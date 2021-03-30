@@ -18,5 +18,18 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
-Route::post('teste/mautic-post', [App\Http\Controllers\MauticWebhookController::class, 'post'])->name('test.mautic.post');
-Route::get('teste/mautic-get',   [App\Http\Controllers\MauticWebhookController::class, 'get'])->name('test.mautic.get');
+Route::prefix('mautic')->group(function () {
+
+    Route::post('/company', [App\Http\Controllers\MauticWebhookController::class, 'company'])->name('mautic.company');
+    Route::post('/contact', [App\Http\Controllers\MauticWebhookController::class, 'contact'])->name('mautic.contact');
+
+});
+
+Route::prefix('pipedrive')->group(function () {
+
+    Route::post('/organization', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.organization');
+    Route::post('/person',       [App\Http\Controllers\PipedriveWebhookController::class, 'person'])->name('pipe.person');
+    Route::post('/stage',        [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
+    Route::post('/deal',         [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
+
+});
