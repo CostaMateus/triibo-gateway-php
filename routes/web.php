@@ -1,6 +1,9 @@
 <?php
 
+use Devio\Pipedrive\Pipedrive;
+use Triibo\Mautic\Facades\Mautic;
 use Illuminate\Support\Facades\Route;
+use Symfony\Component\Console\Input\Input;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,11 +28,16 @@ Route::get('/', function () {
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// Route::get('/contact', [App\Http\Controllers\MauticWebhookController::class, 'index'])->name('getContact');
+// Teste de api mautic
+Route::get('/mautic/{class}', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
 
-Route::get('/contacts/{id?}', function ($id = null) {
-    if ($id)
-        return Mautic::request('GET','contacts/'.$id);
-    else
-        return Mautic::request('GET','contacts');
+// Teste de api pipedrive
+Route::get('/pipedrive/{class}', function ($class) {
+
+    $token     = config('pipedrive.token');
+    $pipedrive = new Pipedrive($token);
+    $response  = $pipedrive->$class->all();
+    $data      = $response->getData();
+
+    dd($data);
 });
