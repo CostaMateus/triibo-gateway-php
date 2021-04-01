@@ -4,7 +4,7 @@ namespace App\Http\Integrations;
 
 use Devio\Pipedrive\Pipedrive;
 
-class Pipedriveintegration
+class PipedriveIntegration
 {
 
     /**

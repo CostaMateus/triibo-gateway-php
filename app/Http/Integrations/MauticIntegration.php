@@ -6,7 +6,7 @@ use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
 use Triibo\Mautic\Facades\Mautic;
 use Triibo\Mautic\Models\MauticConsumer;
-use App\Http\Integrations\Pipedriveintegration;
+use App\Http\Integrations\PipedriveIntegration;
 
 class MauticIntegration
 {
@@ -58,7 +58,7 @@ class MauticIntegration
                 // Se achou um contato, atualiza. Se não achou, cria um novo
                 $res     = ($contact['total'] == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($class, $contact), $data, true);
 
-                Pipedriveintegration::updateMauticId('persons', [
+                PipedriveIntegration::updateMauticId('persons', [
                     'pipe_id'   => $res['contact']['fields']['all']['pipedrive_id'],
                     'mautic_id' => $res['contact']['fields']['all']['id'],
                 ]);
