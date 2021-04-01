@@ -13,11 +13,20 @@ class PipedriveWebhookController extends Controller
 {
 
     /**
+     * Deal to Contact->Funil
+     */
+    const DEAL_ADDED_EVENT     = 'added.deal';
+    const DEAL_UPDATED_EVENT   = 'updated.deal';
+    const DEAL_DELETED_EVENT   = 'deleted.deal';
+    const DEAL_CODE            = 1;
+
+    /**
      * Organization to Company
      */
     const ORG_ADDED_EVENT      = 'added.organization';
     const ORG_UPDATED_EVENT    = 'updated.organization';
     const ORG_DELETED_EVENT    = 'deleted.organization';
+    const ORG_CODE             = 2;
 
     /**
      * Person to Contact
@@ -25,6 +34,7 @@ class PipedriveWebhookController extends Controller
     const PERSON_ADDED_EVENT   = 'added.person';
     const PERSON_UPDATED_EVENT = 'updated.person';
     const PERSON_DELETED_EVENT = 'deleted.person';
+    const PERSON_CODE          = 3;
 
     /**
      * Stage to Funil/pipeline
@@ -32,13 +42,21 @@ class PipedriveWebhookController extends Controller
     const STAGE_ADDED_EVENT    = 'added.stage';
     const STAGE_UPDATED_EVENT  = 'updated.stage';
     const STAGE_DELETED_EVENT  = 'deleted.stage';
+    const STAGE_CODE           = 4;
 
     /**
-     * Deal to Contact->Funil
+     * Pipedrive - deal
+     *
+     * @param  \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\Response
      */
-    const DEAL_ADDED_EVENT     = 'added.deal';
-    const DEAL_UPDATED_EVENT   = 'updated.deal';
-    const DEAL_DELETED_EVENT   = 'deleted.deal';
+    public function deal(Request $request)
+    {
+        return response()->json([
+            'message' => 'pipedrive - deal',
+            'code'    => 200
+        ], 200);
+    }
 
     /**
      * Pipedrive - organization
@@ -69,9 +87,6 @@ class PipedriveWebhookController extends Controller
             switch ($params['event'])
             {
                 case self::PERSON_ADDED_EVENT:
-                    MauticIntegration::updateOrCreate('contacts', $params['current']);
-                break;
-
                 case self::PERSON_UPDATED_EVENT:
                     MauticIntegration::updateOrCreate('contacts', $params['current']);
                 break;
@@ -84,6 +99,7 @@ class PipedriveWebhookController extends Controller
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
+                        'code'    => 0,
                     ], 400);
                 break;
             }
@@ -93,6 +109,7 @@ class PipedriveWebhookController extends Controller
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e->getMessage(),
+                'code'    => self::PERSON_CODE,
             ], 500);
         }
 
@@ -104,45 +121,50 @@ class PipedriveWebhookController extends Controller
 
     /**
      * Pipedrive - stage
+     * Recebe o webhook dos estágios dentro dos funis do Pipedrive
      *
      * @param  \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function stage(Request $request)
     {
+        $params = $request->all();
+
+        try
+        {
+            switch ($params['event'])
+            {
+                case self::STAGE_ADDED_EVENT:
+                case self::STAGE_UPDATED_EVENT:
+                    MauticIntegration::stageUpdate('contactFields', $params['current']);
+                break;
+
+                case self::STAGE_DELETED_EVENT:
+                    MauticIntegration::stageUpdate('contactFields', $params['previous'], true);
+                break;
+
+                default:
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e->getMessage(),
+                'code'    => self::STAGE_CODE,
+            ], 500);
+        }
+
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
         ], 200);
     }
 
-    /**
-     * Pipedrive - deal
-     *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
-     */
-    public function deal(Request $request)
-    {
-        return response()->json([
-            'message' => 'pipedrive - deal',
-            'code'    => 200
-        ], 200);
-    }
-
-    // public function teste()
-    // {
-    //     $token         = config('pipedrive.token');
-    //     $pipedrive     = new Pipedrive($token);
-    //     $response      = $pipedrive->deals->all();
-    //     $organizations = $response->getData();
-    //     foreach ($organizations as $org)
-    //     {
-    //         if ($org->owner_name == 'Pedro')
-    //         {
-    //             $aux[] = $org;
-    //         }
-    //     }
-    //     dd($aux);
-    // }
 }
