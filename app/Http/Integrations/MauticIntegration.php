@@ -6,6 +6,7 @@ use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
 use Triibo\Mautic\Facades\Mautic;
 use Triibo\Mautic\Models\MauticConsumer;
+use App\Http\Integrations\Pipedriveintegration;
 
 class MauticIntegration
 {
@@ -55,22 +56,44 @@ class MauticIntegration
                 $contact = $data['id']              ? $mauticApi->get($data['id'])     : $mauticApi->getList('email:'.$data['email']);
 
                 // Se achou um contato, atualiza. Se não achou, cria um novo
-                $res     = ($contact['total'] == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($class, $contact), $data, true) ;
+                $res     = ($contact['total'] == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($class, $contact), $data, true);
+
+                Pipedriveintegration::updateMauticId('persons', [
+                    'pipe_id'   => $res['contact']['fields']['all']['pipedrive_id'],
+                    'mautic_id' => $res['contact']['fields']['all']['id'],
+                ]);
             break;
 
             case 'organizations':
-                return [];
+                $res = [];
             break;
         }
 
         return $res;
     }
 
-    public static function dealUpdate(String $class, $data, $delete = false)
+    /**
+     * Undocumented function
+     *
+     * @param String $class
+     * @param [type] $data
+     * @param boolean $delete
+     * @return Array $res
+     */
+    public static function dealUpdate(String $class, Array $data, $delete = false)
     {
+        return $res = [];
     }
 
-    public static function stageUpdate(String $class, $data, $delete = false)
+    /**
+     * Undocumented function
+     *
+     * @param String $class
+     * @param [type] $data
+     * @param boolean $delete
+     * @return Array $res
+     */
+    public static function stageUpdate(String $class, Array $data, $delete = false)
     {
         $idField   = 185; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi($class);
