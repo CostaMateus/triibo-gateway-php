@@ -10,6 +10,12 @@ use Triibo\Mautic\Models\MauticConsumer;
 class MauticIntegration
 {
 
+    /**
+     * Undocumented function
+     *
+     * @param String $class
+     * @return \Mautic\MauticApi $api
+     */
     private static function getApi(String $class)
     {
         $factory  = Mautic::getFactory();
@@ -30,56 +36,114 @@ class MauticIntegration
         return $api->newApi($class, $auth, $apiUrl);
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param String $class
+     * @param Array $data
+     * @return Array $res
+     */
     public static function updateOrCreate(String $class, Array $data)
     {
         $mauticApi = self::getApi($class);
         $data      = self::dataTranslator($class, $data);
 
-        /**
-         * Busca por id ou busca por email
-         */
-        $contact   = $data['id']              ? $mauticApi->get($data['id'])     : $mauticApi->getList('email:'.$data['email']);
+        switch ($class)
+        {
+            case 'contacts':
+                // Busca por id ou busca por email
+                $contact = $data['id']              ? $mauticApi->get($data['id'])     : $mauticApi->getList('email:'.$data['email']);
 
-        /**
-         * Se achou um contato, atualiza
-         * Se não achou, cria um novo
-         */
-        $res       = ($contact['total'] == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($class, $contact), $data, true) ;
+                // Se achou um contato, atualiza. Se não achou, cria um novo
+                $res     = ($contact['total'] == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($class, $contact), $data, true) ;
+            break;
 
-        // if ($data['id']) {
-        //     $contact = $mauticApi->get($data['id']);
-        // } else {
-        //     $contact = $mauticApi->getList('email:'.$data['email']);
-        // }
-        //
-        // if ($contact['total'] == 0) {
-        //     $res = $mauticApi->edit(0, $data, true);
-        // } else {
-        //     $id  = self::getId($class, $contact);
-        //     $res = $mauticApi->edit($id, $data, true);
-        // }
+            case 'organizations':
+                return [];
+            break;
+        }
 
         return $res;
     }
 
+    public static function dealUpdate(String $class, $data, $delete = false)
+    {
+    }
+
+    public static function stageUpdate(String $class, $data, $delete = false)
+    {
+        $idField   = 185; // id do campo personalizavel no Mautic
+        $mauticApi = self::getApi($class);
+        $data      = self::dataTranslator($class, $data);
+        $field     = $mauticApi->get($idField);
+        $list      = $field['field']['properties']['list'];
+        $key       = array_search($data['id'], array_column($list, 'value'));
+
+        // Achou o id
+        if ($key !== false)
+        {
+            if (!$delete)
+            {
+                // Atualiza o stage
+                $list[$key]['label'] = $data['name'];
+            }
+            else
+            {
+                // Exclui o stage
+                unset($list[$key]);
+            }
+        }
+        else if (!$delete)
+        {
+            // Adiciona o stage
+            array_push($list, [
+                'label' => $data['name'],
+                'value' => $data['id']
+            ]);
+        }
+
+        $data = [
+            'properties' => [
+                'list' => $list
+            ]
+        ];
+
+        $res = $mauticApi->edit($idField, $data);
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param String $class
+     * @param Array $data
+     * @return void
+     */
     public static function delete(String $class, Array $data)
     {
         $mauticApi = self::getApi($class);
         $data      = self::dataTranslator($class, $data);
 
-        if ($data['id'])
+        switch ($class)
         {
-            $res     = $mauticApi->delete($data['id']);
-        }
-        else
-        {
-            $contact = $mauticApi->getList('email:'.$data['email']);
-            $res     = ($contact['total'] == 0) ? null : $mauticApi->delete(self::getId($class, $contact));
+            case 'contacts':
+                if ($data['id'])
+                {
+                    $res     = $mauticApi->delete($data['id']);
+                }
+                else
+                {
+                    $contact = $mauticApi->getList('email:'.$data['email']);
+                    $res     = ($contact['total'] == 0) ? null : $mauticApi->delete(self::getId($class, $contact));
+                }
+            break;
+
+            case 'organizations':
+                return [];
+            break;
         }
 
         return $res;
     }
-
 
     /**
      * Undocumented function
@@ -90,6 +154,10 @@ class MauticIntegration
     private static function dataTranslator(String $class, Array $data)
     {
         switch ($class) {
+            case 'deals':
+                return [];
+            break;
+
             case 'contacts':
                 return [
                     "id"           => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
@@ -102,28 +170,18 @@ class MauticIntegration
                 ];
             break;
 
-            case 'deals':
-                return [];
-            break;
-
             case 'organizations':
                 return [];
             break;
 
-            case 'stages':
-                return [];
+            // stages
+            case 'contactFields':
+                return [
+                    "id"   => $data["id"],
+                    "name" => $data["name"],
+                ];
             break;
         }
-
-        // return [
-        //     "id"           => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
-        //     "firstname"    => $data['first_name'],
-        //     "lastname"     => $data['last_name'],
-        //     "company"      => ($data['org_name']),
-        //     "email"        => $data['email'][0]['value'],
-        //     "phone"        => $data['phone'][0]['value'],
-        //     "pipedrive_id" => $data['id']
-        // ];
     }
 
     /**
