@@ -2,9 +2,12 @@
 
 namespace App\Http\Integrations;
 
+use Exception;
 use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
+use Devio\Pipedrive\Pipedrive;
 use Triibo\Mautic\Facades\Mautic;
+use Mautic\QueryBuilder\QueryBuilder;
 use Triibo\Mautic\Models\MauticConsumer;
 use App\Http\Integrations\PipedriveIntegration;
 
@@ -53,10 +56,22 @@ class MauticIntegration
         {
             case 'contacts':
                 // Busca por id ou busca por email
-                $contact = $data['id']              ? $mauticApi->get($data['id'])     : $mauticApi->getList('email:'.$data['email']);
+                // $contact = $data['id']              ? $mauticApi->get($data['id'])     : $mauticApi->getList('email:'.$data['email']);
+                if ($data['id'])
+                {
+                    $contact = $mauticApi->get($data['id']);
+                    $total   = (isset($contact['total'])) ? $contact['total'] : null;
+                    $contact = $contact[$mauticApi->itemName()];
+                }
+                else
+                {
+                    $contact = $mauticApi->getList('email:'.$data['email']);
+                    $total   = $contact['total'];
+                    $contact = $contact[$mauticApi->listName()];
+                }
 
                 // Se achou um contato, atualiza. Se não achou, cria um novo
-                $res     = ($contact['total'] == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($class, $contact), $data, true);
+                $res = ($total == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($contact), $data, true);
 
                 PipedriveIntegration::updateMauticId('persons', [
                     'pipe_id'   => $res['contact']['fields']['all']['pipedrive_id'],
@@ -64,8 +79,37 @@ class MauticIntegration
                 ]);
             break;
 
-            case 'organizations':
-                $res = [];
+            case 'companies':
+                if ($data['id'])
+                {
+                    // Busca por id
+                    $company = $mauticApi->get($data['id']);
+                    $total   = (isset($company['total'])) ? $company['total'] : null;
+                    $company = $company[$mauticApi->itemName()];
+                }
+                else
+                {
+                    // Busca por nome
+                    $companies = $mauticApi->getList('', 0, 100000);
+                    $total     = $companies['total'];
+                    $companies = $companies[$mauticApi->listName()];
+
+                    foreach ($companies as $id => $comp)
+                    {
+                        if ($comp['fields']['all']['companyname'] == $data['companyname'])
+                        {
+                            $company = $comp;
+                            break;
+                        }
+                    }
+                }
+
+                $res = ($total == 0) ? $mauticApi->edit(0, $data, true) : $mauticApi->edit(self::getId($company), $data, true);
+
+                PipedriveIntegration::updateMauticId('organizations', [
+                    'pipe_id'   => $res['company']['fields']['all']['pipedrive_org_id'],
+                    'mautic_id' => $res['company']['fields']['all']['id'],
+                ]);
             break;
         }
 
@@ -82,7 +126,6 @@ class MauticIntegration
      */
     public static function dealUpdate(String $class, Array $data, $delete = false)
     {
-        return $res = [];
     }
 
     /**
@@ -156,7 +199,7 @@ class MauticIntegration
                 else
                 {
                     $contact = $mauticApi->getList('email:'.$data['email']);
-                    $res     = ($contact['total'] == 0) ? null : $mauticApi->delete(self::getId($class, $contact));
+                    $res     = ($contact['total'] == 0) ? null : $mauticApi->delete(self::getId($contact));
                 }
             break;
 
@@ -178,30 +221,46 @@ class MauticIntegration
     {
         switch ($class) {
             case 'deals':
-                return [];
+                return [
+                    'pipedrive_id' => $data['person_id'],
+                    'value'        => $data['stage_id'],
+                    'status'       => $data['status'],
+                    // '' => $data[''],
+                ];
             break;
 
             case 'contacts':
                 return [
-                    "id"           => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
-                    "firstname"    => $data['first_name'],
-                    "lastname"     => $data['last_name'],
-                    "company"      => $data['org_name'],
-                    "email"        => $data['email'][0]['value'],
-                    "phone"        => $data['phone'][0]['value'],
-                    "pipedrive_id" => $data['id']
+                    'id'           => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
+                    'firstname'    => $data['first_name'],
+                    'lastname'     => $data['last_name'],
+                    'company'      => $data['org_name'],
+                    'email'        => $data['email'][0]['value'],
+                    'phone'        => $data['phone'][0]['value'],
+                    'pipedrive_id' => $data['id']
                 ];
             break;
 
-            case 'organizations':
-                return [];
+            case 'companies':
+                return [
+                    'id'                => $data['918dace587a4707755926d7c02c3bb46ed53d539'], // custom field for mautic_id
+                    'companyname'       => $data['name'],
+                    'companyaddress1'   => $data['address_formatted_address'],
+                    'companyemail'      => $data['a007cb7cef80c909678503cbcfe49def03cad573'], // custom field for email
+                    'companyphone'      => $data['a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd'], // custom field for fone
+                    // 'companycity'       => $data['address_admin_area_level_1'],
+                    // 'companystate'      => $data['address_admin_area_level_2'],
+                    // 'companyzipcode'    => $data['address_postal_code'],
+                    // 'companycountry'    => $data['address_country'],
+                    'pipedrive_org_id' => $data['id'],
+                ];
             break;
 
             // stages
             case 'contactFields':
                 return [
-                    "id"   => $data["id"],
-                    "name" => $data["name"],
+                    'id'   => $data['id'],
+                    'name' => $data['name'],
                 ];
             break;
         }
@@ -214,11 +273,106 @@ class MauticIntegration
      * @param Array $data
      * @return Integer $id
      */
-    private static function getId(String $class, Array $data)
+    private static function getId(Array $data)
     {
-        foreach ($data[$class] as $id => $obj)
+        foreach ($data as $id => $value)
         {
-            return $id;
+            if (gettype($value) == 'array')
+            {
+                return $id;
+            }
+
+            if ($id == 'id')
+            {
+                return $value;
+            }
+        }
+    }
+
+
+
+    public static function updatePipedrive(Array $classes)
+    {
+        if ($classes['person'] && !$classes['organization'])
+        {
+            $mauticClass = 'contacts';
+            $pipeClass   = 'persons';
+        }
+        else if (!$classes['person'] && $classes['organization'])
+        {
+            $mauticClass = 'companies';
+            $pipeClass   = 'organizations';
+        }
+        else
+        {
+            throw new Exception('Invalid parameters, both true or false');
+        }
+
+        $mauticApi = self::getApi($mauticClass);
+
+        $token     = config('pipedrive.token');
+        $pipeApi   = new Pipedrive($token);
+
+        $response  = $pipeApi->$pipeClass->all();
+        $pipeObjs  = $response->getData();
+
+        switch ($mauticClass) {
+            case 'contacts':
+                foreach ($pipeObjs as $key => $obj)
+                {
+                    if ($obj->email[0]->value)
+                    {
+                        $contact = $mauticApi->getList('email:'.$obj->email[0]->value);
+                        $total   = $contact['total'];
+                        $contact = $contact[$mauticApi->listName()];
+
+                        if ($total > 0)
+                        {
+                            foreach ($contact as $id => $value)
+                            {
+                                $mautic_id = $id;
+                                break;
+                            }
+
+                            $dataM = [ 'pipedrive_id'                             => $obj->id    ];
+                            $dataP = [ 'bd7287f0a9a02de60a8aff83b5905c489b7cf007' => $mautic_id  ];
+
+                            $mauticApi->edit($mautic_id, $dataM, false);
+                            $pipeApi->$pipeClass->update($obj->id, $dataP);
+                        }
+                        else
+                        {
+                            $dataM = self::dataTranslator($mauticClass, json_decode(json_encode($obj), true));
+                            $newContact = $mauticApi->edit(0, $dataM, true);
+
+                            $dataP = [ 'bd7287f0a9a02de60a8aff83b5905c489b7cf007' => $newContact['contact']['id']];
+                            $pipeApi->$pipeClass->update($obj->id, $dataP);
+                        }
+                    }
+                }
+            break;
+
+            case 'companies':
+                $companies = $mauticApi->getList('', 0, 100000);
+                $companies = $companies[$mauticApi->listName()];
+
+                foreach ($pipeObjs as $key => $obj)
+                {
+                    foreach ($companies as $id => $comp)
+                    {
+                        if ($comp['fields']['all']['companyname'] == $obj->name)
+                        {
+                            $mautic_id = $comp['fields']['all']['id'];
+
+                            $dataM = [ 'pipedrive_org_id'                         => $obj->id    ];
+                            $dataP = [ '918dace587a4707755926d7c02c3bb46ed53d539' => $mautic_id  ];
+
+                            $mauticApi->edit($mautic_id, $dataM, false);
+                            $pipeApi->$pipeClass->update($obj->id, $dataP);
+                        }
+                    }
+                }
+            break;
         }
     }
 
