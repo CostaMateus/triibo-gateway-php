@@ -5,9 +5,6 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Http\Request;
 use App\Http\Integrations\MauticIntegration;
-// use Devio\Pipedrive\Pipedrive;
-
-define('TOKEN', config('pipedrive.token'));
 
 class PipedriveWebhookController extends Controller
 {
@@ -52,9 +49,42 @@ class PipedriveWebhookController extends Controller
      */
     public function deal(Request $request)
     {
+        $params = $request->all();
+
+        try
+        {
+            switch ($params['event'])
+            {
+                case self::DEAL_ADDED_EVENT:
+                case self::DEAL_UPDATED_EVENT:
+                    MauticIntegration::dealUpdate('deals', $params['current']);
+                break;
+
+                case self::DEAL_DELETED_EVENT:
+                    MauticIntegration::dealUpdate('deals', $params['previous'], true);
+                break;
+
+                default:
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e->getMessage(),
+                'code'    => self::DEAL_CODE,
+            ], 500);
+        }
+
         return response()->json([
-            'message' => 'pipedrive - deal',
-            'code'    => 200
+            'status'  => 'Ok',
+            'message' => 'Success',
         ], 200);
     }
 
@@ -66,6 +96,39 @@ class PipedriveWebhookController extends Controller
      */
     public function organization(Request $request)
     {
+        $params = $request->all();
+
+        try
+        {
+            switch ($params['event'])
+            {
+                case self::ORG_ADDED_EVENT:
+                case self::ORG_UPDATED_EVENT:
+                    MauticIntegration::updateOrCreate('companies', $params['current']);
+                break;
+
+                case self::ORG_DELETED_EVENT:
+                    MauticIntegration::delete('companies', $params['previous']);
+                break;
+
+                default:
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e->getMessage(),
+                'code'    => self::ORG_CODE,
+            ], 500);
+        }
+
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -158,6 +221,30 @@ class PipedriveWebhookController extends Controller
                 'status'  => 'Error',
                 'message' => $e->getMessage(),
                 'code'    => self::STAGE_CODE,
+            ], 500);
+        }
+
+        return response()->json([
+            'status'  => 'Ok',
+            'message' => 'Success',
+        ], 200);
+    }
+
+
+    public function updatePipedrive(Request $request)
+    {
+        $classes = $request->all();
+
+        try
+        {
+            MauticIntegration::updatePipedrive($classes);
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e->getMessage(),
+                'code'    => 5,
             ], 500);
         }
 
