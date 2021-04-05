@@ -32,4 +32,5 @@ Route::prefix('pipedrive')->group(function () {
     Route::post('/stage',        [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
     Route::post('/deal',         [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
 
+    Route::get('/updatePipedrive', [App\Http\Controllers\PipedriveWebhookController::class, 'updatePipedrive'])->name('pipe.updatePipedrive');
 });
