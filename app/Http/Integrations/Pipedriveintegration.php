@@ -18,7 +18,6 @@ class PipedriveIntegration
     {
         $token     = config('pipedrive.token');
         $pipedrive = new Pipedrive($token);
-        // $res       = $pipedrive->$class->all();
 
         switch ($class)
         {
@@ -29,6 +28,9 @@ class PipedriveIntegration
             break;
 
             case 'organizations':
+                $res = $pipedrive->organizations->update($ids['pipe_id'], [
+                    '918dace587a4707755926d7c02c3bb46ed53d539' => $ids['mautic_id']
+                ]);
             break;
         }
     }
