@@ -120,7 +120,7 @@ class MauticIntegration
      * Undocumented function
      *
      * @param String $class
-     * @param [type] $data
+     * @param Array $data
      * @param boolean $delete
      * @return Array $res
      */
@@ -132,7 +132,7 @@ class MauticIntegration
      * Undocumented function
      *
      * @param String $class
-     * @param [type] $data
+     * @param Array $data
      * @param boolean $delete
      * @return Array $res
      */
