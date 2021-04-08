@@ -18,13 +18,16 @@ use Illuminate\Support\Facades\Route;
 //     return $request->user();
 // });
 
+
+/**
+ * Integração Mautic <> Pipedrive
+ */
 Route::prefix('mautic')->group(function () {
 
     Route::post('/company', [App\Http\Controllers\MauticWebhookController::class, 'company'])->name('mautic.company');
     Route::post('/contact', [App\Http\Controllers\MauticWebhookController::class, 'contact'])->name('mautic.contact');
 
 });
-
 Route::prefix('pipedrive')->group(function () {
 
     Route::post('/organization', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.organization');
@@ -33,4 +36,14 @@ Route::prefix('pipedrive')->group(function () {
     Route::post('/deal',         [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
 
     Route::get('/updatePipedrive', [App\Http\Controllers\PipedriveWebhookController::class, 'updatePipedrive'])->name('pipe.updatePipedrive');
+});
+
+
+/**
+ * Integração Triibo <> Cofry
+ */
+Route::prefix('cofry')->group(function () {
+
+    Route::get('/index',  [App\Http\Controllers\CofryController::class, 'index'])->name('cofry.index');
+
 });
