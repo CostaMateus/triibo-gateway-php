@@ -44,6 +44,12 @@ Route::prefix('pipedrive')->group(function () {
  */
 Route::prefix('cofry')->group(function () {
 
-    Route::get('/index',  [App\Http\Controllers\CofryController::class, 'index'])->name('cofry.index');
+    Route::get('/index',             [App\Http\Controllers\CofryController::class, 'index'])->name('cofry.index');
+
+    Route::get('/estabelecimentos',  [App\Http\Controllers\CofryController::class, 'estabelecimentos'])->name('cofry.estabelecimentos');
+
+    Route::get('/promocoes',         [App\Http\Controllers\CofryController::class, 'promocoes'])->name('cofry.promocoes');
+
+    Route::get('/imagens',           [App\Http\Controllers\CofryController::class, 'imagens'])->name('cofry.imagens');
 
 });
