@@ -24,12 +24,12 @@ class CofryIntegration
     /**
      *
      *
-     * @return JSON $promos
+     * @return Array $promos
      */
     public static function getPromocoes()
     {
-        $stores    = self::getStores();
-        $promos    = self::getPromos();
+        $stores    = self::getStoresCofry();
+        $promos    = self::getPromosCofry();
 
         if ($stores) self::usort($stores);
         if ($promos) self::usort($promos);
@@ -45,17 +45,18 @@ class CofryIntegration
 
         self::generatePromosImage($promos);
 
-        return json_encode($promos);
+        // return json_encode($promos);
+        return $promos;
     }
 
     /**
      *
      *
-     * @return JSON $stores
+     * @return Array $stores
      */
     public static function getEstabelecimentos()
     {
-        $stores = self::getStores();
+        $stores = self::getStoresCofry();
         $status = self::getStatusStores();
 
         if ($stores) self::usort($stores);
@@ -69,7 +70,8 @@ class CofryIntegration
 
         $stores = self::translatorStore($stores);
 
-        return json_encode($stores);
+        // return json_encode($stores);
+        return $stores;
     }
 
     /**
@@ -79,7 +81,7 @@ class CofryIntegration
      */
     public static function getEstabelecimentosImagens()
     {
-        $stores = self::getStores();
+        $stores = self::getStoresCofry();
 
         // if ($stores) self::usort($stores);
 
@@ -87,17 +89,17 @@ class CofryIntegration
     }
 
     /**
-     * Get promotions.
+     * Get promotions Cofry.
      *
      * @return Array $res | null
      */
-    private static function getPromos()
+    private static function getPromosCofry()
     {
         $client = Http::asForm();
 
         $res    = $client->post(self::URL_PROMO, self::TOKEN)->json();
 
-        self::registerLog($res['errorCode'], $res['errorMessage'], 'getPromos');
+        self::registerLog($res['errorCode'], $res['errorMessage'], 'getPromosCofry');
 
         if ($res['errorCode'] == 0)
         {
@@ -108,17 +110,17 @@ class CofryIntegration
     }
 
     /**
-     * Get stores.
+     * Get stores Cofry.
      *
      * @return Array $res | null
      */
-    private static function getStores()
+    private static function getStoresCofry()
     {
         $client = Http::asForm();
 
         $res    = $client->post(self::URL_STORE, self::TOKEN)->json();
 
-        self::registerLog($res['errorCode'], $res['errorMessage'], 'getStores');
+        self::registerLog($res['errorCode'], $res['errorMessage'], 'getStoresCofry');
 
         if ($res['errorCode'] == 0)
         {
@@ -171,7 +173,8 @@ class CofryIntegration
 
             if ($promo['ItemTitle'] === "******") $promo['ItemTitle'] = '';
 
-            $id                 = '-cofry'.$promo['uuid'];
+            $idStore            = '-cofry' . $promo['uuid'];
+            $id                 = $idStore . str_replace('.', '', $promo['ProductAPIID']);
 
             $store['Logo']      = self::PREFIX_PROMO . $i . '_' .
                                   strtolower(str_replace(' ', '-', preg_replace('/[^A-Za-z0-9]/', '', $promo['Advertiser']))) . '_' .
@@ -202,9 +205,9 @@ class CofryIntegration
             $promo['ItemTitle'] = str_replace(': ******',           ': '   . $promo['ItemCode'], $promo['ItemTitle']);
             $promo['ItemTitle'] = str_replace('Use ******',         'Use ' . $promo['ItemCode'], $promo['ItemTitle']);
 
-            $res[]              = [
-                'establishmentId'   => $id,
-                'establishmentName' => $promo['Advertiser'],
+            $res[$id]           = [
+                'establishmentId'   => $idStore,
+                'establishmentName' => trim($promo['Advertiser']),
 
                 'title'             => 'Ganhe ' . $cashB . '% de volta!',
                 'description'       => $promo['ItemTitle'] . '\nUtilize o código de desconto ' . $promo['ItemCode'] . ' no fechamento da compra.',
@@ -215,12 +218,8 @@ class CofryIntegration
                 'disableDate'       => $dateDis,
                 'dueDate'           => $dateDis,
 
-                'iOSWebView'        => true,
-                'droidWebView'      => true,
-
                 'isPublished'       => true,
                 'active'            => true,
-                'show'              => false,
 
                 'lat'               => -15.52047783763576,
                 'long'              => -48.015408891158984,
@@ -230,11 +229,9 @@ class CofryIntegration
                 'photo'             => $store['Logo'],
                 'thumbnail'         => $store['Logo'],
 
-                'buttonLabel'       => '?', //
-
                 'region'            => 'nacional',
                 'type'              => 'businessPartner',
-                'url'               => '?' // montar com o Velho
+                'url'               => '-' // montar com o Velho
             ];
         }
 
@@ -256,16 +253,24 @@ class CofryIntegration
 
         foreach ($data as $store)
         {
-            $id                = '-cofry'.$store['uuid'];
+            $idStore             = '-cofry' . $store['uuid'];
 
-            $store['Logo']     = str_replace('https://imgcofrynew.s3.amazonaws.com/', '', $store['Logo']);
-            $store['Logo']     = self::PREFIX_PROMO . '0_' . ((basename($store['Logo']) != '') ? basename($store['Logo']) : 'standard.png');
+            $store['Advertiser'] = trim($store['Advertiser']);
 
-            $rules             = json_decode($store['GeneralRules'], true);
-            $rules['general']  = str_replace('<ol><li>',   '',   $rules['general']);
-            $rules['general']  = str_replace('</li></ol>', '',   $rules['general']);
-            $rules['general']  = str_replace('</li><li>',  '\n', $rules['general']);
-            $rules['specific'] = '';
+            $auxAdv              = preg_replace('/[^\w\s]/', '', iconv('UTF-8', 'ASCII//TRANSLIT', $store['Advertiser']));
+            $idPromo             = $idStore . strtolower(str_replace(' ', '', $auxAdv));
+
+            $store['Logo']       = str_replace('https://imgcofrynew.s3.amazonaws.com/', '', $store['Logo']);
+            $store['Logo']       = self::PREFIX_PROMO . '0_' . ((basename($store['Logo']) != '') ? basename($store['Logo']) : 'standard.png');
+
+            $store['About']      = trim($store['About']);
+            $store['About']      = str_replace('  ', ' ', $store['About']);
+
+            $rules               = json_decode($store['GeneralRules'], true);
+            $rules['general']    = str_replace('<ol><li>',   '',   $rules['general']);
+            $rules['general']    = str_replace('</li></ol>', '',   $rules['general']);
+            $rules['general']    = str_replace('</li><li>',  '\n', $rules['general']);
+            $rules['specific']   = '';
 
             if ($store['SpecificRules'])
             {
@@ -274,10 +279,10 @@ class CofryIntegration
                 $rules['specific'] = str_replace('</b>', '', $rules['specific']);
             }
 
-            $description = $rules['general'] . ($rules['additional'] != '' ? '\n' . $rules['additional'] : '') . ($rules['specific'] != '' ? '\n' . $rules['specific'] : '');
+            $description   = $store['About'] . '\n' . $rules['general'] . ($rules['additional'] != '' ? '\n' . $rules['additional'] : '') . ($rules['specific'] != '' ? '\n' . $rules['specific'] : '');
 
-            $res[]       = [
-                'establishmentId'   => $id,
+            $res[$idPromo] = [
+                'establishmentId'   => $idStore,
                 'establishmentName' => $store['Advertiser'],
 
                 'title'             => $store['Advertiser'],
@@ -287,26 +292,20 @@ class CofryIntegration
                 'disableDate'       => $dateDis,
                 'dueDate'           => $dateDis,
 
-                'iOSWebView'        => true,
-                'droidWebView'      => true,
-
                 'isPublished'       => true,
                 'active'            => true,
-                'show'              => false,
 
                 'lat'               => -15.52047783763576,
                 'long'              => -48.015408891158984,
 
                 'level'             => 99,
 
-                'photo'             => $store['Logo'], //
-                'thumbnail'         => $store['Logo'], //
-
-                'buttonLabel'       => '?', //
+                'photo'             => $store['Logo'],
+                'thumbnail'         => $store['Logo'],
 
                 'region'            => 'nacional',
                 'type'              => 'businessPartner',
-                'url'               => '?' // montar com o Velho
+                'url'               => '' // montar com o Velho
             ];
         }
 
@@ -333,11 +332,14 @@ class CofryIntegration
             $store['Logo']    = str_replace('https://imgcofrynew.s3.amazonaws.com/', '', $store['Logo']);
             $store['Logo']    = self::PREFIX_STORE . ((basename($store['Logo']) != '') ? basename($store['Logo']) : 'standard.png');
 
+            $store['About']   = trim($store['About']);
+            $store['About']   = str_replace('  ', ' ', $store['About']);
+
             $rules            = json_decode($store['GeneralRules'], true);
             $rules['general'] = str_replace('<ol><li>',   '',   $rules['general']);
             $rules['general'] = str_replace('</li></ol>', '',   $rules['general']);
             $rules['general'] = str_replace('</li><li>',  '\n', $rules['general']);
-            $descricao        = $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '');
+            $descricao        = $store['About'] . '\n' . $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '');
             $tags             = explode(',', $store['Segment']);
 
             $res[$id]         = [
@@ -353,16 +355,12 @@ class CofryIntegration
                 'lat'           => -15.52047783763576,
                 'long'          => -48.015408891158984,
 
-                'nome'          => $store['Advertiser'],
+                'nome'          => trim($store['Advertiser']),
                 'descricao'     => $descricao,
 
-                'fotoUrlThumb'  => '', // ?
                 'fotoThumb'     => $store['Logo'],
                 'listaFotos'    => [
                     $store['Logo'],
-                ],
-                'listaUrlFotos' => [
-                    '?', // ?
                 ],
 
                 'funcionamento' => [
