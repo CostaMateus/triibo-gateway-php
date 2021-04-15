@@ -54,6 +54,6 @@ Route::prefix('cofry')->group(function () {
     Route::get('/index',             [App\Http\Controllers\CofryController::class, 'index'])->name('cofry.index');
 
     // Processa as imagens
-    Route::get('/testeImg',          [App\Http\Controllers\CofryController::class, 'uploadImages'])->name('cofry.uploadImages');
+    Route::get('/uploadImages',      [App\Http\Controllers\CofryController::class, 'uploadImages'])->name('cofry.uploadImages');
 
 });
