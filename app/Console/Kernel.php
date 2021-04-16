@@ -26,8 +26,14 @@ class Kernel extends ConsoleKernel
     {
         // $schedule->command('inspire')->hourly();
 
-        $schedule->command('process:storepromo')->dailyAt('05:00');
-        $schedule->command('process:images')->dailyAt('06:00');
+        // $schedule->command('delete:images')->weekly()->sundays()->at('01:30')->timezone('America/Sao_Paulo');
+        // $schedule->command('delete:images')->weekly()->tuesdays()->at('01:30')->timezone('America/Sao_Paulo');
+        // $schedule->command('delete:images')->weekly()->fridays()->at('01:30')->timezone('America/Sao_Paulo');
+        // o mesmo que os acima - domingo, terca e sexta
+        $schedule->command('delete:images')->cron('30 1 * * 0,2,5')->timezone('America/Sao_Paulo');
+
+        $schedule->command('process:storepromo')->dailyAt('02:00')->timezone('America/Sao_Paulo');
+        $schedule->command('process:images')->dailyAt('03:00')->timezone('America/Sao_Paulo');
     }
 
     /**
