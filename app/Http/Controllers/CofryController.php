@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use File;
 use DateTime;
+use Exception;
 use Throwable;
 use DateInterval;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Google\Cloud\Storage\StorageObject;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Integrations\CofryIntegration;
 use Kreait\Laravel\Firebase\Facades\Firebase;
@@ -39,7 +41,7 @@ class CofryController extends Controller
     {
         // ~ 10 minutos
         echo date('Y-m-d H:i:s.u') . '<br>';
-        CofryIntegration::getEstabelecimentosImagens();
+        CofryIntegration::getImagens();
         echo date('Y-m-d H:i:s.u') . '<br>';
         dd('OK');
     }
@@ -108,11 +110,6 @@ class CofryController extends Controller
      */
     public function uploadImages()
     {
-        CofryIntegration::getEstabelecimentosImagens();
-
-        $imgsStores = self::getFileNames('images/estabelecimentos/');
-        $imgsPromos = self::getFileNames('images/promos/');
-
         // Local
         $lcStore    = 'images/estabelecimentos/';
         $lcPromo    = 'images/promos/';
@@ -121,13 +118,14 @@ class CofryController extends Controller
         $fbStore    = 'estabelecimento/';
         $fbPromo    = 'promocao/';
 
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        $imgsStores = self::getFileNames($lcStore);
+        $imgsPromos = self::getFileNames($lcPromo);
+
+        // ~ 20 min
         self::execUploadImages($imgsStores, $lcStore, $fbStore);
 
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        // ~ 57 min
         self::execUploadImages($imgsPromos, $lcPromo, $fbPromo);
-
-        echo date('Y-m-d H:i:s.u') . '<br>';
     }
 
     /**
@@ -138,11 +136,34 @@ class CofryController extends Controller
      */
     private static function getFileNames(String $pathFolder)
     {
-        $path  = public_path($pathFolder);
-
-        $files = File::allFiles($path);
-
+        $path      = public_path($pathFolder);
+        $files     = File::allFiles($path);
         $fileNames = [];
+
+        if (empty($files))
+        {
+            echo 'IMG : Gerando imagens' . "\n";
+            Log::info('IMG : Gerando imagens');
+            CofryIntegration::getImagens();
+        }
+        else
+        {
+            $today = new DateTime(date('Y-m-d H:i:s'));
+            $fDate = new DateTime(date('Y-m-d H:i:s', $files[0]->getCTime()));
+
+            $diff  = $fDate->diff($today);
+            $diff  = (int) $diff->format('%a');
+
+            if ($diff >= 2)
+            {
+                echo 'IMG : Gerando imagens' . "\n";
+                Log::info('IMG : Gerando imagens');
+                CofryIntegration::getImagens();
+            }
+        }
+
+        echo 'IMG : Capturando nomes - ' . $pathFolder . "\n";
+        Log::info('IMG : Capturando nomes - ' . $pathFolder);
 
         foreach($files as $file)
         {
@@ -165,19 +186,19 @@ class CofryController extends Controller
         $st     = Firebase::storage();
         $bucket = $st->getBucket();
 
+        echo 'IMG : Inicio upload Firebase - ' . $lcFolder . "\n";
+        Log::info('IMG : Inicio upload Firebase - ' . $lcFolder);
+
         foreach ($images as $img)
         {
             $uploader = $bucket->getResumableUploader(
                 fopen(public_path($lcFolder . $img), 'r'),
-                [
-                    'name' => $fbFolder . $img
-                ]
+                [ 'name' => $fbFolder . $img ]
             );
 
             try
             {
                 $uploader->upload();
-                self::registerLog(0, 'Importado com sucesso');
             }
             catch (FirebaseException $e)
             {
@@ -191,6 +212,36 @@ class CofryController extends Controller
                 self::registerLog($e->getCode(), $e->getMessage());
             }
         }
+
+        echo 'IMG : Fim upload Firebase - ' . $lcFolder . "\n";
+        Log::info('IMG : Fim upload Firebase - ' . $lcFolder);
+
+        // $promises = [];
+        // $objects  = [];
+
+        // foreach ($images as $name)
+        // {
+        //     $objects[$name] = fopen(public_path($lcFolder . $name), 'r');
+
+        //     echo $name . '<br><br>';
+        // }
+
+        // foreach ($objects as $k => $v)
+        // {
+        //     $promises[] = $bucket->uploadAsync($v, ['name' => $k])
+        //         ->then(function (StorageObject $object) {
+        //             self::registerLog(0, 'Importe novo, ok');
+
+        //         }, function(\Exception $e) {
+        //             $msg = 'An error has occurred in the matrix';
+        //             self::registerLog($e->getCode(), $msg . ' - ' . $e->getMessage());
+        //             throw new Exception($msg, null, $e);
+        //         });
+        // }
+
+        // foreach ($promises as $promise) {
+        //     $promise->wait();
+        // }
     }
 
 
