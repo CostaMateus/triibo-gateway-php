@@ -39,11 +39,13 @@ class ProcessStoresPromos extends Command
      */
     public function handle()
     {
-        Log::info('Inicio : processamento das stores-promos');
+        echo "SP : Inicio processamento das stores-promos\n";
+        Log::info('SP : Inicio processamento das stores-promos');
 
         $cofry = new CofryController();
         $cofry->index();
 
-        Log::info('Fim : processamento das stores-promos');
+        echo "SP : Fim processamento das stores-promos\n";
+        Log::info('SP : Fim processamento das stores-promos');
     }
 }
