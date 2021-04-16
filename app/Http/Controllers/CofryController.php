@@ -142,8 +142,8 @@ class CofryController extends Controller
 
         if (empty($files))
         {
-            echo 'IMG : Gerando imagens' . "\n";
-            Log::info('IMG : Gerando imagens');
+            echo "IMG : Gerando imagens\n";
+            Log::info("IMG : Gerando imagens");
             CofryIntegration::getImagens();
         }
         else
@@ -156,14 +156,14 @@ class CofryController extends Controller
 
             if ($diff >= 2)
             {
-                echo 'IMG : Gerando imagens' . "\n";
-                Log::info('IMG : Gerando imagens');
+                echo "IMG : Gerando imagens\n";
+                Log::info("IMG : Gerando imagens");
                 CofryIntegration::getImagens();
             }
         }
 
-        echo 'IMG : Capturando nomes - ' . $pathFolder . "\n";
-        Log::info('IMG : Capturando nomes - ' . $pathFolder);
+        echo "IMG : Capturando nomes - $pathFolder\n";
+        Log::info("IMG : Capturando nomes - $pathFolder");
 
         foreach($files as $file)
         {
@@ -186,8 +186,8 @@ class CofryController extends Controller
         $st     = Firebase::storage();
         $bucket = $st->getBucket();
 
-        echo 'IMG : Inicio upload Firebase - ' . $lcFolder . "\n";
-        Log::info('IMG : Inicio upload Firebase - ' . $lcFolder);
+        echo "IMG : Inicio upload Firebase - $lcFolder\n";
+        Log::info("IMG : Inicio upload Firebase - $lcFolder");
 
         foreach ($images as $img)
         {
@@ -213,8 +213,8 @@ class CofryController extends Controller
             }
         }
 
-        echo 'IMG : Fim upload Firebase - ' . $lcFolder . "\n";
-        Log::info('IMG : Fim upload Firebase - ' . $lcFolder);
+        echo "IMG : Fim upload Firebase - $lcFolder\n";
+        Log::info("IMG : Fim upload Firebase - $lcFolder");
 
         // $promises = [];
         // $objects  = [];
@@ -255,7 +255,7 @@ class CofryController extends Controller
      */
     private static function registerLog(Int $code, String $message)
     {
-        $log = 'FirebaseAPI | code: ' . $code . ' | message: ' . $message;
+        $log = "FirebaseAPI | code: $code | message: $message";
 
         ($code != 0) ? Log::critical($log) : Log::info($log);
     }
