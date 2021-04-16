@@ -79,13 +79,13 @@ class CofryIntegration
      *
      * @return void
      */
-    public static function getEstabelecimentosImagens()
+    public static function getImagens()
     {
         $stores = self::getStoresCofry();
 
         // if ($stores) self::usort($stores);
 
-        self::getStoresImages($stores);
+        self::generatorImages($stores);
     }
 
     /**
@@ -257,7 +257,7 @@ class CofryIntegration
 
             $store['Advertiser'] = trim($store['Advertiser']);
 
-            $auxAdv              = preg_replace('/[^\w\s]/', '', iconv('UTF-8', 'ASCII//TRANSLIT', $store['Advertiser']));
+            $auxAdv              = preg_replace('/[^\w\s]/', '', iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $store['Advertiser']));
             $idPromo             = $idStore . strtolower(str_replace(' ', '', $auxAdv));
 
             $store['Logo']       = str_replace('https://imgcofrynew.s3.amazonaws.com/', '', $store['Logo']);
@@ -445,7 +445,7 @@ class CofryIntegration
      * @param Array $data
      * @return void
      */
-    private static function getStoresImages(Array $data)
+    private static function generatorImages(Array $data)
     {
         $pathStore = public_path('images/estabelecimentos');
         $pathPromo = public_path('images/promos');
