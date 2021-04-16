@@ -51,21 +51,41 @@ class CofryController extends Controller
      */
     public function index()
     {
+        // STORE
         try
         {
             $this->insertStoresFirebase();
-
-            $this->insertPromosFirebase();
-
-            self::registerLog(0, 'Importado com sucesso');
+            echo "SP : Estabelecimentos enviados com sucesso\n";
+            self::registerLog(0, 'Estabelecimentos enviados com sucesso');
         }
         catch (FirebaseException $e)
         {
-            self::registerLog($e->getCode(), "An error has occurred while working with the SDK: $e->getMessage()");
+            echo "SP : Estabelecimento, erro processo Firebase - abortando\n";
+            self::registerLog(401, "An error has occurred while working with the SDK: $e");
         }
         catch (Throwable $e)
         {
-            self::registerLog($e->getCode(), "A not-Firebase specific error has occurred: $e->getMessage()");
+            echo "SP : Erro inesperado - abortando\n";
+            self::registerLog(501, "A not-Firebase specific error has occurred: $e");
+        }
+
+
+        // PROMO
+        try
+        {
+            $this->insertPromosFirebase();
+            echo "SP : Promoções enviadas sucesso\n";
+            self::registerLog(0, 'Promoções enviadas sucesso');
+        }
+        catch (FirebaseException $e)
+        {
+            echo "SP : Promoções, erro processo Firebase - abortando\n";
+            self::registerLog(402, "An error has occurred while working with the SDK: $e");
+        }
+        catch (Throwable $e)
+        {
+            echo "SP : Erro inesperado - abortando\n";
+            self::registerLog(502, "A not-Firebase specific error has occurred: $e");
         }
     }
 
@@ -78,8 +98,8 @@ class CofryController extends Controller
         Log::info("SP : Buscando estabelecimentos");
         $stores         = CofryIntegration::getEstabelecimentos();
 
-        echo "SP : Inicio upload Firebase\n";
-        Log::info("SP : Inicio upload Firebase");
+        echo "SP : Enviando estabelecimentos para Firebase\n";
+        Log::info("SP : Enviando estabelecimentos para Firebase");
         $firebaseStores->update($stores);
 
         // $rStores = $firebaseStores->getValue();
@@ -90,12 +110,12 @@ class CofryController extends Controller
         $db             = Firebase::database();
         $firebasePromos = $db->getReference('Store');
 
-        echo "SP : Buscando promoção\n";
-        Log::info("SP : Buscando promoção");
+        echo "SP : Buscando promoções\n";
+        Log::info("SP : Buscando promoções");
         $promos         = CofryIntegration::getPromocoes();
 
-        echo "SP : Inicio upload Firebase\n";
-        Log::info("SP : Inicio upload Firebase");
+        echo "SP : Enviando promoções para Firebase\n";
+        Log::info("SP : Enviando promoções para Firebase");
         $firebasePromos->update($promos);
 
         // $rPromos = $firebasePromos->getValue();
@@ -205,11 +225,11 @@ class CofryController extends Controller
                 $resumeUri = $uploader->getResumeUri();
                 $object    = $uploader->resume($resumeUri);
 
-                self::registerLog($e->getCode(), $e->getMessage());
+                self::registerLog(403, "An error has occurred while working with the SDK: $e");
             }
             catch (Throwable $e)
             {
-                self::registerLog($e->getCode(), $e->getMessage());
+                self::registerLog(503, "A not-Firebase specific error has occurred: $e");
             }
         }
 
