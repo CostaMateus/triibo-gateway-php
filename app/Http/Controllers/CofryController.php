@@ -4,14 +4,8 @@ namespace App\Http\Controllers;
 
 use File;
 use DateTime;
-use Exception;
 use Throwable;
-use DateInterval;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
-use Google\Cloud\Storage\StorageObject;
-use Illuminate\Support\Facades\Storage;
 use App\Http\Integrations\CofryIntegration;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
@@ -22,27 +16,27 @@ class CofryController extends Controller
     public function estabelecimentos()
     {
         // ~ 2 segundos
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        echo date('Y-m-d H:i:s.u') . "\n";
         $stores = CofryIntegration::getEstabelecimentos();
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        echo date('Y-m-d H:i:s.u') . "\n";
         dd($stores);
     }
 
     public function promocoes()
     {
         // ~ 17 segundos
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        echo date('Y-m-d H:i:s.u') . "\n";
         $promos = CofryIntegration::getPromocoes();
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        echo date('Y-m-d H:i:s.u') . "\n";
         dd($promos);
     }
 
     public function imagens()
     {
         // ~ 10 minutos
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        echo date('Y-m-d H:i:s.u') . "\n";
         CofryIntegration::getImagens();
-        echo date('Y-m-d H:i:s.u') . '<br>';
+        echo date('Y-m-d H:i:s.u') . "\n";
         dd('OK');
     }
 
@@ -57,12 +51,9 @@ class CofryController extends Controller
      */
     public function index()
     {
-        // echo date('Y-m-d H:i:s.u') . '<br>';
         try
         {
             $this->insertStoresFirebase();
-
-            // echo date('Y-m-d H:i:s.u') . '<br>';
 
             $this->insertPromosFirebase();
 
@@ -70,35 +61,44 @@ class CofryController extends Controller
         }
         catch (FirebaseException $e)
         {
-            echo date('Y-m-d H:i:s.u') . '<br>';
-            $msg = 'An error has occurred while working with the SDK: ' . $e->getMessage();
-            self::registerLog($e->getCode(), $msg);
+            self::registerLog($e->getCode(), "An error has occurred while working with the SDK: $e->getMessage()");
         }
         catch (Throwable $e)
         {
-            // echo date('Y-m-d H:i:s.u') . '<br>';
-            $msg = 'A not-Firebase specific error has occurred: ' . $e->getMessage();
-            self::registerLog($e->getCode(), $msg);
+            self::registerLog($e->getCode(), "A not-Firebase specific error has occurred: $e->getMessage()");
         }
-        // echo date('Y-m-d H:i:s.u') . '<br>';
     }
 
     public function insertStoresFirebase()
     {
         $db             = Firebase::database();
         $firebaseStores = $db->getReference('Estabelecimento-v2');
-        // $stores         = $this->estabelecimentos();
-        $firebaseStores->update(CofryIntegration::getEstabelecimentos());
-        $rStores        = $firebaseStores->getValue();
+
+        echo "SP : Buscando estabelecimentos\n";
+        Log::info("SP : Buscando estabelecimentos");
+        $stores         = CofryIntegration::getEstabelecimentos();
+
+        echo "SP : Inicio upload Firebase\n";
+        Log::info("SP : Inicio upload Firebase");
+        $firebaseStores->update($stores);
+
+        // $rStores = $firebaseStores->getValue();
     }
 
     public function insertPromosFirebase()
     {
         $db             = Firebase::database();
         $firebasePromos = $db->getReference('Store');
-        // $promos         = $this->promocoes();
-        $firebasePromos->update(CofryIntegration::getPromocoes());
-        $rPromos        = $firebasePromos->getValue();
+
+        echo "SP : Buscando promoção\n";
+        Log::info("SP : Buscando promoção");
+        $promos         = CofryIntegration::getPromocoes();
+
+        echo "SP : Inicio upload Firebase\n";
+        Log::info("SP : Inicio upload Firebase");
+        $firebasePromos->update($promos);
+
+        // $rPromos = $firebasePromos->getValue();
     }
 
 
