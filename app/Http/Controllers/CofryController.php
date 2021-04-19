@@ -235,33 +235,6 @@ class CofryController extends Controller
 
         echo "IMG : Fim upload Firebase - $lcFolder\n";
         Log::info("IMG : Fim upload Firebase - $lcFolder");
-
-        // $promises = [];
-        // $objects  = [];
-
-        // foreach ($images as $name)
-        // {
-        //     $objects[$name] = fopen(public_path($lcFolder . $name), 'r');
-
-        //     echo $name . '<br><br>';
-        // }
-
-        // foreach ($objects as $k => $v)
-        // {
-        //     $promises[] = $bucket->uploadAsync($v, ['name' => $k])
-        //         ->then(function (StorageObject $object) {
-        //             self::registerLog(0, 'Importe novo, ok');
-
-        //         }, function(\Exception $e) {
-        //             $msg = 'An error has occurred in the matrix';
-        //             self::registerLog($e->getCode(), $msg . ' - ' . $e->getMessage());
-        //             throw new Exception($msg, null, $e);
-        //         });
-        // }
-
-        // foreach ($promises as $promise) {
-        //     $promise->wait();
-        // }
     }
 
 
