@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Integrations\MauticIntegration;
 
 class PipedriveWebhookController extends Controller
@@ -51,6 +53,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
+        // Storage::put('pipe-deal-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             switch ($params['event'])
@@ -65,6 +69,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
+                    Log::info("Deal - Unsupported event, 400");
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -75,13 +80,15 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
+            Log::info("Deal - $e, 500");
             return response()->json([
                 'status'  => 'Error',
-                'message' => $e->getMessage(),
+                'message' => $e,
                 'code'    => self::DEAL_CODE,
             ], 500);
         }
 
+        Log::info("Deal - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -98,6 +105,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
+        // Storage::put('pipe-org-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             switch ($params['event'])
@@ -112,6 +121,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
+                    Log::info("Organization - Unsupported event, 400");
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -122,13 +132,15 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
+            Log::info("Organization - $e, 500");
             return response()->json([
                 'status'  => 'Error',
-                'message' => $e->getMessage(),
+                'message' => $e,
                 'code'    => self::ORG_CODE,
             ], 500);
         }
 
+        Log::info("Organization - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -145,6 +157,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
+        // Storage::put('pipe-per-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             switch ($params['event'])
@@ -159,6 +173,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
+                    Log::info("Person - Unsupported event, 400");
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -169,13 +184,15 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
+            Log::info("Person - $e, 500");
             return response()->json([
                 'status'  => 'Error',
-                'message' => $e->getMessage(),
+                'message' => $e,
                 'code'    => self::PERSON_CODE,
             ], 500);
         }
 
+        Log::info("Person - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -193,6 +210,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
+        // Storage::put('pipe-stg-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             switch ($params['event'])
@@ -207,6 +226,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
+                    Log::info("Stage - Unsupported event, 400");
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -217,13 +237,15 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
+            Log::info("Stage - $e, 500");
             return response()->json([
                 'status'  => 'Error',
-                'message' => $e->getMessage(),
+                'message' => $e,
                 'code'    => self::STAGE_CODE,
             ], 500);
         }
 
+        Log::info("Stage - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -243,7 +265,7 @@ class PipedriveWebhookController extends Controller
         {
             return response()->json([
                 'status'  => 'Error',
-                'message' => $e->getMessage(),
+                'message' => $e,
                 'code'    => 5,
             ], 500);
         }
