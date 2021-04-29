@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
 use Illuminate\Http\Request;
+use Devio\Pipedrive\Pipedrive;
 use Triibo\Mautic\Facades\Mautic;
 use Triibo\Mautic\Models\MauticConsumer;
 // use Illuminate\Support\Facades\Storage;
@@ -29,6 +30,20 @@ class HomeController extends Controller
     public function index()
     {
         return view('home');
+    }
+
+    public function teste2()
+    {
+        $token     = config('pipedrive.token');
+        $pipedrive = new Pipedrive($token);
+
+        $res = $pipedrive->persons->update(465, [
+            'last_name' => '9.3-API'
+        ]);
+
+        dd($res->getData());
+
+        return $res;
     }
 
     public function teste(Request $request)

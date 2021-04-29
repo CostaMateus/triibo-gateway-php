@@ -28,16 +28,15 @@ Route::get('/', function () {
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// // Teste de api mautic
-// Route::get('/mautic/{class}', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
+// Teste de api mautic
+Route::get('/mautic/{class}', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
 
-// // Teste de api pipedrive
+// Teste de api pipedrive
+Route::get('/pipe',           [App\Http\Controllers\HomeController::class, 'teste2'])->name('teste2');
 // Route::get('/pipedrive/{class}', function ($class) {
-
 //     $token     = config('pipedrive.token');
 //     $pipedrive = new Pipedrive($token);
 //     $response  = $pipedrive->$class->all();
 //     $data      = $response->getData();
-
 //     dd($data);
 // });
