@@ -55,6 +55,7 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
+            Log::info("Deal changed by api - ignored");
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Deal changed by api - ignored',
@@ -114,6 +115,7 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
+            Log::info("Organization changed by api - ignored");
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Organization changed by api - ignored',
@@ -173,6 +175,7 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
+            Log::info("Person changed by api - ignored");
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Person changed by api - ignored',
@@ -233,6 +236,7 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
+            Log::info("Stage changed by api - ignored");
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Stage changed by api - ignored',
