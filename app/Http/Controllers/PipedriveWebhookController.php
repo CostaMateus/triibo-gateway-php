@@ -63,6 +63,8 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
+        Storage::put('deal-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             // switch ($params['event'])
@@ -125,26 +127,26 @@ class PipedriveWebhookController extends Controller
 
         try
         {
-            // switch ($params['event'])
-            // {
-            //     case self::ORG_ADDED_EVENT:
-            //     case self::ORG_UPDATED_EVENT:
-            //         MauticIntegration::updateOrCreate('companies', $params['current']);
-            //     break;
+            switch ($params['event'])
+            {
+                case self::ORG_ADDED_EVENT:
+                case self::ORG_UPDATED_EVENT:
+                    MauticIntegration::updateOrCreate('companies', $params['current']);
+                break;
 
-            //     case self::ORG_DELETED_EVENT:
-            //         MauticIntegration::delete('companies', $params['previous']);
-            //     break;
+                case self::ORG_DELETED_EVENT:
+                    MauticIntegration::delete('companies', $params['previous']);
+                break;
 
-            //     default:
-            //         Log::info("Organization - Unsupported event, 400");
-            //         return response()->json([
-            //             'status'  => 'Error',
-            //             'message' => 'Unsupported event',
-            //             'code'    => 0,
-            //         ], 400);
-            //     break;
-            // }
+                default:
+                    Log::info("Organization - Unsupported event, 400");
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
         }
         catch (Exception $e)
         {
@@ -243,6 +245,8 @@ class PipedriveWebhookController extends Controller
                 'code'    => -1,
             ], 200);
         }
+
+        Storage::put('stage-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
 
         try
         {
