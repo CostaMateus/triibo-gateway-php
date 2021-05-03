@@ -246,30 +246,28 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        Storage::put('stage-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
-
         try
         {
-            // switch ($params['event'])
-            // {
-            //     case self::STAGE_ADDED_EVENT:
-            //     case self::STAGE_UPDATED_EVENT:
-            //         MauticIntegration::stageUpdate('contactFields', $params['current']);
-            //     break;
+            switch ($params['event'])
+            {
+                case self::STAGE_ADDED_EVENT:
+                case self::STAGE_UPDATED_EVENT:
+                    MauticIntegration::stageUpdate('contactFields', $params['current']);
+                break;
 
-            //     case self::STAGE_DELETED_EVENT:
-            //         MauticIntegration::stageUpdate('contactFields', $params['previous'], true);
-            //     break;
+                case self::STAGE_DELETED_EVENT:
+                    MauticIntegration::stageUpdate('contactFields', $params['previous'], true);
+                break;
 
-            //     default:
-            //         Log::info("Stage - Unsupported event, 400");
-            //         return response()->json([
-            //             'status'  => 'Error',
-            //             'message' => 'Unsupported event',
-            //             'code'    => 0,
-            //         ], 400);
-            //     break;
-            // }
+                default:
+                    Log::info("Stage - Unsupported event, 400");
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
         }
         catch (Exception $e)
         {
@@ -287,6 +285,7 @@ class PipedriveWebhookController extends Controller
             'message' => 'Success',
         ], 200);
     }
+
 
 
     public function syncIdsMauticPipe(Request $request)
@@ -311,7 +310,6 @@ class PipedriveWebhookController extends Controller
             'message' => 'Success',
         ], 200);
     }
-
 
     public function importAllStages(Request $request)
     {
