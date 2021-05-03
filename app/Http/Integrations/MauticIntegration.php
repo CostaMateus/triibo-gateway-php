@@ -518,4 +518,55 @@ class MauticIntegration
         }
     }
 
+
+    public static function importAllStages()
+    {
+        $idField   = 185; // id do campo personalizavel no Mautic
+        $mauticApi = self::getApi('contactFields');
+        $field     = $mauticApi->get($idField);
+        $list      = $field['field']['properties']['list'];
+
+        $token     = config('pipedrive.token');
+        $pipeApi   = new Pipedrive($token);
+        $stages    = $pipeApi->stages()->all()->getData();
+
+        foreach ($stages as &$stage)
+        {
+            // $stage = self::dataTranslator('contactFields', $stage);
+            $stage = [
+                'id'   => $stage->id,
+                'name' => $stage->name
+            ];
+        }
+
+        foreach ($stages as $s)
+        {
+            $key = array_search($s['id'], array_column($list, 'value'));
+
+            if ($key !== false)
+            {
+                $list[$key]['label'] = $s['name'];
+            }
+            else
+            {
+                array_push($list, [
+                    'label' => $s['name'],
+                    'value' => $s['id']
+                ]);
+            }
+        }
+
+        usort($list, function($a, $b) {
+            return $a['value'] <=> $b['value'];
+        });
+
+        $data = [
+            'properties' => [
+                'list' => $list
+            ]
+        ];
+
+        $res = $mauticApi->edit($idField, $data);
+    }
+
 }
