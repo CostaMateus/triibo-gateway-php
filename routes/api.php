@@ -30,12 +30,12 @@ Route::prefix('mautic')->group(function () {
 });
 Route::prefix('pipedrive')->group(function () {
 
-    Route::post('/organization', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.organization');
-    Route::post('/person',       [App\Http\Controllers\PipedriveWebhookController::class, 'person'])->name('pipe.person');
-    Route::post('/stage',        [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
-    Route::post('/deal',         [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
+    Route::post('/organization',  [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.organization');
+    Route::post('/person',        [App\Http\Controllers\PipedriveWebhookController::class, 'person'])->name('pipe.person');
+    Route::post('/stage',         [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
+    Route::post('/deal',          [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
 
-    Route::get('/updatePipedrive', [App\Http\Controllers\PipedriveWebhookController::class, 'updatePipedrive'])->name('pipe.updatePipedrive');
+    Route::get('/synchronizeids', [App\Http\Controllers\PipedriveWebhookController::class, 'syncIdsMauticPipe'])->name('synchronizeIds');
 });
 
 
