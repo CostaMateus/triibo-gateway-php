@@ -35,7 +35,8 @@ Route::prefix('pipedrive')->group(function () {
     Route::post('/stage',         [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
     Route::post('/deal',          [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
 
-    Route::get('/synchronizeids', [App\Http\Controllers\PipedriveWebhookController::class, 'syncIdsMauticPipe'])->name('synchronizeIds');
+    Route::get('/synchronizeids', [App\Http\Controllers\PipedriveWebhookController::class, 'syncIdsMauticPipe'])->name('synchronize.ids');
+    Route::get('/importstages',   [App\Http\Controllers\PipedriveWebhookController::class, 'importAllStages'])->name('import.all.stages');
 });
 
 
