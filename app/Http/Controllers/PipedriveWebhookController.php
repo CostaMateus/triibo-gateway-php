@@ -63,30 +63,28 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        Storage::put('deal-'.date('Ymd-his').'.json', json_encode($params, JSON_UNESCAPED_SLASHES));
-
         try
         {
-            // switch ($params['event'])
-            // {
-            //     case self::DEAL_ADDED_EVENT:
-            //     case self::DEAL_UPDATED_EVENT:
-            //         MauticIntegration::dealUpdate('deals', $params['current']);
-            //     break;
+            switch ($params['event'])
+            {
+                case self::DEAL_ADDED_EVENT:
+                case self::DEAL_UPDATED_EVENT:
+                    MauticIntegration::dealUpdate('deals', $params['current']);
+                break;
 
-            //     case self::DEAL_DELETED_EVENT:
-            //         MauticIntegration::dealUpdate('deals', $params['previous'], true);
-            //     break;
+                case self::DEAL_DELETED_EVENT:
+                    MauticIntegration::dealUpdate('deals', $params['previous'], true);
+                break;
 
-            //     default:
-            //         Log::info("Deal - Unsupported event, 400");
-            //         return response()->json([
-            //             'status'  => 'Error',
-            //             'message' => 'Unsupported event',
-            //             'code'    => 0,
-            //         ], 400);
-            //     break;
-            // }
+                default:
+                    Log::info("Deal - Unsupported event, 400");
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
         }
         catch (Exception $e)
         {
