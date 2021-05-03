@@ -174,43 +174,43 @@ class MauticIntegration
      */
     public static function stageUpdate(String $class, Array $data, $delete = false)
     {
-        // $idField   = 185; // id do campo personalizavel no Mautic
-        // $mauticApi = self::getApi($class);
-        // $data      = self::dataTranslator($class, $data);
-        // $field     = $mauticApi->get($idField);
-        // $list      = $field['field']['properties']['list'];
-        // $key       = array_search($data['id'], array_column($list, 'value'));
+        $idField   = 185; // id do campo personalizavel no Mautic
+        $mauticApi = self::getApi($class);
+        $data      = self::dataTranslator($class, $data);
+        $field     = $mauticApi->get($idField);
+        $list      = $field['field']['properties']['list'];
+        $key       = array_search($data['id'], array_column($list, 'value'));
 
-        // // Achou o id
-        // if ($key !== false)
-        // {
-        //     if (!$delete)
-        //     {
-        //         // Atualiza o stage
-        //         $list[$key]['label'] = $data['name'];
-        //     }
-        //     else
-        //     {
-        //         // Exclui o stage
-        //         unset($list[$key]);
-        //     }
-        // }
-        // else if (!$delete)
-        // {
-        //     // Adiciona o stage
-        //     array_push($list, [
-        //         'label' => $data['name'],
-        //         'value' => $data['id']
-        //     ]);
-        // }
+        // Achou o id
+        if ($key !== false)
+        {
+            if (!$delete)
+            {
+                // Atualiza o stage
+                $list[$key]['label'] = $data['name'];
+            }
+            else
+            {
+                // Exclui o stage
+                unset($list[$key]);
+            }
+        }
+        else if (!$delete)
+        {
+            // Adiciona o stage
+            array_push($list, [
+                'label' => $data['name'],
+                'value' => $data['id']
+            ]);
+        }
 
-        // $data = [
-        //     'properties' => [
-        //         'list' => $list
-        //     ]
-        // ];
+        $data = [
+            'properties' => [
+                'list' => $list
+            ]
+        ];
 
-        // $res = $mauticApi->edit($idField, $data);
+        $res = $mauticApi->edit($idField, $data);
     }
 
     /**
