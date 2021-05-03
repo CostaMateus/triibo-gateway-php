@@ -312,4 +312,25 @@ class PipedriveWebhookController extends Controller
         ], 200);
     }
 
+
+    public function importAllStages(Request $request)
+    {
+        try
+        {
+            MauticIntegration::importAllStages();
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e,
+                'code'    => 5,
+            ], 500);
+        }
+
+        return response()->json([
+            'status'  => 'Ok',
+            'message' => 'Success',
+        ], 200);
+    }
 }
