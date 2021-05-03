@@ -289,13 +289,13 @@ class PipedriveWebhookController extends Controller
     }
 
 
-    public function updatePipedrive(Request $request)
+    public function syncIdsMauticPipe(Request $request)
     {
         $classes = $request->all();
 
         try
         {
-            MauticIntegration::updatePipedrive($classes);
+            MauticIntegration::syncIdsMauticPipe($classes);
         }
         catch (Exception $e)
         {

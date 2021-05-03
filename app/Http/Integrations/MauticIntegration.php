@@ -348,29 +348,6 @@ class MauticIntegration
     }
 
     /**
-     * Busca pelo id no Mautic
-     *
-     * @param MauticApi $mauticApi
-     * @param Integer $id
-     * @return void
-     *
-     * @deprecated version 1
-     */
-    private static function searchMauticById($mauticApi, $id)
-    {
-        $obj = $mauticApi->get($id);
-
-        $ttl = (isset($obj['total'])) ? (int) $obj['total'] : NULL;
-
-        $obj = $obj[$mauticApi->itemName()];
-
-        return [
-            'total'  => $ttl,
-            'object' => self::getId($obj)
-        ];
-    }
-
-    /**
      * Undocumented function
      *
      * @param MauticApi $mauticApi
@@ -456,7 +433,7 @@ class MauticIntegration
      * @param Array $classes
      * @return void
      */
-    public static function updatePipedrive(Array $classes)
+    public static function syncIdsMauticPipe(Array $classes)
     {
         if ($classes['person'] && !$classes['organization'])
         {
