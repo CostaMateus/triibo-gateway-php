@@ -161,7 +161,57 @@ class MauticIntegration
      */
     public static function dealUpdate(String $class, Array $data, $delete = false)
     {
-        //
+        $mauticApi = self::getApi('contacts');
+        $data      = self::dataTranslator($class, $data);
+
+        $total     = 0;
+        $contact   = '';
+
+        // Verifica se tem mautic_id
+        if ($data['id'] != NULL)
+        {
+            Log::info('Persons - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
+
+            // Busca por id
+            $res     = self::searchMauticByField($mauticApi, 'ids', $data['id']);
+            $total   = $res['total'];
+            $contact = $res['object'];
+        }
+        else
+        {
+            throw new Exception("A - Não tem mautic_id, perosn id:" . $data['pipedrive_id']);
+        }
+
+        $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
+        $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
+
+        if ($first !== FALSE || $last !== FALSE)                   // remover em prod
+        {                                                          // remover em prod
+            unset($data['firstname']);                             // remover em prod
+            unset($data['lastname']);                              // remover em prod
+
+            if ($total > 0 && $total != NULL)
+            {
+                if (!$delete)
+                {
+                    Log::info("Persons - stage updated | without errors | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                }
+                else
+                {
+                    Log::info("Persons - stage delete  | without errors | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+
+                    $data['pipeline'] = NULL;
+                }
+
+                $res = $mauticApi->edit(self::getId($contact), $data);
+                // dd($res);
+            }
+            else
+            {
+                throw new Exception("B - Não tem mautic_id, perosn id:" . $data['pipedrive_id']);
+            }
+        }
+        // dd($data);
     }
 
     /**
@@ -279,11 +329,18 @@ class MauticIntegration
     {
         switch ($class) {
             case 'deals':
+                $aux                = explode(' ', $data['person_name']);
+                $data['last_name']  = end($aux);
+                array_pop($aux);
+                $data['first_name'] = implode(' ', $aux);
+
                 return [
+                    'id'           => $data['65365fd90eddd1b97b1729a92a0fb3d7b2cd011b'], // custom field for mautic_id
+                    'firstname'    => $data['first_name'],
+                    'lastname'     => $data['last_name'],
+                    'pipeline'     => $data['stage_id'],
+                    // 'status'       => $data['status'],
                     'pipedrive_id' => $data['person_id'],
-                    'value'        => $data['stage_id'],
-                    'status'       => $data['status'],
-                    // '' => $data[''],
                 ];
             break;
 
@@ -310,7 +367,7 @@ class MauticIntegration
                     // 'companystate'      => $data['address_admin_area_level_2'],
                     // 'companyzipcode'    => $data['address_postal_code'],
                     // 'companycountry'    => $data['address_country'],
-                    'pipedrive_org_id' => $data['id'],
+                    'pipedrive_org_id'  => $data['id'],
                 ];
             break;
 
