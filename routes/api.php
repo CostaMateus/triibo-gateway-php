@@ -43,18 +43,18 @@ Route::prefix('pipedrive')->group(function () {
 /**
  * Integração Triibo <> Cofry
  */
-Route::prefix('cofry')->group(function () {
-
-    // Rotas para testes individuais
-    Route::get('/estabelecimentos',  [App\Http\Controllers\CofryController::class, 'estabelecimentos'])->name('cofry.estabelecimentos');
-    Route::get('/promocoes',         [App\Http\Controllers\CofryController::class, 'promocoes'])->name('cofry.promocoes');
-    Route::get('/imagens',           [App\Http\Controllers\CofryController::class, 'imagens'])->name('cofry.imagens');
-
-
-    // Processa estaabelecimentos e promoções
-    Route::get('/index',             [App\Http\Controllers\CofryController::class, 'index'])->name('cofry.index');
-
-    // Processa as imagens
-    Route::get('/uploadImages',      [App\Http\Controllers\CofryController::class, 'uploadImages'])->name('cofry.uploadImages');
-
-});
+// Route::prefix('cofry')->group(function () {
+//
+//     // Rotas para testes individuais
+//     Route::get('/estabelecimentos',  [App\Http\Controllers\CofryController::class, 'estabelecimentos'])->name('cofry.estabelecimentos');
+//     Route::get('/promocoes',         [App\Http\Controllers\CofryController::class, 'promocoes'])->name('cofry.promocoes');
+//     Route::get('/imagens',           [App\Http\Controllers\CofryController::class, 'imagens'])->name('cofry.imagens');
+//
+//
+//     // Processa estaabelecimentos e promoções
+//     Route::get('/index',             [App\Http\Controllers\CofryController::class, 'index'])->name('cofry.index');
+//
+//     // Processa as imagens
+//     Route::get('/uploadImages',      [App\Http\Controllers\CofryController::class, 'uploadImages'])->name('cofry.uploadImages');
+//
+// });
