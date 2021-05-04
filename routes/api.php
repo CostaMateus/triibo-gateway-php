@@ -30,14 +30,30 @@ Route::prefix('mautic')->group(function () {
 });
 Route::prefix('pipedrive')->group(function () {
 
-    Route::post('/organization',  [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.organization');
+    // Route::prefix('leagues')->group(function () {
+    //     Route::get('/specials', [App\Http\Controllers\PipedriveWebhookController::class, 'organization']);
+    //     Route::get('/specials', [App\Http\Controllers\PipedriveWebhookController::class, 'organization']);
+    //     Route::get('/specials', [App\Http\Controllers\PipedriveWebhookController::class, 'organization']);
+    // });
+
+    Route::prefix('organization')->group(function () {
+        Route::post('/added',   [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.added');
+        Route::post('/updated', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.updated');
+        Route::post('/deleted', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.deleted');
+    });
+
     Route::post('/person',        [App\Http\Controllers\PipedriveWebhookController::class, 'person'])->name('pipe.person');
     Route::post('/stage',         [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
     Route::post('/deal',          [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
 
+});
+
+Route::prefix('common')->group(function () {
+
     Route::get('/synchronizeids', [App\Http\Controllers\PipedriveWebhookController::class, 'syncIdsMauticPipe'])->name('synchronize.ids');
     Route::get('/importstages',   [App\Http\Controllers\PipedriveWebhookController::class, 'importAllStages'])->name('import.all.stages');
 });
+
 
 
 /**
