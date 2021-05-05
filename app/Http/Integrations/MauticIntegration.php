@@ -164,23 +164,38 @@ class MauticIntegration
         $mauticApi = self::getApi('contacts');
         $data      = self::dataTranslator($class, $data);
 
-        $total     = 0;
-        $contact   = '';
+        // Se não está ativo e foi excluido
+        if (!$data['aux_active'] && $data['aux_deleted'])
+        {
+            Log::info('Deals deleted - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
+
+            $data['pipeline'] = NULL;
+        }
+
+        unset($data['aux_active']);
+        unset($data['aux_deleted']);
 
         // Verifica se tem mautic_id
-        if ($data['id'] != NULL)
+        if ($data['id'])
         {
-            Log::info('Persons - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
+            Log::info('Deals - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
 
             // Busca por id
-            $res     = self::searchMauticByField($mauticApi, 'ids', $data['id']);
-            $total   = $res['total'];
-            $contact = $res['object'];
+            $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
         }
         else
         {
-            throw new Exception("A - Não tem mautic_id, perosn id:" . $data['pipedrive_id']);
+            Log::info('Deals - searching by email - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
+
+            // Busca por email
+            $res = self::searchMauticByField($mauticApi, 'email', $data['aux_email']);
+
+            if ($res['total'] && !$delete) self::updateMauticId('persons', key($res['object']), $data['pipedrive_id'], TRUE);
         }
+
+        unset($data['aux_email']);
+
+        $data['id'] = key($res['object']);
 
         $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
         $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
@@ -190,28 +205,27 @@ class MauticIntegration
             unset($data['firstname']);                             // remover em prod
             unset($data['lastname']);                              // remover em prod
 
-            if ($total > 0 && $total != NULL)
+            if ($res['total'])
             {
                 if (!$delete)
                 {
-                    Log::info("Persons - stage updated | without errors | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::info("Deals - contact pipeline updated | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
                 }
                 else
                 {
-                    Log::info("Persons - stage delete  | without errors | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::info("Deals - contact pipeline delete | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
 
                     $data['pipeline'] = NULL;
                 }
 
-                $res = $mauticApi->edit(self::getId($contact), $data);
-                // dd($res);
+                $res = $mauticApi->edit(key($res['object']), $data);
             }
             else
             {
-                throw new Exception("B - Não tem mautic_id, perosn id:" . $data['pipedrive_id']);
+                Log::info("Deals - contact not found - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                // throw new Exception("Contact not found - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
             }
         }
-        // dd($data);
     }
 
     /**
@@ -335,12 +349,17 @@ class MauticIntegration
                 $data['first_name'] = implode(' ', $aux);
 
                 return [
-                    'id'           => $data['65365fd90eddd1b97b1729a92a0fb3d7b2cd011b'], // custom field for mautic_id
-                    'firstname'    => $data['first_name'],
-                    'lastname'     => $data['last_name'],
-                    'pipeline'     => $data['stage_id'],
-                    // 'status'       => $data['status'],
-                    'pipedrive_id' => $data['person_id'],
+                    'id'              => $data['65365fd90eddd1b97b1729a92a0fb3d7b2cd011b'], // custom field for mautic_id
+                    'pipeline'        => $data['stage_id'],
+                    'pipeline_status' => self::statusDeal($data['status']??''),
+                    'pipedrive_id'    => $data['person_id'],
+
+                    'aux_active'      => $data['active'],
+                    'aux_deleted'     => $data['deleted'],
+                    'aux_email'       => $data['person_email'],
+
+                    'firstname'       => $data['first_name'],  // remover em prod
+                    'lastname'        => $data['last_name'],   // remover em prod
                 ];
             break;
 
@@ -423,6 +442,8 @@ class MauticIntegration
 
         $ttl = (isset($obj['total'])) ? (int) $obj['total'] : NULL;
 
+        Log::info("Searching - result total:$ttl");
+
         $obj = $obj[$mauticApi->listName()];
 
         return [
@@ -446,41 +467,71 @@ class MauticIntegration
     {
         $res = $mauticApi->edit($id, $data, TRUE);
 
-        // Para não atualizar o mautic_id no Pipedrive, comentar linha abaixo
-        self::updateMauticId($class, $res, $data[$pipeIdName], is_null($data['id']));
+        if (!isset($res['errors']))
+        {
+            // Para não atualizar o mautic_id no Pipedrive, comentar linha abaixo
+            self::updateMauticId($class, key($res), $data[$pipeIdName], is_null($data['id']));
+        }
     }
 
     /**
      * Atualiza o mautic_id no Pipedrive
      *
      * @param String $class
-     * @param Array $res
-     * @param String $crud
+     * @param Int $mauticId
      * @param Int $pipeId
-     * @param Boolean $mauticId
+     * @param Boolean $hasId
      * @return void
      */
-    private static function updateMauticId(String $class, Array $res, Int $pipeId, Bool $mauticId)
+    private static function updateMauticId(String $class, Int $mauticId, Int $pipeId, Bool $hasId)
     {
-        $aux = ucfirst($class);
+        $auxLog = ucfirst($class);
 
-        if (!isset($res['errors']))
-        {
-            $ids = $res['contact']['fields']['all'];
-            Log::info("$aux - created/updated | without errors | mautic_id:" . $ids['id'] . " | pipedrive_id:$pipeId");
-
-            if ($mauticId)
-            {
-                PipedriveIntegration::updateMauticId($class, [
-                    'pipe_id'   => $ids['pipedrive_id'],
-                    'mautic_id' => $ids['id'],
-                ]);
-            }
-        }
+        if ($class == 'persons')
+            $pipeName = 'pipedrive_id';
         else
+            $pipeName = 'pipedrive_org_id';
+
+        Log::info("$auxLog - created/updated | mautic_id:$mauticId | $pipeName:$pipeId");
+
+        if ($hasId)
         {
-            Log::info("$aux - created/updated | with errors | mautic_id: | pipedrive_id:$pipeId | " . $res['errors']);
+            PipedriveIntegration::updateMauticId($class, [
+                'pipe_id'   => $pipeId,
+                'mautic_id' => $mauticId,
+            ]);
         }
+    }
+
+    /**
+     * Traduz status do Deal
+     *
+     * @param String $status
+     * @return void
+     */
+    private static function statusDeal(String $status)
+    {
+        $new = '';
+
+        switch ($status) {
+            case 'open':
+                $new = 'Aberto';
+            break;
+
+            case 'won':
+                $new = 'Ganho';
+            break;
+
+            case 'lost':
+                $new = 'Perdido';
+            break;
+
+            default:
+                $new = NULL;
+            break;
+        }
+
+        return $new;
     }
 
 
