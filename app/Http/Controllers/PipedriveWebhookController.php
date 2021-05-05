@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Illuminate\Http\Request;
+use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use App\Http\Integrations\MauticIntegration;
@@ -18,6 +19,7 @@ class PipedriveWebhookController extends Controller
     const DEAL_UPDATED_EVENT   = 'updated.deal';
     const DEAL_DELETED_EVENT   = 'deleted.deal';
     const DEAL_CODE            = 1;
+    const DEAL_MONITORING      = ["stage_id", "active", "deleted", "status"];
 
     /**
      * Organization to Company
@@ -63,17 +65,38 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
+        // Storage::put(date('Ymd-his').'-deal.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             switch ($params['event'])
             {
                 case self::DEAL_ADDED_EVENT:
                 case self::DEAL_UPDATED_EVENT:
+                    $result  = FALSE;
+                    $changes = array_diff_assoc($params['current'],$params['previous']);
+                    foreach (self::DEAL_MONITORING as $m)
+                    {
+                        if (array_key_exists($m, $changes)) $result = TRUE;
+                    }
+
+                    if (!$result) break;
+
+                    $api    = new Pipedrive(config('pipedrive.token'));
+                    $person = $api->persons->find($params['current']['person_id'])->getData();
+
+                    $params['current']['person_email'] = $person->email[0]->value;
+
                     MauticIntegration::dealUpdate('deals', $params['current']);
                 break;
 
                 case self::DEAL_DELETED_EVENT:
-                    MauticIntegration::dealUpdate('deals', $params['previous'], true);
+                    $api    = new Pipedrive(config('pipedrive.token'));
+                    $person = $api->persons->find($params['previous']['person_id'])->getData();
+
+                    $params['previous']['person_email'] = $person->email[0]->value;
+
+                    MauticIntegration::dealUpdate('deals', $params['previous'], TRUE);
                 break;
 
                 default:
@@ -123,38 +146,40 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        try
-        {
-            switch ($params['event'])
-            {
-                case self::ORG_ADDED_EVENT:
-                case self::ORG_UPDATED_EVENT:
-                    MauticIntegration::updateOrCreate('companies', $params['current']);
-                break;
+        // Storage::put(date('Ymd-his').'-organization.json', json_encode($params, JSON_UNESCAPED_SLASHES));
 
-                case self::ORG_DELETED_EVENT:
-                    MauticIntegration::delete('companies', $params['previous']);
-                break;
+        // try
+        // {
+        //     switch ($params['event'])
+        //     {
+        //         case self::ORG_ADDED_EVENT:
+        //         case self::ORG_UPDATED_EVENT:
+        //             MauticIntegration::updateOrCreate('companies', $params['current']);
+        //         break;
 
-                default:
-                    Log::info("Organization - Unsupported event, 400");
-                    return response()->json([
-                        'status'  => 'Error',
-                        'message' => 'Unsupported event',
-                        'code'    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::info("Organization - $e, 500");
-            return response()->json([
-                'status'  => 'Error',
-                'message' => $e,
-                'code'    => self::ORG_CODE,
-            ], 500);
-        }
+        //         case self::ORG_DELETED_EVENT:
+        //             MauticIntegration::delete('companies', $params['previous']);
+        //         break;
+
+        //         default:
+        //             Log::info("Organization - Unsupported event, 400");
+        //             return response()->json([
+        //                 'status'  => 'Error',
+        //                 'message' => 'Unsupported event',
+        //                 'code'    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::info("Organization - $e, 500");
+        //     return response()->json([
+        //         'status'  => 'Error',
+        //         'message' => $e,
+        //         'code'    => self::ORG_CODE,
+        //     ], 500);
+        // }
 
         Log::info("Organization - Success, 200");
         return response()->json([
@@ -183,38 +208,40 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        try
-        {
-            switch ($params['event'])
-            {
-                case self::PERSON_ADDED_EVENT:
-                case self::PERSON_UPDATED_EVENT:
-                    MauticIntegration::updateOrCreate('contacts', $params['current']);
-                break;
+        // Storage::put(date('Ymd-his').'-person.json', json_encode($params, JSON_UNESCAPED_SLASHES));
 
-                case self::PERSON_DELETED_EVENT:
-                    MauticIntegration::delete('contacts', $params['previous']);
-                break;
+        // try
+        // {
+        //     switch ($params['event'])
+        //     {
+        //         case self::PERSON_ADDED_EVENT:
+        //         case self::PERSON_UPDATED_EVENT:
+        //             MauticIntegration::updateOrCreate('contacts', $params['current']);
+        //         break;
 
-                default:
-                    Log::info("Person - Unsupported event, 400");
-                    return response()->json([
-                        'status'  => 'Error',
-                        'message' => 'Unsupported event',
-                        'code'    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::info("Person - $e, 500");
-            return response()->json([
-                'status'  => 'Error',
-                'message' => $e,
-                'code'    => self::PERSON_CODE,
-            ], 500);
-        }
+        //         case self::PERSON_DELETED_EVENT:
+        //             MauticIntegration::delete('contacts', $params['previous']);
+        //         break;
+
+        //         default:
+        //             Log::info("Person - Unsupported event, 400");
+        //             return response()->json([
+        //                 'status'  => 'Error',
+        //                 'message' => 'Unsupported event',
+        //                 'code'    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::info("Person - $e, 500");
+        //     return response()->json([
+        //         'status'  => 'Error',
+        //         'message' => $e,
+        //         'code'    => self::PERSON_CODE,
+        //     ], 500);
+        // }
 
         Log::info("Person - Success, 200");
         return response()->json([
@@ -244,38 +271,40 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        try
-        {
-            switch ($params['event'])
-            {
-                case self::STAGE_ADDED_EVENT:
-                case self::STAGE_UPDATED_EVENT:
-                    MauticIntegration::stageUpdate('contactFields', $params['current']);
-                break;
+        // Storage::put(date('Ymd-his').'-stage.json', json_encode($params, JSON_UNESCAPED_SLASHES));
 
-                case self::STAGE_DELETED_EVENT:
-                    MauticIntegration::stageUpdate('contactFields', $params['previous'], true);
-                break;
+        // try
+        // {
+        //     switch ($params['event'])
+        //     {
+        //         case self::STAGE_ADDED_EVENT:
+        //         case self::STAGE_UPDATED_EVENT:
+        //             MauticIntegration::stageUpdate('contactFields', $params['current']);
+        //         break;
 
-                default:
-                    Log::info("Stage - Unsupported event, 400");
-                    return response()->json([
-                        'status'  => 'Error',
-                        'message' => 'Unsupported event',
-                        'code'    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::info("Stage - $e, 500");
-            return response()->json([
-                'status'  => 'Error',
-                'message' => $e,
-                'code'    => self::STAGE_CODE,
-            ], 500);
-        }
+        //         case self::STAGE_DELETED_EVENT:
+        //             MauticIntegration::stageUpdate('contactFields', $params['previous'], true);
+        //         break;
+
+        //         default:
+        //             Log::info("Stage - Unsupported event, 400");
+        //             return response()->json([
+        //                 'status'  => 'Error',
+        //                 'message' => 'Unsupported event',
+        //                 'code'    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::info("Stage - $e, 500");
+        //     return response()->json([
+        //         'status'  => 'Error',
+        //         'message' => $e,
+        //         'code'    => self::STAGE_CODE,
+        //     ], 500);
+        // }
 
         Log::info("Stage - Success, 200");
         return response()->json([
