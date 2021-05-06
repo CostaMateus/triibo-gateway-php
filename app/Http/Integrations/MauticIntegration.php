@@ -3,6 +3,7 @@
 namespace App\Http\Integrations;
 
 use Exception;
+use Mautic\Api\Api;
 use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
 use Devio\Pipedrive\Pipedrive;
@@ -18,7 +19,7 @@ class MauticIntegration
      * Pega a api especifica dada a classe
      *
      * @param string $class
-     * @return \Mautic\Api\Api $api
+     * @return Api $api
      */
     private static function getApi(string $class)
     {
@@ -406,14 +407,14 @@ class MauticIntegration
     /**
      * Procura no mautic dado um campo de filtro
      *
-     * @param \Mautic\Api\Api $mauticApi
+     * @param Api $mauticApi
      * @param string $field
      * @param string $search
      * @param int $start
      * @param int $end
      * @return void
      */
-    private static function searchMauticByField(MauticApi $mauticApi, string $field = '', string $search = '', int $start = 0, int $end = 100000)
+    private static function searchMauticByField(Api $mauticApi, string $field = '', string $search = '', int $start = 0, int $end = 100000)
     {
         if (empty($field))
             $obj = $mauticApi->getList("", $start, $end);
@@ -436,14 +437,14 @@ class MauticIntegration
      * Cria ou atualiza o contato no Mautic
      * E chama a atualização do mautic_id no Pipedrive
      *
-     * @param \Mautic\Api\Api $mauticApi
+     * @param Api $mauticApi
      * @param tring $class
      * @param int $id
      * @param array $data
      * @param string $pipeIdName
      * @return void
      */
-    private static function saveCreateOrUpdateMautic(MauticApi $mauticApi, string $class, int $id, array $data, string $pipeIdName)
+    private static function saveCreateOrUpdateMautic(Api $mauticApi, string $class, int $id, array $data, string $pipeIdName)
     {
         $res = $mauticApi->edit($id, $data, TRUE);
 
