@@ -11,11 +11,11 @@ class PipedriveIntegration
     /**
      * Undocumented function
      *
-     * @param String $class
-     * @param Array $ids
+     * @param string $class
+     * @param array $ids
      * @return void
      */
-    public static function updateMauticId(String $class, Array $ids)
+    public static function updateMauticId(string $class, array $ids)
     {
         $aux       = ucfirst($class);
 
