@@ -85,6 +85,11 @@ class MauticIntegration
                     else
                     {
                         // Achou o contato, atualiza
+
+                        $aux = $res['object'][key($res['object'])]['fields']['all'];
+                        $data['pipeline']        = $aux['pipeline'];
+                        $data['pipeline_status'] = $aux['pipeline_status'];
+
                         self::saveCreateOrUpdateMautic($mauticApi, 'persons', key($res['object']), $data, 'pipedrive_id');
                     }
                 }
@@ -376,7 +381,8 @@ class MauticIntegration
                     'company'           => $data['org_name'],
                     'email'             => $data['email'][0]['value'],
                     'phone'             => $data['phone'][0]['value'],
-                    'pipedrive_id'      => $data['id']
+                    'pipedrive_id'      => $data['id'],
+                    // 'overwriteWithBlank' => true,
                 ];
             break;
 
@@ -451,7 +457,7 @@ class MauticIntegration
     {
         $aux = ($class == 'persons') ? 'contact' : 'company';
 
-        $res = $mauticApi->edit($id, $data, TRUE);
+        $res = $mauticApi->edit($id, $data, (!$id ? TRUE : FALSE));
 
         if (!isset($res['errors']))
         {
