@@ -43,6 +43,12 @@ class PipedriveWebhookController extends Controller
     const PERSON_UPDATED_EVENT = 'updated.person';
     const PERSON_DELETED_EVENT = 'deleted.person';
     const PERSON_CODE          = 3;
+    const PERSON_MONITORING    = [
+        "first_name",
+        "last_name",
+        "org_name",
+        "bd7287f0a9a02de60a8aff83b5905c489b7cf007"  // mautic_id
+    ];
 
     /**
      * Stage to Funil/pipeline
@@ -84,7 +90,11 @@ class PipedriveWebhookController extends Controller
                         $changes = array_diff_assoc($params['current'],$params['previous']);
                         foreach (self::DEAL_MONITORING as $m)
                         {
-                            if (array_key_exists($m, $changes)) $result = TRUE;
+                            if (array_key_exists($m, $changes))
+                            {
+                                $result = TRUE;
+                                break;
+                            }
                         }
 
                         if (!$result) break;
@@ -166,7 +176,11 @@ class PipedriveWebhookController extends Controller
                         $changes = array_diff_assoc($params['current'],$params['previous']);
                         foreach (self::ORG_MONITORING as $m)
                         {
-                            if (array_key_exists($m, $changes)) $result = TRUE;
+                            if (array_key_exists($m, $changes))
+                            {
+                                $result = TRUE;
+                                break;
+                            }
                         }
 
                         if (!$result) break;
@@ -226,40 +240,54 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        // Storage::put(date('Ymd-his').'-person.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+        try
+        {
+            switch ($params['event'])
+            {
+                case self::PERSON_ADDED_EVENT:
+                case self::PERSON_UPDATED_EVENT:
+                    if ($params['previous'])
+                    {
+                        $result  = FALSE;
+                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        foreach (self::PERSON_MONITORING as $m)
+                        {
+                            if (array_key_exists($m, $changes))
+                            {
+                                $result = TRUE;
+                                break;
+                            }
+                        }
 
-        // try
-        // {
-        //     switch ($params['event'])
-        //     {
-        //         case self::PERSON_ADDED_EVENT:
-        //         case self::PERSON_UPDATED_EVENT:
-        //             MauticIntegration::updateOrCreate('contacts', $params['current']);
-        //         break;
+                        if (!$result) break;
+                    }
 
-        //         case self::PERSON_DELETED_EVENT:
-        //             MauticIntegration::delete('contacts', $params['previous']);
-        //         break;
+                    MauticIntegration::updateOrCreate('contacts', $params['current']);
+                break;
 
-        //         default:
-        //             Log::info("Person - Unsupported event, 400");
-        //             return response()->json([
-        //                 'status'  => 'Error',
-        //                 'message' => 'Unsupported event',
-        //                 'code'    => 0,
-        //             ], 400);
-        //         break;
-        //     }
-        // }
-        // catch (Exception $e)
-        // {
-        //     Log::info("Person - $e, 500");
-        //     return response()->json([
-        //         'status'  => 'Error',
-        //         'message' => $e,
-        //         'code'    => self::PERSON_CODE,
-        //     ], 500);
-        // }
+                case self::PERSON_DELETED_EVENT:
+                    MauticIntegration::delete('contacts', $params['previous']);
+                break;
+
+                default:
+                    Log::info("Person - Unsupported event, 400");
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            Log::info("Person - $e, 500");
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e,
+                'code'    => self::PERSON_CODE,
+            ], 500);
+        }
 
         Log::info("Person - Success, 200");
         return response()->json([
