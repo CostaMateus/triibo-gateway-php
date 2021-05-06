@@ -28,6 +28,13 @@ class PipedriveWebhookController extends Controller
     const ORG_UPDATED_EVENT    = 'updated.organization';
     const ORG_DELETED_EVENT    = 'deleted.organization';
     const ORG_CODE             = 2;
+    const ORG_MONITORING       = [
+        "name",
+        "address_formatted_address",
+        "a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd", // telefone
+        "a007cb7cef80c909678503cbcfe49def03cad573", // email
+        "918dace587a4707755926d7c02c3bb46ed53d539"  // mautic_id
+    ];
 
     /**
      * Person to Contact
@@ -65,22 +72,23 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        // Storage::put(date('Ymd-his').'-deal.json', json_encode($params, JSON_UNESCAPED_SLASHES));
-
         try
         {
             switch ($params['event'])
             {
                 case self::DEAL_ADDED_EVENT:
                 case self::DEAL_UPDATED_EVENT:
-                    $result  = FALSE;
-                    $changes = array_diff_assoc($params['current'],$params['previous']);
-                    foreach (self::DEAL_MONITORING as $m)
+                    if ($params['previous'])
                     {
-                        if (array_key_exists($m, $changes)) $result = TRUE;
-                    }
+                        $result  = FALSE;
+                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        foreach (self::DEAL_MONITORING as $m)
+                        {
+                            if (array_key_exists($m, $changes)) $result = TRUE;
+                        }
 
-                    if (!$result) break;
+                        if (!$result) break;
+                    }
 
                     $api    = new Pipedrive(config('pipedrive.token'));
                     $person = $api->persons->find($params['current']['person_id'])->getData();
@@ -146,40 +154,50 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        // Storage::put(date('Ymd-his').'-organization.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+        try
+        {
+            switch ($params['event'])
+            {
+                case self::ORG_ADDED_EVENT:
+                case self::ORG_UPDATED_EVENT:
+                    if ($params['previous'])
+                    {
+                        $result  = FALSE;
+                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        foreach (self::ORG_MONITORING as $m)
+                        {
+                            if (array_key_exists($m, $changes)) $result = TRUE;
+                        }
 
-        // try
-        // {
-        //     switch ($params['event'])
-        //     {
-        //         case self::ORG_ADDED_EVENT:
-        //         case self::ORG_UPDATED_EVENT:
-        //             MauticIntegration::updateOrCreate('companies', $params['current']);
-        //         break;
+                        if (!$result) break;
+                    }
 
-        //         case self::ORG_DELETED_EVENT:
-        //             MauticIntegration::delete('companies', $params['previous']);
-        //         break;
+                    MauticIntegration::updateOrCreate('companies', $params['current']);
+                break;
 
-        //         default:
-        //             Log::info("Organization - Unsupported event, 400");
-        //             return response()->json([
-        //                 'status'  => 'Error',
-        //                 'message' => 'Unsupported event',
-        //                 'code'    => 0,
-        //             ], 400);
-        //         break;
-        //     }
-        // }
-        // catch (Exception $e)
-        // {
-        //     Log::info("Organization - $e, 500");
-        //     return response()->json([
-        //         'status'  => 'Error',
-        //         'message' => $e,
-        //         'code'    => self::ORG_CODE,
-        //     ], 500);
-        // }
+                case self::ORG_DELETED_EVENT:
+                    MauticIntegration::delete('companies', $params['previous']);
+                break;
+
+                default:
+                    Log::info("Organization - Unsupported event, 400");
+                    return response()->json([
+                        'status'  => 'Error',
+                        'message' => 'Unsupported event',
+                        'code'    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            Log::info("Organization - $e, 500");
+            return response()->json([
+                'status'  => 'Error',
+                'message' => $e,
+                'code'    => self::ORG_CODE,
+            ], 500);
+        }
 
         Log::info("Organization - Success, 200");
         return response()->json([
