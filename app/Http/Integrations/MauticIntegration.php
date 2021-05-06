@@ -54,40 +54,31 @@ class MauticIntegration
         $mauticApi = self::getApi($class);
         $data      = self::dataTranslator($class, $data);
 
-        $total     = 0;
-
         switch ($class)
         {
             case 'contacts':
-                $contactId = 0;
-
                 // Verifica se tem mautic_id
-                if ($data['id'] != NULL)
+                if ($data['id'])
                 {
                     Log::info('Persons - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
-
                     // Busca por id
-                    $res       = self::searchMauticByField($mauticApi, 'ids', $data['id']);
-                    $total     = $res['total'];
-                    $contactId = self::getId($res['object']);
+                    $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
                 }
                 // Verifica se tem email
-                else if ($data['email'] != NULL)
+                else if ($data['email'])
                 {
                     Log::info('Persons - searching by email - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
-
                     // Busca por email
-                    $res       = self::searchMauticByField($mauticApi, 'email', $data['email']);
-                    $total     = $res['total'];
-                    $contactId = self::getId($res['object']);
+                    $res = self::searchMauticByField($mauticApi, 'email', $data['email']);
                 }
+
+                dd($res);
 
                 $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
                 $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
-
                 if ($first !== FALSE || $last !== FALSE)                   // remover em prod
                 {                                                          // remover em prod
-                    if ($total == 0 || $total == NULL)
+                    if (!$res['total'])
                     {
                         // Não achou o contato, cria um novo
                         self::saveCreateOrUpdateMautic($mauticApi, 'persons', 0, $data, 'pipedrive_id');
@@ -95,56 +86,56 @@ class MauticIntegration
                     else
                     {
                         // Achou o contato, atualiza
-                        self::saveCreateOrUpdateMautic($mauticApi, 'persons', $contactId, $data, 'pipedrive_id');
+                        self::saveCreateOrUpdateMautic($mauticApi, 'persons', key($res['object']), $data, 'pipedrive_id');
                     }
                 }
             break;
 
             case 'companies':
-                $companyId = 0;
-
-                if ($data['id'] != NULL)
+                // Verifica se tem mautic_id
+                if ($data['id'])
                 {
                     Log::info('Organizations - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_org_id:' . $data['pipedrive_org_id']);
-
                     // Busca por id
-                    $res       = self::searchMauticByField($mauticApi, 'ids', $data['id']);
-                    $total     = $res['total'];
-                    $companyId = $res['object'];
+                    $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
                 }
                 else
                 {
                     Log::info('Organizations - searching by name - mautic_id:NULL | pipedrive_org_id:' . $data['pipedrive_org_id']);
-
                     // Busca por nome
-                    $res       = self::searchMauticByField($mauticApi);
-                    $total     = $res['total'];
-                    $companies = $res['object'];
-
-                    foreach ($companies as $id => $comp)
-                    {
-                        if ($comp['fields']['all']['companyname'] == $data['companyname'])
-                        {
-                            $companyId = self::getId($comp);
-                            break;
-                        }
-                    }
+                    $res = self::searchMauticByField($mauticApi);
                 }
 
-                $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
-                $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
+                $first = strpos(strtolower($data['companyname']), 'zteste'); // remover em prod
+                if ($first !== FALSE)                                        // remover em prod
+                {                                                            // remover em prod
+                    if (!$data['companyemail']) $data['companyemail'] = "@" . str_replace(' ', '', strtolower($data['companyname']));
 
-                if ($first !== FALSE || $last !== FALSE)                   // remover em prod
-                {                                                          // remover em prod
-                    if ($total == 0 || $total == NULL)
+                    if (!$res['total'])
                     {
                         // Não achou a empresa, cria uma nova
                         self::saveCreateOrUpdateMautic($mauticApi, 'organizations', 0, $data, 'pipedrive_org_id');
                     }
                     else
                     {
+                        if (count($res['object']) > 1)
+                        {
+                            foreach ($res['object'] as $company)
+                            {
+                                if ($company['fields']['all']['companyname'] == $data['companyname'])
+                                {
+                                    $id = $company['id'];
+                                    break;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            $id = key($res['object']);
+                        }
+
                         // Achou a empresa, atualiza
-                        self::saveCreateOrUpdateMautic($mauticApi, 'organizations', $companyId, $data, 'pipedrive_org_id');
+                        self::saveCreateOrUpdateMautic($mauticApi, 'organizations', $id, $data, 'pipedrive_org_id');
                     }
                 }
             break;
@@ -156,10 +147,10 @@ class MauticIntegration
      *
      * @param String $class
      * @param Array $data
-     * @param boolean $delete
+     * @param Boolean $delete
      * @return Array $res
      */
-    public static function dealUpdate(String $class, Array $data, $delete = false)
+    public static function dealUpdate(String $class, Array $data, Bool $delete = false)
     {
         $mauticApi = self::getApi('contacts');
         $data      = self::dataTranslator($class, $data);
@@ -233,10 +224,10 @@ class MauticIntegration
      *
      * @param String $class
      * @param Array $data
-     * @param boolean $delete
+     * @param Boolean $delete
      * @return Array $res
      */
-    public static function stageUpdate(String $class, Array $data, $delete = false)
+    public static function stageUpdate(String $class, Array $data, Bool $delete = false)
     {
         $idField   = 185; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi($class);
@@ -292,38 +283,49 @@ class MauticIntegration
         switch ($class)
         {
             case 'contacts':
-                if ($data['id'] != NULL)
+                if ($data['id'])
                 {
+                    Log::info("Persons - delete by id - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+
                     $mauticApi->delete($data['id']);
                 }
-                else if ($data['email'] != NULL)
+                else if ($data['email'])
                 {
                     $res = self::searchMauticByField($mauticApi, 'email', $data['email']);
 
-                    if ($res['total'] != NULL)
+                    if ($res['total'])
                     {
-                        $mauticApi->delete(self::getId($res['object']));
+                        Log::info("Persons - delete by email - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+
+                        $mauticApi->delete(key($res['object']));
                     }
                 }
             break;
 
             case 'organizations':
-                if ($data['id'] != NULL)
+                if ($data['id'])
                 {
+                    Log::info("Organizations - delete by id - mautic_id:" . $data['id'] . " | pipedrive_org_id:" . $data['pipedrive_org_id']);
+
                     $mauticApi->delete($data['id']);
                 }
                 else
                 {
-                    $res       = self::searchMauticByField($mauticApi);
-                    $total     = $res['total'];
-                    $companies = $res['object'];
+                    Log::info("Organizations - delete by name - mautic_id:NULL | pipedrive_org_id:" . $data['pipedrive_org_id']);
 
-                    foreach ($companies as $id => $comp)
+                    $res = self::searchMauticByField($mauticApi);
+
+                    if ($res['total'])
                     {
-                        if ($comp['fields']['all']['companyname'] == $data['companyname'])
+                        foreach ($res['object'] as $id => $company)
                         {
-                            $mauticApi->delete(self::getId($comp));
-                            break;
+                            if ($company['fields']['all']['companyname'] == $data['companyname'])
+                            {
+                                Log::info("Organizations - deleted by name - mautic_id:NULL | pipedrive_org_id:" . $data['pipedrive_org_id']);
+
+                                $mauticApi->delete($id);
+                                break;
+                            }
                         }
                     }
                 }
@@ -403,37 +405,14 @@ class MauticIntegration
     /**
      * Undocumented function
      *
-     * @param String $class
-     * @param Array $data
-     * @return Integer $id
-     */
-    private static function getId(Array $data)
-    {
-        foreach ($data as $id => $value)
-        {
-            if (gettype($value) == 'array')
-            {
-                return $id;
-            }
-
-            if ($id == 'id')
-            {
-                return $value;
-            }
-        }
-    }
-
-    /**
-     * Undocumented function
-     *
      * @param MauticApi $mauticApi
      * @param String $field
      * @param String $search
-     * @param Integer $start
-     * @param Integer $end
+     * @param Int $start
+     * @param Int $end
      * @return void
      */
-    private static function searchMauticByField($mauticApi, $field = '', $search = '', $start = 0, $end = 100000)
+    private static function searchMauticByField(MauticApi $mauticApi, String $field = '', String $search = '', Int $start = 0, Int $end = 100000)
     {
         if (empty($field))
             $obj = $mauticApi->getList("", $start, $end);
@@ -463,7 +442,7 @@ class MauticIntegration
      * @param String $pipeIdName
      * @return void
      */
-    private static function saveCreateOrUpdateMautic($mauticApi, $class, $id, $data, $pipeIdName)
+    private static function saveCreateOrUpdateMautic(MauticApi $mauticApi, String $class, Int $id, Array $data, String $pipeIdName)
     {
         $res = $mauticApi->edit($id, $data, TRUE);
 
@@ -625,7 +604,6 @@ class MauticIntegration
             break;
         }
     }
-
 
     public static function importAllStages()
     {
