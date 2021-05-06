@@ -185,7 +185,7 @@ class MauticIntegration
 
         unset($data['aux_email']);
 
-        $data['id'] = key($res['object']);
+        $data['id'] = $data['id'] ?? key($res['object']);
 
         $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
         $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
@@ -205,7 +205,8 @@ class MauticIntegration
                 {
                     Log::info("Deals - contact pipeline deleted | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
 
-                    $data['pipeline'] = NULL;
+                    $data['pipeline']        = 0;
+                    $data['pipeline_status'] = ' ';
                 }
 
                 $res = $mauticApi->edit(key($res['object']), $data);
@@ -330,7 +331,7 @@ class MauticIntegration
                         }
                     }
 
-                    Log::info("Organizations - not found to delete - mautic_id: | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::info("Organizations - not found to delete - mautic_id: | pipedrive_id:" . $data['pipedrive_org_id']);
                 }
             break;
         }
