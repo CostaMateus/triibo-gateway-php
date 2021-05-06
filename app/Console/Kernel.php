@@ -34,6 +34,8 @@ class Kernel extends ConsoleKernel
 
         $schedule->command('process:storepromo')->dailyAt('02:00')->timezone('America/Sao_Paulo');
         $schedule->command('process:images')->dailyAt('03:00')->timezone('America/Sao_Paulo');
+
+        $schedule->command('import:stages')->weeklyOn(1, '5:00')->timezone('America/Sao_Paulo');
     }
 
     /**
