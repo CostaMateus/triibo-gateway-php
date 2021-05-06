@@ -108,8 +108,6 @@ class MauticIntegration
                 $first = strpos(strtolower($data['companyname']), 'zteste'); // remover em prod
                 if ($first !== FALSE)                                        // remover em prod
                 {                                                            // remover em prod
-                    if (!$data['companyemail']) $data['companyemail'] = "@" . str_replace(' ', '', strtolower($data['companyname']));
-
                     if (!$res['total'])
                     {
                         // Não achou a empresa, cria uma nova
@@ -438,7 +436,7 @@ class MauticIntegration
      * E chama a atualização do mautic_id no Pipedrive
      *
      * @param Api $mauticApi
-     * @param tring $class
+     * @param string $class
      * @param int $id
      * @param array $data
      * @param string $pipeIdName
@@ -446,12 +444,14 @@ class MauticIntegration
      */
     private static function saveCreateOrUpdateMautic(Api $mauticApi, string $class, int $id, array $data, string $pipeIdName)
     {
+        $aux = ($class == 'persons') ? 'contact' : 'company';
+
         $res = $mauticApi->edit($id, $data, TRUE);
 
         if (!isset($res['errors']))
         {
             // Para não atualizar o mautic_id no Pipedrive, comentar linha abaixo
-            self::updateMauticId($class, key($res), $data[$pipeIdName], is_null($data['id']));
+            self::updateMauticId($class, $res[$aux]['id'], $data[$pipeIdName], is_null($data['id']));
         }
     }
 
