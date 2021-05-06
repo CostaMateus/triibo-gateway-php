@@ -15,12 +15,12 @@ class MauticIntegration
 {
 
     /**
-     * Undocumented function
+     * Pega a api especifica dada a classe
      *
-     * @param String $class
-     * @return \Mautic\MauticApi $api
+     * @param string $class
+     * @return \Mautic\Api\Api $api
      */
-    private static function getApi(String $class)
+    private static function getApi(string $class)
     {
         $factory  = Mautic::getFactory();
         $consumer = MauticConsumer::whereNotNull('id')->orderBy('created_at', 'desc')->first();
@@ -43,13 +43,13 @@ class MauticIntegration
     }
 
     /**
-     * Undocumented function
+     * Cria ou atualiza dada a classe
      *
-     * @param String $class
-     * @param Array $data
-     * @return Array $res
+     * @param string $class
+     * @param array $data
+     * @return array $res
      */
-    public static function updateOrCreate(String $class, Array $data)
+    public static function updateOrCreate(string $class, array $data)
     {
         $mauticApi = self::getApi($class);
         $data      = self::dataTranslator($class, $data);
@@ -141,14 +141,14 @@ class MauticIntegration
     }
 
     /**
-     * Undocumented function
+     * Atualiza o estágio de um contato
      *
-     * @param String $class
-     * @param Array $data
-     * @param Boolean $delete
-     * @return Array $res
+     * @param string $class
+     * @param array $data
+     * @param boolean $delete
+     * @return array $res
      */
-    public static function dealUpdate(String $class, Array $data, Bool $delete = false)
+    public static function dealUpdate(string $class, array $data, bool $delete = false)
     {
         $mauticApi = self::getApi('contacts');
         $data      = self::dataTranslator($class, $data);
@@ -218,14 +218,14 @@ class MauticIntegration
     }
 
     /**
-     * Undocumented function
+     * Atualiza um estágio
      *
-     * @param String $class
-     * @param Array $data
-     * @param Boolean $delete
-     * @return Array $res
+     * @param string $class
+     * @param array $data
+     * @param boolean $delete
+     * @return array $res
      */
-    public static function stageUpdate(String $class, Array $data, Bool $delete = false)
+    public static function stageUpdate(string $class, array $data, bool $delete = false)
     {
         $idField   = 185; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi($class);
@@ -267,13 +267,13 @@ class MauticIntegration
     }
 
     /**
-     * Undocumented function
+     * Exclui o dado segundo a classe passada
      *
-     * @param String $class
-     * @param Array $data
+     * @param string $class
+     * @param array $data
      * @return void
      */
-    public static function delete(String $class, Array $data)
+    public static function delete(string $class, array $data)
     {
         $mauticApi = self::getApi($class);
         $data      = self::dataTranslator($class, $data);
@@ -338,11 +338,11 @@ class MauticIntegration
     /**
      * Traduz os dados necessários do Pipedrive para o Mautic
      *
-     * @param String $class
-     * @param Array $data
-     * @return Array
+     * @param string $class
+     * @param array $data
+     * @return array
      */
-    private static function dataTranslator(String $class, Array $data)
+    private static function dataTranslator(string $class, array $data)
     {
         switch ($class) {
             case 'deals':
@@ -404,16 +404,16 @@ class MauticIntegration
     }
 
     /**
-     * Undocumented function
+     * Procura no mautic dado um campo de filtro
      *
-     * @param MauticApi $mauticApi
-     * @param String $field
-     * @param String $search
-     * @param Int $start
-     * @param Int $end
+     * @param \Mautic\Api\Api $mauticApi
+     * @param string $field
+     * @param string $search
+     * @param int $start
+     * @param int $end
      * @return void
      */
-    private static function searchMauticByField(MauticApi $mauticApi, String $field = '', String $search = '', Int $start = 0, Int $end = 100000)
+    private static function searchMauticByField(MauticApi $mauticApi, string $field = '', string $search = '', int $start = 0, int $end = 100000)
     {
         if (empty($field))
             $obj = $mauticApi->getList("", $start, $end);
@@ -436,14 +436,14 @@ class MauticIntegration
      * Cria ou atualiza o contato no Mautic
      * E chama a atualização do mautic_id no Pipedrive
      *
-     * @param MauticApi $mauticApi
-     * @param String $class
-     * @param Int $id
-     * @param Array $data
-     * @param String $pipeIdName
+     * @param \Mautic\Api\Api $mauticApi
+     * @param tring $class
+     * @param int $id
+     * @param array $data
+     * @param string $pipeIdName
      * @return void
      */
-    private static function saveCreateOrUpdateMautic(MauticApi $mauticApi, String $class, Int $id, Array $data, String $pipeIdName)
+    private static function saveCreateOrUpdateMautic(MauticApi $mauticApi, string $class, int $id, array $data, string $pipeIdName)
     {
         $res = $mauticApi->edit($id, $data, TRUE);
 
@@ -457,13 +457,13 @@ class MauticIntegration
     /**
      * Atualiza o mautic_id no Pipedrive
      *
-     * @param String $class
-     * @param Int $mauticId
-     * @param Int $pipeId
-     * @param Boolean $hasId
+     * @param string $class
+     * @param int $mauticId
+     * @param int $pipeId
+     * @param boolean $hasId
      * @return void
      */
-    private static function updateMauticId(String $class, Int $mauticId, Int $pipeId, Bool $hasId)
+    private static function updateMauticId(string $class, int $mauticId, int $pipeId, bool $hasId)
     {
         $auxLog = ucfirst($class);
 
@@ -486,10 +486,10 @@ class MauticIntegration
     /**
      * Traduz status do Deal
      *
-     * @param String $status
+     * @param string $status
      * @return void
      */
-    private static function statusDeal(String $status)
+    private static function statusDeal(string $status)
     {
         $new = '';
 
@@ -518,10 +518,10 @@ class MauticIntegration
     /**
      * Sincroniza os ids do Mautic (pipedrive_id) e do Pipedrive (mautic_id)
      *
-     * @param Array $classes
+     * @param array $classes
      * @return void
      */
-    public static function syncIdsMauticPipe(Array $classes)
+    public static function syncIdsMauticPipe(array $classes)
     {
         if ($classes['person'] && !$classes['organization'])
         {
