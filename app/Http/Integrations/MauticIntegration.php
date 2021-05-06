@@ -72,8 +72,6 @@ class MauticIntegration
                     $res = self::searchMauticByField($mauticApi, 'email', $data['email']);
                 }
 
-                dd($res);
-
                 $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
                 $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
                 if ($first !== FALSE || $last !== FALSE)                   // remover em prod
