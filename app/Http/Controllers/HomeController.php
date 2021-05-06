@@ -2,16 +2,30 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
 use Illuminate\Http\Request;
 use Devio\Pipedrive\Pipedrive;
 use Triibo\Mautic\Facades\Mautic;
+use Illuminate\Support\Facades\Log;
 use Triibo\Mautic\Models\MauticConsumer;
+use App\Http\Integrations\MauticIntegration;
+use Ramsey\Collection\Collection;
+
 // use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
+    const PERSON_ADDED_EVENT   = 'added.person';
+    const PERSON_UPDATED_EVENT = 'updated.person';
+    const PERSON_DELETED_EVENT = 'deleted.person';
+    const PERSON_CODE          = 3;
+    const ORG_ADDED_EVENT      = 'added.organization';
+    const ORG_UPDATED_EVENT    = 'updated.organization';
+    const ORG_DELETED_EVENT    = 'deleted.organization';
+    const ORG_CODE             = 2;
+
     /**
      * Create a new controller instance.
      *
@@ -30,6 +44,53 @@ class HomeController extends Controller
     public function index()
     {
         return view('home');
+    }
+
+    public function teste3(Request $request)
+    {
+        $res = [
+            "123123123" => [
+                "id" => "",
+                "score" => "",
+                "fields" => [
+                    "all" => [
+                        "id" => 123123123,
+                        "companyname" => "companyname"
+                    ]
+                ],
+            ]
+        ];
+
+        dd(key( $res ));
+
+
+
+        // $compare = [
+        //     "stage_id",
+        //     "active",
+        //     "deleted",
+        //     "status"
+        // ];
+
+        // if ($request['meta']['action'] == 'updated')
+        // {
+        //     $current  = $request['current'];
+        //     $previous = $request['previous'];
+
+        //     $result   = array_diff_assoc($current,$previous);
+
+        //     foreach ($compare as $c)
+        //     {
+        //         if (array_key_exists($c,$result))
+        //         {
+        //             $result2 = true;
+        //         }
+        //     }
+
+        //     dd($result2);
+        // }
+
+        // dd($request);
     }
 
     public function teste2()
@@ -142,5 +203,40 @@ class HomeController extends Controller
         // }
 
         // return print_r($result);
+    }
+
+    public function atualizaEmailComEspacoEmBranco(Request $request)
+    {
+        $token     = config('pipedrive.token');
+        $pipedrive = new Pipedrive($token);
+        $arr       = [];
+        for ($i = 1; $i <= 600; $i++)
+        {
+            try
+            {
+                $person = $pipedrive->persons->find($i);
+                $found = true;
+            }
+            catch (Exception $e)
+            {
+                $found = false;
+            }
+            if ($found)
+            {
+                $data  = $person->getData();
+                $email = $data->email[0]->value;
+                if (preg_match('/\s/',$email))
+                {
+                    $arr[] = $email;
+                    $new   = $pipedrive->persons->update($i, ['email' => trim($email)]);
+                    $arr[] = $new->getData()->email[0]->value;
+                }
+            }
+            else
+            {
+                continue;
+            }
+        }
+        dd($arr);
     }
 }

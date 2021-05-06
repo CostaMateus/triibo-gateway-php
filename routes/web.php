@@ -40,3 +40,6 @@ Route::get('/pipe',           [App\Http\Controllers\HomeController::class, 'test
 //     $data      = $response->getData();
 //     dd($data);
 // });
+
+
+Route::any('/teste', [App\Http\Controllers\HomeController::class, 'teste3'])->name('teste3');
