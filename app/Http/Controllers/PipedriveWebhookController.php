@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
@@ -88,7 +89,7 @@ class PipedriveWebhookController extends Controller
                     if ($params['previous'])
                     {
                         $result  = FALSE;
-                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        $changes = Helper::array_diff_assoc_recursive($params['current'],$params['previous']);
                         foreach (self::DEAL_MONITORING as $m)
                         {
                             if (array_key_exists($m, $changes))
@@ -174,7 +175,7 @@ class PipedriveWebhookController extends Controller
                     if ($params['previous'])
                     {
                         $result  = FALSE;
-                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        $changes = Helper::array_diff_assoc_recursive($params['current'],$params['previous']);
                         foreach (self::ORG_MONITORING as $m)
                         {
                             if (array_key_exists($m, $changes))
@@ -250,7 +251,7 @@ class PipedriveWebhookController extends Controller
                     if ($params['previous'])
                     {
                         $result  = FALSE;
-                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        $changes = Helper::array_diff_assoc_recursive($params['current'],$params['previous']);
                         foreach (self::PERSON_MONITORING as $m)
                         {
                             if (array_key_exists($m, $changes))
@@ -327,7 +328,7 @@ class PipedriveWebhookController extends Controller
                     if ($params['previous'])
                     {
                         $result  = FALSE;
-                        $changes = array_diff_assoc($params['current'],$params['previous']);
+                        $changes = Helper::array_diff_assoc_recursive($params['current'],$params['previous']);
 
                         if (array_key_exists(self::STAGE_MONITORING, $changes))
                         {
