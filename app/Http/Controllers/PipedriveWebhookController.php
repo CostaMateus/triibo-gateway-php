@@ -58,7 +58,7 @@ class PipedriveWebhookController extends Controller
     const STAGE_UPDATED_EVENT  = 'updated.stage';
     const STAGE_DELETED_EVENT  = 'deleted.stage';
     const STAGE_CODE           = 4;
-    const STAGE_MONITORING      = "name";
+    const STAGE_MONITORING     = "name";
 
     /**
      * Pipedrive - deal
@@ -244,6 +244,8 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
+        // Storage::put(date('Ymd-his').'-person.json', json_encode($params, JSON_UNESCAPED_SLASHES));
+
         try
         {
             switch ($params['event'])
@@ -332,11 +334,7 @@ class PipedriveWebhookController extends Controller
                         $result  = FALSE;
                         $changes = Helper::array_diff_assoc_recursive($params['current'],$params['previous']);
 
-                        if (array_key_exists(self::STAGE_MONITORING, $changes))
-                        {
-                            $result = TRUE;
-                            break;
-                        }
+                        if (array_key_exists(self::STAGE_MONITORING, $changes)) $result = TRUE;
 
                         if (!$result) break;
                     }
