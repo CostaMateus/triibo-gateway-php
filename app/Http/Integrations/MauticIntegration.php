@@ -608,8 +608,15 @@ class MauticIntegration
         }
     }
 
+    /**
+     * Importa todos os Stages do Pipedrive
+     *
+     * @return void
+     */
     public static function importAllStages()
     {
+        Log::info("Stages - start importing all stages");
+
         $idField   = 185; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi('contactFields');
         $field     = $mauticApi->get($idField);
@@ -655,7 +662,16 @@ class MauticIntegration
             ]
         ];
 
-        $res = $mauticApi->edit($idField, $data);
+        $res  = $mauticApi->edit($idField, $data);
+
+        if (!isset($res['errors']))
+        {
+            Log::info("Stages - end of importing all stages");
+        }
+        else
+        {
+            Log::info("Stages - import failed");
+        }
     }
 
 }
