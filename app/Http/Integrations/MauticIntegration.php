@@ -353,6 +353,7 @@ class MauticIntegration
                 $data['first_name'] = implode(' ', $aux);
 
                 return [
+                    'id'                => $data['person_mautic_id']??'', // custom field for mautic_id
                     'pipeline'          => $data['stage_id'],
                     'pipeline_status'   => self::statusDeal($data['status']??''),
                     'pipedrive_id'      => $data['person_id'],
