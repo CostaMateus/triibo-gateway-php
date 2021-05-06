@@ -45,9 +45,8 @@ class PipedriveWebhookController extends Controller
     const PERSON_DELETED_EVENT = 'deleted.person';
     const PERSON_CODE          = 3;
     const PERSON_MONITORING    = [
-        "first_name",
-        "last_name",
-        "org_name",
+        "first_name", "last_name",
+        "org_name", "email", "phone",
         "bd7287f0a9a02de60a8aff83b5905c489b7cf007"  // mautic_id
     ];
 
@@ -243,8 +242,6 @@ class PipedriveWebhookController extends Controller
                 'code'    => -1,
             ], 200);
         }
-
-        // Storage::put(date('Ymd-his').'-person.json', json_encode($params, JSON_UNESCAPED_SLASHES));
 
         try
         {
