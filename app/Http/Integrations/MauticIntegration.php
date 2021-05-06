@@ -125,6 +125,8 @@ class MauticIntegration
                                     break;
                                 }
                             }
+
+                            $id = $id ?? 0;
                         }
                         else
                         {
