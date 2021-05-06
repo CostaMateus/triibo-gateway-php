@@ -305,7 +305,7 @@ class MauticIntegration
                 }
             break;
 
-            case 'organizations':
+            case 'companies':
                 if ($data['id'])
                 {
                     Log::info("Organizations - delete by id - mautic_id:" . $data['id'] . " | pipedrive_org_id:" . $data['pipedrive_org_id']);
