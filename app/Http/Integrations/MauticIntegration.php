@@ -542,8 +542,7 @@ class MauticIntegration
 
         $mauticApi = self::getApi($mauticClass);
 
-        $token     = config('pipedrive.token');
-        $pipeApi   = new Pipedrive($token);
+        $pipeApi   = new Pipedrive(config('pipedrive.token'));
 
         $response  = $pipeApi->$pipeClass->all();
         $pipeObjs  = $response->getData();
@@ -622,8 +621,7 @@ class MauticIntegration
         $field     = $mauticApi->get($idField);
         $list      = $field['field']['properties']['list'];
 
-        $token     = config('pipedrive.token');
-        $pipeApi   = new Pipedrive($token);
+        $pipeApi   = new Pipedrive(config('pipedrive.token'));
         $stages    = $pipeApi->stages()->all()->getData();
 
         foreach ($stages as &$stage)
