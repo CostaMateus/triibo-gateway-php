@@ -204,7 +204,7 @@ class MauticIntegration
                 }
                 else
                 {
-                    Log::info("Deals - contact pipeline delete | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::info("Deals - contact pipeline deleted | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
 
                     $data['pipeline'] = NULL;
                 }
@@ -295,10 +295,14 @@ class MauticIntegration
 
                     if ($res['total'])
                     {
-                        Log::info("Persons - delete by email - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                        Log::info("Persons - delete by email - mautic_id:NULL | pipedrive_id:" . $data['pipedrive_id']);
 
                         $mauticApi->delete(key($res['object']));
                     }
+                }
+                else
+                {
+                    Log::info("Persons - not found to delete - mautic_id: | pipedrive_id:" . $data['pipedrive_id']);
                 }
             break;
 
@@ -311,8 +315,6 @@ class MauticIntegration
                 }
                 else
                 {
-                    Log::info("Organizations - delete by name - mautic_id:NULL | pipedrive_org_id:" . $data['pipedrive_org_id']);
-
                     $res = self::searchMauticByField($mauticApi);
 
                     if ($res['total'])
@@ -328,11 +330,12 @@ class MauticIntegration
                             }
                         }
                     }
+
+                    Log::info("Organizations - not found to delete - mautic_id: | pipedrive_id:" . $data['pipedrive_id']);
                 }
             break;
         }
     }
-
 
     /**
      * Traduz os dados necessários do Pipedrive para o Mautic
@@ -351,29 +354,29 @@ class MauticIntegration
                 $data['first_name'] = implode(' ', $aux);
 
                 return [
-                    'id'              => $data['65365fd90eddd1b97b1729a92a0fb3d7b2cd011b'], // custom field for mautic_id
-                    'pipeline'        => $data['stage_id'],
-                    'pipeline_status' => self::statusDeal($data['status']??''),
-                    'pipedrive_id'    => $data['person_id'],
+                    'id'                => $data['65365fd90eddd1b97b1729a92a0fb3d7b2cd011b'], // custom field for mautic_id
+                    'pipeline'          => $data['stage_id'],
+                    'pipeline_status'   => self::statusDeal($data['status']??''),
+                    'pipedrive_id'      => $data['person_id'],
 
-                    'aux_active'      => $data['active'],
-                    'aux_deleted'     => $data['deleted'],
-                    'aux_email'       => $data['person_email'],
+                    'aux_active'        => $data['active'],
+                    'aux_deleted'       => $data['deleted'],
+                    'aux_email'         => $data['person_email'],
 
-                    'firstname'       => $data['first_name'],  // remover em prod
-                    'lastname'        => $data['last_name'],   // remover em prod
+                    'firstname'         => $data['first_name'],  // remover em prod
+                    'lastname'          => $data['last_name'],   // remover em prod
                 ];
             break;
 
             case 'contacts':
                 return [
-                    'id'           => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
-                    'firstname'    => $data['first_name'],
-                    'lastname'     => $data['last_name'],
-                    'company'      => $data['org_name'],
-                    'email'        => $data['email'][0]['value'],
-                    'phone'        => $data['phone'][0]['value'],
-                    'pipedrive_id' => $data['id']
+                    'id'                => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
+                    'firstname'         => $data['first_name'],
+                    'lastname'          => $data['last_name'],
+                    'company'           => $data['org_name'],
+                    'email'             => $data['email'][0]['value'],
+                    'phone'             => $data['phone'][0]['value'],
+                    'pipedrive_id'      => $data['id']
                 ];
             break;
 
@@ -395,8 +398,8 @@ class MauticIntegration
             // stages
             case 'contactFields':
                 return [
-                    'id'   => $data['id'],
-                    'name' => $data['name'],
+                    'id'                => $data['id'],
+                    'name'              => $data['name'],
                 ];
             break;
         }
