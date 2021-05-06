@@ -115,7 +115,8 @@ class PipedriveWebhookController extends Controller
                     $api    = new Pipedrive(config('pipedrive.token'));
                     $person = $api->persons->find($params['previous']['person_id'])->getData();
 
-                    $params['previous']['person_email'] = $person->email[0]->value;
+                    $params['previous']['person_email']     = $person->email[0]->value;
+                    $params['previous']['person_mautic_id'] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
 
                     MauticIntegration::dealUpdate('deals', $params['previous'], TRUE);
                 break;
