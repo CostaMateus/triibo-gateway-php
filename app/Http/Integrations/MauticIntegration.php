@@ -424,7 +424,9 @@ class MauticIntegration
 
         $ttl = (isset($obj['total'])) ? (int) $obj['total'] : NULL;
 
-        Log::info("Searching - result total:$ttl");
+        $aux = ($mauticApi->listName() == 'contacts') ? 'Persons' : 'Organizations';
+
+        Log::info("$aux - searching - result total:$ttl");
 
         $obj = $obj[$mauticApi->listName()];
 
