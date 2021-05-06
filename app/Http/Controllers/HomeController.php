@@ -48,23 +48,6 @@ class HomeController extends Controller
 
     public function teste3(Request $request)
     {
-        $res = [
-            "123123123" => [
-                "id" => "",
-                "score" => "",
-                "fields" => [
-                    "all" => [
-                        "id" => 123123123,
-                        "companyname" => "companyname"
-                    ]
-                ],
-            ]
-        ];
-
-        dd(key( $res ));
-
-
-
         // $compare = [
         //     "stage_id",
         //     "active",
