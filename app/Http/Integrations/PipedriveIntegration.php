@@ -19,8 +19,7 @@ class PipedriveIntegration
     {
         $aux       = ucfirst($class);
 
-        $token     = config('pipedrive.token');
-        $pipedrive = new Pipedrive($token);
+        $pipedrive = new Pipedrive(config('pipedrive.token'));
 
         Log::info("$aux - selecionando API class: $class");
 
