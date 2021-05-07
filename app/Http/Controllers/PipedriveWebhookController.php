@@ -45,9 +45,9 @@ class PipedriveWebhookController extends Controller
     const PERSON_DELETED_EVENT = 'deleted.person';
     const PERSON_CODE          = 3;
     const PERSON_MONITORING    = [
-        "first_name", "last_name",
-        "org_name", "email", "phone",
-        "bd7287f0a9a02de60a8aff83b5905c489b7cf007"  // mautic_id
+        "first_name", "last_name", "email", "phone",
+        "bd7287f0a9a02de60a8aff83b5905c489b7cf007", // mautic_id
+        // "org_name",
     ];
 
     /**
@@ -71,10 +71,10 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
-            Log::info("Deal changed by api - ignored");
+            Log::info("Deals - changed by api ignored");
             return response()->json([
                 'status'  => 'Ok',
-                'message' => 'Deal changed by api - ignored',
+                'message' => 'Deals - changed by api ignored',
                 'code'    => -1,
             ], 200);
         }
@@ -159,10 +159,10 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
-            Log::info("Organization changed by api - ignored");
+            Log::info("Organizations - changed by api ignored");
             return response()->json([
                 'status'  => 'Ok',
-                'message' => 'Organization changed by api - ignored',
+                'message' => 'Organizations - changed by api ignored',
                 'code'    => -1,
             ], 200);
         }
@@ -186,7 +186,11 @@ class PipedriveWebhookController extends Controller
                             }
                         }
 
-                        if (!$result) break;
+                        if (!$result)
+                        {
+                            Log::info("Organizations - discarded changes");
+                            break;
+                        }
                     }
 
                     MauticIntegration::updateOrCreate('companies', $params['current']);
@@ -197,7 +201,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::info("Organization - Unsupported event, 400");
+                    Log::info("Organizations - Unsupported event, 400");
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -235,10 +239,10 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
-            Log::info("Person changed by api - ignored");
+            Log::info("Persons - changed by api ignored");
             return response()->json([
                 'status'  => 'Ok',
-                'message' => 'Person changed by api - ignored',
+                'message' => 'Persons - changed by api ignored',
                 'code'    => -1,
             ], 200);
         }
@@ -262,7 +266,11 @@ class PipedriveWebhookController extends Controller
                             }
                         }
 
-                        if (!$result) break;
+                        if (!$result)
+                        {
+                            Log::info("Persons - discarded changes");
+                            break;
+                        }
                     }
 
                     MauticIntegration::updateOrCreate('contacts', $params['current']);
@@ -312,10 +320,10 @@ class PipedriveWebhookController extends Controller
 
         if ($params['meta']['change_source'] == 'api')
         {
-            Log::info("Stage changed by api - ignored");
+            Log::info("Stages - changed by api ignored");
             return response()->json([
                 'status'  => 'Ok',
-                'message' => 'Stage changed by api - ignored',
+                'message' => 'Stages - changed by api ignored',
                 'code'    => -1,
             ], 200);
         }
