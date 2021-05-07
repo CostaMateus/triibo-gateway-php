@@ -132,7 +132,7 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Deal - $e, 500");
+            Log::info("Deals - $e, 500");
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -140,7 +140,7 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Deal - Success, 200");
+        Log::info("Deals - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -208,7 +208,7 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Organization - $e, 500");
+            Log::info("Organizations - $e, 500");
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -216,7 +216,7 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Organization - Success, 200");
+        Log::info("Organizations - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -284,7 +284,7 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Person - $e, 500");
+            Log::info("Persons - $e, 500");
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -292,7 +292,7 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Person - Success, 200");
+        Log::info("Persons - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -355,7 +355,7 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Stage - $e, 500");
+            Log::info("Stages - $e, 500");
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -363,7 +363,7 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Stage - Success, 200");
+        Log::info("Stages - Success, 200");
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
