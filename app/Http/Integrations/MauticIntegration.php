@@ -378,7 +378,7 @@ class MauticIntegration
                     'id'                => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
                     'firstname'         => $data['first_name'],
                     'lastname'          => $data['last_name'],
-                    'company'           => $data['org_name'],
+                    // 'company'           => $data['org_name'],
                     'email'             => $data['email'][0]['value'],
                     'phone'             => $data['phone'][0]['value'],
                     'pipedrive_id'      => $data['id'],
