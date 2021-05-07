@@ -37,6 +37,34 @@ class HomeController extends Controller
     }
 
     /**
+     * Pega a api especifica dada a classe
+     *
+     * @param string $class
+     * @return Api $api
+     */
+    private static function getApi(string $class)
+    {
+        $factory  = Mautic::getFactory();
+        $consumer = MauticConsumer::whereNotNull('id')->orderBy('created_at', 'desc')->first();
+
+        $expired  = $factory->checkExpirationTime($consumer->expires);
+
+        $consumer = ($expired) ? $factory->refreshToken($consumer->refresh_token) : $consumer;
+
+        $settings = config('mautic.connections.main');
+        $settings['accessToken'] = $consumer->access_token;
+
+        $initAuth = new ApiAuth();
+        $auth     = $initAuth->newAuth($settings);
+        $apiUrl   = $settings['baseUrl'];
+        $api      = new MauticApi();
+
+        // dd($api->newApi($class, $auth, $apiUrl));
+
+        return $api->newApi($class, $auth, $apiUrl);
+    }
+
+    /**
      * Show the application dashboard.
      *
      * @return \Illuminate\Contracts\Support\Renderable
@@ -48,6 +76,12 @@ class HomeController extends Controller
 
     public function teste3(Request $request)
     {
+        $api = self::getApi('contacts');
+
+        $res = $api->get(236199);
+
+        dd($res);
+
         // $compare = [
         //     "stage_id",
         //     "active",
@@ -74,6 +108,8 @@ class HomeController extends Controller
         // }
 
         // dd($request);
+
+        echo "ok";
     }
 
     public function teste2()
