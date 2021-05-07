@@ -374,6 +374,14 @@ class MauticIntegration
             break;
 
             case 'contacts':
+                if (!$data['first_name'])
+                {
+                    $name               = explode(' ', $data['last_name']);
+                    $data['first_name'] = current($name);
+                    array_shift($name);
+                    $data['last_name']  = implode(' ', $name);
+                }
+
                 return [
                     'id'                => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
                     'firstname'         => $data['first_name'],
