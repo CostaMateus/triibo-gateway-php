@@ -82,38 +82,66 @@ class HomeController extends Controller
 
     public function teste3(Request $request)
     {
-        // 11954971 Pedro
-        // 12009079 Tiago
+        // // dd(ini_get("max_execution_time"));
+        // // 11954971 Pedro
+        // // 12009079 Tiago
 
-        $start = 0;
+        // $start = 0;
+        // $res   = [];
+        // $exit  = false;
 
-        $res   = [];
+        // do
+        // {
+        //     $response = (self::getPipeApi())->deals->all([
+        //         // 'user_id' => 12009079,
+        //         'status' => 'lost',
+        //         'start'  => $start,
+        //         'limit'  => 500,
+        //     ]);
 
-        $exit  = false;
+        //     $objs = $response->getData();
 
-        do {
-            $response = (self::getPipeApi())->organizations->all([
-                // 'user_id' => 12009079,
-                'start' => $start,
-                'limit' => 500,
-            ]);
+        //     foreach ($objs as &$obj)
+        //     {
+        //         $aux = json_decode(json_encode($obj), true);
+        //         $obj = $aux;
 
-            $objs = $response->getData();
+        //         $pId = $obj['person_id']['value']??NULL;
+        //         unset($obj['person_id']);
+        //         $obj['person_id'] = $pId;
+        //     }
 
-            $res  = array_merge($res, $objs);
+        //     $res = array_merge($res, $objs);
 
-            if (count($objs) < 500)
-            {
-                $exit = true;
-            }
-            else
-            {
-                $start += 500;
-            }
+        //     if (count($objs) < 500)
+        //     {
+        //         $exit = true;
+        //     }
+        //     else
+        //     {
+        //         $start += 500;
+        //     }
 
-        } while (!$exit);
+        // } while (!$exit);
 
-        dd($res);
+        // $api = new Pipedrive(config('pipedrive.token'));
+
+        // foreach ( $res as $deal )
+        // {
+        //     $person    = $api->persons->find($deal['person_id'])->getData();
+
+        //     $auxPerson = json_decode(json_encode($person), true);
+        //     MauticIntegration::updateOrCreate('contacts', $auxPerson);
+
+        //     $deal['person_email']     = $person->email[0]->value;
+        //     $deal['person_mautic_id'] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
+        //     MauticIntegration::dealUpdate('deals', $deal);
+
+        //     $mauticId  = $auxPerson['bd7287f0a9a02de60a8aff83b5905c489b7cf007'];
+        //     $pipeId    = $auxPerson['id'];
+
+        //     Log::info("Persons - mautic_id:$mauticId | pipedrive_id:$pipeId");
+        // }
     }
 
     public function teste2()
