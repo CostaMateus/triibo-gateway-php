@@ -42,7 +42,7 @@ class HomeController extends Controller
      * @param string $class
      * @return Api $api
      */
-    private static function getApi(string $class)
+    private static function getMauticApi(string $class)
     {
         $factory  = Mautic::getFactory();
         $consumer = MauticConsumer::whereNotNull('id')->orderBy('created_at', 'desc')->first();
@@ -64,6 +64,12 @@ class HomeController extends Controller
         return $api->newApi($class, $auth, $apiUrl);
     }
 
+    private static function getPipeApi()
+    {
+        return new Pipedrive(config('pipedrive.token'));
+    }
+
+
     /**
      * Show the application dashboard.
      *
@@ -76,40 +82,38 @@ class HomeController extends Controller
 
     public function teste3(Request $request)
     {
-        $api = self::getApi('contacts');
+        // 11954971 Pedro
+        // 12009079 Tiago
 
-        $res = $api->get(236199);
+        $start = 0;
+
+        $res   = [];
+
+        $exit  = false;
+
+        do {
+            $response = (self::getPipeApi())->organizations->all([
+                // 'user_id' => 12009079,
+                'start' => $start,
+                'limit' => 500,
+            ]);
+
+            $objs = $response->getData();
+
+            $res  = array_merge($res, $objs);
+
+            if (count($objs) < 500)
+            {
+                $exit = true;
+            }
+            else
+            {
+                $start += 500;
+            }
+
+        } while (!$exit);
 
         dd($res);
-
-        // $compare = [
-        //     "stage_id",
-        //     "active",
-        //     "deleted",
-        //     "status"
-        // ];
-
-        // if ($request['meta']['action'] == 'updated')
-        // {
-        //     $current  = $request['current'];
-        //     $previous = $request['previous'];
-
-        //     $result   = array_diff_assoc($current,$previous);
-
-        //     foreach ($compare as $c)
-        //     {
-        //         if (array_key_exists($c,$result))
-        //         {
-        //             $result2 = true;
-        //         }
-        //     }
-
-        //     dd($result2);
-        // }
-
-        // dd($request);
-
-        echo "ok";
     }
 
     public function teste2()
