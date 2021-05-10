@@ -58,7 +58,8 @@ class MauticIntegration
         switch ($class)
         {
             case 'contacts':
-                $res = [];
+                $res = NULL;
+
                 // Verifica se tem mautic_id
                 if ($data['id'])
                 {
@@ -72,6 +73,10 @@ class MauticIntegration
                     Log::info('Persons - searching by email - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
                     // Busca por email
                     $res = self::searchMauticByField($mauticApi, 'email', $data['email']);
+                }
+                else
+                {
+                    break;
                 }
 
                 // $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
@@ -383,8 +388,13 @@ class MauticIntegration
                     $data['last_name']  = implode(' ', $name);
                 }
 
+                $id = $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'];
+
+                if (!$id)
+                    $id = NULL;
+
                 return [
-                    'id'                => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
+                    'id'                => $id, // custom field for mautic_id
                     'firstname'         => $data['first_name'],
                     'lastname'          => $data['last_name'],
                     // 'company'           => $data['org_name'],
@@ -443,7 +453,7 @@ class MauticIntegration
 
         Log::info("$aux - searching - result total:$ttl");
 
-        $obj = $obj[$mauticApi->listName()];
+        $obj = $obj[$mauticApi->listName()]??NULL;
 
         return [
             'total'  => $ttl,
