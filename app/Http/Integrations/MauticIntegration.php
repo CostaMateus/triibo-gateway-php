@@ -58,6 +58,7 @@ class MauticIntegration
         switch ($class)
         {
             case 'contacts':
+                $res = [];
                 // Verifica se tem mautic_id
                 if ($data['id'])
                 {
@@ -73,10 +74,10 @@ class MauticIntegration
                     $res = self::searchMauticByField($mauticApi, 'email', $data['email']);
                 }
 
-                $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
-                $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
-                if ($first !== FALSE || $last !== FALSE)                   // remover em prod
-                {                                                          // remover em prod
+                // $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
+                // $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
+                // if ($first !== FALSE || $last !== FALSE)                   // remover em prod
+                // {                                                          // remover em prod
                     if (!$res['total'])
                     {
                         // Não achou o contato, cria um novo
@@ -92,7 +93,7 @@ class MauticIntegration
 
                         self::saveCreateOrUpdateMautic($mauticApi, 'persons', key($res['object']), $data, 'pipedrive_id');
                     }
-                }
+                // }
             break;
 
             case 'companies':
@@ -110,9 +111,9 @@ class MauticIntegration
                     $res = self::searchMauticByField($mauticApi);
                 }
 
-                $first = strpos(strtolower($data['companyname']), 'zteste'); // remover em prod
-                if ($first !== FALSE)                                        // remover em prod
-                {                                                            // remover em prod
+                // $first = strpos(strtolower($data['companyname']), 'zteste'); // remover em prod
+                // if ($first !== FALSE)                                        // remover em prod
+                // {                                                            // remover em prod
                     if (!$res['total'])
                     {
                         // Não achou a empresa, cria uma nova
@@ -141,7 +142,7 @@ class MauticIntegration
                         // Achou a empresa, atualiza
                         self::saveCreateOrUpdateMautic($mauticApi, 'organizations', $id, $data, 'pipedrive_org_id');
                     }
-                }
+                // }
             break;
         }
     }
@@ -192,13 +193,13 @@ class MauticIntegration
 
         $data['id'] = $data['id'] ?? key($res['object']);
 
-        $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
-        $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
+        // $first = strpos(strtolower($data['firstname']), 'zteste'); // remover em prod
+        // $last  = strpos(strtolower($data['lastname']),  'zteste'); // remover em prod
 
-        if ($first !== FALSE || $last !== FALSE)                   // remover em prod
-        {                                                          // remover em prod
-            unset($data['firstname']);                             // remover em prod
-            unset($data['lastname']);                              // remover em prod
+        // if ($first !== FALSE || $last !== FALSE)                   // remover em prod
+        // {                                                          // remover em prod
+        //     unset($data['firstname']);                             // remover em prod
+        //     unset($data['lastname']);                              // remover em prod
 
             if ($res['total'])
             {
@@ -221,7 +222,7 @@ class MauticIntegration
                 Log::info("Deals - contact not found - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
                 // throw new Exception("Contact not found - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
             }
-        }
+        // }
     }
 
     /**
@@ -270,7 +271,7 @@ class MauticIntegration
             ]
         ];
 
-        $res = $mauticApi->edit($idField, $data);
+        $mauticApi->edit($idField, $data);
     }
 
     /**
@@ -353,10 +354,10 @@ class MauticIntegration
     {
         switch ($class) {
             case 'deals':
-                $aux                = explode(' ', $data['person_name']);
-                $data['last_name']  = end($aux);
-                array_pop($aux);
-                $data['first_name'] = implode(' ', $aux);
+                // $aux                = explode(' ', $data['person_name']);
+                // $data['last_name']  = end($aux);
+                // array_pop($aux);
+                // $data['first_name'] = implode(' ', $aux);
 
                 return [
                     'id'                => $data['person_mautic_id']??'', // custom field for mautic_id
@@ -368,8 +369,8 @@ class MauticIntegration
                     'aux_deleted'       => $data['deleted'],
                     'aux_email'         => $data['person_email'],
 
-                    'firstname'         => $data['first_name'],  // remover em prod
-                    'lastname'          => $data['last_name'],   // remover em prod
+                    // 'firstname'         => $data['first_name'],  // remover em prod
+                    // 'lastname'          => $data['last_name'],   // remover em prod
                 ];
             break;
 
@@ -386,7 +387,7 @@ class MauticIntegration
                     'id'                => $data['bd7287f0a9a02de60a8aff83b5905c489b7cf007'], // custom field for mautic_id
                     'firstname'         => $data['first_name'],
                     'lastname'          => $data['last_name'],
-                    'company'           => $data['org_name'],
+                    // 'company'           => $data['org_name'],
                     'email'             => $data['email'][0]['value'],
                     'phone'             => $data['phone'][0]['value'],
                     'pipedrive_id'      => $data['id'],
