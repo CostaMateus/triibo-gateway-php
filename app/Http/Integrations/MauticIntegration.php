@@ -76,6 +76,7 @@ class MauticIntegration
                 }
                 else
                 {
+                    Log::info('Persons - no data to search - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
                     break;
                 }
 
@@ -184,7 +185,7 @@ class MauticIntegration
             // Busca por id
             $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
         }
-        else
+        else if ($data['aux_email'])
         {
             Log::info('Deals - searching by email - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
 
@@ -192,9 +193,14 @@ class MauticIntegration
             $res = self::searchMauticByField($mauticApi, 'email', $data['aux_email']);
 
             if ($res['total'] && !$delete) self::updateMauticId('persons', key($res['object']), $data['pipedrive_id'], TRUE);
-        }
 
-        unset($data['aux_email']);
+            unset($data['aux_email']);
+        }
+        else
+        {
+            Log::info('Deals - no data to search - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
+            return NULL;
+        }
 
         $data['id'] = $data['id'] ?? key($res['object']);
 
