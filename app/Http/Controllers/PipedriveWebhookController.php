@@ -20,7 +20,7 @@ class PipedriveWebhookController extends Controller
     const DEAL_UPDATED_EVENT   = 'updated.deal';
     const DEAL_DELETED_EVENT   = 'deleted.deal';
     const DEAL_CODE            = 1;
-    const DEAL_MONITORING      = ["stage_id", "active", "deleted", "status"];
+    const DEAL_MONITORING      = ["stage_id", "active", "deleted", "status", "weighted_value"];
 
     /**
      * Organization to Company
