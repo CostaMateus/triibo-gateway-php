@@ -405,7 +405,7 @@ class MauticIntegration
                     'lastname'          => $data['last_name'],
                     // 'company'           => $data['org_name'],
                     'email'             => $data['email'][0]['value'],
-                    'phone'             => $data['phone'][0]['value'],
+                    'phone'             => preg_replace("/\D/", "", $data['phone'][0]['value']),
                     'pipedrive_id'      => $data['id'],
                     // 'overwriteWithBlank' => true,
                 ];
