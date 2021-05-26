@@ -44,13 +44,13 @@ return [
     'exists'               => 'O campo :attribute selecionado é inválido.',
     'file'                 => 'O campo :attribute deve ser um arquivo.',
     'filled'               => 'O campo :attribute deve ter um valor.',
-    'gt' => [
+    'gt'                   => [
         'numeric' => 'O campo :attribute deve ser maior que :value.',
         'file'    => 'O campo :attribute deve ser maior que :value kilobytes.',
         'string'  => 'O campo :attribute deve ser maior que :value caracteres.',
         'array'   => 'O campo :attribute deve conter mais de :value itens.',
     ],
-    'gte' => [
+    'gte'                  => [
         'numeric' => 'O campo :attribute deve ser maior ou igual a :value.',
         'file'    => 'O campo :attribute deve ser maior ou igual a :value kilobytes.',
         'string'  => 'O campo :attribute deve ser maior ou igual a :value caracteres.',
@@ -64,19 +64,19 @@ return [
     'ipv4'                 => 'O campo :attribute deve ser um endereço IPv4 válido.',
     'ipv6'                 => 'O campo :attribute deve ser um endereço IPv6 válido.',
     'json'                 => 'O campo :attribute deve ser uma string JSON válida.',
-    'lt' => [
+    'lt'                   => [
         'numeric' => 'O campo :attribute deve ser menor que :value.',
         'file'    => 'O campo :attribute deve ser menor que :value kilobytes.',
         'string'  => 'O campo :attribute deve ser menor que :value caracteres.',
         'array'   => 'O campo :attribute deve conter menos de :value itens.',
     ],
-    'lte' => [
+    'lte'                  => [
         'numeric' => 'O campo :attribute deve ser menor ou igual a :value.',
         'file'    => 'O campo :attribute deve ser menor ou igual a :value kilobytes.',
         'string'  => 'O campo :attribute deve ser menor ou igual a :value caracteres.',
         'array'   => 'O campo :attribute não deve conter mais que :value itens.',
     ],
-    'max' => [
+    'max'                  => [
         'numeric' => 'O campo :attribute não pode ser superior a :max.',
         'file'    => 'O campo :attribute não pode ser superior a :max kilobytes.',
         'string'  => 'O campo :attribute não pode ser superior a :max caracteres.',
@@ -84,7 +84,7 @@ return [
     ],
     'mimes'                => 'O campo :attribute deve ser um arquivo do tipo: :values.',
     'mimetypes'            => 'O campo :attribute deve ser um arquivo do tipo: :values.',
-    'min' => [
+    'min'                  => [
         'numeric' => 'O campo :attribute deve ser pelo menos :min.',
         'file'    => 'O campo :attribute deve ter pelo menos :min kilobytes.',
         'string'  => 'O campo :attribute deve ter pelo menos :min caracteres.',
@@ -116,7 +116,7 @@ return [
     'unique'               => 'O campo :attribute já está sendo utilizado.',
     'uploaded'             => 'Ocorreu uma falha no upload do campo :attribute.',
     'url'                  => 'O campo :attribute tem um formato inválido.',
-    'uuid' => 'O campo :attribute deve ser um UUID válido.',
+    'uuid'                 => 'O campo :attribute deve ser um UUID válido.',
 
     /*
     |--------------------------------------------------------------------------
@@ -130,9 +130,10 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
-        ],
+        // 'attribute-name' => [
+        //     'rule-name' => 'custom-message',
+        // ],
+        'allowed_domain' => 'E-mail inválido para registro.',
     ],
 
     /*
@@ -147,39 +148,39 @@ return [
     */
 
     'attributes' => [
-        'address'   => 'endereço',
-        'age'       => 'idade',
-        'body'      => 'conteúdo',
-        'cell'      => 'celular',
-        'city'      => 'cidade',
-        'country'   => 'país',
-        'date'      => 'data',
-        'day'       => 'dia',
-        'excerpt'   => 'resumo',
-        'first_name'=> 'primeiro nome',
-        'gender'    => 'gênero',
-        'hour'      => 'hora',
-        'last_name' => 'sobrenome',
-        'message'   => 'mensagem',
-        'minute'    => 'minuto',
-        'mobile'    => 'celular',
-        'month'     => 'mês',
-        'name'      => 'nome',
+        'address'      => 'endereço',
+        'age'          => 'idade',
+        'body'         => 'conteúdo',
+        'cell'         => 'celular',
+        'city'         => 'cidade',
+        'country'      => 'país',
+        'date'         => 'data',
+        'day'          => 'dia',
+        'excerpt'      => 'resumo',
+        'first_name'   => 'primeiro nome',
+        'gender'       => 'gênero',
+        'hour'         => 'hora',
+        'last_name'    => 'sobrenome',
+        'message'      => 'mensagem',
+        'minute'       => 'minuto',
+        'mobile'       => 'celular',
+        'month'        => 'mês',
+        'name'         => 'nome',
         'neighborhood' => 'bairro',
-        'number'    => 'número',
-        'password'  => 'senha',
-        'phone'     => 'telefone',
-        'second'    => 'segundo',
-        'sex'       => 'sexo',
-        'state'     => 'estado',
-        'street'    => 'rua',
-        'subject'   => 'assunto',
-        'text'      => 'texto',
-        'time'      => 'hora',
-        'title'     => 'título',
-        'username'  => 'usuário',
-        'year'      => 'ano',
-        'description' => 'descrição',
+        'number'       => 'número',
+        'password'     => 'senha',
+        'phone'        => 'telefone',
+        'second'       => 'segundo',
+        'sex'          => 'sexo',
+        'state'        => 'estado',
+        'street'       => 'rua',
+        'subject'      => 'assunto',
+        'text'         => 'texto',
+        'time'         => 'hora',
+        'title'        => 'título',
+        'username'     => 'usuário',
+        'year'         => 'ano',
+        'description'  => 'descrição',
         'password_confirmation' => 'confirmação da senha',
     ],
 
