@@ -24,17 +24,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
-
-        // $schedule->command('delete:images')->weekly()->sundays()->at('01:30')->timezone('America/Sao_Paulo');
-        // $schedule->command('delete:images')->weekly()->tuesdays()->at('01:30')->timezone('America/Sao_Paulo');
-        // $schedule->command('delete:images')->weekly()->fridays()->at('01:30')->timezone('America/Sao_Paulo');
-        // o mesmo que os acima - domingo, terca e sexta
-        $schedule->command('delete:images')->cron('30 1 * * 0,2,5')->timezone('America/Sao_Paulo');
-
+        // Cofry Triibo Integration
+        $schedule->command('delete:images')->cron('30 1 * * 0,2,5')->timezone('America/Sao_Paulo'); // 0 domingo, 2 terca e 5 sexta
         $schedule->command('process:storepromo')->dailyAt('02:00')->timezone('America/Sao_Paulo');
         $schedule->command('process:images')->dailyAt('03:00')->timezone('America/Sao_Paulo');
 
+        // Mautic Pipedrive Integration
         $schedule->command('import:stages')->weeklyOn(1, '5:00')->timezone('America/Sao_Paulo');
     }
 
