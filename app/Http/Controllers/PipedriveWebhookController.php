@@ -157,7 +157,7 @@ class PipedriveWebhookController extends Controller
      */
     public function organization(Request $request)
     {
-        if (env('APP_ENV' == 'production'))
+        if (env('APP_ENV') == 'production' || env('APP_ENV') == 'local')
         {
             Log::info("Organizations - deactivated, 200");
             return response()->json([
