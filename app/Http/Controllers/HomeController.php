@@ -82,69 +82,6 @@ class HomeController extends Controller
 
     public function teste3(Request $request)
     {
-        $t   = "(11) 94928-9507";
-        $t1  = "(11)94928-9507";
-        $t2  = "(11)   94928-9507";
-        $t3  = "11 94928----9507";
-        $r[] = preg_replace("/\D/", "", $t);
-        $r[] = preg_replace("/\D/", "", $t1);
-        $r[] = preg_replace("/\D/", "", $t2);
-        $r[] = preg_replace("/\D/", "", $t3);
-
-        dd($r);
-
-        // //"ids:37536"
-        // $max = 250;
-
-        // $start = 0;
-        // $end = 250;
-        // $res = [];
-        // $exit = false;
-
-        // $mauticApi = self::getMauticApi('contacts');
-
-        // // $res = $mauticApi->getList("ids:37536");
-        // // dd($res[$mauticApi->listName()]);
-
-        // do
-        // {
-        //     $objs = $mauticApi->getList("", $start, $end);
-
-        //     if ( isset($objs['errors'] ))
-        //     {
-        //         $exit = false;
-        //     }
-        //     else
-        //     {
-        //         $auxB = $objs['contacts'];
-
-        //         $auxF = [];
-
-        //         foreach ($auxB as $key => $obj)
-        //         {
-        //             $auxF[] = [
-        //                 'id'    => $key,
-        //                 'phone' => $obj['fields']['all']['phone'],
-        //             ];
-        //         }
-
-        //         $res = array_merge($res, $auxF);
-
-        //         if (count($objs['totals']) < $max)
-        //         {
-        //             $exit = true;
-        //         }
-        //         else
-        //         {
-        //             $start = $end + 1;
-        //             $end  += 250;
-        //         }
-        //     }
-        // }
-        // while ($exit);
-
-        // dd($res);
-
 
         // // dd(ini_get("max_execution_time"));
         // // 11954971 Pedro
