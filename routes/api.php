@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Route;
 
 
 /**
- * Integração Mautic <> Pipedrive
+ * Integração Mautic => Pipedrive
  */
 // Route::prefix('mautic')->group(function () {
 //
@@ -29,19 +29,22 @@ use Illuminate\Support\Facades\Route;
 //
 // });
 
-// Route::prefix('pipedrive')->group(function () {
-//
-//     Route::prefix('organization')->group(function () {
-//         Route::post('/added',   [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.added');
-//         Route::post('/updated', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.updated');
-//         Route::post('/deleted', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.deleted');
-//     });
-//
-//     Route::post('/person',        [App\Http\Controllers\PipedriveWebhookController::class, 'person'])->name('pipe.person');
-//     Route::post('/stage',         [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
-//     Route::post('/deal',          [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
-//
-// });
+/**
+ * Integração Pipedrive => Mautic
+ */
+Route::prefix('pipedrive')->group(function () {
+
+    // Route::prefix('organization')->group(function () {
+    //     Route::post('/added',   [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.added');
+    //     Route::post('/updated', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.updated');
+    //     Route::post('/deleted', [App\Http\Controllers\PipedriveWebhookController::class, 'organization'])->name('pipe.org.deleted');
+    // });
+
+    Route::post('/person',        [App\Http\Controllers\PipedriveWebhookController::class, 'person'])->name('pipe.person');
+    Route::post('/stage',         [App\Http\Controllers\PipedriveWebhookController::class, 'stage'])->name('pipe.stage');
+    Route::post('/deal',          [App\Http\Controllers\PipedriveWebhookController::class, 'deal'])->name('pipe.deal');
+
+});
 
 // Route::prefix('common')->group(function () {
 //
