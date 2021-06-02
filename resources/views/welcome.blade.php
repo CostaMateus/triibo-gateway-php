@@ -11,7 +11,7 @@
         <!-- Styles -->
         <link href="{{ asset('css/app.css') }}" rel="stylesheet">
         <style>
-            body{font-family:Nunito,sans-serif;margin:0}*,:after,:before{box-sizing:border-box}.bg-triibo{--bg-opacity:1;background-color:#6e3296;background-color:rgba(110,50,150,var(--bg-opacity))}.flex{display:flex}.items-center{align-items:center}.justify-center{justify-content:center}.h-100{min-height:100vh}.triibo-logo{width:300px}
+            body{font-family:Nunito,sans-serif;margin:0}*,:after,:before{box-sizing:border-box}.flex{display:flex}.items-center{align-items:center}.justify-center{justify-content:center}.h-100{min-height:100vh}.triibo-logo{width:300px}
         </style>
     </head>
     <body>
@@ -34,10 +34,9 @@
                     </div>
                 </div>
             </div>
-            <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-            <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-Piv4xVNRyMGpqkS2by6br4gNJ7DXjqk09RmUpJ8jgGtD7zP9yug3goQfGII0yAns" crossorigin="anonymous"></script>
+
             <script>
-                $('#liveToast').toast('show');
+                // jQuery('#liveToast').toast('show');
                 window.setTimeout(function () {
                     location.href = "/";
                 }, 3000);
