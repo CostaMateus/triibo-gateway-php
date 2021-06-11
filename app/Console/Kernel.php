@@ -24,17 +24,20 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Domingo às 00h30
+        $schedule->exec('composer self-update')->weeklyOn(0, '0:30')->timezone('America/Sao_Paulo');
+        // Domingo às 01h00
+        $schedule->exec('composer update')->weeklyOn(0, '1:00')->timezone('America/Sao_Paulo');
 
-        // $schedule->command('delete:images')->weekly()->sundays()->at('01:30')->timezone('America/Sao_Paulo');
-        // $schedule->command('delete:images')->weekly()->tuesdays()->at('01:30')->timezone('America/Sao_Paulo');
-        // $schedule->command('delete:images')->weekly()->fridays()->at('01:30')->timezone('America/Sao_Paulo');
-        // o mesmo que os acima - domingo, terca e sexta
+        // Domingo, terça e sexta às 01h30
         $schedule->command('delete:images')->cron('30 1 * * 0,2,5')->timezone('America/Sao_Paulo');
 
+        // Diariamente às 02h00
         $schedule->command('process:storepromo')->dailyAt('02:00')->timezone('America/Sao_Paulo');
+        // Diariamente às 03h00
         $schedule->command('process:images')->dailyAt('03:00')->timezone('America/Sao_Paulo');
 
+        // Segunda às 05h00
         $schedule->command('import:stages')->weeklyOn(1, '5:00')->timezone('America/Sao_Paulo');
     }
 
