@@ -29,14 +29,17 @@ class Kernel extends ConsoleKernel
         // Domingo às 01h00
         $schedule->exec('composer update')->weeklyOn(0, '1:00')->timezone('America/Sao_Paulo');
 
+
+        // Cofry Triibo Integration
         // Domingo, terça e sexta às 01h30
         $schedule->command('delete:images')->cron('30 1 * * 0,2,5')->timezone('America/Sao_Paulo');
-
         // Diariamente às 02h00
         $schedule->command('process:storepromo')->dailyAt('02:00')->timezone('America/Sao_Paulo');
         // Diariamente às 03h00
         $schedule->command('process:images')->dailyAt('03:00')->timezone('America/Sao_Paulo');
 
+
+        // Mautic Pipedrive Integration
         // Segunda às 05h00
         $schedule->command('import:stages')->weeklyOn(1, '5:00')->timezone('America/Sao_Paulo');
     }

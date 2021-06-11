@@ -133,9 +133,10 @@ return [
     */
 
     'custom' => [
-        'attribute-name' => [
-            'rule-name' => 'custom-message',
-        ],
+        // 'attribute-name' => [
+        //     'rule-name' => 'custom-message',
+        // ],
+        'allowed_domain' => 'Email not valid for registration.',
     ],
 
     /*

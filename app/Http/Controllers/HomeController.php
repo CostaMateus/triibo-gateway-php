@@ -82,6 +82,7 @@ class HomeController extends Controller
 
     public function teste3(Request $request)
     {
+
         // // dd(ini_get("max_execution_time"));
         // // 11954971 Pedro
         // // 12009079 Tiago
