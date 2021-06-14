@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\UserController;
 use App\Http\Integrations\MauticIntegration;
 
 /*
@@ -25,27 +26,23 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/home', function () {
-    return view('home');
-})->middleware('auth');
+Route::group(['middleware' => 'auth'], function() {
 
-Route::get('/clear-caches', function() {
-    Artisan::call('optimize:clear');
-    return view('welcome', [
-        'showToast' => true,
-        'message'   => __('marketplace.cache')
-    ]);
-})->middleware('auth');
+    Route::get('/home', function () { return view('home'); });
 
-Route::get('/import-stages', function() {
-    MauticIntegration::importAllStages();
-    return view('welcome', [
-        'showToast' => true,
-        'message'   => __('marketplace.import.all.stages')
-    ]);
-})->middleware('auth');
+    Route::get('/clear-caches', function() {
+        Artisan::call('optimize:clear');
+        return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.cache') ]);
+    });
 
+    Route::get('/import-stages', function() {
+        MauticIntegration::importAllStages();
+        return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.import.all.stages') ]);
+    });
 
+    Route::resource('users', UserController::class);
+
+});
 
 // Route::get('/index', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
 // // Teste de api mautic
