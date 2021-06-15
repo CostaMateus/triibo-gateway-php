@@ -17,32 +17,36 @@ use App\Http\Integrations\MauticIntegration;
 |
 */
 
-Auth::routes();
+Auth::routes([
+    'register' => false
+]);
 
 Route::get('/', function () {
     return view('welcome', [
         'showToast' => false,
         'message'   => ''
     ]);
-});
+})->name('welcome');
 
 Route::group(['middleware' => 'auth'], function() {
 
-    Route::get('/home', function () { return view('home'); });
+    Route::get('/home', function () { return view('home'); })->name('home');
 
     Route::get('/clear-caches', function() {
         Artisan::call('optimize:clear');
         return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.cache') ]);
-    });
+    })->name('clear.caches');
 
     Route::get('/import-stages', function() {
         MauticIntegration::importAllStages();
         return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.import.all.stages') ]);
-    });
+    })->name('import.stages');
 
     Route::resource('users', UserController::class);
 
 });
+
+
 
 // Route::get('/index', [App\Http\Controllers\HomeController::class, 'index'])->name('index');
 // // Teste de api mautic
