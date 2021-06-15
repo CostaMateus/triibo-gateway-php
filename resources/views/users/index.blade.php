@@ -97,9 +97,9 @@
                             </div>
                             <div class="col-12 col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label for="add_confirm_password" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
-                                    <input type="password" id="add_confirm_password" class="form-control form-control-sm" name="confirm_password" autocomplete="off" >
-                                    <span id="span_add_confirm_password" class="invalid-feedback"></span>
+                                    <label for="add_password_confirmation" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
+                                    <input type="password" id="add_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
+                                    <span id="span_add_password_confirmation" class="invalid-feedback"></span>
                                 </div>
                             </div>
                         </div>
@@ -154,9 +154,9 @@
                             </div>
                             <div class="col-12 col-md-6 pl-md-2">
                                 <div class="form-group">
-                                    <label for="edit_confirm_password" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
-                                    <input type="password" id="edit_confirm_password" class="form-control form-control-sm" name="confirm_password" autocomplete="off" >
-                                    <span id="span_edit_confirm_password" class="invalid-feedback"></span>
+                                    <label for="edit_password_confirmation" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
+                                    <input type="password" id="edit_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
+                                    <span id="span_edit_password_confirmation" class="invalid-feedback"></span>
                                 </div>
                             </div>
                         </div>
@@ -209,6 +209,7 @@
 
             // CREATE USER
             $(document).on('click', '.add-user', function() {
+                clearFieldInvalidSpan('add');
                 $('#add-user').modal('show');
             });
             $('#add-user-form').on('submit', function(e) {
@@ -236,6 +237,7 @@
 
             // EDIT USER
             $(document).on('click', '.edit-user', function() {
+                clearFieldInvalidSpan('edit');
                 $('#edit-user-title').html($(this).data('name'));
                 $('#edit-user-form').attr('data-id', $(this).data('id'));
                 $('#edit-user-form #edit_name').val($(this).data('name'));
