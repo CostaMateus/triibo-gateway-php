@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Illuminate\Support\Arr;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
@@ -40,15 +39,11 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $message = [
-            'password.same' => 'Os campos Senha e Confirmação de Senha devem corresponder.'
-        ];
-
         $valData = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|max:255|email|allowed_domain|unique:users,email',
-            'password' => 'required|string|min:8|same:confirm_password',
-        ], $message);
+            'password' => 'required|string|min:8|same:password_confirmation',
+        ]);
 
         $valData['password'] = Hash::make($valData['password']);
 
@@ -92,16 +87,11 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $message = [
-            'password.same' => 'Os campos Senha e Confirmação de Senha devem corresponder.'
-        ];
-
         $valData = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|max:255|email|allowed_domain|'.Rule::unique('users')->ignore($user->id),
-            'password' => 'string|min:8|same:confirm_password',
-        ], $message);
-
+            'password' => 'string|min:8|same:password_confirmation',
+        ]);
 
         $user->name  = $valData['name'];
         $user->email = $valData['email'];
