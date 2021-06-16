@@ -69,7 +69,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        if ($params['meta']['change_source'] == 'api')
+        // if ($params['meta']['change_source'] == 'api')
+        if ($params['meta']['host'] == 'app.pipedrive.com')
         {
             Log::info("Deals - changed by api ignored");
             return response()->json([
@@ -168,7 +169,8 @@ class PipedriveWebhookController extends Controller
 
         $params = $request->all();
 
-        if ($params['meta']['change_source'] == 'api')
+        // if ($params['meta']['change_source'] == 'api')
+        if ($params['meta']['host'] == 'app.pipedrive.com')
         {
             Log::info("Organizations - changed by api ignored");
             return response()->json([
@@ -248,7 +250,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        if ($params['meta']['change_source'] == 'api')
+        // if ($params['meta']['change_source'] == 'api')
+        if ($params['meta']['host'] == 'app.pipedrive.com')
         {
             Log::info("Persons - changed by api ignored");
             return response()->json([
@@ -329,7 +332,8 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        if ($params['meta']['change_source'] == 'api')
+        // if ($params['meta']['change_source'] == 'api')
+        if ($params['meta']['host'] == 'app.pipedrive.com')
         {
             Log::info("Stages - changed by api ignored");
             return response()->json([
