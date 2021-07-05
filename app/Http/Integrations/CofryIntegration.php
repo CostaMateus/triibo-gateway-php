@@ -266,7 +266,8 @@ class CofryIntegration
             $store['About']      = trim($store['About']);
             $store['About']      = str_replace('  ', ' ', $store['About']);
 
-            $rules               = json_decode($store['GeneralRules'], true);
+            $rules               = str_replace("\t", "", $store['GeneralRules']);
+            $rules               = json_decode($rules, true);
             $rules['general']    = str_replace('<ol><li>',   '',   $rules['general']);
             $rules['general']    = str_replace('</li></ol>', '',   $rules['general']);
             $rules['general']    = str_replace('</li><li>',  '\n', $rules['general']);
@@ -335,7 +336,8 @@ class CofryIntegration
             $store['About']   = trim($store['About']);
             $store['About']   = str_replace('  ', ' ', $store['About']);
 
-            $rules            = json_decode($store['GeneralRules'], true);
+            $rules            = str_replace("\t", "", $store['GeneralRules']);
+            $rules            = json_decode($rules, true);
             $rules['general'] = str_replace('<ol><li>',   '',   $rules['general']);
             $rules['general'] = str_replace('</li></ol>', '',   $rules['general']);
             $rules['general'] = str_replace('</li><li>',  '\n', $rules['general']);
