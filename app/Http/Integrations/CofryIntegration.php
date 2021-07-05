@@ -210,7 +210,7 @@ class CofryIntegration
                 'establishmentName' => trim($promo['Advertiser']),
 
                 'title'             => 'Ganhe ' . $cashB . '% de volta!',
-                'description'       => $promo['ItemTitle'] . '\nUtilize o código de desconto ' . $promo['ItemCode'] . ' no fechamento da compra.',
+                'description'       => $promo['ItemTitle'] . '\n\nUtilize o código de desconto ' . $promo['ItemCode'] . ' no fechamento da compra.',
 
                 'checkoutCode'      => $promo['ItemCode'],
 
@@ -279,7 +279,7 @@ class CofryIntegration
                 $rules['specific'] = str_replace('</b>', '', $rules['specific']);
             }
 
-            $description   = $store['About'] . '\n' . $rules['general'] . ($rules['additional'] != '' ? '\n' . $rules['additional'] : '') . ($rules['specific'] != '' ? '\n' . $rules['specific'] : '');
+            $description   = $store['About'] . '\n\n' . $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '') . ($rules['specific'] != '' ? '\n\n' . $rules['specific'] : '');
 
             $res[$idPromo] = [
                 'establishmentId'   => $idStore,
@@ -339,7 +339,7 @@ class CofryIntegration
             $rules['general'] = str_replace('<ol><li>',   '',   $rules['general']);
             $rules['general'] = str_replace('</li></ol>', '',   $rules['general']);
             $rules['general'] = str_replace('</li><li>',  '\n', $rules['general']);
-            $descricao        = $store['About'] . '\n' . $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '');
+            $descricao        = $store['About'] . '\n\n' . $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '');
             $tags             = explode(',', $store['Segment']);
 
             $res[$id]         = [
