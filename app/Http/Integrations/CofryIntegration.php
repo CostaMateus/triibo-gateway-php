@@ -345,7 +345,8 @@ class CofryIntegration
 
             if ($store['Segment'])
             {
-                $tags = explode(',', $store['Segment']);
+                // $tags = explode(',', $store['Segment']);
+                $tags = preg_split("/\b,\b/", $store['Segment']);
                 array_unshift($tags, 'Cofry');
             }
             else
@@ -385,6 +386,9 @@ class CofryIntegration
                     ...$tags
                 ]
             ];
+
+            if ($store['uuid'] == 826)
+                dd($store, $res[$id]);
         }
 
         return $res;
