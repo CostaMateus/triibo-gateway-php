@@ -342,7 +342,16 @@ class CofryIntegration
             $rules['general'] = str_replace('</li></ol>', '',   $rules['general']);
             $rules['general'] = str_replace('</li><li>',  '\n', $rules['general']);
             $descricao        = $store['About'] . '\n\n' . $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '');
-            $tags             = explode(',', $store['Segment']);
+
+            if ($store['Segment'])
+            {
+                $tags = explode(',', $store['Segment']);
+                array_unshift($tags, 'Cofry');
+            }
+            else
+            {
+                $tags = [ 'Cofry' ];
+            }
 
             $res[$id]         = [
                 'enableDate'    => $dateEn,
@@ -368,12 +377,11 @@ class CofryIntegration
                 'funcionamento' => [
                     ... self::getSchedulesOperation()
                 ],
-                "horarios"      => [
+                'horarios'      => [
                     ... self::getSchedulesOperation(false)
                 ],
 
                 'tags'          => [
-                    'Cofry',
                     ...$tags
                 ]
             ];
