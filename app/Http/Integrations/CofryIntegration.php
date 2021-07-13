@@ -386,9 +386,6 @@ class CofryIntegration
                     ...$tags
                 ]
             ];
-
-            if ($store['uuid'] == 826)
-                dd($store, $res[$id]);
         }
 
         return $res;
