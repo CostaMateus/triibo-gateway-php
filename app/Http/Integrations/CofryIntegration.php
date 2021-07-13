@@ -346,7 +346,7 @@ class CofryIntegration
             if ($store['Segment'])
             {
                 // $tags = explode(',', $store['Segment']);
-                $tags = preg_split("/\b,\b/", $store['Segment']);
+                $tags = preg_split("/\b,\b/u", $store['Segment']);
                 array_unshift($tags, 'Cofry');
             }
             else
