@@ -176,11 +176,12 @@ class CofryIntegration
             $idStore            = '-cofry' . $promo['uuid'];
             $id                 = $idStore . str_replace('.', '', $promo['ProductAPIID']);
 
+            $promo['ItemCode']  = str_replace(' ',                  '',                          $promo['ItemCode']);
+            $promo['ItemCode']  = str_replace('Cupom:',             '',                          $promo['ItemCode']);
+
             $store['Logo']      = self::PREFIX_PROMO . $i . '_' .
                                   strtolower(str_replace(' ', '-', preg_replace('/[^A-Za-z0-9]/', '', $promo['Advertiser']))) . '_' .
                                   strtolower($promo['ItemCode']) . '.png';
-
-            $promo['ItemCode']  = str_replace(' ',                  '',                          $promo['ItemCode']);
 
             $promo['ItemTitle'] = str_replace('( Código: ******)',  ' (Código: ******)',         $promo['ItemTitle']);
             $promo['ItemTitle'] = str_replace('Código ******',      '(Código: ******)',          $promo['ItemTitle']);
