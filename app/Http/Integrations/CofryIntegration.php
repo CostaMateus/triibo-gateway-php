@@ -206,6 +206,8 @@ class CofryIntegration
             $promo['ItemTitle'] = str_replace('Use ******',         'Use ' . $promo['ItemCode'], $promo['ItemTitle']);
 
             $res[$id]           = [
+                'partnerEstablishmentId' => $promo['uuid'],
+
                 'establishmentId'   => $idStore,
                 'establishmentName' => trim($promo['Advertiser']),
 
@@ -231,7 +233,7 @@ class CofryIntegration
 
                 'region'            => 'nacional',
                 'type'              => 'businessPartner',
-                'url'               => '-' // montar com o Velho
+                'url'               => 'cofry.com.br/partner/check'
             ];
         }
 
@@ -283,6 +285,8 @@ class CofryIntegration
             $description   = $store['About'] . '\n\n' . $rules['general'] . ($rules['additional'] != '' ? '\n\n' . $rules['additional'] : '') . ($rules['specific'] != '' ? '\n\n' . $rules['specific'] : '');
 
             $res[$idPromo] = [
+                'partnerEstablishmentId' => $store['uuid'],
+
                 'establishmentId'   => $idStore,
                 'establishmentName' => $store['Advertiser'],
 
@@ -306,7 +310,7 @@ class CofryIntegration
 
                 'region'            => 'nacional',
                 'type'              => 'businessPartner',
-                'url'               => '' // montar com o Velho
+                'url'               => 'cofry.com.br/partner/check'
             ];
         }
 
