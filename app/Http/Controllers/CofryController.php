@@ -42,10 +42,8 @@ class CofryController extends Controller
 
 
 
-
-
     /**
-     *
+     * Process stores and promotions
      *
      * @return void
      */
@@ -89,6 +87,11 @@ class CofryController extends Controller
         }
     }
 
+    /**
+     * Process stores and send to Firebase
+     *
+     * @return void
+     */
     public function insertStoresFirebase()
     {
         $db             = Firebase::database();
@@ -96,15 +99,25 @@ class CofryController extends Controller
 
         echo "SP : Buscando estabelecimentos\n";
         Log::info("SP : Buscando estabelecimentos");
-        $stores         = CofryIntegration::getEstabelecimentos();
+        $stores = CofryIntegration::getEstabelecimentos();
 
         echo "SP : Enviando estabelecimentos para Firebase\n";
         Log::info("SP : Enviando estabelecimentos para Firebase");
-        $firebaseStores->update($stores);
+        foreach ($stores as $id => $store)
+        {
+            echo "SP : Estab. ID = $id\n";
+            $firebaseStores->update([$id => $store]);
+        }
 
-        // $rStores = $firebaseStores->getValue();
+        // // $firebaseStores->update($stores);
+        // // $rStores = $firebaseStores->getValue();
     }
 
+    /**
+     * Process promotions and send to Firebase
+     *
+     * @return void
+     */
     public function insertPromosFirebase()
     {
         $db             = Firebase::database();
@@ -123,19 +136,24 @@ class CofryController extends Controller
 
         echo "SP : Buscando promoções\n";
         Log::info("SP : Buscando promoções");
-        $promos         = CofryIntegration::getPromocoes();
+        $promos = CofryIntegration::getPromocoes();
 
         echo "SP : Enviando promoções para Firebase\n";
         Log::info("SP : Enviando promoções para Firebase");
-        $firebasePromos->update($promos);
+        foreach ($promos as $id => $p)
+        {
+            echo "SP : Promo ID = $id\n";
+            $firebasePromos->update([$id => $p]);
+        }
 
-        // $rPromos = $firebasePromos->getValue();
+        // // $firebasePromos->update($promos);
+        // // $rPromos = $firebasePromos->getValue();
     }
 
 
 
     /**
-     *
+     * Process images of stores and promotions
      *
      * @return void
      */
@@ -205,7 +223,7 @@ class CofryController extends Controller
     }
 
     /**
-     * Send images to Storage
+     * Send images to Firebase Storage
      *
      * @param Array $images
      * @param String $lcFolder
