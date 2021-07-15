@@ -110,6 +110,17 @@ class CofryController extends Controller
         $db             = Firebase::database();
         $firebasePromos = $db->getReference('Store');
 
+        echo "SP : Limpando promoções Cofry\n";
+        Log::info("SP : Limpando promoções Cofry");
+        $allPromos = $firebasePromos->getValue();
+        foreach ($allPromos as $id => $p)
+        {
+            if (strpos($id, '-cofry') !== false)
+            {
+                $db->getReference("Store/$id")->remove();
+            }
+        }
+
         echo "SP : Buscando promoções\n";
         Log::info("SP : Buscando promoções");
         $promos         = CofryIntegration::getPromocoes();
