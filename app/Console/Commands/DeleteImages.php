@@ -13,14 +13,14 @@ class DeleteImages extends Command
      *
      * @var string
      */
-    protected $signature = 'delete:images';
+    protected $signature = "delete:images";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Delete images from on folder \'images/estabelecimentos/\' and \'images/promos/\'.';
+    protected $description = "Delete images from on folder 'images/estabelecimentos/' and 'images/promos/'.";
 
     /**
      * Create a new command instance.
@@ -42,16 +42,8 @@ class DeleteImages extends Command
         echo "DEL : Excluindo imagens\n";
         Log::info("DEL : Excluindo imagens");
 
-        $paths = [
-            'images/estabelecimentos/',
-            'images/promos/'
-        ];
-
-        foreach ($paths as $p)
-        {
-            $folder = public_path($p);
-            File::deleteDirectory($folder, true);
-        }
+        File::deleteDirectory(public_path("images/estabelecimentos/"), true);
+        File::deleteDirectory(public_path("images/promos/"),           true);
 
         echo "DEL : Excluido com sucesso\n";
         Log::info("DEL : Excluido com sucesso");
