@@ -19,7 +19,7 @@ class CofryIntegration
     const URL_STATUS   = "https://www.cofry.com.br/store-check/import";
     const TOKEN        = [ "token" => "b078c85a534c11ea80311e1746133021" ];
     const PREFIX_STORE = "cofry0_";
-    const PREFIX_PROMO = "promo";
+    const PREFIX_PROMO = "promo0_";
 
     /**
      *
@@ -43,9 +43,6 @@ class CofryIntegration
         $keys      = array_column($promos, "establishmentName");
 		array_multisort($keys, SORT_ASC, $promos);
 
-        self::generatePromosImage($promos);
-
-        // return json_encode($promos);
         return $promos;
     }
 
@@ -56,37 +53,16 @@ class CofryIntegration
      */
     public static function getEstabelecimentos()
     {
-        $stores = self::getStoresCofry();
-        $status = self::getStatusStores();
-
-        if ($stores) self::usort($stores);
-        if ($status) self::usort($status);
-
-        foreach ($stores as &$store)
-        {
-            $index           = array_search($store["uuid"], $status);
-            $store["Active"] = $status[$index]["Active"];
-        }
+        $stores = self::getStoresActive();
 
         $stores = self::translatorStore($stores);
 
-        // return json_encode($stores);
         return $stores;
     }
 
-    /**
-     *
-     *
-     * @return void
-     */
-    public static function getImagens()
-    {
-        $stores = self::getStoresCofry();
 
-        // if ($stores) self::usort($stores);
 
-        self::generatorImages($stores);
-    }
+
 
     /**
      * Get promotions Cofry.
@@ -154,6 +130,43 @@ class CofryIntegration
     /**
      *
      *
+     * @return Array $stores
+     */
+    private static function getStoresActive()
+    {
+        $stores = self::getStoresCofry();
+        $status = self::getStatusStores();
+
+        if ($stores) self::usort($stores);
+        if ($status) self::usort($status);
+
+        foreach ($stores as $id => &$store)
+        {
+            $index           = array_search($store["uuid"], $status);
+            $store["Active"] = $status[$index]["Active"];
+
+            if ($store["Segment"])
+            {
+                $tags = preg_split("/\b,\b/u", $store["Segment"]);
+                array_unshift($tags, "Cofry");
+            }
+            else
+            {
+                $tags = [ "Cofry" ];
+            }
+
+            $store["Segment"] = $tags;
+
+            // Estabelecimentos com esse segmento são ignorados
+            if ( in_array("Seguros e Finanças", $tags) ) unset($stores[$id]);;
+        }
+
+        return $stores;
+    }
+
+    /**
+     *
+     *
      * @param Array $data
      * @return Array $res
      */
@@ -207,8 +220,6 @@ class CofryIntegration
             $promo["ItemTitle"] = str_replace("Use ******",         "Use " . $promo["ItemCode"], $promo["ItemTitle"]);
 
             $res[$id]           = [
-                "partnerEstablishmentId" => $promo["uuid"],
-
                 "establishmentId"    => $idStore,
                 "establishmentName"  => trim($promo["Advertiser"]),
 
@@ -237,7 +248,7 @@ class CofryIntegration
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
-                "url"                => ""
+                "url"                => "{urlCofry}"
             ];
         }
 
@@ -289,8 +300,6 @@ class CofryIntegration
             $description   = $rules["general"] . ($rules["additional"] != "" ? "\n\n" . $rules["additional"] : "") . ($rules["specific"] != "" ? "\n\n" . $rules["specific"] : "");
 
             $res[$idPromo] = [
-                "partnerEstablishmentId" => $store["uuid"],
-
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $store["Advertiser"],
 
@@ -317,7 +326,7 @@ class CofryIntegration
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
-                "url"                => ""
+                "url"                => "{urlCofry}"
             ];
         }
 
@@ -339,20 +348,7 @@ class CofryIntegration
 
         foreach ($data as $store)
         {
-            if ($store["Segment"])
-            {
-                $tags = preg_split("/\b,\b/u", $store["Segment"]);
-                array_unshift($tags, "Cofry");
-            }
-            else
-            {
-                $tags = [ "Cofry" ];
-            }
-
-            // Estabelecimentos com a tag são ignorados
-            if ( in_array("Seguros e Finanças", $tags) ) continue;
-
-            $id               = "-cofry".$store["uuid"];
+            $id               = "-cofry" . $store["uuid"];
 
             $store["Logo"]    = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
             $store["Logo"]    = self::PREFIX_STORE . ((basename($store["Logo"]) != "") ? basename($store["Logo"]) : "standard.png");
@@ -368,6 +364,8 @@ class CofryIntegration
             $descricao        = $store["About"] . "\n\n" . $rules["general"] . ($rules["additional"] != "" ? "\n\n" . $rules["additional"] : "");
 
             $res[$id]         = [
+                "partnerEstablishmentId" => $store["uuid"],
+
                 "enableDate"    => $dateEn,
                 "disableDate"   => $dateDis,
                 "dataAlteracao" => $dateEn,
@@ -396,7 +394,7 @@ class CofryIntegration
                 ],
 
                 "tags"          => [
-                    ...$tags
+                    ...$store["Segment"]
                 ]
             ];
         }
@@ -466,85 +464,51 @@ class CofryIntegration
     /**
      *
      *
-     * @param Array $data
      * @return void
      */
-    private static function generatorImages(Array $data)
+    public static function getImagens()
     {
-        $pathStore = public_path("images/estabelecimentos");
-        $pathPromo = public_path("images/promos");
+        $stores = self::getStoresActive();
 
-        foreach ($data as $store)
+        foreach ($stores as $store)
         {
-            $imgName = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
-            $imgName = basename($imgName);
-
-            if ($imgName)
-            {
-                $fullPathStore = $pathStore . "/" . self::PREFIX_STORE . $imgName;
-                $fullPathPromo = $pathPromo . "/" . self::PREFIX_PROMO . "0_" . $imgName;
-
-                $image         = self::execUrl($store["Logo"]);
-
-                if ($image)
-                {
-                    file_put_contents($fullPathStore, $image);
-
-                    $handle = Image::open($fullPathStore);
-                    $handle->scaleResize(200, 150, "#FFF");
-                    $handle->save($fullPathStore);
-                    $handle->save($fullPathPromo);
-                }
-            }
+            self::saveImage($store["Logo"]);
         }
     }
 
     /**
      *
      *
-     * @param String $url
-     * @return String $data
+     * @param String $logo
+     * @param String $path
+     * @param String $prefix
+     * @return void
      */
-    private static function execUrl(String $url)
+    private static function saveImage(String $logo)
     {
-        $ch   = curl_init();
-
-        curl_setopt($ch, CURLOPT_HEADER, 0);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_URL, $url);
-
-        $data = curl_exec($ch);
-
-        if (curl_getinfo($ch)["http_code"] != 200) $data = null;
-
-        curl_close($ch);
-
-        return $data;
-    }
-
-    private static function generatePromosImage(Array $data)
-    {
+        $pathStore = public_path("images/estabelecimentos");
         $pathPromo = public_path("images/promos");
-        $handle    = Image::open(public_path("images/standard.png"));
 
-        foreach ($data as $promo)
+        $imgName   = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $logo);
+        $imgName   = basename($imgName);
+
+        if ($imgName)
         {
-            $auxHandle = clone $handle;
+            $fullPathStore = $pathStore . "/" . self::PREFIX_STORE . $imgName;
+            $fullPathPromo = $pathPromo . "/" . self::PREFIX_PROMO . $imgName;
 
-            if (isset($promo["checkoutCode"]))
+            $response = Http::get($logo);
+
+            if ($response->successful())
             {
-                $font     = public_path("fonts/OpenSans-Bold.ttf");
-                $f_size   = 48;
-                $f_color  = "#333";
-                $text     = strtoupper($promo["checkoutCode"]);
-                $width    = $auxHandle->width()  / 2;
-                $height   = $auxHandle->height() / 2 + $f_size / 2;
-                $angle    = 0;
-                $position = "center";
+                file_put_contents($fullPathStore, $response->body());
 
-                $auxHandle->write($font, $text, $width, $height, $f_size, $angle, $f_color, $position);
-                $auxHandle->save($pathPromo . "/" . $promo["photo"]);
+                $handle = Image::open($fullPathStore);
+                $handle->scaleResize(200, 150, "#FFF");
+                $handle->save($fullPathStore);
+                $handle->save($fullPathPromo);
             }
         }
     }
+
 }
