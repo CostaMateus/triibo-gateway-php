@@ -471,9 +471,7 @@ class CofryIntegration
         $stores = self::getStoresActive();
 
         foreach ($stores as $store)
-        {
-            self::saveImage($store["Logo"]);
-        }
+            if ($store["Logo"]) self::saveImage($store["Logo"]);
     }
 
     /**
@@ -497,7 +495,7 @@ class CofryIntegration
             $fullPathStore = $pathStore . "/" . self::PREFIX_STORE . $imgName;
             $fullPathPromo = $pathPromo . "/" . self::PREFIX_PROMO . $imgName;
 
-            $response = Http::get($logo);
+            $response      = Http::get($logo);
 
             if ($response->successful())
             {
