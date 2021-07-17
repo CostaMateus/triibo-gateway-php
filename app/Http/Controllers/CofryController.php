@@ -16,28 +16,28 @@ class CofryController extends Controller
     public function estabelecimentos()
     {
         // ~ 2 segundos
-        echo date('Y-m-d H:i:s.u') . "\n";
+        echo date("Y-m-d H:i:s.u") . "\n";
         $stores = CofryIntegration::getEstabelecimentos();
-        echo date('Y-m-d H:i:s.u') . "\n";
+        echo date("Y-m-d H:i:s.u") . "\n";
         dd($stores);
     }
 
     public function promocoes()
     {
         // ~ 17 segundos
-        echo date('Y-m-d H:i:s.u') . "\n";
+        echo date("Y-m-d H:i:s.u") . "\n";
         $promos = CofryIntegration::getPromocoes();
-        echo date('Y-m-d H:i:s.u') . "\n";
+        echo date("Y-m-d H:i:s.u") . "\n";
         dd($promos);
     }
 
     public function imagens()
     {
         // ~ 10 minutos
-        echo date('Y-m-d H:i:s.u') . "\n";
+        echo date("Y-m-d H:i:s.u") . "\n";
         CofryIntegration::getImagens();
-        echo date('Y-m-d H:i:s.u') . "\n";
-        dd('OK');
+        echo date("Y-m-d H:i:s.u") . "\n";
+        dd("OK");
     }
 
 
@@ -54,7 +54,7 @@ class CofryController extends Controller
         {
             $this->insertStoresFirebase();
             echo "SP : Estabelecimentos enviados com sucesso\n";
-            self::registerLog(0, 'Estabelecimentos enviados com sucesso');
+            self::registerLog(0, "Estabelecimentos enviados com sucesso");
         }
         catch (FirebaseException $e)
         {
@@ -73,7 +73,7 @@ class CofryController extends Controller
         {
             $this->insertPromosFirebase();
             echo "SP : Promoções enviadas sucesso\n";
-            self::registerLog(0, 'Promoções enviadas sucesso');
+            self::registerLog(0, "Promoções enviadas sucesso");
         }
         catch (FirebaseException $e)
         {
@@ -95,7 +95,7 @@ class CofryController extends Controller
     public function insertStoresFirebase()
     {
         $db             = Firebase::database();
-        $firebaseStores = $db->getReference('Estabelecimento-v2');
+        $firebaseStores = $db->getReference("Estabelecimento-v2");
 
         echo "SP : Buscando estabelecimentos\n";
         Log::info("SP : Buscando estabelecimentos");
@@ -121,14 +121,14 @@ class CofryController extends Controller
     public function insertPromosFirebase()
     {
         $db             = Firebase::database();
-        $firebasePromos = $db->getReference('Store');
+        $firebasePromos = $db->getReference("Store");
 
         echo "SP : Limpando promoções Cofry\n";
         Log::info("SP : Limpando promoções Cofry");
         $allPromos = $firebasePromos->getValue();
         foreach ($allPromos as $id => $p)
         {
-            if (strpos($id, '-cofry') !== false)
+            if (strpos($id, "-cofry") !== false)
             {
                 $db->getReference("Store/$id")->remove();
             }
@@ -160,64 +160,53 @@ class CofryController extends Controller
     public function uploadImages()
     {
         // Local
-        $lcStore    = 'images/estabelecimentos/';
-        $lcPromo    = 'images/promos/';
+        $lcStore     = "images/estabelecimentos/";
+        $lcPromo     = "images/promos/";
 
         // Firebase
-        $fbStore    = 'estabelecimento/';
-        $fbPromo    = 'promocao/';
+        $fbStore     = "estabelecimento/";
+        $fbPromo     = "promocao/";
 
-        $imgsStores = self::getFileNames($lcStore);
-        $imgsPromos = self::getFileNames($lcPromo);
+        $filesStores = File::allFiles(public_path($lcStore));
+        $filesPromos = File::allFiles(public_path($lcPromo));
 
-        // ~ 20 min
-        self::execUploadImages($imgsStores, $lcStore, $fbStore);
-
-        // ~ 57 min
-        self::execUploadImages($imgsPromos, $lcPromo, $fbPromo);
-    }
-
-    /**
-     * Get the file names from some folder
-     *
-     * @param String $pathFolder
-     * @return Array $fileNames
-     */
-    private static function getFileNames(String $pathFolder)
-    {
-        $path      = public_path($pathFolder);
-        $files     = File::allFiles($path);
-        $fileNames = [];
-
-        if (empty($files))
+        if (empty($filesStores) || empty($filesPromos))
         {
             echo "IMG : Gerando imagens\n";
             Log::info("IMG : Gerando imagens");
             CofryIntegration::getImagens();
-        }
-        else
-        {
-            $today = new DateTime(date('Y-m-d H:i:s'));
-            $fDate = new DateTime(date('Y-m-d H:i:s', $files[0]->getCTime()));
 
-            $diff  = $fDate->diff($today);
-            $diff  = (int) $diff->format('%a');
-
-            if ($diff >= 2)
-            {
-                echo "IMG : Gerando imagens\n";
-                Log::info("IMG : Gerando imagens");
-                CofryIntegration::getImagens();
-            }
+            $filesStores = File::allFiles(public_path($lcStore));
+            $filesPromos = File::allFiles(public_path($lcPromo));
         }
 
-        echo "IMG : Capturando nomes - $pathFolder\n";
-        Log::info("IMG : Capturando nomes - $pathFolder");
+        echo "IMG : Capturando nomes - $lcStore\n";
+        Log::info("IMG : Capturando nomes - $lcStore");
+        $fileNameStores = self::getFileNames($filesStores);
+
+        echo "IMG : Capturando nomes - $lcPromo\n";
+        Log::info("IMG : Capturando nomes - $lcPromo");
+        $fileNamePromos = self::getFileNames($filesPromos);
+
+        // ~ 20 min
+        self::execUploadImages($fileNameStores, $lcStore, $fbStore);
+
+        // ~ 57 min
+        self::execUploadImages($fileNamePromos, $lcPromo, $fbPromo);
+    }
+
+    /**
+     * Get the file names from list of files
+     *
+     * @param Array $files
+     * @return Array $fileNames
+     */
+    private static function getFileNames(Array $files)
+    {
+        $fileNames = [];
 
         foreach($files as $file)
-        {
-            array_push($fileNames, pathinfo($file)['basename']);
-        }
+            array_push($fileNames, pathinfo($file)["basename"]);
 
         return $fileNames;
     }
@@ -241,8 +230,8 @@ class CofryController extends Controller
         foreach ($images as $img)
         {
             $uploader = $bucket->getResumableUploader(
-                fopen(public_path($lcFolder . $img), 'r'),
-                [ 'name' => $fbFolder . $img ]
+                fopen(public_path($lcFolder . $img), "r"),
+                [ "name" => $fbFolder . $img ]
             );
 
             try
