@@ -31,10 +31,10 @@ class Kernel extends ConsoleKernel
 
 
         // Cofry Triibo Integration
-        // Diariamente às 01h10
-        $schedule->command('delete:images')->dailyAt('01:10')->timezone('America/Sao_Paulo');
         // Diariamente às 02h00
         $schedule->command('process:storepromo')->dailyAt('02:00')->timezone('America/Sao_Paulo');
+        // Diariamente às 02h55
+        $schedule->command('delete:images')->dailyAt('02:55')->timezone('America/Sao_Paulo');
         // Diariamente às 03h00
         $schedule->command('process:images')->dailyAt('03:00')->timezone('America/Sao_Paulo');
 
