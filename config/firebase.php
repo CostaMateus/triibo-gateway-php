@@ -47,7 +47,7 @@ return [
              *
              */
             'credentials' => [
-                'file' => env('FIREBASE_CREDENTIALS', env('GOOGLE_APPLICATION_CREDENTIALS')),
+                'file' => (env('TRIIBO_ENV') == 'production') ? env('FIREBASE_CREDENTIALS_PROD') : env('FIREBASE_CREDENTIALS_HML'),
 
                 /*
                  * If you want to prevent the auto discovery of credentials, set the
@@ -85,7 +85,7 @@ return [
                  * Please make sure that you use a full URL like, for example,
                  * https://my-project-id.firebaseio.com
                  */
-                'url' => env('FIREBASE_DATABASE_URL'),
+                'url' => (env('TRIIBO_ENV') == 'production') ? env('FIREBASE_DATABASE_URL_PROD') : env('FIREBASE_DATABASE_URL_HML'),
             ],
 
             'dynamic_links' => [
