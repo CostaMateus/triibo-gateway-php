@@ -44,7 +44,7 @@ class CofryIntegration
         $keys      = array_column($promos, "establishmentName");
 		array_multisort($keys, SORT_ASC, $promos);
 
-        $cupom     = public_path("images/cupom.png");
+        $cupom     = public_path("images") . "/cupom.png";
         $pathPromo = public_path("images/promos");
         File::copy($cupom, $pathPromo . "/common_promotion.png");
 
