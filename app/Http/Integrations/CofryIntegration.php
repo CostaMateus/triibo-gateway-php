@@ -8,6 +8,7 @@ use DateInterval;
 use Gregwar\Image\Image;
 use Verot\Upload\Upload;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
@@ -42,6 +43,10 @@ class CofryIntegration
 
         $keys      = array_column($promos, "establishmentName");
 		array_multisort($keys, SORT_ASC, $promos);
+
+        $cupom     = public_path("images/cupom.png");
+        $pathPromo = public_path("images/promos");
+        File::copy($cupom, $pathPromo . "/common_promotion.png");
 
         return $promos;
     }
@@ -278,7 +283,7 @@ class CofryIntegration
             $idPromo             = $idStore . strtolower(str_replace(" ", "", $auxAdv));
 
             $store["Logo"]       = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
-            $store["Logo"]       = self::PREFIX_PROMO . "0_" . ((basename($store["Logo"]) != "") ? basename($store["Logo"]) : "standard.png");
+            $store["Logo"]       = self::PREFIX_PROMO . ((basename($store["Logo"]) != "") ? basename($store["Logo"]) : "standard.png");
 
             $store["About"]      = trim($store["About"]);
             $store["About"]      = str_replace("  ", " ", $store["About"]);
@@ -472,6 +477,12 @@ class CofryIntegration
 
         foreach ($stores as $store)
             if ($store["Logo"]) self::saveImage($store["Logo"]);
+
+        $pathStore = public_path("images/estabelecimentos");
+        $pathPromo = public_path("images/promos");
+        $default   = public_path("images/standard.png");
+        File::copy($default, $pathStore . "/cofry0_standard.png");
+        File::copy($default, $pathPromo . "/promo0_standard.png");
     }
 
     /**
