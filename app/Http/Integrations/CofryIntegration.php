@@ -187,17 +187,13 @@ class CofryIntegration
         {
             ($key > 0 && $promo["uuid"] == $data[$key - 1]["uuid"]) ? $i++ : $i = 1;
 
-            $cashB             = number_format((float) $promo["CashbackClient"], $promo["CashbackFormat"], ",", "");
+            $cashback          = number_format((float) $promo["CashbackClient"], $promo["CashbackFormat"], ",", "");
 
             $idStore           = "-cofry" . $promo["uuid"];
             $id                = $idStore . str_replace(".", "", $promo["ProductAPIID"]);
 
             $promo["ItemCode"] = str_replace(" ",      "", $promo["ItemCode"]);
             $promo["ItemCode"] = str_replace("Cupom:", "", $promo["ItemCode"]);
-
-            // $store["Logo"]      = self::PREFIX_PROMO . $i . "_" .
-            //                       strtolower(str_replace(" ", "-", preg_replace("/[^A-Za-z0-9]/", "", $promo["Advertiser"]))) . "_" .
-            //                       strtolower($promo["ItemCode"]) . ".png";
 
             if ($promo["ItemTitle"] === "******") $promo["ItemTitle"] = "Cupom: ******";
 
@@ -228,8 +224,8 @@ class CofryIntegration
                 "establishmentId"    => $idStore,
                 "establishmentName"  => trim($promo["Advertiser"]),
 
-                "title"              => "Ganhe " . $cashB . "% de volta!",
-                "detailsTitle"       => "Ganhe " . $cashB . "% de volta!",
+                "title"              => "Ganhe " . $cashback . "% de volta!",
+                "detailsTitle"       => "Ganhe " . $cashback . "% de volta!",
 
                 "description"        => $promo["ItemTitle"],
                 "detailsDescription" => $promo["ItemTitle"] . "\n\nUtilize o código de desconto " . $promo["ItemCode"] . " no fechamento da compra.",
@@ -277,6 +273,8 @@ class CofryIntegration
         {
             $idStore             = "-cofry" . $store["uuid"];
 
+            $cashback            = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
+
             $store["Advertiser"] = trim($store["Advertiser"]);
 
             $auxAdv              = preg_replace("/[^\w\s]/", "", iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $store["Advertiser"]));
@@ -308,8 +306,8 @@ class CofryIntegration
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $store["Advertiser"],
 
-                "title"              => $store["Advertiser"],
-                "detailsTitle"       => $store["Advertiser"],
+                "title"              => "Ganhe " . $cashback . "% de volta!",
+                "detailsTitle"       => "Ganhe " . $cashback . "% de volta!",
 
                 "description"        => $store["About"],
                 "detailsDescription" => $description,
