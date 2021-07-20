@@ -63,20 +63,32 @@ class MauticIntegration
                 // Verifica se tem mautic_id
                 if ($data['id'])
                 {
-                    Log::info('Persons - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Persons", [
+                        "data"         => "searching by id",
+                        "mautic_id"    => $data["id"],
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
                     // Busca por id
                     $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
                 }
                 // Verifica se tem email
                 else if ($data['email'])
                 {
-                    Log::info('Persons - searching by email - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Persons", [
+                        "data"         => "searching by email",
+                        "mautic_id"    => NULL,
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
                     // Busca por email
                     $res = self::searchMauticByField($mauticApi, 'email', $data['email']);
                 }
                 else
                 {
-                    Log::info('Persons - no data to search - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Persons", [
+                        "data"         => "no data to search",
+                        "mautic_id"    => NULL,
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
                     break;
                 }
 
@@ -106,13 +118,21 @@ class MauticIntegration
                 // Verifica se tem mautic_id
                 if ($data['id'])
                 {
-                    Log::info('Organizations - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_org_id:' . $data['pipedrive_org_id']);
+                    Log::channel("marketplace")->info("Organizations", [
+                        "data"             => "searching by id",
+                        "mautic_id"        => $data["id"],
+                        "pipedrive_org_id" => $data["pipedrive_org_id"]
+                    ]);
                     // Busca por id
                     $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
                 }
                 else
                 {
-                    Log::info('Organizations - searching by name - mautic_id:NULL | pipedrive_org_id:' . $data['pipedrive_org_id']);
+                    Log::channel("marketplace")->info("Organizations", [
+                        "data"             => "searching by name",
+                        "mautic_id"        => NULL,
+                        "pipedrive_org_id" => $data["pipedrive_org_id"]
+                    ]);
                     // Busca por nome
                     $res = self::searchMauticByField($mauticApi);
                 }
@@ -169,7 +189,11 @@ class MauticIntegration
         // Se não está ativo e foi excluido
         if (!$data['aux_active'] && $data['aux_deleted'])
         {
-            Log::info('Deals deleted - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
+            Log::channel("marketplace")->info("Deals", [
+                "data"         => "deleted",
+                "mautic_id"    => $data["id"],
+                "pipedrive_id" => $data["pipedrive_id"]
+            ]);
 
             $data['pipeline'] = NULL;
         }
@@ -180,14 +204,22 @@ class MauticIntegration
         // Verifica se tem mautic_id
         if ($data['id'])
         {
-            Log::info('Deals - searching by id - mautic_id:' . $data['id'] . ' | pipedrive_id:' . $data['pipedrive_id']);
+            Log::channel("marketplace")->info("Deals", [
+                "data"         => "searching by id",
+                "mautic_id"    => $data["id"],
+                "pipedrive_id" => $data["pipedrive_id"]
+            ]);
 
             // Busca por id
             $res = self::searchMauticByField($mauticApi, 'ids', $data['id']);
         }
         else if ($data['aux_email'])
         {
-            Log::info('Deals - searching by email - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
+            Log::channel("marketplace")->info("Deals", [
+                "data"         => "searching by email",
+                "mautic_id"    => NULL,
+                "pipedrive_id" => $data["pipedrive_id"]
+            ]);
 
             // Busca por email
             $res = self::searchMauticByField($mauticApi, 'email', $data['aux_email']);
@@ -198,7 +230,11 @@ class MauticIntegration
         }
         else
         {
-            Log::info('Deals - no data to search - mautic_id:NULL | pipedrive_id:' . $data['pipedrive_id']);
+            Log::channel("marketplace")->info("Deals", [
+                "data"         => "no data to search",
+                "mautic_id"    => NULL,
+                "pipedrive_id" => $data["pipedrive_id"]
+            ]);
             return NULL;
         }
 
@@ -216,11 +252,19 @@ class MauticIntegration
             {
                 if (!$delete)
                 {
-                    Log::info("Deals - contact pipeline updated | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Deals", [
+                        "data"         => "contact pipeline updated",
+                        "mautic_id"    => $data["id"],
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
                 }
                 else
                 {
-                    Log::info("Deals - contact pipeline deleted | mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Deals", [
+                        "data"         => "contact pipeline deleted",
+                        "mautic_id"    => $data["id"],
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
 
                     $data['pipeline']        = 0;
                     $data['pipeline_status'] = ' ';
@@ -230,7 +274,11 @@ class MauticIntegration
             }
             else
             {
-                Log::info("Deals - contact not found - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                Log::channel("marketplace")->info("Deals", [
+                    "data"         => "contact not found",
+                    "mautic_id"    => $data["id"],
+                    "pipedrive_id" => $data["pipedrive_id"]
+                ]);
                 // throw new Exception("Contact not found - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
             }
         // }
@@ -302,7 +350,11 @@ class MauticIntegration
             case 'contacts':
                 if ($data['id'])
                 {
-                    Log::info("Persons - delete by id - mautic_id:" . $data['id'] . " | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Persons", [
+                        "data"         => "delete by id",
+                        "mautic_id"    => $data["id"],
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
 
                     $mauticApi->delete($data['id']);
                 }
@@ -312,21 +364,33 @@ class MauticIntegration
 
                     if ($res['total'])
                     {
-                        Log::info("Persons - delete by email - mautic_id:NULL | pipedrive_id:" . $data['pipedrive_id']);
+                        Log::channel("marketplace")->info("Persons", [
+                            "data"         => "delete by email",
+                            "mautic_id"    => NULL,
+                            "pipedrive_id" => $data["pipedrive_id"]
+                        ]);
 
                         $mauticApi->delete(key($res['object']));
                     }
                 }
                 else
                 {
-                    Log::info("Persons - not found to delete - mautic_id: | pipedrive_id:" . $data['pipedrive_id']);
+                    Log::channel("marketplace")->info("Persons", [
+                        "data"         => "not found to delete",
+                        "mautic_id"    => NULL,
+                        "pipedrive_id" => $data["pipedrive_id"]
+                    ]);
                 }
             break;
 
             case 'companies':
                 if ($data['id'])
                 {
-                    Log::info("Organizations - delete by id - mautic_id:" . $data['id'] . " | pipedrive_org_id:" . $data['pipedrive_org_id']);
+                    Log::channel("marketplace")->info("Organizations", [
+                        "data"             => "delete by id",
+                        "mautic_id"        => $data["id"],
+                        "pipedrive_org_id" => $data["pipedrive_org_id"]
+                    ]);
 
                     $mauticApi->delete($data['id']);
                 }
@@ -340,7 +404,11 @@ class MauticIntegration
                         {
                             if ($company['fields']['all']['companyname'] == $data['companyname'])
                             {
-                                Log::info("Organizations - deleted by name - mautic_id:NULL | pipedrive_org_id:" . $data['pipedrive_org_id']);
+                                Log::channel("marketplace")->info("Organizations", [
+                                    "data"             => "deleted by name",
+                                    "mautic_id"        => NULL,
+                                    "pipedrive_org_id" => $data["pipedrive_org_id"]
+                                ]);
 
                                 $mauticApi->delete($id);
                                 break;
@@ -348,7 +416,11 @@ class MauticIntegration
                         }
                     }
 
-                    Log::info("Organizations - not found to delete - mautic_id: | pipedrive_id:" . $data['pipedrive_org_id']);
+                    Log::channel("marketplace")->info("Organizations", [
+                        "data"         => "not found to delete",
+                        "mautic_id"    => NULL,
+                        "pipedrive_id" => $data["pipedrive_org_id"]
+                    ]);
                 }
             break;
         }
@@ -457,7 +529,10 @@ class MauticIntegration
 
         $aux = ($mauticApi->listName() == 'contacts') ? 'Persons' : 'Organizations';
 
-        Log::info("$aux - searching - result total:$ttl");
+        Log::channel("marketplace")->info("$aux", [
+            "data"         => "searching",
+            "result_total" => $ttl
+        ]);
 
         $obj = $obj[$mauticApi->listName()]??NULL;
 
@@ -509,7 +584,11 @@ class MauticIntegration
         else
             $pipeName = 'pipedrive_org_id';
 
-        Log::info("$auxLog - created/updated | mautic_id:$mauticId | $pipeName:$pipeId");
+        Log::channel("marketplace")->info("$auxLog", [
+            "data"      => "created/updated",
+            "mautic_id" => $mauticId,
+            "$pipeName" => $pipeId
+        ]);
 
         if ($hasId)
         {
@@ -649,7 +728,9 @@ class MauticIntegration
      */
     public static function importAllStages()
     {
-        Log::info("Stages - start importing all stages");
+        Log::channel("marketplace")->info("Stages", [
+            "data" => "start importing all stages"
+        ]);
 
         $idField   = 185; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi('contactFields');
@@ -679,11 +760,15 @@ class MauticIntegration
 
         if (!isset($res['errors']))
         {
-            Log::info("Stages - end of importing all stages");
+            Log::channel("marketplace")->info("Stages", [
+                "data" => "end of importing all stages"
+            ]);
         }
         else
         {
-            Log::info("Stages - import failed");
+            Log::channel("marketplace")->info("Stages", [
+                "data" => "import failed"
+            ]);
         }
     }
 
