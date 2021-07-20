@@ -80,7 +80,11 @@ class CofryIntegration
 
         $res    = $client->post(self::URL_PROMO, self::TOKEN)->json();
 
-        self::registerLog($res["errorCode"], $res["errorMessage"], "getPromosCofry");
+        Log::channel("cofry")->info("CofryAPI", [
+            "code"    => $res["errorCode"],
+            "method"  => "getPromosCofry",
+            "message" => $res["errorMessage"]
+        ]);
 
         if ($res["errorCode"] == 0)
         {
@@ -101,7 +105,11 @@ class CofryIntegration
 
         $res    = $client->post(self::URL_STORE, self::TOKEN)->json();
 
-        self::registerLog($res["errorCode"], $res["errorMessage"], "getStoresCofry");
+        Log::channel("cofry")->info("CofryAPI", [
+            "code"    => $res["errorCode"],
+            "method"  => "getStoresCofry",
+            "message" => $res["errorMessage"]
+        ]);
 
         if ($res["errorCode"] == 0)
         {
@@ -122,7 +130,11 @@ class CofryIntegration
 
         $res    = $client->post(self::URL_STATUS, self::TOKEN)->json();
 
-        self::registerLog($res["errorCode"], $res["errorMessage"], "getStatusStores");
+        Log::channel("cofry")->info("CofryAPI", [
+            "code"    => $res["errorCode"],
+            "method"  => "getStatusStores",
+            "message" => $res["errorMessage"]
+        ]);
 
         if ($res["errorCode"] == 0)
         {
@@ -437,20 +449,6 @@ class CofryIntegration
         }
 
         return $res;
-    }
-
-    /**
-     * Log access to cofry APIs
-     *
-     * @param  Int    $code
-     * @param  String $message
-     * @return void
-     */
-    private static function registerLog(Int $code, String $message, String $class)
-    {
-        $log = "CofryAPI | code: " . $code . " | message: " . $class . ", " . $message;
-
-        ($code != 0) ? Log::critical($log) : Log::info($log);
     }
 
     /**

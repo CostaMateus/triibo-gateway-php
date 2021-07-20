@@ -106,6 +106,12 @@ return [
             'path'   => storage_path('logs/marketplace.log'),
             'level'  => 'debug'
         ],
+
+        'cofry' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/cofry.log'),
+            'level'  => 'debug'
+        ],
     ],
 
 ];

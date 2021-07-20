@@ -54,17 +54,29 @@ class CofryController extends Controller
         {
             $this->insertStoresFirebase();
             echo "SP : Estabelecimentos enviados com sucesso\n";
-            self::registerLog(0, "Estabelecimentos enviados com sucesso");
+            Log::channel("cofry")->info("Images", [
+                "code" => 0,
+                "error" => NULL,
+                "message" => "Estabelecimentos enviados com sucesso"
+            ]);
         }
         catch (FirebaseException $e)
         {
             echo "SP : Estabelecimento, erro processo Firebase - abortando\n";
-            self::registerLog(401, "An error has occurred while working with the SDK: $e");
+            Log::channel("cofry")->critical("Images", [
+                "code" => "C-401",
+                "error" => "An error has occurred while working with the SDK",
+                "message" => $e
+            ]);
         }
         catch (Throwable $e)
         {
             echo "SP : Erro inesperado - abortando\n";
-            self::registerLog(501, "A not-Firebase specific error has occurred: $e");
+            Log::channel("cofry")->critical("Images", [
+                "code" => "C-501",
+                "error" => "A not-Firebase specific error has occurred",
+                "message" => $e
+            ]);
         }
 
 
@@ -73,17 +85,29 @@ class CofryController extends Controller
         {
             $this->insertPromosFirebase();
             echo "SP : Promoções enviadas sucesso\n";
-            self::registerLog(0, "Promoções enviadas sucesso");
+            Log::channel("cofry")->info("Images", [
+                "code" => 0,
+                "error" => NULL,
+                "message" => "Promoções enviadas sucesso"
+            ]);
         }
         catch (FirebaseException $e)
         {
             echo "SP : Promoções, erro processo Firebase - abortando\n";
-            self::registerLog(402, "An error has occurred while working with the SDK: $e");
+            Log::channel("cofry")->critical("Images", [
+                "code" => "C-402",
+                "error" => "An error has occurred while working with the SDK",
+                "message" => $e
+            ]);
         }
         catch (Throwable $e)
         {
             echo "SP : Erro inesperado - abortando\n";
-            self::registerLog(502, "A not-Firebase specific error has occurred: $e");
+            Log::channel("cofry")->critical("Images", [
+                "code" => "C-502",
+                "error" => "A not-Firebase specific error has occurred",
+                "message" => $e
+            ]);
         }
     }
 
@@ -98,11 +122,11 @@ class CofryController extends Controller
         $firebaseStores = $db->getReference("Estabelecimento-v2");
 
         echo "SP : Buscando estabelecimentos\n";
-        Log::info("SP : Buscando estabelecimentos");
+        Log::channel("cofry")->info("Stores|Promos", [ "Buscando estabelecimentos" ]);
         $stores = CofryIntegration::getEstabelecimentos();
 
         echo "SP : Enviando estabelecimentos para Firebase\n";
-        Log::info("SP : Enviando estabelecimentos para Firebase");
+        Log::channel("cofry")->info("Stores|Promos", [ "Enviando estabelecimentos para Firebase" ]);
         foreach ($stores as $id => $store)
         {
             echo "SP : Estab. ID = $id\n";
@@ -124,7 +148,7 @@ class CofryController extends Controller
         $firebasePromos = $db->getReference("Store");
 
         echo "SP : Limpando promoções Cofry\n";
-        Log::info("SP : Limpando promoções Cofry");
+        Log::channel("cofry")->info("Stores|Promos", [ "Limpando promoções Cofry" ]);
         $allPromos = $firebasePromos->getValue();
         foreach ($allPromos as $id => $p)
         {
@@ -135,11 +159,11 @@ class CofryController extends Controller
         }
 
         echo "SP : Buscando promoções\n";
-        Log::info("SP : Buscando promoções");
+        Log::channel("cofry")->info("Stores|Promos", [ "Buscando promoções" ]);
         $promos = CofryIntegration::getPromocoes();
 
         echo "SP : Enviando promoções para Firebase\n";
-        Log::info("SP : Enviando promoções para Firebase");
+        Log::channel("cofry")->info("Stores|Promos", [ "Enviando promoções para Firebase" ]);
         foreach ($promos as $id => $p)
         {
             echo "SP : Promo ID = $id\n";
@@ -173,7 +197,7 @@ class CofryController extends Controller
         if (empty($filesStores) || empty($filesPromos))
         {
             echo "IMG : Gerando imagens\n";
-            Log::info("IMG : Gerando imagens");
+            Log::channel("cofry")->info("Images", [ "Gerando imagens" ]);
             CofryIntegration::getImagens();
 
             $filesStores = File::allFiles(public_path($lcStore));
@@ -181,11 +205,11 @@ class CofryController extends Controller
         }
 
         echo "IMG : Capturando nomes - $lcStore\n";
-        Log::info("IMG : Capturando nomes - $lcStore");
+        Log::channel("cofry")->info("Images", [ "Capturando nomes - $lcStore" ]);
         $fileNameStores = self::getFileNames($filesStores);
 
         echo "IMG : Capturando nomes - $lcPromo\n";
-        Log::info("IMG : Capturando nomes - $lcPromo");
+        Log::channel("cofry")->info("Images", [ "Capturando nomes - $lcPromo" ]);
         $fileNamePromos = self::getFileNames($filesPromos);
 
         // ~ 20 min
@@ -225,7 +249,7 @@ class CofryController extends Controller
         $bucket = $st->getBucket();
 
         echo "IMG : Inicio upload Firebase - $lcFolder\n";
-        Log::info("IMG : Inicio upload Firebase - $lcFolder");
+        Log::channel("cofry")->info("Images", [ "Inicio upload Firebase - $lcFolder" ]);
 
         foreach ($images as $img)
         {
@@ -236,6 +260,7 @@ class CofryController extends Controller
 
             try
             {
+                echo "IMG : Image ID = $img\n";
                 $uploader->upload();
             }
             catch (FirebaseException $e)
@@ -243,31 +268,24 @@ class CofryController extends Controller
                 $resumeUri = $uploader->getResumeUri();
                 $object    = $uploader->resume($resumeUri);
 
-                self::registerLog(403, "An error has occurred while working with the SDK: $e");
+                Log::channel("cofry")->critical("Images", [
+                    "code" => "C-403",
+                    "error" => "An error has occurred while working with the SDK",
+                    "message" => $e
+                ]);
             }
             catch (Throwable $e)
             {
-                self::registerLog(503, "A not-Firebase specific error has occurred: $e");
+                Log::channel("cofry")->critical("Images", [
+                    "code" => "C-503",
+                    "error" => "A not-Firebase specific error has occurred",
+                    "message" => $e
+                ]);
             }
         }
 
         echo "IMG : Fim upload Firebase - $lcFolder\n";
-        Log::info("IMG : Fim upload Firebase - $lcFolder");
+        Log::channel("cofry")->info("Images", [ "Fim upload Firebase - $lcFolder" ]);
     }
 
-
-
-    /**
-     * Log access to cofry APIs
-     *
-     * @param  Int    $code
-     * @param  String $message
-     * @return void
-     */
-    private static function registerLog(Int $code, String $message)
-    {
-        $log = "FirebaseAPI | code: $code | message: $message";
-
-        ($code != 0) ? Log::critical($log) : Log::info($log);
-    }
 }
