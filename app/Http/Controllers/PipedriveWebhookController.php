@@ -72,10 +72,13 @@ class PipedriveWebhookController extends Controller
         // if ($params['meta']['change_source'] == 'api')
         if ($params['meta']['host'] == 'app.pipedrive.com')
         {
-            Log::info("Deals - changed by api ignored");
+            Log::channel("marketplace")->info("Deals", [
+                "0" => "changed by api ignored"
+            ]);
+
             return response()->json([
                 'status'  => 'Ok',
-                'message' => 'Deals - changed by api ignored',
+                'message' => 'Deal - changed by api ignored',
                 'code'    => -1,
             ], 200);
         }
@@ -124,7 +127,10 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::info("Deal - Unsupported event, 400");
+                    Log::channel("marketplace")->info("Deals", [
+                        "400" => "Unsupported event"
+                    ]);
+
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -135,7 +141,10 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Deals - $e, 500");
+            Log::channel("marketplace")->info("Deals", [
+                "500" => $e
+            ]);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -143,7 +152,10 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Deals - Success, 200");
+        Log::channel("marketplace")->info("Deals", [
+            "200" => "Success"
+        ]);
+
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -160,7 +172,10 @@ class PipedriveWebhookController extends Controller
     {
         if (env('APP_ENV') == 'production' || env('APP_ENV') == 'local')
         {
-            Log::info("Organizations - deactivated, 200");
+            Log::channel("marketplace")->info("Organizations", [
+                "0" => "deactivated"
+            ]);
+
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Deactivated',
@@ -172,7 +187,10 @@ class PipedriveWebhookController extends Controller
         // if ($params['meta']['change_source'] == 'api')
         if ($params['meta']['host'] == 'app.pipedrive.com')
         {
-            Log::info("Organizations - changed by api ignored");
+            Log::channel("marketplace")->info("Organizations", [
+                "0" => "changed by api ignored"
+            ]);
+
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Organizations - changed by api ignored',
@@ -201,7 +219,9 @@ class PipedriveWebhookController extends Controller
 
                         if (!$result)
                         {
-                            Log::info("Organizations - discarded changes");
+                            Log::channel("marketplace")->info("Organizations", [
+                                "0" => "discarded changes"
+                            ]);
                             break;
                         }
                     }
@@ -214,7 +234,10 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::info("Organizations - Unsupported event, 400");
+                    Log::channel("marketplace")->info("Organizations", [
+                        "400" => "Unsupported event"
+                    ]);
+
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -225,7 +248,10 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Organizations - $e, 500");
+            Log::channel("marketplace")->info("Organizations", [
+                "500" => $e
+            ]);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -233,7 +259,10 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Organizations - Success, 200");
+        Log::channel("marketplace")->info("Organizations", [
+            "200" => "Success"
+        ]);
+
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -253,7 +282,10 @@ class PipedriveWebhookController extends Controller
         // if ($params['meta']['change_source'] == 'api')
         if ($params['meta']['host'] == 'app.pipedrive.com')
         {
-            Log::info("Persons - changed by api ignored");
+            Log::channel("marketplace")->info("Persons", [
+                "0" => "changed by api ignored"
+            ]);
+
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Persons - changed by api ignored',
@@ -282,7 +314,9 @@ class PipedriveWebhookController extends Controller
 
                         if (!$result)
                         {
-                            Log::info("Persons - discarded changes");
+                            Log::channel("marketplace")->info("Persons", [
+                                "0" => "discarded changes"
+                            ]);
                             break;
                         }
                     }
@@ -295,7 +329,10 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::info("Person - Unsupported event, 400");
+                    Log::channel("marketplace")->info("Persons", [
+                        "400" => "Unsupported event"
+                    ]);
+
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -306,7 +343,10 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Persons - $e, 500");
+            Log::channel("marketplace")->info("Persons", [
+                "500" => $e
+            ]);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -314,7 +354,10 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Persons - Success, 200");
+        Log::channel("marketplace")->info("Persons", [
+            "200" => "Success"
+        ]);
+
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',
@@ -335,7 +378,10 @@ class PipedriveWebhookController extends Controller
         // if ($params['meta']['change_source'] == 'api')
         if ($params['meta']['host'] == 'app.pipedrive.com')
         {
-            Log::info("Stages - changed by api ignored");
+            Log::channel("marketplace")->info("Persons", [
+                "0" => "changed by api ignored"
+            ]);
+
             return response()->json([
                 'status'  => 'Ok',
                 'message' => 'Stages - changed by api ignored',
@@ -367,7 +413,10 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::info("Stage - Unsupported event, 400");
+                    Log::channel("marketplace")->info("Persons", [
+                        "400" => "Unsupported event"
+                    ]);
+
                     return response()->json([
                         'status'  => 'Error',
                         'message' => 'Unsupported event',
@@ -378,7 +427,10 @@ class PipedriveWebhookController extends Controller
         }
         catch (Exception $e)
         {
-            Log::info("Stages - $e, 500");
+            Log::channel("marketplace")->info("Stages", [
+                "500" => $e
+            ]);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -386,7 +438,10 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::info("Stages - Success, 200");
+        Log::channel("marketplace")->info("Stages", [
+            "200" => "Success"
+        ]);
+
         return response()->json([
             'status'  => 'Ok',
             'message' => 'Success',

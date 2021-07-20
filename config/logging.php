@@ -100,6 +100,12 @@ return [
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
+
+        'marketplace' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/marketplace.log'),
+            'level'  => 'debug'
+        ],
     ],
 
 ];
