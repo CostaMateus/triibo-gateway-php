@@ -39,13 +39,13 @@ class ProcessImages extends Command
      */
     public function handle()
     {
-        echo "IMG : Inicio processamento das imagens\n";
-        Log::info("IMG : Inicio processamento das imagens");
+        echo "IMG : Start processing of images\n";
+        Log::channel("cofry")->info("Images", [ "Start processing of images" ]);
 
         $cofry = new CofryController();
         $cofry->uploadImages();
 
-        echo "IMG : Fim processamento das imagens\n";
-        Log::info("IMG : Fim processamento das imagens");
+        echo "IMG : End images processing\n";
+        Log::channel("cofry")->info("Images", [ "End images processing" ]);
     }
 }

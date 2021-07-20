@@ -39,13 +39,13 @@ class DeleteImages extends Command
      */
     public function handle()
     {
-        echo "DEL : Excluindo imagens\n";
-        Log::info("DEL : Excluindo imagens");
+        echo "DEL : Deleting images\n";
+        Log::channel("cofry")->info("Images", [ "Deleting images" ]);
 
         File::deleteDirectory(public_path("images/estabelecimentos/"), true);
         File::deleteDirectory(public_path("images/promos/"),           true);
 
-        echo "DEL : Excluido com sucesso\n";
-        Log::info("DEL : Excluido com sucesso");
+        echo "DEL : Successfully deleted\n";
+        Log::channel("cofry")->info("Images", [ "Successfully deleted" ]);
     }
 }
