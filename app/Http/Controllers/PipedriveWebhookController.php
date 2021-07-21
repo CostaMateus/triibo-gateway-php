@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\User;
 use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use App\Notifications\WebhookMarketplace;
 use App\Http\Integrations\MauticIntegration;
 
 class PipedriveWebhookController extends Controller
@@ -145,6 +147,8 @@ class PipedriveWebhookController extends Controller
                 "500" => $e
             ]);
 
+            self::sendMailNotification($params, $e);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -252,6 +256,8 @@ class PipedriveWebhookController extends Controller
                 "500" => $e
             ]);
 
+            self::sendMailNotification($params, $e);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -347,6 +353,8 @@ class PipedriveWebhookController extends Controller
                 "500" => $e
             ]);
 
+            self::sendMailNotification($params, $e);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -431,6 +439,8 @@ class PipedriveWebhookController extends Controller
                 "500" => $e
             ]);
 
+            self::sendMailNotification($params, $e);
+
             return response()->json([
                 'status'  => 'Error',
                 'message' => $e,
@@ -492,5 +502,20 @@ class PipedriveWebhookController extends Controller
             'status'  => 'Ok',
             'message' => 'Success',
         ], 200);
+    }
+
+
+    private static function sendMailNotification(Array $params, Exception $e)
+    {
+        $mail = [
+            "subject"    => "Dev - Integração Triibo Pipedrive-Mautic",
+            "title"      => "Erro no webhook: " . $params["meta"]["object"],
+            "class"      => $params["meta"]["object"],
+            "params"     => $params,
+            "stacktrace" => $e,
+        ];
+        $users = User::where("email", "equipemarketplace@triibo.com.br")->orWhere("email", "mateus.costa@triibo.com.br")->get();
+        $users[0]->notify(new WebhookMarketplace($mail));
+        $users[1]->notify(new WebhookMarketplace($mail));
     }
 }
