@@ -507,7 +507,7 @@ class PipedriveWebhookController extends Controller
 
     private static function sendMailNotification(Array $params, Exception $e)
     {
-        if ($params["retry"] == 2)
+        if ($params["retry"] == 3)
         {
             $mail = [
                 "subject"    => "Dev - Integração Triibo Pipedrive-Mautic",
