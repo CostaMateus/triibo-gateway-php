@@ -16,7 +16,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $data = User::where('email', '!=', 'admin@triibo.com.br')->orderBy('name','ASC')->paginate(5);
+        $data = User::where('email', '!=', 'equipemarketplace@triibo.com.br')->orderBy('name','ASC')->paginate(5);
 
         return view('users.index', compact('data'));
     }
@@ -90,7 +90,7 @@ class UserController extends Controller
         $valData = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|max:255|email|allowed_domain|'.Rule::unique('users')->ignore($user->id),
-            'password' => 'string|min:8|same:password_confirmation',
+            'password' => 'nullable|string|min:8|same:password_confirmation',
         ]);
 
         $user->name  = $valData['name'];
