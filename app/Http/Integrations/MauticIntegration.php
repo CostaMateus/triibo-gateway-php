@@ -744,4 +744,71 @@ class MauticIntegration
         }
     }
 
+    /**
+     * Importa todas as Etiquetas (labels) do Negócios do Pipedrive
+     *
+     * @return void
+     */
+    public static function importAllDealsLabels()
+    {
+        Log::channel("marketplace")->info("Deal-Label", [
+            "data" => "start importing all deals-labels"
+        ]);
+
+        /********************************************/
+        // CAMPO NÂO CRIADO AINDA -- RESOLVER ANTES //
+        /********************************************/
+        $idField   = 000; // id do campo personalizavel no Mautic
+        $mauticApi = self::getApi("contactFields");
+
+        $pipeApi   = new Pipedrive(config("pipedrive.token"));
+        $data      = $pipeApi->dealFields()->all()->getData();
+        $labels    = [];
+
+        foreach ($data as $d)
+        {
+            if ($d->id == 12463 && $d->key == "label")
+            {
+                $labels = $d->options;
+
+                foreach ($labels as &$label)
+                {
+                    $label = [
+                        "value" => $label->id,
+                        "label" => $label->label
+                    ];
+                }
+               break;
+            }
+        }
+
+        $data = [
+            "properties" => [
+                "list" => [
+                    [
+                        "value" => 0,
+                        "label" => "Sem Funil"
+                    ],
+                    ...$labels
+                ],
+            ]
+        ];
+
+        $res  = $mauticApi->edit($idField, $data);
+
+        if (!isset($res["errors"]))
+        {
+            Log::channel("marketplace")->info("Deal-Label", [
+                "data" => "end of importing all deals-labels"
+            ]);
+        }
+        else
+        {
+            Log::channel("marketplace")->info("Deal-Label", [
+                "data" => "import failed"
+            ]);
+        }
+
+    }
+
 }
