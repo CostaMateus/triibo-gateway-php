@@ -752,7 +752,13 @@ class MauticIntegration
 
         $data = [
             'properties' => [
-                'list' => $stages
+                'list' => [
+                    [
+                        'value' => 0,
+                        'label' => 'Sem Funil'
+                    ],
+                    ...$stages
+                ],
             ]
         ];
 
