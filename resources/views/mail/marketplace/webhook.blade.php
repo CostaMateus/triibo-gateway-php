@@ -12,7 +12,8 @@ Parametros enviados:
 
 <br>
 
-Stacktrace:
+<b>Stacktrace</b>:
+<br>
 {{ $stacktrace }}
 
 <br>
