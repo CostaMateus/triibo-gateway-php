@@ -19,7 +19,7 @@ class PipedriveIntegration
     {
         $aux       = ucfirst($class);
 
-        $pipedrive = new Pipedrive(config('pipedrive.token'));
+        $pipedrive = new Pipedrive(config("pipedrive.token"));
 
         Log::channel("marketplace")->info("$aux", [
             "data" => "selecionando API class: $class"
@@ -27,18 +27,18 @@ class PipedriveIntegration
 
         switch ($class)
         {
-            case 'persons':
-                $res = $pipedrive->persons->update($ids['pipe_id'], [
-                    'bd7287f0a9a02de60a8aff83b5905c489b7cf007' => $ids['mautic_id']
+            case "persons":
+                $res = $pipedrive->persons->update($ids["pipe_id"], [
+                    "bd7287f0a9a02de60a8aff83b5905c489b7cf007" => $ids["mautic_id"]
                 ]);
                 Log::channel("marketplace")->info("$aux", [
                     "data" => "chamada API finalizada"
                 ]);
             break;
 
-            case 'organizations':
-                $res = $pipedrive->organizations->update($ids['pipe_id'], [
-                    '918dace587a4707755926d7c02c3bb46ed53d539' => $ids['mautic_id']
+            case "organizations":
+                $res = $pipedrive->organizations->update($ids["pipe_id"], [
+                    "918dace587a4707755926d7c02c3bb46ed53d539" => $ids["mautic_id"]
                 ]);
                 Log::channel("marketplace")->info("$aux", [
                     "data" => "chamada API finalizada"
