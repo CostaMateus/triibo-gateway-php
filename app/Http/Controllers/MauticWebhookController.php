@@ -16,28 +16,28 @@ class MauticWebhookController extends Controller
      */
     public function post(Request $request)
     {
-        $date    = date('Ymd-his');
+        $date    = date("Ymd-his");
         $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
 
-        Storage::put('mautic-'.$date.'.json', $encoded);
+        Storage::put("mautic-".$date.".json", $encoded);
 
         return response()->json([
-            'message' => 'Apenas teste',
-            'code'    => 200
+            "message" => "Apenas teste",
+            "code"    => 200
         ], 200);
     }
 
     public function get(Request $request)
     {
-        $date    = date('Ymd-his');
+        $date    = date("Ymd-his");
         $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
 
-        Storage::put('mautic-app-register-'.$date.'.json', $encoded);
+        Storage::put("mautic-app-register-".$date.".json", $encoded);
 
         return response()->json([
-            'message' => 'Callback Mautic teste',
-            'code'    => 200,
-            'body'    => $request->all()
+            "message" => "Callback Mautic teste",
+            "code"    => 200,
+            "body"    => $request->all()
         ], 200);
     }
 
@@ -45,8 +45,8 @@ class MauticWebhookController extends Controller
 
     public function index($id)
     {
-        
-        $contact = Mautic::request('GET','contacts/158095');
+
+        $contact = Mautic::request("GET","contacts/158095");
         return $contact;
     }
 }

@@ -12,14 +12,14 @@ class ImportPipeStages extends Command
      *
      * @var string
      */
-    protected $signature = 'import:stages';
+    protected $signature = "import:stages";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Imports all stages from Pipedrive to Mautic';
+    protected $description = "Imports all stages from Pipedrive to Mautic";
 
     /**
      * Create a new command instance.

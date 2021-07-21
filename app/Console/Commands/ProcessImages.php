@@ -13,14 +13,14 @@ class ProcessImages extends Command
      *
      * @var string
      */
-    protected $signature = 'process:images';
+    protected $signature = "process:images";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Processes images from Cofry stores and promotions';
+    protected $description = "Processes images from Cofry stores and promotions";
 
     /**
      * Create a new command instance.

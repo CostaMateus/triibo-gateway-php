@@ -12,14 +12,14 @@ class ImportPipeDealsLabels extends Command
      *
      * @var string
      */
-    protected $signature = 'import:dealslabels';
+    protected $signature = "import:dealslabels";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Imports all deals labels (etiquetas) from Pipedrive to Mautic';
+    protected $description = "Imports all deals labels (etiquetas) from Pipedrive to Mautic";
 
     /**
      * Create a new command instance.

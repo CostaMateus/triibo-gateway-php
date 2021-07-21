@@ -13,14 +13,14 @@ class ProcessStoresPromos extends Command
      *
      * @var string
      */
-    protected $signature = 'process:storepromo';
+    protected $signature = "process:storepromo";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Processes Cofry stores and promotions';
+    protected $description = "Processes Cofry stores and promotions";
 
     /**
      * Create a new command instance.

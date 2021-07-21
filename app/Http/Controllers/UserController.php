@@ -16,9 +16,9 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $data = User::where('email', '!=', 'equipemarketplace@triibo.com.br')->orderBy('name','ASC')->paginate(5);
+        $data = User::where("email", "!=", "equipemarketplace@triibo.com.br")->orderBy("name","ASC")->paginate(5);
 
-        return view('users.index', compact('data'));
+        return view("users.index", compact("data"));
     }
 
     /**
@@ -28,7 +28,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('users.create');
+        return view("users.create");
     }
 
     /**
@@ -40,12 +40,12 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $valData = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|max:255|email|allowed_domain|unique:users,email',
-            'password' => 'required|string|min:8|same:password_confirmation',
+            "name"     => "required|string|max:255",
+            "email"    => "required|string|max:255|email|allowed_domain|unique:users,email",
+            "password" => "required|string|min:8|same:password_confirmation",
         ]);
 
-        $valData['password'] = Hash::make($valData['password']);
+        $valData["password"] = Hash::make($valData["password"]);
 
         $user = User::create($valData);
 
@@ -62,7 +62,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        return view('users.show', compact('user'));
+        return view("users.show", compact("user"));
     }
 
     /**
@@ -75,7 +75,7 @@ class UserController extends Controller
     {
         $user = User::find($id);
 
-        return view('users.edit', compact('user'));
+        return view("users.edit", compact("user"));
     }
 
     /**
@@ -88,15 +88,15 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $valData = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|max:255|email|allowed_domain|'.Rule::unique('users')->ignore($user->id),
-            'password' => 'nullable|string|min:8|same:password_confirmation',
+            "name"     => "required|string|max:255",
+            "email"    => "required|string|max:255|email|allowed_domain|".Rule::unique("users")->ignore($user->id),
+            "password" => "nullable|string|min:8|same:password_confirmation",
         ]);
 
-        $user->name  = $valData['name'];
-        $user->email = $valData['email'];
+        $user->name  = $valData["name"];
+        $user->email = $valData["email"];
 
-        if (!empty($valData['password'])) $user->password = Hash::make($valData['password']);
+        if (!empty($valData["password"])) $user->password = Hash::make($valData["password"]);
 
         $user->save();
 
