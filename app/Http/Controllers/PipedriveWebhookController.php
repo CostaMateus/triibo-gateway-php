@@ -22,7 +22,7 @@ class PipedriveWebhookController extends Controller
     const DEAL_UPDATED_EVENT   = "updated.deal";
     const DEAL_DELETED_EVENT   = "deleted.deal";
     const DEAL_CODE            = 1;
-    const DEAL_MONITORING      = ["stage_id", "active", "deleted", "status", "weighted_value"];
+    const DEAL_MONITORING      = ["stage_id", "active", "deleted", "status", "label"];
 
     /**
      * Organization to Company
@@ -93,6 +93,8 @@ class PipedriveWebhookController extends Controller
             {
                 case self::DEAL_ADDED_EVENT:
                 case self::DEAL_UPDATED_EVENT:
+                    if (!$params["current"]["person_id"]) break;
+
                     if ($params["previous"])
                     {
                         $result  = FALSE;
