@@ -111,8 +111,6 @@ class PipedriveWebhookController extends Controller
                         if (!$result) break;
                     }
 
-                    if (!$params["current"]["person_id"]) break;
-
                     $api    = new Pipedrive(config("pipedrive.token"));
                     $person = $api->persons->find($params["current"]["person_id"])->getData();
 
