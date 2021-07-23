@@ -75,7 +75,7 @@ class PipedriveWebhookController extends Controller
         if ($params["meta"]["host"] == "app.pipedrive.com")
         {
             Log::channel("marketplace")->info("Deals", [
-                "0" => "changed by api ignored"
+                "0" => "Changed by api ignored"
             ]);
 
             return response()->json([
@@ -111,6 +111,8 @@ class PipedriveWebhookController extends Controller
                         if (!$result) break;
                     }
 
+                    if (!$params["current"]["person_id"]) break;
+
                     $api    = new Pipedrive(config("pipedrive.token"));
                     $person = $api->persons->find($params["current"]["person_id"])->getData();
 
@@ -121,6 +123,8 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 case self::DEAL_DELETED_EVENT:
+                    if (!$params["current"]["person_id"]) break;
+
                     $api    = new Pipedrive(config("pipedrive.token"));
                     $person = $api->persons->find($params["previous"]["person_id"])->getData();
 
@@ -291,7 +295,7 @@ class PipedriveWebhookController extends Controller
         if ($params["meta"]["host"] == "app.pipedrive.com")
         {
             Log::channel("marketplace")->info("Persons", [
-                "0" => "changed by api ignored"
+                "0" => "Changed by api ignored"
             ]);
 
             return response()->json([
@@ -323,7 +327,7 @@ class PipedriveWebhookController extends Controller
                         if (!$result)
                         {
                             Log::channel("marketplace")->info("Persons", [
-                                "0" => "discarded changes"
+                                "0" => "Discarded changes"
                             ]);
                             break;
                         }
@@ -389,7 +393,7 @@ class PipedriveWebhookController extends Controller
         if ($params["meta"]["host"] == "app.pipedrive.com")
         {
             Log::channel("marketplace")->info("Persons", [
-                "0" => "changed by api ignored"
+                "0" => "Changed by api ignored"
             ]);
 
             return response()->json([
