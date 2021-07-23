@@ -183,7 +183,9 @@ class MauticIntegration
                 "pipedrive_id" => $data["pipedrive_id"]
             ]);
 
-            $data["pipeline"] = NULL;
+            $data["pipeline"]          = 0;
+            $data["pipeline_status"]   = " ";
+            // $data["pipeline_etiqueta"] = 0;
         }
 
         unset($data["aux_active"]);
@@ -233,7 +235,7 @@ class MauticIntegration
             if (!$delete)
             {
                 Log::channel("marketplace")->info("Deals", [
-                    "data"         => "contact pipeline updated",
+                    "data"         => "contact deal updated",
                     "mautic_id"    => $data["id"],
                     "pipedrive_id" => $data["pipedrive_id"]
                 ]);
@@ -241,13 +243,14 @@ class MauticIntegration
             else
             {
                 Log::channel("marketplace")->info("Deals", [
-                    "data"         => "contact pipeline deleted",
+                    "data"         => "contact deal deleted",
                     "mautic_id"    => $data["id"],
                     "pipedrive_id" => $data["pipedrive_id"]
                 ]);
 
-                $data["pipeline"]        = 0;
-                $data["pipeline_status"] = " ";
+                $data["pipeline"]          = 0;
+                $data["pipeline_status"]   = " ";
+                // $data["pipeline_etiqueta"] = 0;
             }
 
             $res = $mauticApi->edit(key($res["object"]), $data);
@@ -419,6 +422,7 @@ class MauticIntegration
                     "id"                => $data["person_mautic_id"]??"", // custom field for mautic_id
                     "pipeline"          => $data["stage_id"],
                     "pipeline_status"   => self::statusDeal($data["status"]??""),
+                    // "pipeline_etiqueta" => $data["label"],
                     "pipedrive_id"      => $data["person_id"],
 
                     "aux_active"        => $data["active"],
@@ -758,6 +762,7 @@ class MauticIntegration
         /********************************************/
         // CAMPO NÂO CRIADO AINDA -- RESOLVER ANTES //
         /********************************************/
+        // resolvido? descomentar $schedule->command no kernel
         $idField   = 000; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi("contactFields");
 
@@ -808,7 +813,6 @@ class MauticIntegration
                 "data" => "import failed"
             ]);
         }
-
     }
 
 }
