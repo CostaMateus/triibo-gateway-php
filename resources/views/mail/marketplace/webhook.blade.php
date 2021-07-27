@@ -1,3 +1,5 @@
+<style> .code { font-family: "Courier New", "monospace", "monospace"; } </style>
+
 @component('mail::message')
 # {{ $title }}
 
@@ -5,7 +7,7 @@
 
 Parametros enviados:
 @php
-    echo "<pre>";
+    echo "<pre class='code' >";
         print_r($params);
     echo "</pre>";
 @endphp
@@ -14,7 +16,9 @@ Parametros enviados:
 
 <b>Stacktrace</b>:
 <br>
-{{ $stacktrace }}
+<div class="code" >
+    {{ $stacktrace }}
+</div>
 
 <br>
 
