@@ -121,7 +121,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 case self::DEAL_DELETED_EVENT:
-                    if (!$params["current"]["person_id"]) break;
+                    if (!$params["previous"]["person_id"]) break;
 
                     $api    = new Pipedrive(config("pipedrive.token"));
                     $person = $api->persons->find($params["previous"]["person_id"])->getData();
