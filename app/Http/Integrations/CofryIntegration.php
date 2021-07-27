@@ -157,6 +157,19 @@ class CofryIntegration
         if ($stores) self::usort($stores);
         if ($status) self::usort($status);
 
+        /** Lojas tag Destaques */
+            // - 347  Amazon
+            // - 503  Cobasi
+            // - 349  Americanas
+            // - 137  Nike
+            // - 123  Booking
+            // - 357  Centauro
+            // - 351  Submarino
+            // - 445  Carrefour
+        /************************/
+
+        $highlights = [123, 137, 347, 349, 351, 357, 445, 503];
+
         foreach ($stores as $id => &$store)
         {
             $index           = array_search($store["uuid"], $status);
@@ -172,10 +185,12 @@ class CofryIntegration
                 $tags = [ "Cofry" ];
             }
 
+            if ( in_array($store["uuid"], $highlights) ) array_push($tags, "Destaques");
+
             $store["Segment"] = $tags;
 
             // Estabelecimentos com esse segmento são ignorados
-            if ( in_array("Seguros e Finanças", $tags) ) unset($stores[$id]);;
+            if ( in_array("Seguros e Finanças", $tags) ) unset($stores[$id]);
         }
 
         return $stores;
