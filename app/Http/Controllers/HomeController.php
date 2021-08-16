@@ -3,28 +3,25 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use App\Models\User;
 use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
 use Illuminate\Http\Request;
 use Devio\Pipedrive\Pipedrive;
+use Ramsey\Collection\Collection;
 use Triibo\Mautic\Facades\Mautic;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 use Triibo\Mautic\Models\MauticConsumer;
+use App\Notifications\WebhookMarketplace;
 use App\Http\Integrations\MauticIntegration;
-use Ramsey\Collection\Collection;
 
 // use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
-    const PERSON_ADDED_EVENT   = "added.person";
-    const PERSON_UPDATED_EVENT = "updated.person";
-    const PERSON_DELETED_EVENT = "deleted.person";
-    const PERSON_CODE          = 3;
-    const ORG_ADDED_EVENT      = "added.organization";
-    const ORG_UPDATED_EVENT    = "updated.organization";
-    const ORG_DELETED_EVENT    = "deleted.organization";
-    const ORG_CODE             = 2;
+    const APIKEY = "7f3a767e18d06afd45d8a09402ee687951953686729d7006a88c59c5195d7753";
+    const URL    = "https://sandbox.asaas.com/api/v3/";
 
     /**
      * Create a new controller instance.
@@ -37,40 +34,6 @@ class HomeController extends Controller
     }
 
     /**
-     * Pega a api especifica dada a classe
-     *
-     * @param string $class
-     * @return Api $api
-     */
-    private static function getMauticApi(string $class)
-    {
-        $factory  = Mautic::getFactory();
-        $consumer = MauticConsumer::whereNotNull("id")->orderBy("created_at", "desc")->first();
-
-        $expired  = $factory->checkExpirationTime($consumer->expires);
-
-        $consumer = ($expired) ? $factory->refreshToken($consumer->refresh_token) : $consumer;
-
-        $settings = config("mautic.connections.main");
-        $settings["accessToken"] = $consumer->access_token;
-
-        $initAuth = new ApiAuth();
-        $auth     = $initAuth->newAuth($settings);
-        $apiUrl   = $settings["baseUrl"];
-        $api      = new MauticApi();
-
-        // dd($api->newApi($class, $auth, $apiUrl));
-
-        return $api->newApi($class, $auth, $apiUrl);
-    }
-
-    private static function getPipeApi()
-    {
-        return new Pipedrive(config("pipedrive.token"));
-    }
-
-
-    /**
      * Show the application dashboard.
      *
      * @return \Illuminate\Contracts\Support\Renderable
@@ -78,183 +41,6 @@ class HomeController extends Controller
     public function index()
     {
         return view("home");
-    }
-
-    public function teste3(Request $request)
-    {
-
-        // // dd(ini_get("max_execution_time"));
-        // // 11954971 Pedro
-        // // 12009079 Tiago
-
-        // $start = 0;
-        // $res   = [];
-        // $exit  = false;
-
-        // do
-        // {
-        //     $response = (self::getPipeApi())->deals->all([
-        //         // "user_id" => 12009079,
-        //         "status" => "lost",
-        //         "start"  => $start,
-        //         "limit"  => 500,
-        //     ]);
-
-        //     $objs = $response->getData();
-
-        //     foreach ($objs as &$obj)
-        //     {
-        //         $aux = json_decode(json_encode($obj), true);
-        //         $obj = $aux;
-
-        //         $pId = $obj["person_id"]["value"]??NULL;
-        //         unset($obj["person_id"]);
-        //         $obj["person_id"] = $pId;
-        //     }
-
-        //     $res = array_merge($res, $objs);
-
-        //     if (count($objs) < 500)
-        //     {
-        //         $exit = true;
-        //     }
-        //     else
-        //     {
-        //         $start += 500;
-        //     }
-
-        // } while (!$exit);
-
-        // $api = new Pipedrive(config("pipedrive.token"));
-
-        // foreach ( $res as $deal )
-        // {
-        //     $person    = $api->persons->find($deal["person_id"])->getData();
-
-        //     $auxPerson = json_decode(json_encode($person), true);
-        //     MauticIntegration::updateOrCreate("contacts", $auxPerson);
-
-        //     $deal["person_email"]     = $person->email[0]->value;
-        //     $deal["person_mautic_id"] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
-        //     MauticIntegration::dealUpdate("deals", $deal);
-
-        //     $mauticId  = $auxPerson["bd7287f0a9a02de60a8aff83b5905c489b7cf007"];
-        //     $pipeId    = $auxPerson["id"];
-
-        //     Log::info("Persons - mautic_id:$mauticId | pipedrive_id:$pipeId");
-        // }
-    }
-
-    public function teste2()
-    {
-        $token     = config("pipedrive.token");
-        $pipedrive = new Pipedrive($token);
-
-        $res = $pipedrive->persons->update(465, [
-            "last_name" => "9.3-API"
-        ]);
-
-        dd($res->getData());
-
-        return $res;
-    }
-
-    public function teste(Request $request)
-    {
-        $factory    = Mautic::getFactory();
-        $consumer   = MauticConsumer::whereNotNull("id")->orderBy("created_at", "desc")->first();
-
-        $expired    = $factory->checkExpirationTime($consumer->expires);
-
-        $consumer   = ($expired) ? $factory->refreshToken($consumer->refresh_token) : $consumer;
-
-        $settings   = config("mautic.connections.main");
-        $settings["accessToken"] = $consumer->access_token;
-
-        $initAuth   = new ApiAuth();
-        $auth       = $initAuth->newAuth($settings);
-        $apiUrl     = $settings["baseUrl"];
-        $api        = new MauticApi();
-        $contactApi = $api->newApi($request["class"], $auth, $apiUrl);
-
-        // $res = $contactApi->getList("email:teste2@corp.com");
-        // $res = $contactApi->getList("pipedrive_id:247");
-
-        // $res = $contactApi->getList("companyemail:pedeminas3@gmail.com");
-        // $res = $contactApi->getList("Pe de Minas", 0, 0, "companyname", "asc");
-
-        // if (!isset($res["errors"]))
-        // {
-        //     if ($res["total"] == 0)
-        //     {
-                $res = $contactApi->getList();
-
-        //         foreach ($res[$request["class"]] as $id => $obj)
-        //         {
-        //             if ($obj["fields"]["all"]["companyname"] == "Pé de Minas")
-        //             {
-        //                 $s = $obj;
-        //                 break;
-        //             }
-        //             else
-        //             {
-        //                 $s = null;
-        //             }
-        //         }
-        //     }
-        //     else
-        //     {
-        //         $s = $res;
-        //     }
-        // }
-        // else
-        // {
-        //     $s = $res["errors"][0];
-        // }
-
-        dd($res);
-
-        // $endpoints = [
-        //     "assets",
-        //     "campaigns",
-        //     "categories",
-        //     "companies",
-        //     "contacts",
-        //     "data",
-        //     "emails",
-        //     "fields/company",
-        //     "fields/contact",
-        //     "files/images",
-        //     "forms",
-        //     "messages",
-        //     "notes",
-        //     "notifications",
-        //     "pages",
-        //     "points",
-        //     "reports",
-        //     "roles",
-        //     "segments",
-        //     "smses",
-        //     "stages",
-        //     "stats",
-        //     "tags",
-        //     "themes",
-        //     "tweets",
-        //     "users",
-        //     "hooks",
-        // ];
-
-        // foreach ($endpoints as $e)
-        // {
-        //     $res     = Mautic::request("GET", $e);
-        //     $encoded = json_encode($res, JSON_UNESCAPED_SLASHES);
-        //     Storage::put($e . ".json", $encoded);
-        //     $result[] = [
-        //         $e => "success"
-        //     ];
-        // }
-
-        // return print_r($result);
     }
 
     public function atualizaEmailComEspacoEmBranco(Request $request)
@@ -290,5 +76,164 @@ class HomeController extends Controller
             }
         }
         dd($arr);
+    }
+
+    public function teste(Request $request)
+    {
+        $header   = [
+            "Content-Type" => "application/json",
+            "access_token" => self::APIKEY,
+        ];
+
+        $customer = [
+            "name"                 => "Mateus Costa",
+            "email"                => "Mateus.costa@triibo.com.br",
+            "phone"                => "11949289507",
+            "mobilePhone"          => "11949289507",
+            "cpfCnpj"              => "02681487242",
+            "postalCode"           => "01218-011",
+            "address"              => "Al. Eduardo Prado",
+            "addressNumber"        => "170",
+            "complement"           => "125A",
+            "province"             => "Campos Eliseos",
+            "notificationDisabled" => false,
+            "creditCard"           => [
+                "holderName"  => "Mateus Costa",
+                "number"      => "5162306219378829",
+                "expiryMonth" => "10",
+                "expiryYear"  => "2022",
+                "ccv"         => "318"
+            ]
+        ];
+
+        $response = Http::withHeaders($header)->get(self::URL . "/customers?cpfCnpj=" . $customer["cpfCnpj"]);
+
+        $data     = $response->json();
+
+        // cpf não cadastrado
+        if ($data["data"] == [] && empty($data["data"]))
+        {
+            $response       = Http::withHeaders($header)->post(self::URL . "/customers", $customer);
+            $data           = $response->json();
+            $customer["id"] = $data["id"];
+        }
+        else
+        {
+            $customer["id"] = $data["data"][0]["id"];
+        }
+
+        // $cobranca = self::gerarCobranca($customer, "CREDIT_CARD", 111, 2);
+        $assinatura = self::gerarAssinatura($customer, "CREDIT_CARD", "MONTHLY", 19.90, 2);
+
+        dd($data, $assinatura);
+    }
+
+    /**
+     * Gerar cobrança no boleto e no cartão de credito
+     *
+     * @param array $customer
+     * @param string $tipo
+     * @param double $total
+     * @param int $parcelas
+     * @return void
+     */
+    private static function gerarCobranca($customer, $tipo, $total, $parcelas = NULL)
+    {
+        $header   = [
+            "Content-Type" => "application/json",
+            "access_token" => self::APIKEY,
+        ];
+
+        $payment = [
+            "customer"          => $customer["id"],
+            "billingType"       => $tipo,   // BOLETO, CREDIT_CARD, UNDEFINED
+            "value"             => $total,
+            "dueDate"           => "2021-07-28",
+            "description"       => "Pedido 056984", // ID marketplace
+            "externalReference" => "056984",        // ID marketplace
+            "postalService"     => false,
+            // "installmentCount"  => 5,
+            // "installmentValue"  => 100,
+        ];
+
+        if ($tipo == "CREDIT_CARD")
+        {
+            $parcelas = $parcelas ?? 3;
+            $payment["installmentCount"]     = $parcelas;
+            $payment["installmentValue"]     = ($total / $parcelas);
+            $payment["creditCard"]           = $customer["creditCard"];
+            $payment["creditCardHolderInfo"] = [
+                "name"              => $customer["name"],          //"Marcelo Henrique Almeida",
+                "email"             => $customer["email"],         //"marcelo.almeida@gmail.com",
+                "cpfCnpj"           => $customer["cpfCnpj"],       //"24971563792",
+                "postalCode"        => $customer["postalCode"],    //"89223-005",
+                "addressNumber"     => $customer["addressNumber"], //"277",
+                "addressComplement" => $customer["complement"],    //NULL,
+                "phone"             => $customer["phone"],         //"4738010919",
+                "mobilePhone"       => $customer["mobilePhone"],   //"47998781877"
+            ];
+        }
+
+        $response = Http::withHeaders($header)->post(self::URL . "/payments", $payment);
+
+        return $response->json();
+    }
+
+    /**
+     * Gera uma assinatura
+     *
+     * @param array $customer
+     * @param string $tipo
+     * @param string $ciclo
+     * @param double $total
+     * @param int $parcelas
+     * @return void
+     */
+    private static function gerarAssinatura($customer, $tipo, $ciclo, $total, $parcelas)
+    {
+        $header   = [
+            "Content-Type" => "application/json",
+            "access_token" => self::APIKEY,
+        ];
+
+        $payment = [
+            "customer"          => $customer["id"],
+            "billingType"       => $tipo,           // BOLETO, CREDIT_CARD, UNDEFINED
+            "value"             => $total,
+            "nextDueDate"       => "2021-07-27",
+            "endDate"           => "2022-01-26",
+            "interest"          => [
+                "value" => 2,
+            ],
+            "fine"              => [
+                "value" => 1,
+            ],
+            "cycle"             => $ciclo,          // WEEKLY semana, BIWEEKLY quizenal, MONTHLY mensal, QUARTERLY trimestral, SEMIANNUALLY semestral, YEARLY anual,
+            "description"       => "Pedido 056984", // ID marketplace
+            "externalReference" => "056984",        // ID marketplace
+            "maxPayments"       => $parcelas,
+        ];
+
+        if ($tipo == "CREDIT_CARD")
+        {
+            $payment["installmentCount"]     = $parcelas;
+            $payment["installmentValue"]     = ($total / $parcelas);
+            $payment["creditCard"]           = $customer["creditCard"];
+            $payment["creditCardHolderInfo"] = [
+                "name"              => $customer["name"],          //"Marcelo Henrique Almeida",
+                "email"             => $customer["email"],         //"marcelo.almeida@gmail.com",
+                "cpfCnpj"           => $customer["cpfCnpj"],       //"24971563792",
+                "postalCode"        => $customer["postalCode"],    //"89223-005",
+                "addressNumber"     => $customer["addressNumber"], //"277",
+                "addressComplement" => $customer["complement"],    //NULL,
+                "phone"             => $customer["phone"],         //"4738010919",
+                "mobilePhone"       => $customer["mobilePhone"],   //"47998781877"
+            ];
+            // $payment["creditCardToken"]      = "c9d92c1e-7667-491f-be38-6e0ccc2fc1bd";
+        }
+
+        $response = Http::withHeaders($header)->post(self::URL . "/subscriptions", $payment);
+
+        return $response->json();
     }
 }
