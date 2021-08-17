@@ -380,6 +380,8 @@ class CofryIntegration
         {
             $id               = "-cofry" . $store["uuid"];
 
+            $cashback         = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
+
             $store["Logo"]    = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
             $store["Logo"]    = self::PREFIX_STORE . ((basename($store["Logo"]) != "") ? basename($store["Logo"]) : "standard.png");
 
@@ -395,6 +397,7 @@ class CofryIntegration
 
             $res[$id]         = [
                 "partnerEstablishmentId" => $store["uuid"],
+                "cashbackDefault" => $cashback,
 
                 "enableDate"    => $dateEn,
                 "disableDate"   => $dateDis,
