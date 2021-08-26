@@ -83,38 +83,38 @@ class CofryController extends Controller
         }
 
 
-        // PROMO
-        try
-        {
-            $this->insertPromosFirebase();
-            echo "SP : Promotions sent successfully\n";
-            Log::channel("cofry")->info("Stores|Promos", [
-                "code"    => 0,
-                "info"    => "Promotions sent successfully",
-                "error"   => NULL,
-                "message" => NULL
-            ]);
-        }
-        catch (FirebaseException $e)
-        {
-            echo "SP : Promotions, Firebase process error - aborted\n";
-            Log::channel("cofry")->critical("Stores|Promos", [
-                "code"    => "C-402",
-                "info"    => "Promotions, Firebase process error - aborted",
-                "error"   => "An error has occurred while working with the SDK",
-                "message" => $e
-            ]);
-        }
-        catch (Throwable $e)
-        {
-            echo "SP : Unexpected error - aborted\n";
-            Log::channel("cofry")->critical("Stores|Promos", [
-                "code"    => "C-502",
-                "info"    => "Unexpected error - aborted",
-                "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e
-            ]);
-        }
+        // // PROMO
+        // try
+        // {
+        //     $this->insertPromosFirebase();
+        //     echo "SP : Promotions sent successfully\n";
+        //     Log::channel("cofry")->info("Stores|Promos", [
+        //         "code"    => 0,
+        //         "info"    => "Promotions sent successfully",
+        //         "error"   => NULL,
+        //         "message" => NULL
+        //     ]);
+        // }
+        // catch (FirebaseException $e)
+        // {
+        //     echo "SP : Promotions, Firebase process error - aborted\n";
+        //     Log::channel("cofry")->critical("Stores|Promos", [
+        //         "code"    => "C-402",
+        //         "info"    => "Promotions, Firebase process error - aborted",
+        //         "error"   => "An error has occurred while working with the SDK",
+        //         "message" => $e
+        //     ]);
+        // }
+        // catch (Throwable $e)
+        // {
+        //     echo "SP : Unexpected error - aborted\n";
+        //     Log::channel("cofry")->critical("Stores|Promos", [
+        //         "code"    => "C-502",
+        //         "info"    => "Unexpected error - aborted",
+        //         "error"   => "A not-Firebase specific error has occurred",
+        //         "message" => $e
+        //     ]);
+        // }
     }
 
     /**
@@ -129,7 +129,25 @@ class CofryController extends Controller
 
         echo "SP : Searching establishments\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Searching establishments" ]);
-        $stores = CofryIntegration::getEstabelecimentos();
+        $stores    = CofryIntegration::getEstabelecimentos();
+        $allStores = $firebaseStores->getValue();
+        foreach ($allStores as $id => $s)
+        {
+            if (strpos($id, "-cofry") !== false)
+            {
+                if (!isset($stores[$id]))
+                {
+                    // if($id == "-cofry1176")
+                    // {
+                    //     dd($id, $s["isPublished"]);
+                    // }
+
+                    $s["isPublished"] = false;
+
+                    $firebaseStores->update([$id => $s]);
+                }
+            }
+        }
 
         echo "SP : Sending establishments to Firebase\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Sending establishments to Firebase" ]);
