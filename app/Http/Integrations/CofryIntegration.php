@@ -158,21 +158,21 @@ class CofryIntegration
         if ($status) self::usort($status);
 
         /** Lojas tag Destaques */
-            // - 347  Amazon
-            // - 503  Cobasi
-            // - 349  Americanas
-            // - 137  Nike
             // - 123  Booking
-            // - 357  Centauro
+            // - 137  Nike
+            // - 347  Amazon
+            // - 349  Americanas
             // - 351  Submarino
+            // - 357  Centauro
             // - 445  Carrefour
+            // - 503  Cobasi
         /************************/
 
         $highlights = [123, 137, 347, 349, 351, 357, 445, 503];
 
         foreach ($stores as $id => &$store)
         {
-            $index           = array_search($store["uuid"], $status);
+            $index           = array_search($store["uuid"], array_column($status, 'uuid'));
             $store["Active"] = $status[$index]["Active"];
 
             if ($store["Segment"])
