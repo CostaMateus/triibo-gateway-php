@@ -181,6 +181,7 @@ class CofryController extends Controller
                 {
                     echo "SP : Disab. Promo. ID = $id\n";
                     $s["isPublished"] = false;
+                    $s["active"]      = false;
                     $firebasePromos->update([$id => $p]);
                 }
             }
