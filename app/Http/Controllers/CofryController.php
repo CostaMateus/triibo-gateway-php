@@ -137,7 +137,7 @@ class CofryController extends Controller
             {
                 if (!isset($stores[$id]))
                 {
-                    echo "SP : Desat. Estab. ID = $id\n";
+                    echo "SP : Disab. Estab. ID = $id\n";
                     $s["isPublished"] = false;
                     $firebaseStores->update([$id => $s]);
                 }
@@ -166,21 +166,25 @@ class CofryController extends Controller
         $db             = Firebase::database();
         $firebasePromos = $db->getReference("Store");
 
-        echo "SP : Excluding Cofry Promos\n";
-        Log::channel("cofry")->info("Stores|Promos", [ "Excluding Cofry Promos" ]);
+        echo "SP : Searching for promos\n";
+        Log::channel("cofry")->info("Stores|Promos", [ "Searching for promos" ]);
+        $promos    = CofryIntegration::getPromocoes();
         $allPromos = $firebasePromos->getValue();
         foreach ($allPromos as $id => $p)
         {
             if (strpos($id, "-cofry") !== false)
             {
-                echo "SP : Del Promo ID = $id\n";
-                $db->getReference("Store/$id")->remove();
+                // echo "SP : Del Promo ID = $id\n";
+                // $db->getReference("Store/$id")->remove();
+
+                if (!isset($stores[$id]))
+                {
+                    echo "SP : Disab. Promo. ID = $id\n";
+                    $s["isPublished"] = false;
+                    $firebasePromos->update([$id => $p]);
+                }
             }
         }
-
-        echo "SP : Searching for promos\n";
-        Log::channel("cofry")->info("Stores|Promos", [ "Searching for promos" ]);
-        $promos = CofryIntegration::getPromocoes();
 
         echo "SP : Sending promos to Firebase\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Sending promos to Firebase" ]);
