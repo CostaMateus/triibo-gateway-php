@@ -177,7 +177,7 @@ class CofryController extends Controller
                 // echo "SP : Del Promo ID = $id\n";
                 // $db->getReference("Store/$id")->remove();
 
-                if (!isset($stores[$id]))
+                if (!isset($promos[$id]))
                 {
                     echo "SP : Disab. Promo. ID = $id\n";
                     $s["isPublished"] = false;
