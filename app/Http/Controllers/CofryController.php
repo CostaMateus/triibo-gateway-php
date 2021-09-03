@@ -129,8 +129,10 @@ class CofryController extends Controller
 
         echo "SP : Searching establishments\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Searching establishments" ]);
+
         $stores    = CofryIntegration::getEstabelecimentos();
         $allStores = $firebaseStores->getValue();
+
         foreach ($allStores as $id => $s)
         {
             if (strpos($id, "-cofry") !== false)
@@ -146,14 +148,29 @@ class CofryController extends Controller
 
         echo "SP : Sending establishments to Firebase\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Sending establishments to Firebase" ]);
-        foreach ($stores as $id => $store)
+
+        foreach ($stores as $id => $s)
         {
             echo "SP : Estab. ID = $id\n";
-            $firebaseStores->update([$id => $store]);
-        }
 
-        // // $firebaseStores->update($stores);
-        // // $rStores = $firebaseStores->getValue();
+            if (isset($allStores[$id]))
+            {
+                $desc = $allStores[$id]["descricao"];
+                $desc = explode("\n\n#", $desc);
+
+                if (count($desc) > 1)
+                {
+                    array_shift($desc);
+
+                    $aux = "";
+                    foreach ($desc as $value) $aux .= "\n\n#" . $value;
+
+                    $s["descricao"] .= $aux;
+                }
+            }
+
+            $firebaseStores->update([$id => $s]);
+        }
     }
 
     /**
@@ -168,15 +185,14 @@ class CofryController extends Controller
 
         echo "SP : Searching for promos\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Searching for promos" ]);
+
         $promos    = CofryIntegration::getPromocoes();
         $allPromos = $firebasePromos->getValue();
+
         foreach ($allPromos as $id => $p)
         {
             if (strpos($id, "-cofry") !== false)
             {
-                // echo "SP : Del Promo ID = $id\n";
-                // $db->getReference("Store/$id")->remove();
-
                 if (!isset($promos[$id]))
                 {
                     echo "SP : Disab. Promo. ID = $id\n";
@@ -189,14 +205,29 @@ class CofryController extends Controller
 
         echo "SP : Sending promos to Firebase\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Sending promos to Firebase" ]);
+
         foreach ($promos as $id => $p)
         {
             echo "SP : Promo ID = $id\n";
+
+            if (isset($allPromos[$id]))
+            {
+                $desc = $allPromos[$id]["description"];
+                $desc = explode("\n\n#", $desc);
+
+                if (count($desc) > 1)
+                {
+                    array_shift($desc);
+
+                    $aux = "";
+                    foreach ($desc as $value) $aux .= "\n\n#" . $value;
+
+                    $p["description"] .= $aux;
+                }
+            }
+
             $firebasePromos->update([$id => $p]);
         }
-
-        // // $firebasePromos->update($promos);
-        // // $rPromos = $firebasePromos->getValue();
     }
 
 
