@@ -367,7 +367,7 @@ class CofryController extends Controller
             $fb     = $db->getReference("$w/$wallet_id");
             $wallet = $fb->getValue();
 
-            echo "$wallet_id\n";
+            // echo "$wallet_id\n";
 
             foreach ($wallet as $key => $value)
             {
