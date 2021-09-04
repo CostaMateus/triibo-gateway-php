@@ -367,26 +367,31 @@ class CofryController extends Controller
             $fb     = $db->getReference("$w/$wallet_id");
             $wallet = $fb->getValue();
 
-            // echo "$wallet_id\n";
-
-            foreach ($wallet as $key => $value)
+            if (gettype($wallet) == "array")
             {
-                if ($key == "updateDate")
+                foreach ($wallet as $key => $value)
                 {
-                    $i++;
-                    $i_ids[] = $wallet_id;
-                }
+                    if ($key == "updateDate")
+                    {
+                        $i++;
+                        $i_ids[] = $wallet_id;
+                        // Log::channel("cofry")->info("updateDate", [ $wallet_id ]);
+                    }
 
-                if (isset($value["vouchers"][0]))
-                {
-                    $y++;
-                    $y_ids[] = $wallet_id;
+                    if (isset($value["vouchers"][0]))
+                    {
+                        $y++;
+                        $y_ids[] = $wallet_id;
+                        // Log::channel("cofry")->info("vouchers", [ $wallet_id ]);
+                    }
                 }
             }
+
+            echo "$wallet_id - $i:$y\n";
         }
 
         Log::channel("cofry")->info("updateDate", [ $i_ids ]);
-        Log::channel("cofry")->info("vouchers", [ $y_ids ]);
+        Log::channel("cofry")->info("vouchers",   [ $y_ids ]);
 
         dd($i, $y);
     }
