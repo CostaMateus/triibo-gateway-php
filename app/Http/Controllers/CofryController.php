@@ -357,11 +357,11 @@ class CofryController extends Controller
         $wallets = $fb->getChildKeys();
         // $wallets = $fb->shallow()->getSnapshot();
 
-        // dd($wallets);
-        // $wallets = $fb->getValue();
-
         $i = 0;
         $y = 0;
+        $i_ids = [];
+        $y_ids = [];
+
         foreach ($wallets as $wallet_id)
         {
             $fb     = $db->getReference("$w/$wallet_id");
@@ -371,22 +371,22 @@ class CofryController extends Controller
 
             foreach ($wallet as $key => $value)
             {
-                if ($key == "updateDate") $i++;
+                if ($key == "updateDate")
+                {
+                    $i++;
+                    $i_ids[] = $wallet_id;
+                }
 
-                if (isset($value["vouchers"][0])) $y++;
+                if (isset($value["vouchers"][0]))
+                {
+                    $y++;
+                    $y_ids[] = $wallet_id;
+                }
             }
-
-            // if ($wallet->hasChild("updateDate"))
-            // {
-            //     dd($wallet);
-            // }
-
-            // // foreach ($wallet as $i => $value)
-            // // {
-            // //     echo "\t$i\n";
-            // // }
-            // echo "\n";
         }
+
+        Log::channel("cofry")->info("updateDate", [ $i_ids ]);
+        Log::channel("cofry")->info("vouchers", [ $y_ids ]);
 
         dd($i, $y);
     }
