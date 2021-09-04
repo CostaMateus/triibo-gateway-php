@@ -350,19 +350,45 @@ class CofryController extends Controller
 
     public function fix()
     {
-        $db = Firebase::database();
-        $fb = $db->getReference("Wallet");
-        $wallets = $fb->getValue();
+        $w = "Wallet";
 
-        foreach ($wallets as $key => $wallet)
+        $db      = Firebase::database();
+        $fb      = $db->getReference($w);
+        $wallets = $fb->getChildKeys();
+        // $wallets = $fb->shallow()->getSnapshot();
+
+        // dd($wallets);
+        // $wallets = $fb->getValue();
+
+        $i = 0;
+        $y = 0;
+        foreach ($wallets as $wallet_id)
         {
-            echo "$key : \n";
-            foreach ($wallet as $i => $value)
+            $fb     = $db->getReference("$w/$wallet_id");
+            $wallet = $fb->getValue();
+
+            echo "$wallet_id\n";
+
+            foreach ($wallet as $key => $value)
             {
-                echo "\t$i\n";
+                if ($key == "updateDate") $i++;
+
+                if (isset($value["vouchers"][0])) $y++;
             }
-            echo "\n";
+
+            // if ($wallet->hasChild("updateDate"))
+            // {
+            //     dd($wallet);
+            // }
+
+            // // foreach ($wallet as $i => $value)
+            // // {
+            // //     echo "\t$i\n";
+            // // }
+            // echo "\n";
         }
+
+        dd($i, $y);
     }
 
 }
