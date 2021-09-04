@@ -346,4 +346,23 @@ class CofryController extends Controller
         Log::channel("cofry")->info("Images", [ "End uploading images to Firebase - $lcFolder" ]);
     }
 
+
+
+    public function fix()
+    {
+        $db = Firebase::database();
+        $fb = $db->getReference("Wallet");
+        $wallets = $fb->getValue();
+
+        foreach ($wallets as $key => $wallet)
+        {
+            echo "$key : \n";
+            foreach ($wallet as $i => $value)
+            {
+                echo "\t$i\n";
+            }
+            echo "\n";
+        }
+    }
+
 }
