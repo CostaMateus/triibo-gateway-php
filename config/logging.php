@@ -112,6 +112,12 @@ return [
             'path'   => storage_path('logs/cofry.log'),
             'level'  => 'debug'
         ],
+
+        'triibo' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/triibo.log'),
+            'level'  => 'debug'
+        ],
     ],
 
 ];
