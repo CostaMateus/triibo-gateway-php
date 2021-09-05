@@ -18,11 +18,9 @@ class TriiboController extends Controller
         // $wallets = $fb->shallow()->getSnapshot();
 
         $i_ids = [];
-        $i_aux = 0;
         $i     = 0;
 
         $y_ids = [];
-        $y_aux = 0;
         $y     = 0;
 
         foreach ($wallets as $wallet_id)
@@ -38,19 +36,12 @@ class TriiboController extends Controller
                     {
                         $i++;
                         $i_ids[] = $wallet_id;
-
-                        unset($wallet[$key]);
-
-                        dd($wallet);
-
-                        // Log::channel("triibo")->info("updateDate", [ $wallet_id ]);
                     }
 
                     if (isset($value["vouchers"][0]))
                     {
                         $y++;
                         $y_ids[] = $wallet_id;
-                        // Log::channel("triibo")->info("vouchers", [ $wallet_id ]);
                     }
                 }
             }
@@ -62,7 +53,6 @@ class TriiboController extends Controller
                 Log::channel("triibo")->info("updateDate", [ $i_ids ]);
                 $i     = 0;
                 $i_ids = [];
-                $i_aux += $i;
             }
 
             if ($y >= 800)
@@ -70,19 +60,15 @@ class TriiboController extends Controller
                 Log::channel("triibo")->info("vouchers",   [ $y_ids ]);
                 $y     = 0;
                 $y_ids = [];
-                $y_aux += $y;
             }
         }
 
-        $i_aux += $i;
-        $y_aux += $y;
-
         Log::channel("triibo")->info("updateDate", [ $i_ids ]);
         Log::channel("triibo")->info("vouchers",   [ $y_ids ]);
-
-        dd($i_aux, $y_aux);
     }
 
+
+    
 
     public function unsetUpdateDate()
     {

@@ -42,8 +42,9 @@ class UnsetUpdateDate extends Command
     {
         Log::channel("triibo")->info("unset-updateDate", [ "Start processing of unset-updateDate" ]);
 
-        $cofry = new TriiboController();
-        $cofry->unsetUpdateDate();
+        $triibo = new TriiboController();
+        $triibo->unsetUpdateDate();
+        // $triibo->fix();
 
         Log::channel("triibo")->info("unset-updateDate", [ "End unset-updateDate processing" ]);
     }
