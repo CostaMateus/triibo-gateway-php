@@ -49,6 +49,7 @@ class Kernel extends ConsoleKernel
         // Triibo
         // Diariamente a cada quatro horas
         $schedule->command("unset:updateDate")->everyFourHours()->timezone("America/Sao_Paulo")->runInBackground();
+        $schedule->command("unset:vouchers")->everyFourHours()->timezone("America/Sao_Paulo")->runInBackground();
     }
 
     /**
