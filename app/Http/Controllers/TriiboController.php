@@ -119,18 +119,22 @@ class TriiboController extends Controller
 
             if (gettype($wallet) == "array")
             {
-                foreach ($wallet as $key => &$value)
+                foreach ($wallet as &$value)
                 {
-                    if (isset($value["vouchers"][0]))
+                    if (isset($value["vouchers"]))
                     {
-                        foreach ($value["vouchers"] as $key2 => $id)
+                        foreach ($value["vouchers"] as $key => $id)
                         {
+                            echo strlen($key);
+
+                            if (strlen($key) > 2) continue;
+
                             $value["vouchers"][$id] = [ "value" => 1 ];
-                            unset($value["vouchers"][$key2]);
+                            unset($value["vouchers"][$key]);
 
                             $fb->update([$wallet_id => $wallet]);
 
-                            echo "$wallet_id\n";
+                            echo "\n$wallet_id\n";
                         }
                     }
                 }
