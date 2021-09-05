@@ -68,7 +68,7 @@ class TriiboController extends Controller
     }
 
 
-    
+
 
     public function unsetUpdateDate()
     {
@@ -81,8 +81,8 @@ class TriiboController extends Controller
 
         foreach ($wallets as $wallet_id)
         {
-            $fb     = $db->getReference("$w/$wallet_id");
-            $wallet = $fb->getValue();
+            $fb2    = $db->getReference("$w/$wallet_id");
+            $wallet = $fb2->getValue();
 
             if (gettype($wallet) == "array")
             {
@@ -91,6 +91,9 @@ class TriiboController extends Controller
                     if ($key == "updateDate")
                     {
                         unset($wallet[$key]);
+                        $fb->update([$wallet_id => $wallet]);
+                        // $db->getReference($w)->update([$wallet_id => $wallet]);
+
                         // $i++;
                         echo "$wallet_id\n";
                         // Log::channel("triibo")->info("unsetUpdateDate", [ $wallet_id ]);
