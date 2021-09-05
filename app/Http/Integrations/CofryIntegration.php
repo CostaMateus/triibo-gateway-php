@@ -494,9 +494,13 @@ class CofryIntegration
 
         $pathStore = public_path("images/estabelecimentos");
         $pathPromo = public_path("images/promos");
+
         $default   = public_path("images/standard.png");
         File::copy($default, $pathStore . "/cofry0_standard.png");
         File::copy($default, $pathPromo . "/promo0_standard.png");
+
+        $common    = public_path("images/cupom.png");
+        File::copy($common, $pathPromo . "/common_promotion.png");
     }
 
     /**
