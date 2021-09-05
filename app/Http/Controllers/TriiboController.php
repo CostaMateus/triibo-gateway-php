@@ -102,4 +102,40 @@ class TriiboController extends Controller
             }
         }
     }
+
+
+    public function unsetVouchers()
+    {
+        $w = "Wallet";
+
+        $db      = Firebase::database();
+        $fb      = $db->getReference($w);
+        $wallets = $fb->getChildKeys();
+
+        foreach ($wallets as $wallet_id)
+        {
+            $fb2    = $db->getReference("$w/$wallet_id");
+            $wallet = $fb2->getValue();
+
+            if (gettype($wallet) == "array")
+            {
+                foreach ($wallet as $key => &$value)
+                {
+                    if (isset($value["vouchers"][0]))
+                    {
+                        foreach ($value["vouchers"] as $key2 => $id)
+                        {
+                            $value["vouchers"][$id] = [ "value" => 1 ];
+                            unset($value["vouchers"][$key2]);
+
+                            $fb->update([$wallet_id => $wallet]);
+
+                            echo "$wallet_id\n";
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
