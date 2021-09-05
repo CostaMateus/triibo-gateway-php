@@ -43,8 +43,7 @@ class ProcessStoresPromos extends Command
         Log::channel("cofry")->info("Stores|Promos", [ "Start processing of stores|promos" ]);
 
         $cofry = new CofryController();
-        // $cofry->index();
-        $cofry->fix();
+        $cofry->index();
 
         // echo "SP : End stores|promos processing\n";
         Log::channel("cofry")->info("Stores|Promos", [ "End stores|promos processing" ]);
