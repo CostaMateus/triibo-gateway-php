@@ -44,6 +44,11 @@ class Kernel extends ConsoleKernel
         $schedule->command("import:stages")->weeklyOn(1, "5:00")->timezone("America/Sao_Paulo");
         // // Segunda às 05h10
         // $schedule->command("import:dealslabels")->weeklyOn(1, "5:10")->timezone("America/Sao_Paulo");
+
+
+        // Triibo
+        // Diariamente a cada quatro horas
+        $schedule->command("unset:updateDate")->everyFourHours()->timezone("America/Sao_Paulo")->runInBackground();
     }
 
     /**
