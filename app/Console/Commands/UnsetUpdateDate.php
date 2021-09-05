@@ -44,7 +44,6 @@ class UnsetUpdateDate extends Command
 
         $triibo = new TriiboController();
         $triibo->unsetUpdateDate();
-        // $triibo->fix();
 
         Log::channel("triibo")->info("unset-updateDate", [ "End unset-updateDate processing" ]);
     }
