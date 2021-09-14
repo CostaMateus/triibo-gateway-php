@@ -10,12 +10,12 @@ class TriiboController extends Controller
 {
     public function unsetUpdateDate()
     {
+        $i = 0;
         $w = "Wallet";
 
         $db      = Firebase::database();
         $fb      = $db->getReference($w);
         $wallets = $fb->getChildKeys();
-        // $i = 0;
 
         foreach ($wallets as $wallet_id)
         {
@@ -30,20 +30,20 @@ class TriiboController extends Controller
                     {
                         unset($wallet[$key]);
                         $fb->update([$wallet_id => $wallet]);
-                        // $db->getReference($w)->update([$wallet_id => $wallet]);
-
-                        // $i++;
-                        echo "$wallet_id\n";
-                        // Log::channel("triibo")->info("unsetUpdateDate", [ $wallet_id ]);
+                        // echo "$wallet_id\n";
+                        $i++;
                     }
                 }
             }
         }
+
+        Log::channel("triibo")->info("unset-updateDate", [ "unset-updateDate: $i wallets fixed" ]);
     }
 
 
     public function unsetVouchers()
     {
+        $i = 0;
         $w = "Wallet";
 
         $db      = Firebase::database();
@@ -63,70 +63,21 @@ class TriiboController extends Controller
                     {
                         foreach ($value["vouchers"] as $key => $id)
                         {
-                            echo strlen($key);
-
                             if (strlen($key) > 2) continue;
 
                             $value["vouchers"][$id] = [ "value" => 1 ];
                             unset($value["vouchers"][$key]);
 
                             $fb->update([$wallet_id => $wallet]);
-
-                            echo "\n$wallet_id\n";
+                            // echo "$wallet_id\n";
+                            $i++;
                         }
                     }
                 }
             }
         }
+
+        Log::channel("triibo")->info("unset-vouchers", [ "unset-vouchers: $i wallets fixed" ]);
     }
 
-
-    // public function fix()
-    // {
-    //     $w = "Wallet";
-    //     $db      = Firebase::database();
-    //     $fb      = $db->getReference($w);
-    //     $wallets = $fb->getChildKeys();
-    //     // $wallets = $fb->shallow()->getSnapshot();
-    //     $i_ids = [];
-    //     $i     = 0;
-    //     $y_ids = [];
-    //     $y     = 0;
-    //     foreach ($wallets as $wallet_id)
-    //     {
-    //         $fb     = $db->getReference("$w/$wallet_id");
-    //         $wallet = $fb->getValue();
-    //         if (gettype($wallet) == "array")
-    //         {
-    //             foreach ($wallet as $key => $value)
-    //             {
-    //                 if ($key == "updateDate")
-    //                 {
-    //                     $i++;
-    //                     $i_ids[] = $wallet_id;
-    //                 }
-    //                 if (isset($value["vouchers"][0]))
-    //                 {
-    //                     $y++;
-    //                     $y_ids[] = $wallet_id;
-    //                 }
-    //             }
-    //         }
-    //         echo "$wallet_id - $i:$y\n";
-    //         if ($i >= 800)
-    //         {
-    //             Log::channel("triibo")->info("updateDate", [ $i_ids ]);
-    //             $i     = 0;
-    //             $i_ids = [];
-    //         }
-    //         if ($y >= 800)
-    //         {
-    //             Log::channel("triibo")->info("vouchers",   [ $y_ids ]);
-    //             $y     = 0;
-    //             $y_ids = [];
-    //         }
-    //     }
-    //     Log::channel("triibo")->info("updateDate", [ $i_ids ]);
-    //     Log::channel("triibo")->info("vouchers",   [ $y_ids ]);
-    // }
 }
