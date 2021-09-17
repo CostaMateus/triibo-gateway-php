@@ -73,3 +73,6 @@ Route::prefix("pipedrive")->group(function () {
 //     Route::get("/uploadImages",      [App\Http\Controllers\CofryController::class, "uploadImages"])->name("cofry.uploadImages");
 //
 // });
+
+
+Route::post("/gateway/teste", [App\Http\Controllers\HomeController::class, 'gateway'])->name('gateway');

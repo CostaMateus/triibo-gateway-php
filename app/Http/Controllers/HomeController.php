@@ -12,6 +12,7 @@ use Ramsey\Collection\Collection;
 use Triibo\Mautic\Facades\Mautic;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Triibo\Mautic\Models\MauticConsumer;
 use App\Notifications\WebhookMarketplace;
 use App\Http\Integrations\MauticIntegration;
@@ -235,5 +236,13 @@ class HomeController extends Controller
         $response = Http::withHeaders($header)->post(self::URL . "/subscriptions", $payment);
 
         return $response->json();
+    }
+
+
+    public static function gateway(Request $request)
+    {
+        $date    = date("Ymd-his");
+        $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
+        Storage::put("gateway-".$date.".json", $encoded);
     }
 }
