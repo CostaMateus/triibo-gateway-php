@@ -44,10 +44,10 @@ Route::group(['middleware' => 'auth'], function() {
         return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.cache') ]);
     })->name('clear.caches');
 
-    Route::get('/import-stages', function() {
-        MauticIntegration::importAllStages();
-        return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.import.all.stages') ]);
-    })->name('import.stages');
+    Route::get('/update-stages', function() {
+        MauticIntegration::updateStages();
+        return view('welcome', [ 'showToast' => true, 'message' => __('marketplace.update.all.stages') ]);
+    })->name('update.stages');
 
     Route::resource('users', UserController::class);
 

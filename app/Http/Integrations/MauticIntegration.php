@@ -5,6 +5,7 @@ namespace App\Http\Integrations;
 use Exception;
 use Mautic\Api\Api;
 use Mautic\MauticApi;
+use App\Helpers\Helper;
 use Mautic\Auth\ApiAuth;
 use Devio\Pipedrive\Pipedrive;
 use Triibo\Mautic\Facades\Mautic;
@@ -696,31 +697,31 @@ class MauticIntegration
      *
      * @return void
      */
-    public static function importAllStages()
+    public static function updateStages()
     {
-        Log::channel("marketplace")->info("Stages", [
-            "data" => "start importing all stages"
-        ]);
+        Log::channel("marketplace")->info("Stages", ["Start importing all stages"]);
 
-        $idField   = 185; // id do campo personalizavel no Mautic
         $mauticApi = self::getApi("contactFields");
 
         $pipeApi   = new Pipedrive(config("pipedrive.token"));
         $stages    = $pipeApi->stages()->all()->getData();
 
+        // inicio processamento estágios dos funis
         foreach ($stages as &$stage)
         {
             $stage = [
-                "value" => $stage->id,
-                "label" => $stage->name
+                "value"    => $stage->id,
+                "label"    => $stage->name,
+                "pd_id"    => $stage->pipeline_id,
+                "order_nr" => $stage->order_nr
             ];
         }
 
-        usort($stages, function($a, $b) {
-            return $a["value"] <=> $b["value"];
-        });
+        $stages = Helper::array_orderby($stages, "pd_id", SORT_ASC, "order_nr", SORT_ASC);
 
-        $data = [
+        foreach ($stages as &$stage) unset($stage["pd_id"], $stage["order_nr"]);
+
+        $dataStages = [
             "properties" => [
                 "list" => [
                     [
@@ -732,87 +733,54 @@ class MauticIntegration
             ]
         ];
 
-        $res  = $mauticApi->edit($idField, $data);
+        // 214 = id do campo no Mautic: Pipedrive Funil
+        $resp1 = $mauticApi->edit(214, $dataStages);
+        // fim processamento dos estágios dos funis
 
-        if (!isset($res["errors"]))
+
+        // inicio processamento dos status dos estágios dos funis
+        $status = [];
+        foreach ($stages as $s)
         {
-            Log::channel("marketplace")->info("Stages", [
-                "data" => "end of importing all stages"
-            ]);
-        }
-        else
-        {
-            Log::channel("marketplace")->info("Stages", [
-                "data" => "import failed"
-            ]);
-        }
-    }
-
-    /**
-     * Importa todas as Etiquetas (labels) do Negócios do Pipedrive
-     *
-     * @return void
-     */
-    public static function importAllDealsLabels()
-    {
-        Log::channel("marketplace")->info("Deal-Label", [
-            "data" => "start importing all deals-labels"
-        ]);
-
-        /********************************************/
-        // CAMPO NÂO CRIADO AINDA -- RESOLVER ANTES //
-        /********************************************/
-        // resolvido? descomentar $schedule->command no kernel
-        $idField   = 000; // id do campo personalizavel no Mautic
-        $mauticApi = self::getApi("contactFields");
-
-        $pipeApi   = new Pipedrive(config("pipedrive.token"));
-        $data      = $pipeApi->dealFields()->all()->getData();
-        $labels    = [];
-
-        foreach ($data as $d)
-        {
-            if ($d->id == 12463 && $d->key == "label")
-            {
-                $labels = $d->options;
-
-                foreach ($labels as &$label)
-                {
-                    $label = [
-                        "value" => $label->id,
-                        "label" => $label->label
-                    ];
-                }
-               break;
-            }
+            $status[] = [
+                "value" => $s["value"] . ":A",
+                "label" => $s["label"] . " : Aberto",
+            ];
+            $status[] = [
+                "value" => $s["value"] . ":G",
+                "label" => $s["label"] . " : Ganho",
+            ];
+            $status[] = [
+                "value" => $s["value"] . ":P",
+                "label" => $s["label"] . " : Perdido",
+            ];
+            $status[] = [
+                "value" => $s["value"] . ":E",
+                "label" => $s["label"] . " : Excluído",
+            ];
         }
 
-        $data = [
+        $dataStatus = [
             "properties" => [
                 "list" => [
                     [
                         "value" => 0,
                         "label" => "Sem Funil"
                     ],
-                    ...$labels
+                    ...$status
                 ],
             ]
         ];
 
-        $res  = $mauticApi->edit($idField, $data);
+        // 215 = id do campo no Mautic: Pipedrive Funil Status
+        $resp2 = $mauticApi->edit(215, $dataStatus);
+        // fim processamento dos status dos estágios dos funis
 
-        if (!isset($res["errors"]))
-        {
-            Log::channel("marketplace")->info("Deal-Label", [
-                "data" => "end of importing all deals-labels"
-            ]);
-        }
-        else
-        {
-            Log::channel("marketplace")->info("Deal-Label", [
-                "data" => "import failed"
-            ]);
-        }
+        $log = (!isset($resp1["errors"]) &&
+                !isset($resp2["errors"])) ?
+                    "Successfully imported all stages" :
+                        "Import of stages failed";
+
+        Log::channel("marketplace")->info("Stages", [$log]);
     }
-
 }
