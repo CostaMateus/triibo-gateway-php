@@ -24,10 +24,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Domingo às 00h30
-        $schedule->exec("composer self-update")->weeklyOn(0, "0:30")->timezone("America/Sao_Paulo")->runInBackground();
-        // Domingo às 01h00
-        $schedule->exec("composer update")->weeklyOn(0, "0:45")->timezone("America/Sao_Paulo")->runInBackground();
+        // // Domingo às 00h30
+        // $schedule->exec("composer self-update")->weeklyOn(0, "0:30")->timezone("America/Sao_Paulo")->runInBackground();
+        // // Domingo às 01h00
+        // $schedule->exec("composer update")->weeklyOn(0, "0:45")->timezone("America/Sao_Paulo")->runInBackground();
 
 
         // Cofry Triibo Integration
@@ -41,7 +41,7 @@ class Kernel extends ConsoleKernel
 
         // Mautic Pipedrive Integration
         // Segunda às 05h00
-        $schedule->command("import:stages")->weeklyOn(1, "5:00")->timezone("America/Sao_Paulo")->runInBackground();
+        $schedule->command("update:stages")->weeklyOn(1, "5:00")->timezone("America/Sao_Paulo")->runInBackground();
         // // Segunda às 05h10
         // $schedule->command("import:dealslabels")->weeklyOn(1, "5:10")->timezone("America/Sao_Paulo");
 

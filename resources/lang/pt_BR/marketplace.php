@@ -2,10 +2,10 @@
 
 return [
 
-    'cache'  => 'Caches limpos com sucesso!',
-    'import' => [
-        'all' => [
-            'stages' => 'Estágios carregados com sucesso'
+    "cache"  => "Caches limpos com sucesso!",
+    "update" => [
+        "all" => [
+            "stages" => "Funil e Funil Status atualizados"
         ]
     ],
 

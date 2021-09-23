@@ -5,21 +5,21 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Http\Integrations\MauticIntegration;
 
-class ImportPipeDealsLabels extends Command
+class UpdatePipeStages extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "import:dealslabels";
+    protected $signature = "update:stages";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Imports all deals labels (etiquetas) from Pipedrive to Mautic";
+    protected $description = "Update stages from Pipedrive to Mautic";
 
     /**
      * Create a new command instance.
@@ -38,7 +38,6 @@ class ImportPipeDealsLabels extends Command
      */
     public function handle()
     {
-        $integ = new MauticIntegration();
-        $integ->importAllDealsLabels();
+        MauticIntegration::updateStages();
     }
 }

@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use File;
-use DateTime;
 use Throwable;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use App\Notifications\WebhookMarketplace;
 use App\Http\Integrations\CofryIntegration;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
@@ -70,6 +71,11 @@ class CofryController extends Controller
                 "error"   => "An error has occurred while working with the SDK",
                 "message" => $e
             ]);
+
+            self::sendMailNotification([
+                "class"  => "insertStoresFirebase()",
+                "params" => "FirebaseException"
+            ], $e);
         }
         catch (Throwable $e)
         {
@@ -80,6 +86,11 @@ class CofryController extends Controller
                 "error"   => "A not-Firebase specific error has occurred",
                 "message" => $e
             ]);
+
+            self::sendMailNotification([
+                "class"  => "insertStoresFirebase()",
+                "params" => "Throwable"
+            ], $e);
         }
 
 
@@ -104,6 +115,11 @@ class CofryController extends Controller
                 "error"   => "An error has occurred while working with the SDK",
                 "message" => $e
             ]);
+
+            self::sendMailNotification([
+                "class"  => "insertPromosFirebase()",
+                "params" => "FirebaseException"
+            ], $e);
         }
         catch (Throwable $e)
         {
@@ -114,6 +130,11 @@ class CofryController extends Controller
                 "error"   => "A not-Firebase specific error has occurred",
                 "message" => $e
             ]);
+
+            self::sendMailNotification([
+                "class"  => "insertPromosFirebase()",
+                "params" => "Throwable"
+            ], $e);
         }
     }
 
@@ -330,6 +351,11 @@ class CofryController extends Controller
                     "error"   => "An error has occurred while working with the SDK",
                     "message" => $e
                 ]);
+
+                self::sendMailNotification([
+                    "class"  => "execUploadImages()",
+                    "params" => "FirebaseException"
+                ], $e);
             }
             catch (Throwable $e)
             {
@@ -339,11 +365,30 @@ class CofryController extends Controller
                     "error"   => "A not-Firebase specific error has occurred",
                     "message" => $e
                 ]);
+
+                self::sendMailNotification([
+                    "class"  => "execUploadImages()",
+                    "params" => "Throwable"
+                ], $e);
             }
         }
 
         echo "IMG : End uploading images to Firebase - $lcFolder\n";
         Log::channel("cofry")->info("Images", [ "End uploading images to Firebase - $lcFolder" ]);
+    }
+
+
+    private static function sendMailNotification($params, $e)
+    {
+        $mail = [
+            "subject"    => "Dev - Integração Cofry",
+            "title"      => "Erro no schedule: ",
+            "class"      => $params["class"],
+            "params"     => $params["params"],
+            "stacktrace" => $e,
+        ];
+        $user = User::firstWhere("email", "mateus.costa@triibo.com.br");
+        $user->notify(new WebhookMarketplace($mail));
     }
 
 }
