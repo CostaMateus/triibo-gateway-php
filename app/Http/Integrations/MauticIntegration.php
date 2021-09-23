@@ -702,11 +702,11 @@ class MauticIntegration
         Log::channel("marketplace")->info("Stages", ["Start importing all stages"]);
 
         $mauticApi = self::getApi("contactFields");
-
         $pipeApi   = new Pipedrive(config("pipedrive.token"));
-        $stages    = $pipeApi->stages()->all()->getData();
 
-        // inicio processamento estágios dos funis
+        // inicio processamento etapas dos funis
+        $stages = $pipeApi->stages()->all()->getData();
+
         foreach ($stages as &$stage)
         {
             $stage = [
@@ -732,55 +732,109 @@ class MauticIntegration
                 ],
             ]
         ];
-
-        // 214 = id do campo no Mautic: Pipedrive Funil
         $resp1 = $mauticApi->edit(214, $dataStages);
-        // fim processamento dos estágios dos funis
+        // 214 = id do campo no Mautic: (Pipedrive Funil)
+        // fim processamento das etapas dos funis
 
 
-        // inicio processamento dos status dos estágios dos funis
-        $status = [];
-        foreach ($stages as $s)
-        {
-            $status[] = [
-                "value" => $s["value"] . ":A",
-                "label" => $s["label"] . " : Aberto",
-            ];
-            $status[] = [
-                "value" => $s["value"] . ":G",
-                "label" => $s["label"] . " : Ganho",
-            ];
-            $status[] = [
-                "value" => $s["value"] . ":P",
-                "label" => $s["label"] . " : Perdido",
-            ];
-            $status[] = [
-                "value" => $s["value"] . ":E",
-                "label" => $s["label"] . " : Excluído",
-            ];
-        }
-
-        $dataStatus = [
+        // inicio processamento dos status dos negocios em cada etapa dos funis
+        $stageStatus = self::getLabels($pipeApi, 12464); // id Status no Pipe
+        $dataStatus  = [
             "properties" => [
                 "list" => [
                     [
                         "value" => 0,
-                        "label" => "Sem Funil"
+                        "label" => "Sem Status"
                     ],
-                    ...$status
+                    ...self::processStages($stages, $stageStatus)
                 ],
             ]
         ];
+        $resp2       = $mauticApi->edit(215, $dataStatus);
+        // 215 = id do campo no Mautic (Pipedrive Funil Status)
+        // fim processamento dos status dos negocios em cada etapa dos funis
 
-        // 215 = id do campo no Mautic: Pipedrive Funil Status
-        $resp2 = $mauticApi->edit(215, $dataStatus);
-        // fim processamento dos status dos estágios dos funis
+
+        // inicio processamento dos status dos negocios em cada etapa dos funis
+        $stageLabels = self::getLabels($pipeApi, 12463); // id Etiqueta no Pipe
+        $dataLabels  = [
+            "properties" => [
+                "list" => [
+                    [
+                        "value" => 0,
+                        "label" => "Sem Etiqueta"
+                    ],
+                    ...self::processStages($stages, $stageLabels)
+                ],
+            ]
+        ];
+        $resp3       = $mauticApi->edit(218, $dataLabels);
+        // 218 = id do campo no Mautic (Pipedrive Funil Etiqueta)
+        // fim processamento dos status dos negocios em cada etapa dos funis
+
 
         $log = (!isset($resp1["errors"]) &&
-                !isset($resp2["errors"])) ?
+                !isset($resp2["errors"]) &&
+                !isset($resp3["errors"])) ?
                     "Successfully imported all stages" :
                         "Import of stages failed";
 
         Log::channel("marketplace")->info("Stages", [$log]);
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param Pipedrive $pipeApi
+     * @param integer $id
+     * @return array
+     */
+    private static function getLabels(Pipedrive $pipeApi, int $id)
+    {
+        $resp = $pipeApi->DealFields->find($id)->getData();
+        $temp = $resp->options;
+
+        foreach ($temp as $t)
+        {
+            // opc1
+            $lbl = mb_strtolower($t->label);
+            $arr = ["em aberto", "em espera", "em degustação"];
+
+            if (in_array($lbl, $arr))
+            {
+                $label    = explode(" ", $t->label)[1];
+                $t->label = ucfirst($label);
+            }
+
+            $data[] = $t->label;
+
+            // // opc2
+            // $data[] = (in_array(mb_strtolower($t->label), ["em aberto", "em espera", "em degustação"])) ? ucfirst(explode(" ", $t->label)[1]) : $t->label;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param array $stages
+     * @param array $labels
+     * @return array
+     */
+    private static function processStages(array $stages, array $labels)
+    {
+        foreach ($stages as $s)
+        {
+            foreach ($labels as $lb)
+            {
+                $data[] = [
+                    "value" => $s["value"] .  ":"  . $lb[0],
+                    "label" => $s["label"] . " : " . $lb,
+                ];
+            }
+        }
+
+        return $data;
     }
 }
