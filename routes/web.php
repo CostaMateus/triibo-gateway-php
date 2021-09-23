@@ -63,108 +63,108 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get('/mautic', [App\Http\Controllers\zTesteController::class, 'index']);
+// Route::get('/mautic', [App\Http\Controllers\HomeController::class, 'index']);
 
-Route::get('/pipedrive', function () {
-    $token     = config('pipedrive.token');
-    $pipedrive = new Pipedrive($token);
-    try
-    {
-        $data = $pipedrive->deals->find(1426)->getData();
-    }
-    catch(Exception $e)
-    {
-        $data = null;
-    }
+// Route::get('/pipedrive', function () {
+//     $token     = config('pipedrive.token');
+//     $pipedrive = new Pipedrive($token);
+//     try
+//     {
+//         $data = $pipedrive->deals->find(1426)->getData();
+//     }
+//     catch(Exception $e)
+//     {
+//         $data = null;
+//     }
 
-    Log::channel("marketplace")->info("aaaa", [
-        "data" => $data,
-    ]);
+//     Log::channel("marketplace")->info("aaaa", [
+//         "data" => $data,
+//     ]);
 
-    dd($data);
-
-
-    // // // $label     = [];
-    // // // foreach ($data as $d)
-    // // //     if ($d->id == 12463 && $d->key == "label")
-    // // //         $labels = $d->options;
-    // // // foreach ($labels as &$label)
-    // // // {
-    // // //     $label = [
-    // // //         "value" => $label->id,
-    // // //         "label" => $label->label
-    // // //     ];
-    // // // }
-    // // // // array_unshift($labels, [
-    // // //     // "value" => 0,
-    // // //     // "label" => "Sem Etiqueta"
-    // // // // ]);
-    // // // $data = [
-    // // //     "properties" => [
-    // // //         "list" => [
-    // // //             [
-    // // //                 "value" => 0,
-    // // //                 "label" => "Sem Etiqueta"
-    // // //             ],
-    // // //             ...$labels
-    // // //         ],
-    // // //     ]
-    // // // ];
+//     dd($data);
 
 
-    // $factory    = Mautic::getFactory();
-    // $consumer   = MauticConsumer::whereNotNull('id')->orderBy('created_at', 'desc')->first();
+//     // // // $label     = [];
+//     // // // foreach ($data as $d)
+//     // // //     if ($d->id == 12463 && $d->key == "label")
+//     // // //         $labels = $d->options;
+//     // // // foreach ($labels as &$label)
+//     // // // {
+//     // // //     $label = [
+//     // // //         "value" => $label->id,
+//     // // //         "label" => $label->label
+//     // // //     ];
+//     // // // }
+//     // // // // array_unshift($labels, [
+//     // // //     // "value" => 0,
+//     // // //     // "label" => "Sem Etiqueta"
+//     // // // // ]);
+//     // // // $data = [
+//     // // //     "properties" => [
+//     // // //         "list" => [
+//     // // //             [
+//     // // //                 "value" => 0,
+//     // // //                 "label" => "Sem Etiqueta"
+//     // // //             ],
+//     // // //             ...$labels
+//     // // //         ],
+//     // // //     ]
+//     // // // ];
 
-    // $expired    = $factory->checkExpirationTime($consumer->expires);
 
-    // $consumer   = ($expired) ? $factory->refreshToken($consumer->refresh_token) : $consumer;
+//     // $factory    = Mautic::getFactory();
+//     // $consumer   = MauticConsumer::whereNotNull('id')->orderBy('created_at', 'desc')->first();
 
-    // $settings   = config('mautic.connections.main');
-    // $settings['accessToken'] = $consumer->access_token;
+//     // $expired    = $factory->checkExpirationTime($consumer->expires);
 
-    // $initAuth   = new ApiAuth();
-    // $auth       = $initAuth->newAuth($settings);
-    // $apiUrl     = $settings['baseUrl'];
-    // $api        = new MauticApi();
-    // $contactApi = $api->newApi("contactFields", $auth, $apiUrl);
+//     // $consumer   = ($expired) ? $factory->refreshToken($consumer->refresh_token) : $consumer;
 
-    // $res = $contactApi->getList("", 0, 200)["fields"];
+//     // $settings   = config('mautic.connections.main');
+//     // $settings['accessToken'] = $consumer->access_token;
 
-    // $data = [];
-    // foreach ($res as $r)
-    // {
-    //     if ( $r["createdByUser"] == "Mateus Costa")
-    //         $data[] = $r;
-    // }
+//     // $initAuth   = new ApiAuth();
+//     // $auth       = $initAuth->newAuth($settings);
+//     // $apiUrl     = $settings['baseUrl'];
+//     // $api        = new MauticApi();
+//     // $contactApi = $api->newApi("contactFields", $auth, $apiUrl);
 
-    // // dd($data);
+//     // $res = $contactApi->getList("", 0, 200)["fields"];
 
-    // $test = [
-    //     "isPublished" => true,
-    //     "label"       => "Funil Etiqueta",
-    //     "alias"       => "pipeline_etiqueta",
-    //     "type"        => "select",
-    //     "group"       => "core",
-    //     "order"       => 4,
-    //     "object"      => "lead",
-    //     "defaultValue" => "0",
-    //     "isRequired" => false,
-    //     "isPubliclyUpdatable" => false,
-    //     "isUniqueIdentifier" => false,
-    //     "properties" => [
-    //         "list" => [
-    //             [
-    //                 "label" => "Sem Etiqueta",
-    //                 "value" => 0
-    //             ]
-    //         ]
-    //     ],
-    // ];
+//     // $data = [];
+//     // foreach ($res as $r)
+//     // {
+//     //     if ( $r["createdByUser"] == "Mateus Costa")
+//     //         $data[] = $r;
+//     // }
 
-    // $field = $contactApi->create($test);
+//     // // dd($data);
 
-    // dd($field);
-});
+//     // $test = [
+//     //     "isPublished" => true,
+//     //     "label"       => "Funil Etiqueta",
+//     //     "alias"       => "pipeline_etiqueta",
+//     //     "type"        => "select",
+//     //     "group"       => "core",
+//     //     "order"       => 4,
+//     //     "object"      => "lead",
+//     //     "defaultValue" => "0",
+//     //     "isRequired" => false,
+//     //     "isPubliclyUpdatable" => false,
+//     //     "isUniqueIdentifier" => false,
+//     //     "properties" => [
+//     //         "list" => [
+//     //             [
+//     //                 "label" => "Sem Etiqueta",
+//     //                 "value" => 0
+//     //             ]
+//     //         ]
+//     //     ],
+//     // ];
 
-// Route::any('/teste', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste3');
-// Route::any('/assas', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
+//     // $field = $contactApi->create($test);
+
+//     // dd($field);
+// });
+
+// // Route::any('/teste', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste3');
+// // Route::any('/assas', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
