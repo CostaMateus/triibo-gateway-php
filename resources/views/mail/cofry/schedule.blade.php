@@ -3,8 +3,8 @@
 @component('mail::message')
 # {{ $title }}
 
-{{ "Metodo: " $method }}
-{{ "Catch:  " $catch }}
+{{ "Metodo: $method" }}
+{{ "Catch:  $catch"  }}
 
 <b>Stacktrace</b>:
 <br>
