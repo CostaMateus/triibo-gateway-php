@@ -40,6 +40,7 @@ Route::prefix("pipedrive")->group(function () {
     //     Route::post("/deleted", [App\Http\Controllers\PipedriveWebhookController::class, "organization"])->name("pipe.org.deleted");
     // });
 
+    Route::post("/organization",  [App\Http\Controllers\PipedriveWebhookController::class, "organization"])->name("pipe.organization");
     Route::post("/person",        [App\Http\Controllers\PipedriveWebhookController::class, "person"])->name("pipe.person");
     Route::post("/stage",         [App\Http\Controllers\PipedriveWebhookController::class, "stage"])->name("pipe.stage");
     Route::post("/deal",          [App\Http\Controllers\PipedriveWebhookController::class, "deal"])->name("pipe.deal");

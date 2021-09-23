@@ -74,19 +74,19 @@ class PipedriveWebhookController extends Controller
         $date   = date("Ymd-his");
         Storage::put("deal-$date.json", json_encode($params, JSON_UNESCAPED_SLASHES));
 
-        // if ($params["meta"]["change_source"] == "api")
-        if ($params["meta"]["host"] == "app.pipedrive.com")
-        {
-            Log::channel("marketplace")->info("Deals", [
-                "0" => "Changed by api ignored"
-            ]);
+        // // if ($params["meta"]["change_source"] == "api")
+        // if ($params["meta"]["host"] == "app.pipedrive.com")
+        // {
+        //     Log::channel("marketplace")->info("Deals", [
+        //         "0" => "Changed by api ignored"
+        //     ]);
 
-            return response()->json([
-                "status"  => "Ok",
-                "message" => "Deal - changed by api ignored",
-                "code"    => -1,
-            ], 200);
-        }
+        //     return response()->json([
+        //         "status"  => "Ok",
+        //         "message" => "Deal - changed by api ignored",
+        //         "code"    => -1,
+        //     ], 200);
+        // }
 
         // try
         // {
@@ -161,14 +161,14 @@ class PipedriveWebhookController extends Controller
         //     ], 500);
         // }
 
-        Log::channel("marketplace")->info("Deals", [
-            "200" => "Success"
-        ]);
+        // Log::channel("marketplace")->info("Deals", [
+        //     "200" => "Success"
+        // ]);
 
-        return response()->json([
-            "status"  => "Ok",
-            "message" => "Success",
-        ], 200);
+        // return response()->json([
+        //     "status"  => "Ok",
+        //     "message" => "Success",
+        // ], 200);
     }
 
     /**
@@ -179,33 +179,36 @@ class PipedriveWebhookController extends Controller
      */
     public function organization(Request $request)
     {
-        if (env("APP_ENV") == "production" || env("APP_ENV") == "local")
-        {
-            Log::channel("marketplace")->info("Organizations", [
-                "0" => "deactivated"
-            ]);
+        // if (env("APP_ENV") == "production" || env("APP_ENV") == "local")
+        // {
+        //     Log::channel("marketplace")->info("Organizations", [
+        //         "0" => "deactivated"
+        //     ]);
 
-            return response()->json([
-                "status"  => "Ok",
-                "message" => "Deactivated",
-            ], 200);
-        }
+        //     return response()->json([
+        //         "status"  => "Ok",
+        //         "message" => "Deactivated",
+        //     ], 200);
+        // }
 
         $params = $request->all();
 
-        // if ($params["meta"]["change_source"] == "api")
-        if ($params["meta"]["host"] == "app.pipedrive.com")
-        {
-            Log::channel("marketplace")->info("Organizations", [
-                "0" => "changed by api ignored"
-            ]);
+        $date   = date("Ymd-his");
+        Storage::put("org-$date.json", json_encode($params, JSON_UNESCAPED_SLASHES));
 
-            return response()->json([
-                "status"  => "Ok",
-                "message" => "Organizations - changed by api ignored",
-                "code"    => -1,
-            ], 200);
-        }
+        // // if ($params["meta"]["change_source"] == "api")
+        // if ($params["meta"]["host"] == "app.pipedrive.com")
+        // {
+        //     Log::channel("marketplace")->info("Organizations", [
+        //         "0" => "changed by api ignored"
+        //     ]);
+
+        //     return response()->json([
+        //         "status"  => "Ok",
+        //         "message" => "Organizations - changed by api ignored",
+        //         "code"    => -1,
+        //     ], 200);
+        // }
 
         // try
         // {
@@ -270,14 +273,14 @@ class PipedriveWebhookController extends Controller
         //     ], 500);
         // }
 
-        Log::channel("marketplace")->info("Organizations", [
-            "200" => "Success"
-        ]);
+        // Log::channel("marketplace")->info("Organizations", [
+        //     "200" => "Success"
+        // ]);
 
-        return response()->json([
-            "status"  => "Ok",
-            "message" => "Success",
-        ], 200);
+        // return response()->json([
+        //     "status"  => "Ok",
+        //     "message" => "Success",
+        // ], 200);
     }
 
     /**
@@ -290,19 +293,22 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        // if ($params["meta"]["change_source"] == "api")
-        if ($params["meta"]["host"] == "app.pipedrive.com")
-        {
-            Log::channel("marketplace")->info("Persons", [
-                "0" => "Changed by api ignored"
-            ]);
+        $date   = date("Ymd-his");
+        Storage::put("person-$date.json", json_encode($params, JSON_UNESCAPED_SLASHES));
 
-            return response()->json([
-                "status"  => "Ok",
-                "message" => "Persons - changed by api ignored",
-                "code"    => -1,
-            ], 200);
-        }
+        // // if ($params["meta"]["change_source"] == "api")
+        // if ($params["meta"]["host"] == "app.pipedrive.com")
+        // {
+        //     Log::channel("marketplace")->info("Persons", [
+        //         "0" => "Changed by api ignored"
+        //     ]);
+
+        //     return response()->json([
+        //         "status"  => "Ok",
+        //         "message" => "Persons - changed by api ignored",
+        //         "code"    => -1,
+        //     ], 200);
+        // }
 
         // try
         // {
@@ -367,14 +373,14 @@ class PipedriveWebhookController extends Controller
         //     ], 500);
         // }
 
-        Log::channel("marketplace")->info("Persons", [
-            "200" => "Success"
-        ]);
+        // Log::channel("marketplace")->info("Persons", [
+        //     "200" => "Success"
+        // ]);
 
-        return response()->json([
-            "status"  => "Ok",
-            "message" => "Success",
-        ], 200);
+        // return response()->json([
+        //     "status"  => "Ok",
+        //     "message" => "Success",
+        // ], 200);
     }
 
     /**
@@ -388,19 +394,22 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        // if ($params["meta"]["change_source"] == "api")
-        if ($params["meta"]["host"] == "app.pipedrive.com")
-        {
-            Log::channel("marketplace")->info("Persons", [
-                "0" => "Changed by api ignored"
-            ]);
+        $date   = date("Ymd-his");
+        Storage::put("stage-$date.json", json_encode($params, JSON_UNESCAPED_SLASHES));
 
-            return response()->json([
-                "status"  => "Ok",
-                "message" => "Stages - changed by api ignored",
-                "code"    => -1,
-            ], 200);
-        }
+        // // if ($params["meta"]["change_source"] == "api")
+        // if ($params["meta"]["host"] == "app.pipedrive.com")
+        // {
+        //     Log::channel("marketplace")->info("Persons", [
+        //         "0" => "Changed by api ignored"
+        //     ]);
+
+        //     return response()->json([
+        //         "status"  => "Ok",
+        //         "message" => "Stages - changed by api ignored",
+        //         "code"    => -1,
+        //     ], 200);
+        // }
 
         // try
         // {
@@ -453,14 +462,14 @@ class PipedriveWebhookController extends Controller
         //     ], 500);
         // }
 
-        Log::channel("marketplace")->info("Stages", [
-            "200" => "Success"
-        ]);
+        // Log::channel("marketplace")->info("Stages", [
+        //     "200" => "Success"
+        // ]);
 
-        return response()->json([
-            "status"  => "Ok",
-            "message" => "Success",
-        ], 200);
+        // return response()->json([
+        //     "status"  => "Ok",
+        //     "message" => "Success",
+        // ], 200);
     }
 
 
