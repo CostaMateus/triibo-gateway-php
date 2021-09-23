@@ -55,6 +55,8 @@ Route::group(['middleware' => 'auth'], function() {
 
 
 
+Route::get('/mautic', [App\Http\Controllers\zTesteController::class, 'index']);
+
 Route::get('/pipedrive', function () {
     $token     = config('pipedrive.token');
     $pipedrive = new Pipedrive($token);
@@ -157,4 +159,4 @@ Route::get('/pipedrive', function () {
 });
 
 // Route::any('/teste', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste3');
-Route::any('/assas', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
+// Route::any('/assas', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
