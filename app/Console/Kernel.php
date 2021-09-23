@@ -46,11 +46,11 @@ class Kernel extends ConsoleKernel
         // $schedule->command("import:dealslabels")->weeklyOn(1, "5:10")->timezone("America/Sao_Paulo");
 
 
-        // Triibo
-        // Diariamente às 03h
-        $schedule->command("unset:updateDate")->dailyAt("03:00")->timezone("America/Sao_Paulo")->runInBackground();
-        // Diariamente às 03h02
-        $schedule->command("unset:vouchers")->dailyAt("03:02")->timezone("America/Sao_Paulo")->runInBackground();
+        // // Triibo
+        // // Diariamente às 03h
+        // $schedule->command("unset:updateDate")->dailyAt("03:00")->timezone("America/Sao_Paulo")->runInBackground();
+        // // Diariamente às 03h02
+        // $schedule->command("unset:vouchers")->dailyAt("03:02")->timezone("America/Sao_Paulo")->runInBackground();
     }
 
     /**
