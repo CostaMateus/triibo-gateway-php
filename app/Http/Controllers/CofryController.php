@@ -6,7 +6,7 @@ use File;
 use Throwable;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
-use App\Notifications\WebhookMarketplace;
+use App\Notifications\ScheduleCofry;
 use App\Http\Integrations\CofryIntegration;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
@@ -73,8 +73,8 @@ class CofryController extends Controller
             ]);
 
             self::sendMailNotification([
-                "class"  => "insertStoresFirebase()",
-                "params" => "FirebaseException"
+                "method" => "insertStoresFirebase()",
+                "catch"  => "FirebaseException"
             ], $e);
         }
         catch (Throwable $e)
@@ -88,8 +88,8 @@ class CofryController extends Controller
             ]);
 
             self::sendMailNotification([
-                "class"  => "insertStoresFirebase()",
-                "params" => "Throwable"
+                "method" => "insertStoresFirebase()",
+                "catch"  => "Throwable"
             ], $e);
         }
 
@@ -117,8 +117,8 @@ class CofryController extends Controller
             ]);
 
             self::sendMailNotification([
-                "class"  => "insertPromosFirebase()",
-                "params" => "FirebaseException"
+                "method" => "insertPromosFirebase()",
+                "catch"  => "FirebaseException"
             ], $e);
         }
         catch (Throwable $e)
@@ -132,8 +132,8 @@ class CofryController extends Controller
             ]);
 
             self::sendMailNotification([
-                "class"  => "insertPromosFirebase()",
-                "params" => "Throwable"
+                "method" => "insertPromosFirebase()",
+                "catch"  => "Throwable"
             ], $e);
         }
     }
@@ -353,8 +353,8 @@ class CofryController extends Controller
                 ]);
 
                 self::sendMailNotification([
-                    "class"  => "execUploadImages()",
-                    "params" => "FirebaseException"
+                    "method" => "execUploadImages()",
+                    "catch"  => "FirebaseException"
                 ], $e);
             }
             catch (Throwable $e)
@@ -367,8 +367,8 @@ class CofryController extends Controller
                 ]);
 
                 self::sendMailNotification([
-                    "class"  => "execUploadImages()",
-                    "params" => "Throwable"
+                    "method" => "execUploadImages()",
+                    "catch"  => "Throwable"
                 ], $e);
             }
         }
@@ -383,12 +383,13 @@ class CofryController extends Controller
         $mail = [
             "subject"    => "Dev - Integração Cofry",
             "title"      => "Erro no schedule: ",
-            "class"      => $params["class"],
-            "params"     => $params["params"],
+            "method"     => $params["method"],
+            "catch"      => $params["catch"],
             "stacktrace" => $e,
         ];
+
         $user = User::firstWhere("email", "mateus.costa@triibo.com.br");
-        $user->notify(new WebhookMarketplace($mail));
+        $user->notify(new ScheduleCofry($mail, "cofry"));
     }
 
 }

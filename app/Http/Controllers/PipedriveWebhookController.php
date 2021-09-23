@@ -71,6 +71,9 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
+        $date   = date("Ymd-his");
+        Storage::put("deal-$date.json", json_encode($params, JSON_UNESCAPED_SLASHES));
+
         // if ($params["meta"]["change_source"] == "api")
         if ($params["meta"]["host"] == "app.pipedrive.com")
         {
@@ -85,80 +88,78 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        // Storage::put(date("Ymd-his")."-deal.json", json_encode($params, JSON_UNESCAPED_SLASHES));
+        // try
+        // {
+        //     switch ($params["event"])
+        //     {
+        //         case self::DEAL_ADDED_EVENT:
+        //         case self::DEAL_UPDATED_EVENT:
+        //             if (!$params["current"]["person_id"]) break;
 
-        try
-        {
-            switch ($params["event"])
-            {
-                case self::DEAL_ADDED_EVENT:
-                case self::DEAL_UPDATED_EVENT:
-                    if (!$params["current"]["person_id"]) break;
+        //             if ($params["previous"])
+        //             {
+        //                 $result  = FALSE;
+        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+        //                 foreach (self::DEAL_MONITORING as $m)
+        //                 {
+        //                     if (array_key_exists($m, $changes))
+        //                     {
+        //                         $result = TRUE;
+        //                         break;
+        //                     }
+        //                 }
 
-                    if ($params["previous"])
-                    {
-                        $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
-                        foreach (self::DEAL_MONITORING as $m)
-                        {
-                            if (array_key_exists($m, $changes))
-                            {
-                                $result = TRUE;
-                                break;
-                            }
-                        }
+        //                 if (!$result) break;
+        //             }
 
-                        if (!$result) break;
-                    }
+        //             $api    = new Pipedrive(config("pipedrive.token"));
+        //             $person = $api->persons->find($params["current"]["person_id"])->getData();
 
-                    $api    = new Pipedrive(config("pipedrive.token"));
-                    $person = $api->persons->find($params["current"]["person_id"])->getData();
+        //             $params["current"]["person_email"]     = $person->email[0]->value;
+        //             $params["current"]["person_mautic_id"] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
 
-                    $params["current"]["person_email"]     = $person->email[0]->value;
-                    $params["current"]["person_mautic_id"] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
+        //             MauticIntegration::dealUpdate("deals", $params["current"]);
+        //         break;
 
-                    MauticIntegration::dealUpdate("deals", $params["current"]);
-                break;
+        //         case self::DEAL_DELETED_EVENT:
+        //             if (!$params["previous"]["person_id"]) break;
 
-                case self::DEAL_DELETED_EVENT:
-                    if (!$params["previous"]["person_id"]) break;
+        //             $api    = new Pipedrive(config("pipedrive.token"));
+        //             $person = $api->persons->find($params["previous"]["person_id"])->getData();
 
-                    $api    = new Pipedrive(config("pipedrive.token"));
-                    $person = $api->persons->find($params["previous"]["person_id"])->getData();
+        //             $params["previous"]["person_email"]     = $person->email[0]->value;
+        //             $params["previous"]["person_mautic_id"] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
 
-                    $params["previous"]["person_email"]     = $person->email[0]->value;
-                    $params["previous"]["person_mautic_id"] = $person->bd7287f0a9a02de60a8aff83b5905c489b7cf007;
+        //             MauticIntegration::dealUpdate("deals", $params["previous"], TRUE);
+        //         break;
 
-                    MauticIntegration::dealUpdate("deals", $params["previous"], TRUE);
-                break;
+        //         default:
+        //             Log::channel("marketplace")->info("Deals", [
+        //                 "400" => "Unsupported event"
+        //             ]);
 
-                default:
-                    Log::channel("marketplace")->info("Deals", [
-                        "400" => "Unsupported event"
-                    ]);
+        //             return response()->json([
+        //                 "status"  => "Error",
+        //                 "message" => "Unsupported event",
+        //                 "code"    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::channel("marketplace")->info("Deals", [
+        //         "500" => $e
+        //     ]);
 
-                    return response()->json([
-                        "status"  => "Error",
-                        "message" => "Unsupported event",
-                        "code"    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::channel("marketplace")->info("Deals", [
-                "500" => $e
-            ]);
+        //     self::sendMailNotification($params, $e);
 
-            self::sendMailNotification($params, $e);
-
-            return response()->json([
-                "status"  => "Error",
-                "message" => $e,
-                "code"    => self::DEAL_CODE,
-            ], 500);
-        }
+        //     return response()->json([
+        //         "status"  => "Error",
+        //         "message" => $e,
+        //         "code"    => self::DEAL_CODE,
+        //     ], 500);
+        // }
 
         Log::channel("marketplace")->info("Deals", [
             "200" => "Success"
@@ -206,68 +207,68 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        try
-        {
-            switch ($params["event"])
-            {
-                case self::ORG_ADDED_EVENT:
-                case self::ORG_UPDATED_EVENT:
-                    if ($params["previous"])
-                    {
-                        $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
-                        foreach (self::ORG_MONITORING as $m)
-                        {
-                            if (array_key_exists($m, $changes))
-                            {
-                                $result = TRUE;
-                                break;
-                            }
-                        }
+        // try
+        // {
+        //     switch ($params["event"])
+        //     {
+        //         case self::ORG_ADDED_EVENT:
+        //         case self::ORG_UPDATED_EVENT:
+        //             if ($params["previous"])
+        //             {
+        //                 $result  = FALSE;
+        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+        //                 foreach (self::ORG_MONITORING as $m)
+        //                 {
+        //                     if (array_key_exists($m, $changes))
+        //                     {
+        //                         $result = TRUE;
+        //                         break;
+        //                     }
+        //                 }
 
-                        if (!$result)
-                        {
-                            Log::channel("marketplace")->info("Organizations", [
-                                "0" => "discarded changes"
-                            ]);
-                            break;
-                        }
-                    }
+        //                 if (!$result)
+        //                 {
+        //                     Log::channel("marketplace")->info("Organizations", [
+        //                         "0" => "discarded changes"
+        //                     ]);
+        //                     break;
+        //                 }
+        //             }
 
-                    MauticIntegration::updateOrCreate("companies", $params["current"]);
-                break;
+        //             MauticIntegration::updateOrCreate("companies", $params["current"]);
+        //         break;
 
-                case self::ORG_DELETED_EVENT:
-                    MauticIntegration::delete("companies", $params["previous"]);
-                break;
+        //         case self::ORG_DELETED_EVENT:
+        //             MauticIntegration::delete("companies", $params["previous"]);
+        //         break;
 
-                default:
-                    Log::channel("marketplace")->info("Organizations", [
-                        "400" => "Unsupported event"
-                    ]);
+        //         default:
+        //             Log::channel("marketplace")->info("Organizations", [
+        //                 "400" => "Unsupported event"
+        //             ]);
 
-                    return response()->json([
-                        "status"  => "Error",
-                        "message" => "Unsupported event",
-                        "code"    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::channel("marketplace")->info("Organizations", [
-                "500" => $e
-            ]);
+        //             return response()->json([
+        //                 "status"  => "Error",
+        //                 "message" => "Unsupported event",
+        //                 "code"    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::channel("marketplace")->info("Organizations", [
+        //         "500" => $e
+        //     ]);
 
-            self::sendMailNotification($params, $e);
+        //     self::sendMailNotification($params, $e);
 
-            return response()->json([
-                "status"  => "Error",
-                "message" => $e,
-                "code"    => self::ORG_CODE,
-            ], 500);
-        }
+        //     return response()->json([
+        //         "status"  => "Error",
+        //         "message" => $e,
+        //         "code"    => self::ORG_CODE,
+        //     ], 500);
+        // }
 
         Log::channel("marketplace")->info("Organizations", [
             "200" => "Success"
@@ -303,68 +304,68 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        try
-        {
-            switch ($params["event"])
-            {
-                case self::PERSON_ADDED_EVENT:
-                case self::PERSON_UPDATED_EVENT:
-                    if ($params["previous"])
-                    {
-                        $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
-                        foreach (self::PERSON_MONITORING as $m)
-                        {
-                            if (array_key_exists($m, $changes))
-                            {
-                                $result = TRUE;
-                                break;
-                            }
-                        }
+        // try
+        // {
+        //     switch ($params["event"])
+        //     {
+        //         case self::PERSON_ADDED_EVENT:
+        //         case self::PERSON_UPDATED_EVENT:
+        //             if ($params["previous"])
+        //             {
+        //                 $result  = FALSE;
+        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+        //                 foreach (self::PERSON_MONITORING as $m)
+        //                 {
+        //                     if (array_key_exists($m, $changes))
+        //                     {
+        //                         $result = TRUE;
+        //                         break;
+        //                     }
+        //                 }
 
-                        if (!$result)
-                        {
-                            Log::channel("marketplace")->info("Persons", [
-                                "0" => "Discarded changes"
-                            ]);
-                            break;
-                        }
-                    }
+        //                 if (!$result)
+        //                 {
+        //                     Log::channel("marketplace")->info("Persons", [
+        //                         "0" => "Discarded changes"
+        //                     ]);
+        //                     break;
+        //                 }
+        //             }
 
-                    MauticIntegration::updateOrCreate("contacts", $params["current"]);
-                break;
+        //             MauticIntegration::updateOrCreate("contacts", $params["current"]);
+        //         break;
 
-                case self::PERSON_DELETED_EVENT:
-                    MauticIntegration::delete("contacts", $params["previous"]);
-                break;
+        //         case self::PERSON_DELETED_EVENT:
+        //             MauticIntegration::delete("contacts", $params["previous"]);
+        //         break;
 
-                default:
-                    Log::channel("marketplace")->info("Persons", [
-                        "400" => "Unsupported event"
-                    ]);
+        //         default:
+        //             Log::channel("marketplace")->info("Persons", [
+        //                 "400" => "Unsupported event"
+        //             ]);
 
-                    return response()->json([
-                        "status"  => "Error",
-                        "message" => "Unsupported event",
-                        "code"    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::channel("marketplace")->info("Persons", [
-                "500" => $e
-            ]);
+        //             return response()->json([
+        //                 "status"  => "Error",
+        //                 "message" => "Unsupported event",
+        //                 "code"    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::channel("marketplace")->info("Persons", [
+        //         "500" => $e
+        //     ]);
 
-            self::sendMailNotification($params, $e);
+        //     self::sendMailNotification($params, $e);
 
-            return response()->json([
-                "status"  => "Error",
-                "message" => $e,
-                "code"    => self::PERSON_CODE,
-            ], 500);
-        }
+        //     return response()->json([
+        //         "status"  => "Error",
+        //         "message" => $e,
+        //         "code"    => self::PERSON_CODE,
+        //     ], 500);
+        // }
 
         Log::channel("marketplace")->info("Persons", [
             "200" => "Success"
@@ -401,56 +402,56 @@ class PipedriveWebhookController extends Controller
             ], 200);
         }
 
-        try
-        {
-            switch ($params["event"])
-            {
-                case self::STAGE_ADDED_EVENT:
-                case self::STAGE_UPDATED_EVENT:
-                    if ($params["previous"])
-                    {
-                        $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+        // try
+        // {
+        //     switch ($params["event"])
+        //     {
+        //         case self::STAGE_ADDED_EVENT:
+        //         case self::STAGE_UPDATED_EVENT:
+        //             if ($params["previous"])
+        //             {
+        //                 $result  = FALSE;
+        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
 
-                        if (array_key_exists(self::STAGE_MONITORING, $changes)) $result = TRUE;
+        //                 if (array_key_exists(self::STAGE_MONITORING, $changes)) $result = TRUE;
 
-                        if (!$result) break;
-                    }
+        //                 if (!$result) break;
+        //             }
 
-                    MauticIntegration::stageUpdate("contactFields", $params["current"]);
-                break;
+        //             MauticIntegration::stageUpdate("contactFields", $params["current"]);
+        //         break;
 
-                case self::STAGE_DELETED_EVENT:
-                    MauticIntegration::stageUpdate("contactFields", $params["previous"], true);
-                break;
+        //         case self::STAGE_DELETED_EVENT:
+        //             MauticIntegration::stageUpdate("contactFields", $params["previous"], true);
+        //         break;
 
-                default:
-                    Log::channel("marketplace")->info("Persons", [
-                        "400" => "Unsupported event"
-                    ]);
+        //         default:
+        //             Log::channel("marketplace")->info("Persons", [
+        //                 "400" => "Unsupported event"
+        //             ]);
 
-                    return response()->json([
-                        "status"  => "Error",
-                        "message" => "Unsupported event",
-                        "code"    => 0,
-                    ], 400);
-                break;
-            }
-        }
-        catch (Exception $e)
-        {
-            Log::channel("marketplace")->info("Stages", [
-                "500" => $e
-            ]);
+        //             return response()->json([
+        //                 "status"  => "Error",
+        //                 "message" => "Unsupported event",
+        //                 "code"    => 0,
+        //             ], 400);
+        //         break;
+        //     }
+        // }
+        // catch (Exception $e)
+        // {
+        //     Log::channel("marketplace")->info("Stages", [
+        //         "500" => $e
+        //     ]);
 
-            self::sendMailNotification($params, $e);
+        //     self::sendMailNotification($params, $e);
 
-            return response()->json([
-                "status"  => "Error",
-                "message" => $e,
-                "code"    => self::STAGE_CODE,
-            ], 500);
-        }
+        //     return response()->json([
+        //         "status"  => "Error",
+        //         "message" => $e,
+        //         "code"    => self::STAGE_CODE,
+        //     ], 500);
+        // }
 
         Log::channel("marketplace")->info("Stages", [
             "200" => "Success"
