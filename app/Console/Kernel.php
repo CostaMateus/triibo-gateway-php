@@ -24,10 +24,10 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // Domingo às 00h30
-        $schedule->exec("composer self-update")->weeklyOn(0, "0:30")->timezone("America/Sao_Paulo")->runInBackground();
-        // Domingo às 01h00
-        $schedule->exec("composer update")->weeklyOn(0, "0:45")->timezone("America/Sao_Paulo")->runInBackground();
+        // // Domingo às 00h30
+        // $schedule->exec("composer self-update")->weeklyOn(0, "0:30")->timezone("America/Sao_Paulo")->runInBackground();
+        // // Domingo às 01h00
+        // $schedule->exec("composer update")->weeklyOn(0, "0:45")->timezone("America/Sao_Paulo")->runInBackground();
 
 
         // Cofry Triibo Integration

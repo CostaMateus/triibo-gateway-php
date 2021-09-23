@@ -29,15 +29,15 @@
                                 <ul class="mb-0" >
                                     <li>
                                         Importa imagens
-                                        <span class="text-muted h7" >(aos domingos, terças e sextas às 01h30)</span>
+                                        <span class="text-muted h7" >(todos os dias às 02h)</span>
                                     </li>
                                     <li>
                                         Importa lojas
-                                        <span class="text-muted h7" >(todos os dias às 03h)</span>
+                                        <span class="text-muted h7" >(duas vezes no dia, às 02h e às 14h)</span>
                                     </li>
                                     <li>
                                         Importa promoções
-                                        <span class="text-muted h7" >(todos os dias às 02h)</span>
+                                        <span class="text-muted h7" >(duas vezes no dia, às 02h e às 14h)</span>
                                     </li>
                                 </ul>
                             </div>
@@ -55,7 +55,7 @@
                             </button>
                         </h2>
                     </div>
-                    <div id="collapseMauticPipe" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionTriibo">
+                    <div id="collapseMauticPipe" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionTriibo">
                         <div class="card-body">
 
                             <div id="marketplace">
@@ -64,7 +64,7 @@
                                 <p class="mb-0" >Ações automáticas</p>
                                 <ul class="" >
                                     <li>
-                                        Importa o nome dos estágios dos funis
+                                        Atualiza o campo Funil e o Funil Status no Mautic
                                         <span class="text-muted h7" >(toda segunda às 05h)</span>
                                     </li>
                                 </ul>
@@ -73,38 +73,35 @@
                                     <li>Alterações em massa no Pipedrive, não gera alterações no Mautic</li>
                                     <li>Dados sincronizados:
                                         <ul>
-                                            <li>Organização - não é sincronizado
-                                                {{-- <ul>
+                                            <li>Organização
+                                                <ul>
                                                     <li>ID</li>
-                                                    <li>Nome</li>
-                                                    <li>Endereço</li>
                                                     <li>E-mail</li>
                                                     <li>Telefone</li>
-                                                </ul> --}}
+                                                    <li>Fonte do Lead</li>
+                                                </ul>
                                             </li>
                                             <li>Pessoa
                                                 <ul>
                                                     <li>ID Pessoa</li>
                                                     <li>Nome</li>
                                                     <li>Sobrenome</li>
-                                                    <li>E-mail</li>
-                                                    <li>Telefone</li>
                                                 </ul>
                                             </li>
                                             <li>Negócio
                                                 <ul>
                                                     <li>ID Pessoa</li>
-                                                    <li>Nome do estágio do funil</li>
+                                                    <li>Etapa do funil</li>
                                                     <li>
                                                         Status
-                                                        <span class="text-muted h7" >(aberto, ganho, perdido)</span>
+                                                        <span class="text-muted h7" >(aberto, ganho, perdido, excluído)</span>
                                                     </li>
                                                 </ul>
                                             </li>
-                                            <li>Estágio
+                                            <li>Etapa (Funil)
                                                 <ul>
-                                                    <li>ID Estágio</li>
-                                                    <li>Nome do estágio</li>
+                                                    <li>ID Etapa</li>
+                                                    <li>Nome do etapa</li>
                                                 </ul>
                                             </li>
                                         </ul>
@@ -112,12 +109,12 @@
                                 </ul>
 
                                 <p class="mb-0" >
-                                    Caso seja feita a alteração do nome de dois ou mais estágios de uma vez, apenas o último será sincronizado automaticamente.
+                                    Caso seja feita a alteração do nome de duas ou mais etapas de uma vez, apenas a última será sincronizada automaticamente.
                                     Após a alteraçao faz-se necessário acesso a seguinte URL: <br>
                                 </p>
                                 <ul>
                                     <li>
-                                        <code>{{ env('APP_URL') . 'import-stages' }}</code>
+                                        <code>{{ env('APP_URL') . 'update-stages' }}</code>
                                     </li>
                                 </ul>
 
@@ -131,52 +128,70 @@
                                     </thead>
                                     <tbody>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >ID</td>
-                                            <td class="text-left  w-30"               >Mautic Id</td>
-                                            <td class="text-muted h7 text-right w-20" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >ID</td>
+                                            <td class="text-left  w-40"               >Mautic Id</td>
+                                            <td class="text-muted h7 text-right w-10" >(Pessoa)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Nome</td>
-                                            <td class="text-left  w-30"               >Primeiro Nome</td>
-                                            <td class="text-muted h7 text-right w-20" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >ID</td>
+                                            <td class="text-left  w-40"               >Mautic Id</td>
+                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Sobrenome</td>
-                                            <td class="text-left  w-30"               >Sobrenome</td>
-                                            <td class="text-muted h7 text-right w-20" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Nome</td>
+                                            <td class="text-left  w-40"               >Primeiro Nome</td>
+                                            <td class="text-muted h7 text-right w-10" >(Pessoa)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Email</td>
-                                            <td class="text-left  w-30"               >E-mail</td>
-                                            <td class="text-muted h7 text-right w-20" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Sobrenome</td>
+                                            <td class="text-left  w-40"               >Sobrenome</td>
+                                            <td class="text-muted h7 text-right w-10" >(Pessoa)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Phone</td>
-                                            <td class="text-left  w-30"               >Telefone</td>
-                                            <td class="text-muted h7 text-right w-20" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Email</td>
+                                            <td class="text-left  w-40"               >E-mail</td>
+                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Funil</td>
-                                            <td class="text-left  w-30"               >Nome do estágio do funil</td>
-                                            <td class="text-muted h7 text-right w-20" >(Negócio)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Phone</td>
+                                            <td class="text-left  w-40"               >Telefone</td>
+                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Funil Status</td>
-                                            <td class="text-left  w-30"               >Status do negócio</td>
-                                            <td class="text-muted h7 text-right w-20" >(Negócio)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Pipedrive Fonte do Lead</td>
+                                            <td class="text-left  w-40"               >Fonte do Lead</td>
+                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-20" >(Contato)</td>
-                                            <td class="text-right w-30"               >Pipedrive ID Person</td>
-                                            <td class="text-left  w-30"               >ID</td>
-                                            <td class="text-muted h7 text-right w-20" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Pipedrive Funil</td>
+                                            <td class="text-left  w-40"               >Etapa do funil</td>
+                                            <td class="text-muted h7 text-right w-10" >(Negócio)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Pipedrive Funil Status</td>
+                                            <td class="text-left  w-40"               >Etapa : Status do negócio</td>
+                                            <td class="text-muted h7 text-right w-10" >(Negócio)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Pipedrive ID Person</td>
+                                            <td class="text-left  w-40"               >ID</td>
+                                            <td class="text-muted h7 text-right w-10" >(Pessoa)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
+                                            <td class="text-right w-40"               >Pipedrive ID Organization</td>
+                                            <td class="text-left  w-40"               >ID</td>
+                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
                                         </tr>
                                     </tbody>
                                 </table>
