@@ -4,6 +4,7 @@
 # {{ $title }}
 
 {{ "Metodo: $method" }}
+<br>
 {{ "Catch:  $catch"  }}
 
 <b>Stacktrace</b>:

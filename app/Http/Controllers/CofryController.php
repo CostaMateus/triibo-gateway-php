@@ -146,7 +146,7 @@ class CofryController extends Controller
     public function insertStoresFirebase()
     {
         $db             = Firebase::database();
-        $firebaseStores = $db->getReference("Estabelecimento-v2");
+        $firebaseStores = $db->getReference("/Estabelecimento-v2");
 
         echo "SP : Searching establishments\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Searching establishments" ]);
@@ -202,7 +202,7 @@ class CofryController extends Controller
     public function insertPromosFirebase()
     {
         $db             = Firebase::database();
-        $firebasePromos = $db->getReference("Store");
+        $firebasePromos = $db->getReference("/Store");
 
         echo "SP : Searching for promos\n";
         Log::channel("cofry")->info("Stores|Promos", [ "Searching for promos" ]);
