@@ -191,15 +191,20 @@ class MauticIntegration
             break;
 
             case "contacts":
-                $id = $data["918dace587a4707755926d7c02c3bb46ed53d539"]; // Mautic Id
+                $id    = $data["918dace587a4707755926d7c02c3bb46ed53d539"]; // Mautic Id
+                $email = $data["a007cb7cef80c909678503cbcfe49def03cad573"]; // E-mail
+                $phone = $data["a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd"]; // Telefone
+                $lead  = $data["c917493d194dbeac05ccbfd26d152f95b8763ec9"]; // Fonte do Lead
+                $resp  = $data["fa0b068c55533f0298d1d3d26997cdbc2f17eca6"]; // Vendedor resposavel
+
                 return [
                     "id"                    => $id ?? NULL,
                     "firstname"             => "",
                     "lastname"              => "",
-                    "email"                 => $data["a007cb7cef80c909678503cbcfe49def03cad573"], // E-mail
-                    "phone"                 => $data["a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd"], // Telefone
-                    "pd_lead"               => $data["c917493d194dbeac05ccbfd26d152f95b8763ec9"], // Fonte do Lead
-                    "pd_responsible_seller" => $data["fa0b068c55533f0298d1d3d26997cdbc2f17eca6"], // Vendedor resp
+                    "email"                 => $email,
+                    "phone"                 => $phone,
+                    "pd_lead"               => Helper::getOrgCustomField(4028, $lead),
+                    "pd_responsible_seller" => Helper::getOrgCustomField(4032, $resp),
                     "pd_org_id"             => $data["id"],
                     "pd_org_name"           => $data["name"],
                 ];
