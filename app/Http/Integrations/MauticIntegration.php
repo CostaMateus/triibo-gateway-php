@@ -434,67 +434,40 @@ class MauticIntegration
     /**
      * Sincroniza os ids do Mautic (pd_org_id) e do Pipedrive (mautic_id / 918dace587a4707755926d7c02c3bb46ed53d539)
      *
-     * @param array $classes
      * @return void
      */
-    public static function syncIdsMauticPipe(array $classes)
+    public static function syncIdsMauticPipe()
     {
-        // $mauticApi = self::getApi("contacts");
-        // $pipeApi   = new Pipedrive(config("pipedrive.token"));
-        // $pipeObjs  = $pipeApi->organizations->all()->getData();
+        $mauticApi = self::getApi("contacts");
+        $pipeApi   = new Pipedrive(config("pipedrive.token"));
+        $pipeObjs  = $pipeApi->organizations->all()->getData();
 
-        // foreach ($pipeObjs as $key => $obj)
-        // {
-        //     if ($obj->{"a007cb7cef80c909678503cbcfe49def03cad573"})
-        //     {
+        foreach ($pipeObjs as $key => $org)
+        {
+            $email = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
+            if ($email)
+            {
+                $res = self::searchMauticByField($mauticApi, "email", $email);
 
-        //         $contact = $mauticApi->getList("email:".$obj->email[0]->value);
-        //         $total   = (isset($contact["total"])) ? $contact["total"] : NULL;
-        //         $contact = $contact[$mauticApi->listName()];
+                if ($res["total"])
+                {
+                    $mautic_id = key($res["object"]);
 
-        //         if ($total > 0 || $total != NULL)
-        //         {
-        //             foreach ($contact as $id => $value)
-        //             {
-        //                 $mautic_id = $id;
-        //                 break;
-        //             }
+                    $dataM = [ "pd_org_id"                                => $org->id    ];
+                    $dataP = [ "918dace587a4707755926d7c02c3bb46ed53d539" => $mautic_id  ];
 
-        //             $dataM = [ "pipedrive_id"                             => $obj->id    ];
-        //             $dataP = [ "bd7287f0a9a02de60a8aff83b5905c489b7cf007" => $mautic_id  ];
+                    $mauticApi->edit($mautic_id, $dataM, false);
+                    $pipeApi->organizations->update($org->id, $dataP);
+                }
+                else
+                {
+                    $dataM      = self::dataTranslator("contacts", json_decode(json_encode($org), true));
+                    $newContact = $mauticApi->edit(0, $dataM, true);
 
-        //             $mauticApi->edit($mautic_id, $dataM, false);
-        //             $pipeApi->$pipeClass->update($obj->id, $dataP);
-        //         }
-        //         else
-        //         {
-        //             $dataM      = self::dataTranslator($mauticClass, json_decode(json_encode($obj), true));
-        //             $newContact = $mauticApi->edit(0, $dataM, true);
-
-        //             $dataP = [ "bd7287f0a9a02de60a8aff83b5905c489b7cf007" => $newContact["contact"]["id"]];
-        //             $pipeApi->$pipeClass->update($obj->id, $dataP);
-        //         }
-        //     }
-        // }
-
-        // $companies = $mauticApi->getList("", 0, 100000);
-        // $companies = $companies[$mauticApi->listName()];
-
-        // foreach ($pipeObjs as $key => $obj)
-        // {
-        //     foreach ($companies as $id => $comp)
-        //     {
-        //         if ($comp["fields"]["all"]["companyname"] == $obj->name)
-        //         {
-        //             $mautic_id = $comp["fields"]["all"]["id"];
-
-        //             $dataM = [ "pipedrive_org_id"                         => $obj->id    ];
-        //             $dataP = [ "918dace587a4707755926d7c02c3bb46ed53d539" => $mautic_id  ];
-
-        //             $mauticApi->edit($mautic_id, $dataM, false);
-        //             $pipeApi->$pipeClass->update($obj->id, $dataP);
-        //         }
-        //     }
-        // }
+                    $dataP = [ "918dace587a4707755926d7c02c3bb46ed53d539" => $newContact["contact"]["id"]];
+                    $pipeApi->organizations->update($org->id, $dataP);
+                }
+            }
+        }
     }
 }

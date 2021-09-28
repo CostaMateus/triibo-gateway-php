@@ -1,5 +1,6 @@
 <?php
 
+use App\Helpers\Helper;
 use App\Models\User;
 use Mautic\MauticApi;
 use Mautic\Auth\ApiAuth;
@@ -37,22 +38,23 @@ Route::get("/", function () {
 
 Route::group(["middleware" => "auth"], function() {
 
-    Route::get("/home", function () { return view("home"); })->name("home");
+    Route::get("/home", function () {
+        return view("home");
+    })->name("home");
 
     Route::get("/clear-caches", function() {
         Artisan::call("optimize:clear");
-        return view("welcome", [
-            "showToast" => true,
-            "message"   => __("marketplace.cache")
-        ]);
+        return view("welcome", [ "showToast" => true, "message" => __("marketplace.cache") ]);
     })->name("clear.caches");
 
     Route::get("/update-stages", function() {
         MauticIntegration::updateStages();
-        return view("welcome", [
-            "showToast" => true,
-            "message"   => __("marketplace.update.all.stages")
-        ]);
+        return view("welcome", [ "showToast" => true, "message" => __("marketplace.update.all.stages") ]);
+    })->name("update.stages");
+
+    Route::get("/sync-ids", function() {
+        MauticIntegration::syncIdsMauticPipe();
+        return view("welcome", [ "showToast" => true, "message" => __("marketplace.sync.id") ]);
     })->name("update.stages");
 
     Route::resource("users", UserController::class);
@@ -63,108 +65,34 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-// Route::get('/mautic', [App\Http\Controllers\HomeController::class, 'index']);
+Route::get("/mautic", function () {
+    dd("mautic");
+});
 
-// Route::get('/pipedrive', function () {
-//     $token     = config('pipedrive.token');
-//     $pipedrive = new Pipedrive($token);
-//     try
-//     {
-//         $data = $pipedrive->deals->find(1426)->getData();
-//     }
-//     catch(Exception $e)
-//     {
-//         $data = null;
-//     }
+Route::get("/pipedrive", function () {
+    $token   = config("pipedrive.token");
+    $pipeApi = new Pipedrive($token);
 
-//     Log::channel("marketplace")->info("aaaa", [
-//         "data" => $data,
-//     ]);
+    try
+    {
+        // // encontra o campo pelo ID "Fonte do Lead"
+        // $data = $pipedrive->OrganizationFields->find(4028)->getData();
+        // $data->options; // get possiveis valores do campo
 
-//     dd($data);
+        // $data = $pipedrive->organizations->persons(2079)->getData();
+        // $data = $pipeApi->organizations->find(1512)->getData();
+        // $data = $pipeApi->organizations->all()->getData();
 
+        // $data = $pipeApi->DealFields->find(12464)->getData();
+        // $data = $pipeApi->DealFields->find(12463)->getData();
 
-//     // // // $label     = [];
-//     // // // foreach ($data as $d)
-//     // // //     if ($d->id == 12463 && $d->key == "label")
-//     // // //         $labels = $d->options;
-//     // // // foreach ($labels as &$label)
-//     // // // {
-//     // // //     $label = [
-//     // // //         "value" => $label->id,
-//     // // //         "label" => $label->label
-//     // // //     ];
-//     // // // }
-//     // // // // array_unshift($labels, [
-//     // // //     // "value" => 0,
-//     // // //     // "label" => "Sem Etiqueta"
-//     // // // // ]);
-//     // // // $data = [
-//     // // //     "properties" => [
-//     // // //         "list" => [
-//     // // //             [
-//     // // //                 "value" => 0,
-//     // // //                 "label" => "Sem Etiqueta"
-//     // // //             ],
-//     // // //             ...$labels
-//     // // //         ],
-//     // // //     ]
-//     // // // ];
+        // $data = $pipeApi->OrganizationFields->all()->getData();
+        // $data = $pipeApi->OrganizationField->find(4032)->getData();
+    }
+    catch(Exception $e)
+    {
+        // $data = (object) [ null ];
+    }
 
-
-//     // $factory    = Mautic::getFactory();
-//     // $consumer   = MauticConsumer::whereNotNull('id')->orderBy('created_at', 'desc')->first();
-
-//     // $expired    = $factory->checkExpirationTime($consumer->expires);
-
-//     // $consumer   = ($expired) ? $factory->refreshToken($consumer->refresh_token) : $consumer;
-
-//     // $settings   = config('mautic.connections.main');
-//     // $settings['accessToken'] = $consumer->access_token;
-
-//     // $initAuth   = new ApiAuth();
-//     // $auth       = $initAuth->newAuth($settings);
-//     // $apiUrl     = $settings['baseUrl'];
-//     // $api        = new MauticApi();
-//     // $contactApi = $api->newApi("contactFields", $auth, $apiUrl);
-
-//     // $res = $contactApi->getList("", 0, 200)["fields"];
-
-//     // $data = [];
-//     // foreach ($res as $r)
-//     // {
-//     //     if ( $r["createdByUser"] == "Mateus Costa")
-//     //         $data[] = $r;
-//     // }
-
-//     // // dd($data);
-
-//     // $test = [
-//     //     "isPublished" => true,
-//     //     "label"       => "Funil Etiqueta",
-//     //     "alias"       => "pipeline_etiqueta",
-//     //     "type"        => "select",
-//     //     "group"       => "core",
-//     //     "order"       => 4,
-//     //     "object"      => "lead",
-//     //     "defaultValue" => "0",
-//     //     "isRequired" => false,
-//     //     "isPubliclyUpdatable" => false,
-//     //     "isUniqueIdentifier" => false,
-//     //     "properties" => [
-//     //         "list" => [
-//     //             [
-//     //                 "label" => "Sem Etiqueta",
-//     //                 "value" => 0
-//     //             ]
-//     //         ]
-//     //     ],
-//     // ];
-
-//     // $field = $contactApi->create($test);
-
-//     // dd($field);
-// });
-
-// // Route::any('/teste', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste3');
-// // Route::any('/assas', [App\Http\Controllers\HomeController::class, 'teste'])->name('teste');
+    dd($data);
+});
