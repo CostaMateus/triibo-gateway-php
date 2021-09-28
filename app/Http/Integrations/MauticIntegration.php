@@ -79,27 +79,32 @@ class MauticIntegration
 
         $data["id"] = $data["id"] ?? key($res["object"]);
 
-        // Achou o contato, atualiza
-        if ($res["total"])
-        {
-            if ($delete)
+        $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
+        if ($orgName !== FALSE)                                        // remover em prod
+        {                                                              // remover em prod
+
+            // Achou o contato, atualiza
+            if ($res["total"])
             {
-                $data["pd_pipeline"]        = 0;
-                $data["pd_pipeline_status"] = 0;
-                $data["pd_pipeline_label"]  = 0;
+                if ($delete)
+                {
+                    $data["pd_pipeline"]        = 0;
+                    $data["pd_pipeline_status"] = 0;
+                    $data["pd_pipeline_label"]  = 0;
+                }
+
+                array_push($logMsg, "Contact updated");
+                self::saveCreateOrUpdateMautic($mauticApi, "persons", $data["id"], $data, "pd_org_id");
+            }
+            // Não achou o contato, cria um novo
+            else
+            {
+                array_push($logMsg, "Contact created");
+                self::saveCreateOrUpdateMautic($mauticApi, "persons", 0, $data, "pd_org_id");
             }
 
-            array_push($logMsg, "Contact updated");
-            self::saveCreateOrUpdateMautic($mauticApi, "persons", $data["id"], $data, "pd_org_id");
+            Helper::log("Persons", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
         }
-        // Não achou o contato, cria um novo
-        else
-        {
-            array_push($logMsg, "Contact created");
-            self::saveCreateOrUpdateMautic($mauticApi, "persons", 0, $data, "pd_org_id");
-        }
-
-        Helper::log("Persons", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
     }
 
     /**
@@ -142,17 +147,22 @@ class MauticIntegration
 
         $data["id"] = $data["id"] ?? key($res["object"]);
 
-        if ($res["total"])
-        {
-            array_push($logMsg, "Contact deal updated");
-            $res = $mauticApi->edit($data["id"], $data);
-        }
-        else
-        {
-            array_push($logMsg, "Contact not found");
-        }
+        $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
+        if ($orgName !== FALSE)                                        // remover em prod
+        {                                                              // remover em prod
 
-        Helper::log("Deals", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
+            if ($res["total"])
+            {
+                array_push($logMsg, "Contact deal updated");
+                $res = $mauticApi->edit($data["id"], $data);
+            }
+            else
+            {
+                array_push($logMsg, "Contact not found");
+            }
+
+            Helper::log("Deals", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
+        }
     }
 
     /**
