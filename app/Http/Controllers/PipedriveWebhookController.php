@@ -262,78 +262,77 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        // if ($params["meta"]["change_source"] == "api")
-        // {
-        //     Log::channel("marketplace")->info("Persons", [
-        //         "0" => "Changed by api ignored"
-        //     ]);
-        //
-        //     return response()->json([
-        //         "status"  => "Ok",
-        //         "message" => "Stages - changed by api ignored",
-        //         "code"    => -1,
-        //     ], 200);
-        // }
-        //
-        // try
-        // {
-        //     switch ($params["event"])
-        //     {
-        //         case self::STAGE_ADDED_EVENT:
-        //         case self::STAGE_UPDATED_EVENT:
-        //             if ($params["previous"])
-        //             {
-        //                 $result  = FALSE;
-        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
-        //
-        //                 if (array_key_exists(self::STAGE_MONITORING, $changes)) $result = TRUE;
-        //
-        //                 if (!$result) break;
-        //             }
-        //
-        //             MauticIntegration::stageUpdate("contactFields", $params["current"]);
-        //         break;
-        //
-        //         case self::STAGE_DELETED_EVENT:
-        //             MauticIntegration::stageUpdate("contactFields", $params["previous"], true);
-        //         break;
-        //
-        //         default:
-        //             Log::channel("marketplace")->info("Persons", [
-        //                 "400" => "Unsupported event"
-        //             ]);
-        //
-        //             return response()->json([
-        //                 "status"  => "Error",
-        //                 "message" => "Unsupported event",
-        //                 "code"    => 0,
-        //             ], 400);
-        //         break;
-        //     }
-        // }
-        // catch (Exception $e)
-        // {
-        //     Log::channel("marketplace")->info("Stages", [
-        //         "500" => $e
-        //     ]);
-        //
-        //     self::sendMailNotification($params, $e);
-        //
-        //     return response()->json([
-        //         "status"  => "Error",
-        //         "message" => $e,
-        //         "code"    => self::STAGE_CODE,
-        //     ], 500);
-        // }
-        //
-        // Log::channel("marketplace")->info("Stages", [
-        //     "200" => "Success"
-        // ]);
-        //
-        // return response()->json([
-        //     "status"  => "Ok",
-        //     "message" => "Success",
-        // ], 200);
+        if ($params["meta"]["change_source"] == "api")
+        {
+            Log::channel("marketplace")->info("Stages", [ "0" => "Changed by api ignored" ]);
+
+            return response()->json([
+                "status"  => "Ok",
+                "message" => "Stages - changed by api ignored",
+                "code"    => -1,
+            ], 200);
+        }
+
+        try
+        {
+            switch ($params["event"])
+            {
+                case self::STAGE_ADDED_EVENT:
+                case self::STAGE_UPDATED_EVENT:
+                case self::STAGE_DELETED_EVENT:
+
+                    if ($params["event"] == self::STAGE_DELETED_EVENT)
+                    {
+                        $index = "previous";
+                        $del   = TRUE;
+                    }
+                    else
+                    {
+                        $index = "current";
+                        $del   = FALSE;
+                    }
+
+                    if ($params["previous"] && $params["event"] != self::STAGE_DELETED_EVENT)
+                    {
+                        $result  = FALSE;
+                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+
+                        if (array_key_exists(self::STAGE_MONITORING, $changes)) $result = TRUE;
+
+                        if (!$result) break;
+                    }
+
+                    MauticIntegration::stageUpdate("contactFields", $params[$index], $del);
+                break;
+
+                default:
+                    Log::channel("marketplace")->info("Persons", [ "400" => "Unsupported event" ]);
+
+                    return response()->json([
+                        "status"  => "Error",
+                        "message" => "Unsupported event",
+                        "code"    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            Log::channel("marketplace")->info("Stages", [ "500" => $e ]);
+
+            self::sendMailNotification($params, $e);
+
+            return response()->json([
+                "status"  => "Error",
+                "message" => $e,
+                "code"    => self::STAGE_CODE,
+            ], 500);
+        }
+
+        return response()->json([
+            "status"  => "Ok",
+            "message" => "Success",
+        ], 200);
     }
 
     /**
