@@ -186,4 +186,27 @@ class Helper
 
         return $resp;
     }
+
+    /**
+     * Recupera o campo segundo o $idField passado.
+     * Apenas campos select / com options
+
+     * @param integer $idField    ID do campo
+     * @param integer $idSelected ID da opção selecionada
+     * @return string label do campo
+     */
+    public static function getOrgCustomField(int $idField, int $idSelected)
+    {
+        // Fonte do Lead / id interno: 4028
+        // Vendedor resp / id interno: 4032
+
+        $token   = config('pipedrive.token');
+        $pipeApi = new Pipedrive($token);
+        $opts    = $pipeApi->OrganizationFields->find($idField)->getData()->options;
+
+        foreach($opts as $opt)
+        {
+            if ($opt->id == $idSelected) return $opt->label;
+        }
+    }
 }
