@@ -200,13 +200,18 @@ class Helper
         // Fonte do Lead / id interno: 4028
         // Vendedor resp / id interno: 4032
 
-        $token   = config('pipedrive.token');
-        $pipeApi = new Pipedrive($token);
-        $opts    = $pipeApi->OrganizationFields->find($idField)->getData()->options;
-
-        foreach($opts as $opt)
+        if ($idSelected > 0)
         {
-            if ($opt->id == $idSelected) return $opt->label;
+            $token   = config('pipedrive.token');
+            $pipeApi = new Pipedrive($token);
+            $opts    = $pipeApi->OrganizationFields->find($idField)->getData()->options;
+
+            foreach($opts as $opt)
+            {
+                if ($opt->id == $idSelected) return $opt->label;
+            }
         }
+
+        return " ";
     }
 }
