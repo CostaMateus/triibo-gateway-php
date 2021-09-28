@@ -100,117 +100,6 @@ class MauticIntegration
         }
 
         Helper::log("Persons", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
-
-
-        // $mauticApi = self::getApi($class);
-        // $data      = self::dataTranslator($class, $data);
-        //
-        // switch ($class)
-        // {
-        //     case "contacts":
-        //         $res = NULL;
-        //
-        //         // Verifica se tem mautic_id
-        //         if ($data["id"])
-        //         {
-        //             Log::channel("marketplace")->info("Persons", [
-        //                 "data"         => "searching by id",
-        //                 "mautic_id"    => $data["id"],
-        //                 "pipedrive_id" => $data["pipedrive_id"]
-        //             ]);
-        //             // Busca por id
-        //             $res = self::searchMauticByField($mauticApi, "ids", $data["id"]);
-        //         }
-        //         // Verifica se tem email
-        //         else if ($data["email"])
-        //         {
-        //             Log::channel("marketplace")->info("Persons", [
-        //                 "data"         => "searching by email",
-        //                 "mautic_id"    => NULL,
-        //                 "pipedrive_id" => $data["pipedrive_id"]
-        //             ]);
-        //             // Busca por email
-        //             $res = self::searchMauticByField($mauticApi, "email", $data["email"]);
-        //         }
-        //         else
-        //         {
-        //             Log::channel("marketplace")->info("Persons", [
-        //                 "data"         => "no data to search",
-        //                 "mautic_id"    => NULL,
-        //                 "pipedrive_id" => $data["pipedrive_id"]
-        //             ]);
-        //             break;
-        //         }
-        //
-        //         if (!$res["total"])
-        //         {
-        //             // Não achou o contato, cria um novo
-        //             self::saveCreateOrUpdateMautic($mauticApi, "persons", 0, $data, "pipedrive_id");
-        //         }
-        //         else
-        //         {
-        //             // Achou o contato, atualiza
-        //             $aux = $res["object"][key($res["object"])]["fields"]["all"];
-        //             $data["pipeline"]        = $aux["pipeline"];
-        //             $data["pipeline_status"] = $aux["pipeline_status"];
-        //
-        //             self::saveCreateOrUpdateMautic($mauticApi, "persons", key($res["object"]), $data, "pipedrive_id");
-        //         }
-        //     break;
-        //
-        //     case "companies":
-        //         // Verifica se tem mautic_id
-        //         if ($data["id"])
-        //         {
-        //             Log::channel("marketplace")->info("Organizations", [
-        //                 "data"             => "searching by id",
-        //                 "mautic_id"        => $data["id"],
-        //                 "pipedrive_org_id" => $data["pipedrive_org_id"]
-        //             ]);
-        //             // Busca por id
-        //             $res = self::searchMauticByField($mauticApi, "ids", $data["id"]);
-        //         }
-        //         else
-        //         {
-        //             Log::channel("marketplace")->info("Organizations", [
-        //                 "data"             => "searching by name",
-        //                 "mautic_id"        => NULL,
-        //                 "pipedrive_org_id" => $data["pipedrive_org_id"]
-        //             ]);
-        //             // Busca por nome
-        //             $res = self::searchMauticByField($mauticApi);
-        //         }
-        //
-        //         if (!$res["total"])
-        //         {
-        //             // Não achou a empresa, cria uma nova
-        //             self::saveCreateOrUpdateMautic($mauticApi, "organizations", 0, $data, "pipedrive_org_id");
-        //         }
-        //         else
-        //         {
-        //             if (count($res["object"]) > 1)
-        //             {
-        //                 foreach ($res["object"] as $company)
-        //                 {
-        //                     if ($company["fields"]["all"]["companyname"] == $data["companyname"])
-        //                     {
-        //                         $id = $company["id"];
-        //                         break;
-        //                     }
-        //                 }
-        //
-        //                 $id = $id ?? 0;
-        //             }
-        //             else
-        //             {
-        //                 $id = key($res["object"]);
-        //             }
-        //
-        //             // Achou a empresa, atualiza
-        //             self::saveCreateOrUpdateMautic($mauticApi, "organizations", $id, $data, "pipedrive_org_id");
-        //         }
-        //     break;
-        // }
     }
 
     /**
@@ -334,7 +223,6 @@ class MauticIntegration
                     "pd_pipeline_label"  => Helper::statusLabelDeal($data["label"],  $data["stage_id"], FALSE),
                     "pd_org_id"          => $data["org_id"],
                     "pd_org_name"        => $data["org_name"],
-                    // "pd_person_id"       => $data["person_id"],
 
                     "aux_active"         => $data["active"],
                     "aux_deleted"        => $data["deleted"],
@@ -355,17 +243,6 @@ class MauticIntegration
                     "pd_org_name"           => $data["name"],
                 ];
             break;
-
-            // case "companies":
-            //     return [
-            //         "id"                => $data["918dace587a4707755926d7c02c3bb46ed53d539"], // custom field for mautic_id
-            //         "companyname"       => $data["name"],
-            //         "companyaddress1"   => $data["address_formatted_address"],
-            //         "companyemail"      => $data["a007cb7cef80c909678503cbcfe49def03cad573"], // custom field for email
-            //         "companyphone"      => $data["a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd"], // custom field for fone
-            //         "pipedrive_org_id"  => $data["id"],
-            //     ];
-            // break;
 
             // stages
             case "contactFields":
