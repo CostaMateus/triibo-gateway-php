@@ -280,29 +280,7 @@ class PipedriveWebhookController extends Controller
                 case self::STAGE_ADDED_EVENT:
                 case self::STAGE_UPDATED_EVENT:
                 case self::STAGE_DELETED_EVENT:
-
-                    if ($params["event"] == self::STAGE_DELETED_EVENT)
-                    {
-                        $index = "previous";
-                        $del   = TRUE;
-                    }
-                    else
-                    {
-                        $index = "current";
-                        $del   = FALSE;
-                    }
-
-                    if ($params["previous"] && $params["event"] != self::STAGE_DELETED_EVENT)
-                    {
-                        $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
-
-                        if (array_key_exists(self::STAGE_MONITORING, $changes)) $result = TRUE;
-
-                        if (!$result) break;
-                    }
-
-                    MauticIntegration::stageUpdate("contactFields", $params[$index], $del);
+                    MauticIntegration::updateStages();
                 break;
 
                 default:

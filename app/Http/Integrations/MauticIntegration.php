@@ -156,55 +156,6 @@ class MauticIntegration
     }
 
     /**
-     * Atualiza um estágio
-     *
-     * @param string  $class
-     * @param array   $data
-     * @param boolean $delete
-     * @return array  $res
-     */
-    public static function stageUpdate(string $class, array $data, bool $delete = false)
-    {
-        $idField   = 185; // id do campo personalizavel no Mautic
-        $mauticApi = self::getApi($class);
-        $data      = self::dataTranslator($class, $data);
-        $field     = $mauticApi->get($idField);
-        $list      = $field["field"]["properties"]["list"];
-        $key       = array_search($data["id"], array_column($list, "value"));
-
-        // Achou o id
-        if ($key !== false)
-        {
-            if (!$delete)
-            {
-                // Atualiza o stage
-                $list[$key]["label"] = $data["name"];
-            }
-            else
-            {
-                // Exclui o stage
-                unset($list[$key]);
-            }
-        }
-        else if (!$delete)
-        {
-            // Adiciona o stage
-            array_push($list, [
-                "label" => $data["name"],
-                "value" => $data["id"]
-            ]);
-        }
-
-        $data = [
-            "properties" => [
-                "list" => $list
-            ]
-        ];
-
-        $mauticApi->edit($idField, $data);
-    }
-
-    /**
      * Traduz os dados necessários do Pipedrive para o Mautic
      *
      * @param string $class
