@@ -28,7 +28,6 @@ class PipedriveWebhookController extends Controller
         "status",   // Status   / id interno: 12464
         "active",
         "deleted",
-        // $pipedrive->DealFields->find(12464)->getData();
     ];
 
     /**
@@ -45,8 +44,7 @@ class PipedriveWebhookController extends Controller
         "a007cb7cef80c909678503cbcfe49def03cad573", // E-mail        / id interno: 4023
         "918dace587a4707755926d7c02c3bb46ed53d539", // Mautic Id     / id interno: 4026
         "c917493d194dbeac05ccbfd26d152f95b8763ec9", // Fonte do Lead / id interno: 4028
-
-        // $pipedrive->OrganizationFields->find(4028)->getData();
+        "fa0b068c55533f0298d1d3d26997cdbc2f17eca6", // Vendedor resp / id interno: 4032
     ];
 
     /**
@@ -158,8 +156,6 @@ class PipedriveWebhookController extends Controller
             ], 500);
         }
 
-        Log::channel("marketplace")->info("Deals", [ "200" => "Success" ]);
-
         return response()->json([
             "status"  => "Ok",
             "message" => "Success",
@@ -176,90 +172,83 @@ class PipedriveWebhookController extends Controller
     {
         $params = $request->all();
 
-        // if ($params["meta"]["change_source"] == "api")
-        // {
-        //     Log::channel("marketplace")->info("Organizations", [
-        //         "0" => "changed by api ignored"
-        //     ]);
-        //
-        //     return response()->json([
-        //         "status"  => "Ok",
-        //         "message" => "Organizations - changed by api ignored",
-        //         "code"    => -1,
-        //     ], 200);
-        // }
-        //
-        // try
-        // {
-        //     switch ($params["event"])
-        //     {
-        //         case self::ORG_ADDED_EVENT:
-        //         case self::ORG_UPDATED_EVENT:
-        //             if ($params["previous"])
-        //             {
-        //                 $result  = FALSE;
-        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
-        //                 foreach (self::ORG_MONITORING as $m)
-        //                 {
-        //                     if (array_key_exists($m, $changes))
-        //                     {
-        //                         $result = TRUE;
-        //                         break;
-        //                     }
-        //                 }
-        //
-        //                 if (!$result)
-        //                 {
-        //                     Log::channel("marketplace")->info("Organizations", [
-        //                         "0" => "discarded changes"
-        //                     ]);
-        //                     break;
-        //                 }
-        //             }
-        //
-        //             MauticIntegration::updateOrCreate("companies", $params["current"]);
-        //         break;
-        //
-        //         case self::ORG_DELETED_EVENT:
-        //             MauticIntegration::delete("companies", $params["previous"]);
-        //         break;
-        //
-        //         default:
-        //             Log::channel("marketplace")->info("Organizations", [
-        //                 "400" => "Unsupported event"
-        //             ]);
-        //
-        //             return response()->json([
-        //                 "status"  => "Error",
-        //                 "message" => "Unsupported event",
-        //                 "code"    => 0,
-        //             ], 400);
-        //         break;
-        //     }
-        // }
-        // catch (Exception $e)
-        // {
-        //     Log::channel("marketplace")->info("Organizations", [
-        //         "500" => $e
-        //     ]);
-        //
-        //     self::sendMailNotification($params, $e);
-        //
-        //     return response()->json([
-        //         "status"  => "Error",
-        //         "message" => $e,
-        //         "code"    => self::ORG_CODE,
-        //     ], 500);
-        // }
-        //
-        // Log::channel("marketplace")->info("Organizations", [
-        //     "200" => "Success"
-        // ]);
-        //
-        // return response()->json([
-        //     "status"  => "Ok",
-        //     "message" => "Success",
-        // ], 200);
+        if ($params["meta"]["change_source"] == "api")
+        {
+            Log::channel("marketplace")->info("Organizations", [ "0" => "changed by api ignored" ]);
+
+            return response()->json([
+                "status"  => "Ok",
+                "message" => "Organizations - changed by api ignored",
+                "code"    => -1,
+            ], 200);
+        }
+
+        try
+        {
+            switch ($params["event"])
+            {
+                case self::ORG_ADDED_EVENT:
+                case self::ORG_UPDATED_EVENT:
+                case self::ORG_DELETED_EVENT:
+
+                    if ($params["event"] == self::ORG_DELETED_EVENT)
+                    {
+                        $index = "previous";
+                        $del   = TRUE;
+                    }
+                    else
+                    {
+                        $index = "current";
+                        $del   = FALSE;
+                    }
+
+                    if ($params["previous"] && $params["event"] != self::ORG_DELETED_EVENT)
+                    {
+                        $result  = FALSE;
+                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+                        foreach (self::ORG_MONITORING as $m)
+                        {
+                            if (array_key_exists($m, $changes))
+                            {
+                                $result = TRUE;
+                                break;
+                            }
+                        }
+
+                        if (!$result) break;
+                    }
+
+                    MauticIntegration::updateOrCreate("contacts", $params[$index], $del);
+                break;
+
+                default:
+                    Log::channel("marketplace")->info("Organizations", [ "400" => "Unsupported event" ]);
+
+                    return response()->json([
+                        "status"  => "Error",
+                        "message" => "Unsupported event",
+                        "code"    => 0,
+                    ], 400);
+                break;
+            }
+        }
+        catch (Exception $e)
+        {
+            Log::channel("marketplace")->info("Organizations", [ "500" => $e ]);
+
+            self::sendMailNotification($params, $e);
+
+            return response()->json([
+                "status"  => "Error",
+                "message" => $e,
+                "code"    => self::ORG_CODE,
+            ], 500);
+        }
+
+        return response()->json([
+            "status"  => "Ok",
+            "message" => "Success",
+        ], 200);
     }
 
     /**
@@ -442,36 +431,6 @@ class PipedriveWebhookController extends Controller
         //     "status"  => "Ok",
         //     "message" => "Success",
         // ], 200);
-    }
-
-
-    /**
-     * Undocumented function
-     *
-     * @param Request $request
-     * @return void
-     */
-    public function syncIdsMauticPipe(Request $request)
-    {
-        $classes = $request->all();
-
-        try
-        {
-            MauticIntegration::syncIdsMauticPipe($classes);
-        }
-        catch (Exception $e)
-        {
-            return response()->json([
-                "status"  => "Error",
-                "message" => $e,
-                "code"    => 5,
-            ], 500);
-        }
-
-        return response()->json([
-            "status"  => "Ok",
-            "message" => "Success",
-        ], 200);
     }
 
     /**
