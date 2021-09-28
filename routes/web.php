@@ -94,5 +94,5 @@ Route::get("/pipedrive", function () {
         // $data = (object) [ null ];
     }
 
-    dd($data);
+    // dd($data);
 });
