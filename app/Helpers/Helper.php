@@ -2,6 +2,9 @@
 
 namespace App\Helpers;
 
+use Devio\Pipedrive\Pipedrive;
+use Illuminate\Support\Facades\Log;
+
 class Helper
 {
 
@@ -81,5 +84,106 @@ class Helper
         call_user_func_array('array_multisort', $args);
 
         return array_pop($args);
+    }
+
+    /**
+     * Registra log
+     *
+     * @param string  $class  Classe do objeto
+     * @param string  $msg    Mensegame principal
+     * @param integer $mautic ID do objeto no Mautic
+     * @param integer $pipe   ID do objeto no Pipedrive
+     * @return void
+     */
+    public static function log(string $class, string $msg, int $mautic, int $pipe)
+    {
+        Log::channel("marketplace")->info($class, [
+            "message"   => $msg,
+            "mautic_id" => $mautic,
+            "pd_id"     => $pipe
+        ]);
+    }
+
+    /**
+     * Traduz o status/label do Deal
+     *
+     * @param string  $label Valor do campo
+     * @param string  $id    ID do stage
+     * @param boolean $type  TRUE para status, FALSE para label
+     * @return void
+     */
+    public static function statusLabelDeal(string $label, int $id, bool $type = true)
+    {
+        $resp = 0;
+
+        if ($type)
+        {
+            switch ($label) {
+                case "open":
+                    $resp = "$id:A";
+                break;
+
+                case "won":
+                    $resp = "$id:G";
+                break;
+
+                case "lost":
+                    $resp = "$id:P";
+                break;
+
+                case "deleted":
+                    $resp = "$id:E";
+                break;
+
+                default:
+                    $resp = 0;
+                break;
+            }
+        }
+        else
+        {
+            $labels = self::getLabelsDeal();
+
+            foreach ($labels as $lbl)
+            {
+                if ($lbl["id"] == (int) $label)
+                {
+                    $resp = "$id:" . $lbl["label"];
+                    break;
+                }
+            }
+        }
+
+        return $resp;
+    }
+
+    /**
+     * Auxilio para função statusLabelDeal()
+     *
+     * @return array
+     */
+    private static function getLabelsDeal()
+    {
+        // Etiqueta / id interno: 12463
+
+        $token   = config('pipedrive.token');
+        $pipeApi = new Pipedrive($token);
+        $labels  = $pipeApi->DealFields->find(12463)->getData();
+
+        foreach ($labels->options as $t)
+        {
+            if (in_array(mb_strtolower($t->label), ["em espera", "em degustação"]))
+            {
+                $label    = explode(" ", $t->label)[1];
+                $t->label = ucfirst($label);
+            }
+
+            $resp[] = [
+                "id"    => $t->id,
+                "label" => $t->label[0]
+            ];
+        }
+
+        return $resp;
     }
 }
