@@ -284,7 +284,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::channel("marketplace")->info("Persons", [ "400" => "Unsupported event" ]);
+                    Log::channel("marketplace")->info("Stages", [ "400" => "Unsupported event" ]);
 
                     return response()->json([
                         "status"  => "Error",
@@ -323,7 +323,7 @@ class PipedriveWebhookController extends Controller
     {
         if (env("APP_ENV") == "production" || env("APP_ENV") == "local")
         {
-            Log::channel("marketplace")->info("Organizations", [ "0" => "deactivated" ]);
+            Log::channel("marketplace")->info("Persons", [ "0" => "deactivated" ]);
             return response()->json([
                 "status"  => "Ok",
                 "message" => "Deactivated",
