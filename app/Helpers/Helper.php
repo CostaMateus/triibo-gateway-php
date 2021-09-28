@@ -99,8 +99,8 @@ class Helper
     {
         Log::channel("marketplace")->info($class, [
             "message"   => $msg,
-            "mautic_id" => $mautic,
-            "pd_id"     => $pipe
+            "mautic_id" => $mautic??NULL,
+            "pd_id"     => $pipe??NULL
         ]);
     }
 
