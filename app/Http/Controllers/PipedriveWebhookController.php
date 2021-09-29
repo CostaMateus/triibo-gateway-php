@@ -107,7 +107,7 @@ class PipedriveWebhookController extends Controller
                         break;
                     }
 
-                    if ($params["previous"] && $params["event"] != self::DEAL_DELETED_EVENT)
+                    if (isset($params["previous"]) && $params["event"] != self::DEAL_DELETED_EVENT)
                     {
                         $result  = FALSE;
                         $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
@@ -126,10 +126,47 @@ class PipedriveWebhookController extends Controller
                     $api = new Pipedrive(config("pipedrive.token"));
                     $org = $api->organizations->find($params[$index]["org_id"])->getData();
 
-                    $params[$index]["email"]     = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
-                    $params[$index]["mautic_id"] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
+                    // $params[$index]["email"]     = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
+                    // $params[$index]["mautic_id"] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
 
-                    MauticIntegration::dealUpdate("deals", $params[$index]);
+                    $data["mautic_id"] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
+                    $data["email"]     = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
+                    $data["org_id"]    = $params[$index]["org_id"];
+                    $data["org_name"]  = $params[$index]["org_name"];
+                    $data["active"]    = $params[$index]["active"];
+                    $data["deleted"]   = $params[$index]["deleted"];
+
+                    if ($index == "current")
+                    {
+                        $data["new_stage_id"] = $params[$index]["stage_id"];
+                        $data["new_status"]   = $params[$index]["status"];
+                        $data["new_label"]    = $params[$index]["label"];
+
+                        if (isset($params["previous"]))
+                        {
+                            $data["old_stage_id"] = $params["previous"]["stage_id"];
+                            $data["old_status"]   = $params["previous"]["status"];
+                            $data["old_label"]    = $params["previous"]["label"];
+                        }
+                        else
+                        {
+                            $data["old_stage_id"] = 0;
+                            $data["old_status"]   = 0;
+                            $data["old_label"]    = 0;
+                        }
+                    }
+                    else
+                    {
+                        $data["new_stage_id"] = 0;
+                        $data["new_status"]   = 0;
+                        $data["new_label"]    = 0;
+
+                        $data["old_stage_id"] = $params[$index]["stage_id"];
+                        $data["old_status"]   = $params[$index]["status"];
+                        $data["old_label"]    = $params[$index]["label"];
+                    }
+
+                    MauticIntegration::dealUpdate("deals", $data);
                 break;
 
                 default:
@@ -202,7 +239,7 @@ class PipedriveWebhookController extends Controller
                         $del   = FALSE;
                     }
 
-                    if ($params["previous"] && $params["event"] != self::ORG_DELETED_EVENT)
+                    if (isset($params["previous"]) && $params["event"] != self::ORG_DELETED_EVENT)
                     {
                         $result  = FALSE;
                         $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
@@ -351,7 +388,7 @@ class PipedriveWebhookController extends Controller
         //     {
         //         case self::PERSON_ADDED_EVENT:
         //         case self::PERSON_UPDATED_EVENT:
-        //             if ($params["previous"])
+        //             if (isset($params["previous"]))
         //             {
         //                 $result  = FALSE;
         //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
