@@ -134,7 +134,7 @@ class MauticIntegration
         else if ($data["email"])
         {
             array_push($logMsg, "Searching by email");
-            $res = self::searchMauticByField($mauticApi, "email", $data["aux_email"]);
+            $res = self::searchMauticByField($mauticApi, "email", $data["email"]);
 
             if ($res["total"]) self::updateMauticId("organizations", key($res["object"]), $data["pd_org_id"], TRUE);
         }
