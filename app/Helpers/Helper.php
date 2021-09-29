@@ -107,13 +107,15 @@ class Helper
     /**
      * Traduz o status/label do Deal
      *
-     * @param string  $label Valor do campo
-     * @param string  $id    ID do stage
+     * @param [type]  $label Valor do campo
+     * @param [type]  $id    ID do stage
      * @param boolean $type  TRUE para status, FALSE para label
      * @return void
      */
-    public static function statusLabelDeal(string $label, int $id, bool $type = true)
+    public static function statusLabelDeal($label, $id, bool $type = true)
     {
+        if (!$label || !$id) return 0;
+
         $resp = 0;
 
         if ($type)
@@ -200,13 +202,18 @@ class Helper
         // Fonte do Lead / id interno: 4028
         // Vendedor resp / id interno: 4032
 
-        $token   = config('pipedrive.token');
-        $pipeApi = new Pipedrive($token);
-        $opts    = $pipeApi->OrganizationFields->find($idField)->getData()->options;
-
-        foreach($opts as $opt)
+        if ($idSelected > 0)
         {
-            if ($opt->id == $idSelected) return $opt->label;
+            $token   = config('pipedrive.token');
+            $pipeApi = new Pipedrive($token);
+            $opts    = $pipeApi->OrganizationFields->find($idField)->getData()->options;
+
+            foreach($opts as $opt)
+            {
+                if ($opt->id == $idSelected) return $opt->label;
+            }
         }
+
+        return " ";
     }
 }

@@ -146,6 +146,11 @@ class MauticIntegration
         }
 
         $data["id"] = $data["id"] ?? key($res["object"]);
+        $oldData    = $res["object"][$data["id"]]["fields"]["all"];
+
+        self::treatFieldsDeal($data, $oldData["pd_pipeline"],        "pd_pipeline",        "new_stage_id", "old_stage_id");
+        self::treatFieldsDeal($data, $oldData["pd_pipeline_status"], "pd_pipeline_status", "new_status",   "old_status");
+        self::treatFieldsDeal($data, $oldData["pd_pipeline_label"],  "pd_pipeline_label",  "new_label",    "old_label");
 
         $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
         if ($orgName !== FALSE)                                        // remover em prod
@@ -177,16 +182,21 @@ class MauticIntegration
         switch ($class) {
             case "deals":
                 return [
-                    "id"                 => $data["mautic_id"] ?? NULL,
-                    "email"              => $data["email"],
-                    "pd_pipeline"        => $data["stage_id"],
-                    "pd_pipeline_status" => Helper::statusLabelDeal($data["status"], $data["stage_id"]),
-                    "pd_pipeline_label"  => Helper::statusLabelDeal($data["label"],  $data["stage_id"], FALSE),
-                    "pd_org_id"          => $data["org_id"],
-                    "pd_org_name"        => $data["org_name"],
+                    "id"           => $data["mautic_id"] ?? NULL,
+                    "email"        => $data["email"],
+                    "pd_org_id"    => $data["org_id"],
+                    "pd_org_name"  => $data["org_name"],
 
-                    "aux_active"         => $data["active"],
-                    "aux_deleted"        => $data["deleted"],
+                    "new_stage_id" => $data["new_stage_id"]??0,
+                    "new_status"   => Helper::statusLabelDeal($data["new_status"], $data["new_stage_id"]),
+                    "new_label"    => Helper::statusLabelDeal($data["new_label"],  $data["new_stage_id"], FALSE),
+
+                    "old_stage_id" => $data["old_stage_id"]??0,
+                    "old_status"   => Helper::statusLabelDeal($data["old_status"], $data["old_stage_id"]),
+                    "old_label"    => Helper::statusLabelDeal($data["old_label"],  $data["old_stage_id"], FALSE),
+
+                    "aux_active"   => $data["active"],
+                    "aux_deleted"  => $data["deleted"],
                 ];
             break;
 
@@ -203,8 +213,8 @@ class MauticIntegration
                     "lastname"              => "",
                     "email"                 => $email,
                     "phone"                 => $phone,
-                    "pd_lead"               => Helper::getOrgCustomField(4028, $lead),
-                    "pd_responsible_seller" => Helper::getOrgCustomField(4032, $resp),
+                    "pd_lead"               => Helper::getOrgCustomField(4028, $lead??0),
+                    "pd_responsible_seller" => Helper::getOrgCustomField(4032, $resp??0),
                     "pd_org_id"             => $data["id"],
                     "pd_org_name"           => $data["name"],
                 ];
@@ -443,6 +453,56 @@ class MauticIntegration
         }
 
         return $data;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param array  $data
+     * @param string $oldData
+     * @param string $field
+     * @param string $new
+     * @param string $old
+     * @return void
+     */
+    private static function treatFieldsDeal(array &$data, string $oldData, string $field, string $new, string $old)
+    {
+        $arr = explode("|", $oldData);
+
+        if (($i = array_search("0", $arr)) !== false) unset($arr[$i]);
+
+        if ($data[$new] && $data[$old])
+        {
+            // atualiza
+            foreach ($arr as $i => $v)
+            {
+                if ($v == $data[$old])
+                {
+                    unset($arr[$i]);
+                    array_push($arr, $data[$new]);
+                    break;
+                }
+            }
+        }
+        elseif ($data[$new] && !$data[$old])
+        {
+            // adiciona
+            array_push($arr, $data[$new]);
+        }
+        elseif (!$data[$new] && $data[$old])
+        {
+            // remove
+            if ($arr && ($i = array_search($data[$old], $arr)) !== false) unset($arr[$i]);
+        }
+        else
+        {
+            // não faz nada
+            $arr = [0];
+        }
+
+        unset($data[$new], $data[$old]);
+
+        $data[$field] = $arr ? implode("|", $arr) : 0;
     }
 
 
