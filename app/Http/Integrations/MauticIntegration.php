@@ -299,17 +299,19 @@ class MauticIntegration
      */
     private static function updateMauticId(string $class, int $mauticId, int $pipeId, bool $hasId)
     {
-        $pipeName = ($class == "persons") ? "pd_person_id" : "pd_org_id";
+        // $pipeName = ($class == "persons") ? "pd_person_id" : "pd_org_id";
 
         Log::channel("marketplace")->info(ucfirst($class), [
             "data"      => "created/updated",
             "mautic_id" => $mauticId,
-            "$pipeName" => $pipeId
+            "pd_org_id" => $pipeId
+            // "$pipeName" => $pipeId
         ]);
 
         if ($hasId)
         {
-            PipedriveIntegration::updateMauticId($class, [
+            // PipedriveIntegration::updateMauticId($class, [
+            PipedriveIntegration::updateMauticId("organizations", [
                 "pd_id"     => $pipeId,
                 "mautic_id" => $mauticId,
             ]);
