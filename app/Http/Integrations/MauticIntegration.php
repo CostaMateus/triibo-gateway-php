@@ -79,9 +79,9 @@ class MauticIntegration
 
         $data["id"] = $data["id"] ?? key($res["object"]);
 
-        $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
-        if ($orgName !== FALSE)                                        // remover em prod
-        {                                                              // remover em prod
+        // $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
+        // if ($orgName !== FALSE)                                        // remover em prod
+        // {                                                              // remover em prod
 
             // Achou o contato, atualiza
             if ($res["total"])
@@ -104,7 +104,8 @@ class MauticIntegration
             }
 
             Helper::log("Persons", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
-        }
+
+        // }
     }
 
     /**
@@ -120,9 +121,9 @@ class MauticIntegration
         $data      = self::dataTranslator($class, $data);
         $logMsg    = [];
 
-        $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
-        if ($orgName !== FALSE)                                        // remover em prod
-        {                                                              // remover em prod
+        // $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
+        // if ($orgName !== FALSE)                                        // remover em prod
+        // {                                                              // remover em prod
 
             if (!$data["aux_active"] && $data["aux_deleted"]) array_push($logMsg, "Deleted deal");
 
@@ -172,7 +173,8 @@ class MauticIntegration
 
                 Helper::log("Deals", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
             }
-        }
+
+        // }
     }
 
     /**
