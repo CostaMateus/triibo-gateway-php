@@ -40,10 +40,8 @@ class Kernel extends ConsoleKernel
 
 
         // Mautic Pipedrive Integration
-        // Segunda às 05h00
-        $schedule->command("update:stages")->weeklyOn(1, "5:00")->timezone("America/Sao_Paulo")->runInBackground();
-        // // Segunda às 05h10
-        // $schedule->command("import:dealslabels")->weeklyOn(1, "5:10")->timezone("America/Sao_Paulo");
+        // Diariamente às 05h00
+        $schedule->command("update:stages")->dailyAt(1, "5:00")->timezone("America/Sao_Paulo")->runInBackground();
 
 
         // // Triibo
