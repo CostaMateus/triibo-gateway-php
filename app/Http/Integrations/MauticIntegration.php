@@ -157,9 +157,9 @@ class MauticIntegration
             self::treatFieldsDeal($data, $oldData["pd_pipeline_status"], "pd_pipeline_status", "new_status",   "old_status");
             self::treatFieldsDeal($data, $oldData["pd_pipeline_label"],  "pd_pipeline_label",  "new_label",    "old_label");
 
-            $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
-            if ($orgName !== FALSE)                                        // remover em prod
-            {                                                              // remover em prod
+        //     $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
+        //     if ($orgName !== FALSE)                                        // remover em prod
+        //     {                                                              // remover em prod
 
                 if ($res["total"])
                 {
@@ -172,8 +172,8 @@ class MauticIntegration
                 }
 
                 Helper::log("Deals", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
-            }
 
+        //     }
         // }
     }
 
