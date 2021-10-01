@@ -362,7 +362,7 @@ class MauticIntegration
         // fim processamento das etapas dos funis
 
 
-        // inicio processamento dos status dos negocios em cada etapa dos funis
+        // inicio processamento dos status dos negocios nas etapas dos funis
         $stageStatus = self::getLabels($pipeApi, 12464); // id Status no Pipe
         $dataStatus  = [
             "properties" => [
@@ -377,10 +377,10 @@ class MauticIntegration
         ];
         $resp2       = $mauticApi->edit(215, $dataStatus);
         // 215 = id do campo no Mautic (Pipedrive Funil Status)
-        // fim processamento dos status dos negocios em cada etapa dos funis
+        // fim processamento dos status dos negocios nas etapas dos funis
 
 
-        // inicio processamento dos status dos negocios em cada etapa dos funis
+        // inicio processamento das etiquetas dos negocios nas etapas dos funis
         $stageLabels = self::getLabels($pipeApi, 12463); // id Etiqueta no Pipe
         $dataLabels  = [
             "properties" => [
@@ -395,7 +395,7 @@ class MauticIntegration
         ];
         $resp3       = $mauticApi->edit(218, $dataLabels);
         // 218 = id do campo no Mautic (Pipedrive Funil Etiqueta)
-        // fim processamento dos status dos negocios em cada etapa dos funis
+        // fim processamento das etiquetas dos negocios nas etapas dos funis
 
 
         $log = (!isset($resp1["errors"]) &&
