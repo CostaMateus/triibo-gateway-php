@@ -143,6 +143,7 @@ class MauticIntegration
 
                 if ($res["total"]) self::updateMauticId("organizations", key($res["object"]), $data["pd_org_id"], TRUE);
             }
+            // Caso não tenha nenhum, ingora
             else
             {
                 array_push($logMsg, "No data to search");
@@ -150,30 +151,28 @@ class MauticIntegration
                 return;
             }
 
-            $data["id"] = $data["id"] ?? key($res["object"]);
-            $oldData    = $res["object"][$data["id"]]["fields"]["all"];
 
-            self::treatFieldsDeal($data, $oldData["pd_pipeline"]       ??"", "pd_pipeline",        "new_stage_id", "old_stage_id");
-            self::treatFieldsDeal($data, $oldData["pd_pipeline_status"]??"", "pd_pipeline_status", "new_status",   "old_status");
-            self::treatFieldsDeal($data, $oldData["pd_pipeline_label"] ??"", "pd_pipeline_label",  "new_label",    "old_label");
+            // Achou correspondente no Mauitc
+            if ($res["total"])
+            {
+                $data["id"] = $data["id"] ?? key($res["object"]);
+                $oldData    = $res["object"][$data["id"]]["fields"]["all"];
 
-        //     $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
-        //     if ($orgName !== FALSE)                                        // remover em prod
-        //     {                                                              // remover em prod
+                self::treatFieldsDeal($data, $oldData["pd_pipeline"]       ??"", "pd_pipeline",        "new_stage_id", "old_stage_id");
+                self::treatFieldsDeal($data, $oldData["pd_pipeline_status"]??"", "pd_pipeline_status", "new_status",   "old_status");
+                self::treatFieldsDeal($data, $oldData["pd_pipeline_label"] ??"", "pd_pipeline_label",  "new_label",    "old_label");
 
-                if ($res["total"])
-                {
-                    array_push($logMsg, "Contact deal updated");
-                    $res = $mauticApi->edit($data["id"], $data);
-                }
-                else
-                {
-                    array_push($logMsg, "Contact not found");
-                }
+                array_push($logMsg, "Contact deal updated");
+                $res = $mauticApi->edit($data["id"], $data);
+            }
+            // Não achou
+            else
+            {
+                array_push($logMsg, "Contact not found");
+            }
 
-                Helper::log("Deals", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
+            Helper::log("Deals", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
 
-        //     }
         // }
     }
 
