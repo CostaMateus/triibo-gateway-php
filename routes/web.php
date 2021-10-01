@@ -70,29 +70,24 @@ Route::get("/mautic", function () {
 });
 
 Route::get("/pipedrive", function () {
-    $token   = config("pipedrive.token");
-    $pipeApi = new Pipedrive($token);
+    // $token   = config("pipedrive.token");
+    // $pipeApi = new Pipedrive($token);
 
-    try
-    {
-        // // encontra o campo pelo ID "Fonte do Lead"
-        // $data = $pipedrive->OrganizationFields->find(4028)->getData();
-        // $data->options; // get possiveis valores do campo
+    // try
+    // {
+    //     // // encontra o campo pelo ID "Fonte do Lead"
+    //     // $data = $pipeApi->OrganizationFields->find(4028)->getData();
+    //     // $data = $pipeApi->OrganizationFields->all()->getData();
+    //     // $data = $pipeApi->organizations->persons(2079)->getData();
+    //     // $data = $pipeApi->organizations->find(1512)->getData();
+    //     // $data = $pipeApi->organizations->all()->getData();
+    //     // $data = $pipeApi->DealFields->find(12464)->getData();
 
-        // $data = $pipedrive->organizations->persons(2079)->getData();
-        // $data = $pipeApi->organizations->find(1512)->getData();
-        // $data = $pipeApi->organizations->all()->getData();
-
-        // $data = $pipeApi->DealFields->find(12464)->getData();
-        // $data = $pipeApi->DealFields->find(12463)->getData();
-
-        // $data = $pipeApi->OrganizationFields->all()->getData();
-        // $data = $pipeApi->OrganizationField->find(4032)->getData();
-    }
-    catch(Exception $e)
-    {
-        // $data = (object) [ null ];
-    }
-
-    // dd($data);
+    //     $objs = $pipeApi->organizations->all(["start" =>    0, "limit" =>  500])->getData();
+    //     foreach ($objs as $obj) MauticIntegration::updateOrCreate("contacts", json_decode(json_encode($obj), true), false);
+    // }
+    // catch(Exception $e)
+    // {
+    //     dd($e);
+    // }
 });
