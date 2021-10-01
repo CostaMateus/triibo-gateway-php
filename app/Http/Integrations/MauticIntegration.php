@@ -153,9 +153,9 @@ class MauticIntegration
             $data["id"] = $data["id"] ?? key($res["object"]);
             $oldData    = $res["object"][$data["id"]]["fields"]["all"];
 
-            self::treatFieldsDeal($data, $oldData["pd_pipeline"],        "pd_pipeline",        "new_stage_id", "old_stage_id");
-            self::treatFieldsDeal($data, $oldData["pd_pipeline_status"], "pd_pipeline_status", "new_status",   "old_status");
-            self::treatFieldsDeal($data, $oldData["pd_pipeline_label"],  "pd_pipeline_label",  "new_label",    "old_label");
+            self::treatFieldsDeal($data, $oldData["pd_pipeline"]       ??"", "pd_pipeline",        "new_stage_id", "old_stage_id");
+            self::treatFieldsDeal($data, $oldData["pd_pipeline_status"]??"", "pd_pipeline_status", "new_status",   "old_status");
+            self::treatFieldsDeal($data, $oldData["pd_pipeline_label"] ??"", "pd_pipeline_label",  "new_label",    "old_label");
 
         //     $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
         //     if ($orgName !== FALSE)                                        // remover em prod
