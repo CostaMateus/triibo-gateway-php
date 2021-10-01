@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use App\Http\Integrations\MauticIntegration;
 
 class UpdatePipeStages extends Command
@@ -38,6 +39,10 @@ class UpdatePipeStages extends Command
      */
     public function handle()
     {
+        Log::channel("marketplace")->info("update-stages", [ "Start processing of update Stages/Status/Labels" ]);
+
         MauticIntegration::updateStages();
+
+        Log::channel("marketplace")->info("update-stages", [ "End Stages/Status/Labels processing" ]);
     }
 }
