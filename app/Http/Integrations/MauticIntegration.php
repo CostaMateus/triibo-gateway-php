@@ -218,7 +218,7 @@ class MauticIntegration
                     "id"                    => $id ?? NULL,
                     "firstname"             => "",
                     "lastname"              => "",
-                    "email"                 => $email,
+                    "email"                 => $email ?? NULL,
                     "pd_lead"               => Helper::getOrgCustomField(4028, $lead??0),
                     "pd_responsible_seller" => Helper::getOrgCustomField(4032, $resp??0),
                     "pd_org_id"             => $data["id"],
