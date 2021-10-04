@@ -324,8 +324,6 @@ class MauticIntegration
      */
     public static function updateStages()
     {
-        Log::channel("marketplace")->info("Stages", ["Start importing all stages"]);
-
         $mauticApi = self::getApi("contactFields");
         $pipeApi   = new Pipedrive(config("pipedrive.token"));
 
@@ -401,10 +399,10 @@ class MauticIntegration
         $log = (!isset($resp1["errors"]) &&
                 !isset($resp2["errors"]) &&
                 !isset($resp3["errors"])) ?
-                    "Successfully imported all stages" :
-                        "Import of stages failed";
+                    "Successfully imported" :
+                        "Import failed";
 
-        Log::channel("marketplace")->info("Stages", [$log]);
+        Log::channel("marketplace")->info("update-stages", [$log]);
     }
 
     /**
