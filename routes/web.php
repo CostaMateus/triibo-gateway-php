@@ -55,7 +55,7 @@ Route::group(["middleware" => "auth"], function() {
     Route::get("/sync-ids", function() {
         MauticIntegration::syncIdsMauticPipe();
         return view("welcome", [ "showToast" => true, "message" => __("marketplace.sync.id") ]);
-    })->name("update.stages");
+    })->name("sync.ids");
 
     Route::resource("users", UserController::class);
 
