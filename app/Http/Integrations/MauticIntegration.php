@@ -77,7 +77,7 @@ class MauticIntegration
             return;
         }
 
-        $data["id"] = $data["id"] ?? key($res["object"]);
+        // $data["id"] = $data["id"] ?? key($res["object"]);
 
         // $orgName = strpos(strtolower($data['pd_org_name']), 'zteste'); // remover em prod
         // if ($orgName !== FALSE)                                        // remover em prod
@@ -93,15 +93,21 @@ class MauticIntegration
                     $data["pd_pipeline_label"]  = 0;
                 }
 
+                $data["id"] = key($res["object"]);
+
                 array_push($logMsg, "Contact updated");
-                self::saveCreateOrUpdateMautic($mauticApi, "persons", $data["id"], $data, "pd_org_id");
+                // self::saveCreateOrUpdateMautic($mauticApi, "persons", $data["id"], $data, "pd_org_id");
             }
             // Não achou o contato, cria um novo
             else
             {
+                $data["id"] = 0;
+
                 array_push($logMsg, "Contact created");
-                self::saveCreateOrUpdateMautic($mauticApi, "persons", 0, $data, "pd_org_id");
+                // self::saveCreateOrUpdateMautic($mauticApi, "persons", 0,           $data, "pd_org_id");
             }
+
+            self::saveCreateOrUpdateMautic($mauticApi, "persons", $data, "pd_org_id");
 
             Helper::log("Persons", implode(". ", $logMsg), $data["id"]??0, $data["pd_org_id"]??0);
 
@@ -274,16 +280,22 @@ class MauticIntegration
      * @param string $pipeIdName
      * @return void
      */
-    private static function saveCreateOrUpdateMautic(Api $mauticApi, string $class, int $id, array $data, string $pipeIdName)
+    private static function saveCreateOrUpdateMautic(Api $mauticApi, string $class, array $data, string $pipeIdName)
     {
         $aux = ($class == "persons") ? "contact" : "company";
 
-        $res = $mauticApi->edit($id, $data, (!$id ? TRUE : FALSE));
+        $id  = $data["id"] ?? 0;
+
+        $res = $mauticApi->edit($id, $data, ($id ? FALSE : TRUE));
 
         if (!isset($res["errors"]))
         {
             // Para não atualizar o mautic_id no Pipedrive, comentar linha abaixo
-            self::updateMauticId($class, $res[$aux]["id"], $data[$pipeIdName], is_null($data["id"]));
+            self::updateMauticId($class, $res[$aux]["id"], $data[$pipeIdName], TRUE);
+        }
+        else
+        {
+            Helper::log("Persons", json_encode($res, TRUE), $id??0, $data["pd_org_id"]??0);
         }
     }
 
@@ -324,8 +336,6 @@ class MauticIntegration
      */
     public static function updateStages()
     {
-        Log::channel("marketplace")->info("Stages", ["Start importing all stages"]);
-
         $mauticApi = self::getApi("contactFields");
         $pipeApi   = new Pipedrive(config("pipedrive.token"));
 
@@ -401,10 +411,10 @@ class MauticIntegration
         $log = (!isset($resp1["errors"]) &&
                 !isset($resp2["errors"]) &&
                 !isset($resp3["errors"])) ?
-                    "Successfully imported all stages" :
-                        "Import of stages failed";
+                    "Successfully imported" :
+                        "Import failed";
 
-        Log::channel("marketplace")->info("Stages", [$log]);
+        Log::channel("marketplace")->info("update-stages", [$log]);
     }
 
     /**
@@ -523,33 +533,59 @@ class MauticIntegration
     {
         $mauticApi = self::getApi("contacts");
         $pipeApi   = new Pipedrive(config("pipedrive.token"));
-        $pipeObjs  = $pipeApi->organizations->all()->getData();
+        $arrObjs   = [];
+        $start     = 0;
 
-        foreach ($pipeObjs as $key => $org)
+        do {
+            $objs = $pipeApi->organizations->all([
+                "start" => $start,
+                "limit" =>  500
+            ])->getData();
+
+            array_push($arrObjs, $objs);
+
+            $start += 500;
+        }
+        while (count($objs) == 500);
+
+        // echo "\nE-mail : pipe ID : mautic ID";
+
+        foreach ($arrObjs as $objs)
         {
-            $email = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
-            if ($email)
+            foreach ($objs as $key => $org)
             {
+                $mtcId = NULL;
+                $email = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
+
+                if (!$email) continue;
+
                 $res = self::searchMauticByField($mauticApi, "email", $email);
 
-                if ($res["total"])
+                if (!$res["total"]) continue;
+
+                if ($res["total"] > 1)
                 {
-                    $mautic_id = key($res["object"]);
+                    foreach ($res["object"] as $key => $org)
+                    {
+                        if ($org["fields"] && $org["fields"]["all"] && $org["fields"]["all"]["email"])
+                        {
+                            if ($org["fields"]["all"]["email"] != $email) continue;
 
-                    $dataM = [ "pd_org_id"                                => $org->id    ];
-                    $dataP = [ "918dace587a4707755926d7c02c3bb46ed53d539" => $mautic_id  ];
-
-                    $mauticApi->edit($mautic_id, $dataM, false);
-                    $pipeApi->organizations->update($org->id, $dataP);
+                            $mtcId = $key;
+                        }
+                    }
                 }
-                else
-                {
-                    $dataM      = self::dataTranslator("contacts", json_decode(json_encode($org), true));
-                    $newContact = $mauticApi->edit(0, $dataM, true);
 
-                    $dataP = [ "918dace587a4707755926d7c02c3bb46ed53d539" => $newContact["contact"]["id"]];
-                    $pipeApi->organizations->update($org->id, $dataP);
-                }
+                $mtcId = $mtcId ?? key($res["object"]);
+
+                $dataM = [ "pd_org_id"                                => $org->id ];
+                $dataP = [ "918dace587a4707755926d7c02c3bb46ed53d539" => $mtcId   ];
+
+                $mauticApi->edit($mtcId, $dataM, false);
+                $pipeApi->organizations->update($org->id, $dataP);
+
+
+                // echo "\n$email : $org->id : $mtcId";
             }
         }
     }

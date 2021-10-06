@@ -55,8 +55,8 @@
                         <div class="card-body">
 
                             <div id="marketplace">
-                                <h2 class="text-center" >Integração Mautic-Pipedrive</h2>
-                                <p class="text-center" >Os dados fluem do Pipedrive para Comunica.Mautic apenas.</p>
+                                <h2 class="text-center mb-3" >Integração Mautic-Pipedrive</h2>
+                                <p class="text-center d-none" >Os dados fluem do Pipedrive para Comunica.Mautic apenas.</p>
                                 <p class="mb-0" >Ações automáticas</p>
                                 <ul class="" >
                                     <li>
@@ -69,6 +69,7 @@
                                         </ul>
                                     </li>
                                 </ul>
+
                                 <p class="mt-2 mb-0" >Sincronização em tempo real via webhook</p>
                                 <ul>
                                     <li>Alterações em massa no Pipedrive, não gera alterações no Mautic</li>
@@ -227,6 +228,15 @@
                                         </tr> --}}
                                     </tbody>
                                 </table>
+
+                                <p class="mt-2 mb-0">Links úteis</p>
+                                <ul>
+                                    <li>
+                                        Sincroniza IDs <span class="text-muted h7" >(apenas se encontrar o e-mail da organização no Mautic)</span>
+                                        <br>
+                                        <a href="{{ route("sync.ids") }}" target="_blank" >Sincronizar agora!</a>
+                                    </li>
+                                </ul>
                             </div>
 
                         </div>
