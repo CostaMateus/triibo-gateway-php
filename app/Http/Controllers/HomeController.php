@@ -27,7 +27,7 @@ class HomeController extends Controller
 
     const merchantId     = "2b19aec0-3884-4243-8ac6-8bdf99597fce";
     const merchantKey    = "GIYOSRIKPSFDBHPRSQNXLYVFWXMQMZLETMYLGSWC";
-    const api            = "https://apisandbox.cieloecommerce.cielo.com.br/1";
+    const api            = "https://apisandbox.cieloecommerce.cielo.com.br/1/sales";
     const apiquery       = "https://apiquerysandbox.cieloecommerce.cielo.com.br/1";
     const onlyVisa       = "-Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA";
     const apiTokenConst  = "54723162306C6F6A7052646D4C6170693030";
@@ -403,7 +403,7 @@ class HomeController extends Controller
             ]
         ];
 
-        $res = Http::withHeaders(self::header)->post(self::api . "/1/sales/", $sale);
+        $res = Http::withHeaders(self::header)->post(self::api, $sale);
 
         // Erro na verificação do cartão
         if ($res->failed() && !$res->successful())
