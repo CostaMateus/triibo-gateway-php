@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Triibo\Mautic\Models\MauticConsumer;
 use App\Notifications\WebhookMarketplace;
+use Codexshaper\WooCommerce\Facades\Order;
 use App\Http\Integrations\MauticIntegration;
 
 // use Illuminate\Support\Facades\Storage;
@@ -23,6 +24,13 @@ class HomeController extends Controller
 {
     const APIKEY = "7f3a767e18d06afd45d8a09402ee687951953686729d7006a88c59c5195d7753";
     const URL    = "https://sandbox.asaas.com/api/v3/";
+
+    const merchantId     = "2b19aec0-3884-4243-8ac6-8bdf99597fce";
+    const merchantKey    = "GIYOSRIKPSFDBHPRSQNXLYVFWXMQMZLETMYLGSWC";
+    const api            = "https://apisandbox.cieloecommerce.cielo.com.br/1";
+    const apiquery       = "https://apiquerysandbox.cieloecommerce.cielo.com.br/1";
+    const onlyVisa       = "-Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA";
+    const apiTokenConst  = "54723162306C6F6A7052646D4C6170693030";
 
     /**
      * Create a new controller instance.
@@ -239,10 +247,214 @@ class HomeController extends Controller
     }
 
 
+    // Cielo
     public static function gateway(Request $request)
     {
-        $date    = date("Ymd-his");
-        $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
-        Storage::put("gateway-".$date.".json", $encoded);
+        // $date    = date("Ymd-his");
+        // $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
+        // Storage::put("gateway-".$date.".json", $encoded);
+
+        $error = false;
+
+        // STATUS - DESCRIÇÃO
+        // 200      OK (Capture/Void/Get)
+        // 201      OK (Authorization)
+        // 400      Bad Request
+        // 404      Resource Not Found
+        // 500      Internal Server Error
+
+        // consts
+        $merchantId  = "2b19aec0-3884-4243-8ac6-8bdf99597fce";
+        $merchantKey = "GIYOSRIKPSFDBHPRSQNXLYVFWXMQMZLETMYLGSWC";
+        $api         = "https://apisandbox.cieloecommerce.cielo.com.br";
+        $apiquery    = "https://apiquerysandbox.cieloecommerce.cielo.com.br";
+
+        $header      = [
+            "Content-Type" => "application/json",
+            "MerchantId"   => $merchantId,
+            "MerchantKey"  => $merchantKey,
+        ];
+
+
+        $req = [
+            "totalAmount"    => ($request->totalAmount * 100),                  // 69.31, // recebe em reais e transforma para centavos
+            "orderId"        => $request->orderId,                              // 38963,
+            "senderEmail"    => $request->senderEmail,                          // mateus.costa@triibo.com.br,
+            "orderIp"        => $request->orderIp,                              // 189.111.43.160,
+            "callBack"       => $request->callBack,                             // https://dev-marketplace.triibo.com.br/checkout_01/order-received/38963/?key=wc_order_Ex5KUA4AbaUiv,
+            "cellPhone"      => $request->cellPhone,                            // (11) 3331-2370,
+            "name"           => $request->name,                                 // MATEUS LOPES COSTA,
+            "document"       => $request->document,                             // 00987654321,
+            "cardNumber"     => str_replace(" ", "", $request->cardNumber),     // 5162 9260 1111 3940, // recebe com espaços e já remove os msm
+            "expirationDate" => str_replace(" ", "", $request->expirationDate), // 10 / 2044,           // recebe com espaços e já remove os msm
+            "cvc"            => $request->cvc,                                  // 111,
+
+            "gatewayId"      => $request->gatewayId, // -Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA,
+            "apiToken"       => $request->apiToken,  // 54723162306C6F6A7052646D4C6170693030
+        ];
+
+        if (empty($req["apiToken"]) || is_null($req["apiToken"]) || $req["apiToken"] != self::apiTokenConst)
+        {
+            return self::error([
+                "code"    => 500,
+                "message" => "'apiToken' inválida"
+            ]);
+        }
+
+        $res1 = self::validateCardBrand($req);
+        if ($res1["code"] != 200)
+        {
+            self::updateOrder($req["orderId"], "failed");
+            Log::channel("marketplace")->info("Gateway", $res1["data"]);
+            return self::error($res1);
+        }
+
+
+        // ========================================================
+        $res2 = self::makePayment($req);
+        if ($res2["code"] != 200)
+        {
+            self::updateOrder($req["orderId"], "failed");
+            return self::error($res2);
+        }
+
+        self::updateOrder($req["orderId"], "processing");
+
+        Log::channel("marketplace")->info("Gateway", $res2["data"]);
+
+        return response()->json([
+            "code"    => 200,
+            "message" => "Autorizado",
+        ], 200);
+    }
+
+    private static function error(array $res)
+    {
+        Log::channel("marketplace")->info("Gateway", $res);
+        return response()->json($res, 500);
+    }
+
+    private static function updateOrder(int $orderId, string $status)
+    {
+        Order::update($orderId, [ "status" => $status ]);
+    }
+
+    private static function validateCardBrand($req)
+    {
+        $header = [
+            "Content-Type" => "application/json",
+            "MerchantId"   => self::merchantId,
+            "MerchantKey"  => self::merchantKey,
+        ];
+
+        $res = Http::withHeaders($header)->get(self::apiquery . "/cardBin/" . $req["cardNumber"]);
+
+        // Erro na verificação do cartão
+        if ($res->failed() && !$res->successful())
+        {
+            $code    = $res[0]["Code"];
+            $message = $res[0]["Message"];
+        }
+
+        // erro no dados retornados pelo Cielo
+        elseif (!isset($res["Provider"]))
+        {
+            $code    = 500;
+            $message = "Error";
+        }
+
+        // bandeira diferente de VISA
+        elseif ($res["Provider"] != "VISA" && $req["gatewayId"] == self::onlyVisa)
+        {
+            $code    = 500;
+            $message = "Bandeira não permitida";
+        }
+
+        else
+        {
+            $code    = 200;
+            $message = "Valid Brand";
+        }
+
+        return [
+            "code"    => $code,
+            "message" => $message,
+            "data"    => $res->json()
+        ];
+    }
+
+    private static function makePayment($req)
+    {
+        $header = [
+            "Content-Type" => "application/json",
+            "MerchantId"   => self::merchantId,
+            "MerchantKey"  => self::merchantKey,
+        ];
+
+        // monta objeto para efetuar a cobrança
+        $sale = [
+            "MerchantOrderId" => $req["orderId"],
+            "Customer"        => [
+                "Name"         => $req["name"],
+                "Identity"     => $req["document"],
+                "IdentityType" => "CPF",
+                "Email"        => $req["senderEmail"],
+            ],
+            "Payment" => [
+                "Type"           => "CreditCard",
+                "Amount"         => $req["totalAmount"],
+                "Currency"       => "BRL",
+                "Country"        => "BRA",
+                "Installments"   => 1,
+                "SoftDescriptor" => "Marketplace Triibo",
+                "CreditCard"     => [
+                    "CardNumber"     => $req["cardNumber"],
+                    "Holder"         => $req["name"],
+                    "ExpirationDate" => $req["expirationDate"],
+                    "SecurityCode"   => $req["cvc"],
+                    "Brand"          => "VISA",
+                    "CardOnFile"     => [
+                        "Usage"  => "Used",
+                        "Reason" => "Unscheduled"
+                    ]
+                ],
+                "IsCryptoCurrencyNegotiation" => false
+            ]
+        ];
+
+        $res = Http::withHeaders($header)->post(self::api . "/1/sales/", $sale);
+
+        // Erro na verificação do cartão
+        if ($res->failed() && !$res->successful())
+        {
+            $code    = $res[0]["Code"];
+            $message = $res[0]["Message"];
+        }
+
+        // erro no dados retornados pelo Cielo
+        elseif (!isset($res["Payment"]))
+        {
+            $code    = 500;
+            $message = "Error";
+        }
+
+        // bandeira diferente de VISA
+        elseif (!in_array($res["Payment"]["ReturnCode"], ["4","6"]))
+        {
+            $code    = 500;
+            $message = "Não Autorizado";
+        }
+
+        else
+        {
+            $code    = 200;
+            $message = "Autorizado";
+        }
+
+        return [
+            "code"    => $code,
+            "message" => $message,
+            "data"    => $res->json(),
+        ];
     }
 }
