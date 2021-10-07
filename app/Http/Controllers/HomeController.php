@@ -27,10 +27,16 @@ class HomeController extends Controller
 
     const merchantId     = "2b19aec0-3884-4243-8ac6-8bdf99597fce";
     const merchantKey    = "GIYOSRIKPSFDBHPRSQNXLYVFWXMQMZLETMYLGSWC";
-    const api            = "https://apisandbox.cieloecommerce.cielo.com.br/1";
+    const api            = "https://apisandbox.cieloecommerce.cielo.com.br/1/sales";
     const apiquery       = "https://apiquerysandbox.cieloecommerce.cielo.com.br/1";
     const onlyVisa       = "-Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA";
     const apiTokenConst  = "54723162306C6F6A7052646D4C6170693030";
+
+    const header = [
+        "Content-Type" => "application/json",
+        "MerchantId"   => self::merchantId,
+        "MerchantKey"  => self::merchantKey,
+    ];
 
     /**
      * Create a new controller instance.
@@ -254,27 +260,12 @@ class HomeController extends Controller
         // $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
         // Storage::put("gateway-".$date.".json", $encoded);
 
-        $error = false;
-
         // STATUS - DESCRIÇÃO
         // 200      OK (Capture/Void/Get)
         // 201      OK (Authorization)
         // 400      Bad Request
         // 404      Resource Not Found
         // 500      Internal Server Error
-
-        // consts
-        $merchantId  = "2b19aec0-3884-4243-8ac6-8bdf99597fce";
-        $merchantKey = "GIYOSRIKPSFDBHPRSQNXLYVFWXMQMZLETMYLGSWC";
-        $api         = "https://apisandbox.cieloecommerce.cielo.com.br";
-        $apiquery    = "https://apiquerysandbox.cieloecommerce.cielo.com.br";
-
-        $header      = [
-            "Content-Type" => "application/json",
-            "MerchantId"   => $merchantId,
-            "MerchantKey"  => $merchantKey,
-        ];
-
 
         $req = [
             "totalAmount"    => ($request->totalAmount * 100),                  // 69.31, // recebe em reais e transforma para centavos
@@ -301,6 +292,8 @@ class HomeController extends Controller
             ]);
         }
 
+
+        // ========================================================
         $res1 = self::validateCardBrand($req);
         if ($res1["code"] != 200)
         {
@@ -341,13 +334,7 @@ class HomeController extends Controller
 
     private static function validateCardBrand($req)
     {
-        $header = [
-            "Content-Type" => "application/json",
-            "MerchantId"   => self::merchantId,
-            "MerchantKey"  => self::merchantKey,
-        ];
-
-        $res = Http::withHeaders($header)->get(self::apiquery . "/cardBin/" . $req["cardNumber"]);
+        $res = Http::withHeaders(self::header)->get(self::apiquery . "/cardBin/" . $req["cardNumber"]);
 
         // Erro na verificação do cartão
         if ($res->failed() && !$res->successful())
@@ -385,12 +372,6 @@ class HomeController extends Controller
 
     private static function makePayment($req)
     {
-        $header = [
-            "Content-Type" => "application/json",
-            "MerchantId"   => self::merchantId,
-            "MerchantKey"  => self::merchantKey,
-        ];
-
         // monta objeto para efetuar a cobrança
         $sale = [
             "MerchantOrderId" => $req["orderId"],
@@ -422,7 +403,7 @@ class HomeController extends Controller
             ]
         ];
 
-        $res = Http::withHeaders($header)->post(self::api . "/1/sales/", $sale);
+        $res = Http::withHeaders(self::header)->post(self::api, $sale);
 
         // Erro na verificação do cartão
         if ($res->failed() && !$res->successful())
