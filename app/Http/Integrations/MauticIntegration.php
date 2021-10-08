@@ -548,7 +548,7 @@ class MauticIntegration
         }
         while (count($objs) == 500);
 
-        // echo "\nE-mail : pipe ID : mautic ID";
+        echo "\nE-mail : pipe ID : mautic ID";
 
         foreach ($arrObjs as $objs)
         {
@@ -585,7 +585,7 @@ class MauticIntegration
                 $pipeApi->organizations->update($org->id, $dataP);
 
 
-                // echo "\n$email : $org->id : $mtcId";
+                echo "\n$email : $org->id : $mtcId";
             }
         }
     }
