@@ -80,4 +80,9 @@ class TriiboController extends Controller
         Log::channel("triibo")->info("unset-vouchers", [ "unset-vouchers: $i wallets fixed" ]);
     }
 
+
+    public function chatguru()
+    {
+
+    }
 }
