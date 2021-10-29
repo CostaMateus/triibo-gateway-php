@@ -16,7 +16,10 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $data = User::where("email", "!=", "equipemarketplace@triibo.com.br")->orderBy("name","ASC")->paginate(5);
+        $data = User::where("email", "!=", "equipemarketplace@triibo.com.br")
+                    ->where("email", "!=", "contato@triibo.com.br")
+                    ->where("email", "!=", "atendimento@triibo.com.br")
+                    ->orderBy("name","ASC")->paginate(50);
 
         return view("users.index", compact("data"));
     }

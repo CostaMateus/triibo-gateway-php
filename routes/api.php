@@ -4,7 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CofryController;
-use App\Http\Controllers\TriiboController;
+use App\Http\Controllers\ChatGuruController;
 use App\Http\Controllers\PipedriveWebhookController;
 
 /*
@@ -84,7 +84,7 @@ Route::prefix("pipedrive")->group(function () {
  */
 Route::prefix("triibo")->group(function () {
 
-    Route::post("/chatguru", [TriiboController::class, "chatguru"])->name("triibo.chatguru");
+    Route::post("/chatguru", [ChatGuruController::class, "index"])->name("triibo.chatguru");
 
 });
 
