@@ -236,7 +236,8 @@ class ChatGuruController extends Controller
             self::sendMailNotification($dataEmail);
             return false;
         }
-        else if ($res_check_chat["chat_add_status"] == "fetched")
+        else if ($res_check_chat["chat_add_status"] == "fetched" ||
+                 $res_check_chat["chat_add_status"] == "pending")
         {
             self::checkChat($chat_id, $dataEmail);
         }
