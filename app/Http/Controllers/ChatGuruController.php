@@ -215,7 +215,6 @@ class ChatGuruController extends Controller
 
         if (!$res_check_chat)
         {
-            // self::sendMailNotification($dataEmail);
             return [
                 "code"  => "check",
                 "error" => true
@@ -232,12 +231,12 @@ class ChatGuruController extends Controller
     {
         $res_add_chat = Http::post(
             self::URL .
-            "?key="        . self::KEY .
+            "?key=" . self::KEY .
             "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id="   . self::PHONE_ID .
+            "&phone_id=" . self::PHONE_ID .
             "&action=chat_add" .
-            "&name=$name"  .
-            "&text="       . self::getFirstMessage($name) .
+            "&name=$name" .
+            "&text=" . self::getFirstMessage($name) .
             "&chat_number=$phone" .
             "&dialog_id=$dialog_id"
         );
@@ -258,9 +257,9 @@ class ChatGuruController extends Controller
         sleep(2.5);
         $res_check_chat = Http::post(
             self::URL .
-            "?key="        . self::KEY .
+            "?key=" . self::KEY .
             "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id=  " . self::PHONE_ID .
+            "&phone_id=" . self::PHONE_ID .
             "&action=chat_add_status" .
             "&chat_add_id=$chat_id"
         );
@@ -271,7 +270,6 @@ class ChatGuruController extends Controller
             $res_check_chat["chat_add_status"] == "error")
         {
             self::log("error", "check_add_chat", $res_check_chat->json());
-            // self::sendMailNotification($dataEmail);
             return false;
         }
         else if ($res_check_chat["chat_add_status"] == "fetched" ||
@@ -298,9 +296,9 @@ class ChatGuruController extends Controller
 
         $res_add_note = Http::post(
             self::URL .
-            "?key="        . self::KEY .
+            "?key=" . self::KEY .
             "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id="   . self::PHONE_ID .
+            "&phone_id=" . self::PHONE_ID .
             "&action=note_add" .
             "&chat_number=$phone" .
             "&note_text=$note_text"
