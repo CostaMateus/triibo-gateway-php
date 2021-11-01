@@ -33,6 +33,7 @@ class ChatGuruController extends Controller
 
         do
         {
+            // request UM e DOIS
             $res = self::sendToChatGuru($name, $phone, $segment["dialog_id"], $dataEmail);
 
             if ($res["code"] == "create" && $res["error"]) return;
@@ -42,7 +43,7 @@ class ChatGuruController extends Controller
                 if ($count == 1)
                 {
                     self::sendMailNotification($dataEmail);
-                    return;
+                    return self::success();
                 }
 
                 $code = substr($phone, 0, 4);
@@ -64,33 +65,9 @@ class ChatGuruController extends Controller
         while ($res["code"] == "check" && $res["error"]);
 
         // request TRÊS
-        sleep(1);
-        $note_text  = "E-mail: $email\n\n";
-        $note_text .= "Segmento da Empresa: " . $segment["text"] . "\n\n";
-        $note_text .= "Tamanho da Empresa: $size\n\n";
-        $note_text .= "Objetivo: $objective\n\n";
-        $note_text .= "Estabelecimento físico: $physical";
+        self::createNote($phone, $email, $segment["text"], $size, $objective, $physical, $dataEmail);
 
-        $res_add_note = Http::post(
-            self::URL .
-            "?key=" . self::KEY .
-            "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id=" . self::PHONE_ID .
-            "&action=note_add" .
-            "&chat_number=$phone" .
-            "&note_text=$note_text"
-        );
-
-        if ($res_add_note->failed() ||
-            $res_add_note["code"] == 400 ||
-            $res_add_note["result"] == "error")
-        {
-            self::log("error", "add_note", $res_add_note->json());
-            self::sendMailNotification($dataEmail);
-            return;
-        }
-
-        self::log("info", "add_note", $res_add_note->json());
+        return self::success();
     }
 
 
@@ -255,18 +232,18 @@ class ChatGuruController extends Controller
     {
         $res_add_chat = Http::post(
             self::URL .
-            "?key=" . self::KEY .
+            "?key="        . self::KEY .
             "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id=" . self::PHONE_ID .
+            "&phone_id="   . self::PHONE_ID .
             "&action=chat_add" .
-            "&name=$name" .
-            "&text=" . self::getFirstMessage($name) .
+            "&name=$name"  .
+            "&text="       . self::getFirstMessage($name) .
             "&chat_number=$phone" .
             "&dialog_id=$dialog_id"
         );
 
         if ($res_add_chat->failed() ||
-            $res_add_chat["code"] == 400 ||
+            $res_add_chat["code"]   == 400 ||
             $res_add_chat["result"] == "error")
         {
             self::log("error", "add_chat", $res_add_chat->json());
@@ -281,15 +258,15 @@ class ChatGuruController extends Controller
         sleep(2.5);
         $res_check_chat = Http::post(
             self::URL .
-            "?key=" . self::KEY .
+            "?key="        . self::KEY .
             "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id=" . self::PHONE_ID .
+            "&phone_id=  " . self::PHONE_ID .
             "&action=chat_add_status" .
             "&chat_add_id=$chat_id"
         );
 
         if ($res_check_chat->failed() ||
-            $res_check_chat["code"] == 400 ||
+            $res_check_chat["code"]   == 400 ||
             $res_check_chat["result"] == "error" ||
             $res_check_chat["chat_add_status"] == "error")
         {
@@ -309,8 +286,38 @@ class ChatGuruController extends Controller
         }
     }
 
-    private static function createNote()
+    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail)
     {
+        // request TRÊS
+        sleep(1);
+        $note_text  = "E-mail: $email\n\n";
+        $note_text .= "Segmento da Empresa: $segment\n\n";
+        $note_text .= "Tamanho da Empresa: $size\n\n";
+        $note_text .= "Objetivo: $objective\n\n";
+        $note_text .= "Estabelecimento físico: $physical";
+
+        $res_add_note = Http::post(
+            self::URL .
+            "?key="        . self::KEY .
+            "&account_id=" . self::ACCOUNT_ID .
+            "&phone_id="   . self::PHONE_ID .
+            "&action=note_add" .
+            "&chat_number=$phone" .
+            "&note_text=$note_text"
+        );
+
+        if ($res_add_note->failed() ||
+            $res_add_note["code"]   == 400 ||
+            $res_add_note["result"] == "error")
+        {
+            self::log("error", "add_note", $res_add_note->json());
+            self::sendMailNotification($dataEmail);
+            return false;
+        }
+
+        self::log("info", "add_note", $res_add_note->json());
+
+        return true;
     }
 
     private static function log(string $method, string $title, array $data)
@@ -338,5 +345,13 @@ class ChatGuruController extends Controller
                      ->orWhere("email", "mateus.costa@triibo.com.br")->get();
         $users[0]->notify(new ChatGuru($mail));
         $users[1]->notify(new ChatGuru($mail));
+    }
+
+    private static function success()
+    {
+        return response()->json([
+            "message" => "Apenas teste",
+            "code"    => 200
+        ], 200);
     }
 }
