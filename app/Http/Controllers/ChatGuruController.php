@@ -29,35 +29,39 @@ class ChatGuruController extends Controller
 
         $dataEmail = self::getEmailMessage($name, $phone, $email, $physical, $segment["text"], $size, $objective);
 
-        // request UM
-        $res_add_chat = Http::post(
-            self::URL .
-            "?key=" . self::KEY .
-            "&account_id=" . self::ACCOUNT_ID .
-            "&phone_id=" . self::PHONE_ID .
-            "&action=chat_add" .
-            "&name=$name" .
-            "&text=" . self::getFirstMessage($name) .
-            "&chat_number=$phone" .
-            "&dialog_id=" . $segment["dialog_id"]
-        );
+        $count     = 0;
 
-        if ($res_add_chat->failed() ||
-            $res_add_chat["code"] == 400 ||
-            $res_add_chat["result"] == "error")
+        do
         {
-            self::log("error", "add_chat", $res_add_chat->json());
-            self::sendMailNotification($dataEmail);
-            return;
+            $res = self::sendToChatGuru($name, $phone, $segment["dialog_id"], $dataEmail);
+
+            if ($res["code"] == "create" && $res["error"]) return;
+
+            if ($res["code"] == "check"  && $res["error"])
+            {
+                if ($count == 1)
+                {
+                    self::sendMailNotification($dataEmail);
+                    return;
+                }
+
+                $code = substr($phone, 0, 4);
+
+                if (strlen($phone) == 13)
+                {
+                    $count++;
+                    $num   = substr($phone, 5, strlen($phone));
+                    $phone = $code . $num;
+                }
+                else if (strlen($phone) == 12)
+                {
+                    $count++;
+                    $num   = substr($phone, 4, strlen($phone));
+                    $phone = $code . "9" . $num;
+                }
+            }
         }
-
-        self::log("info", "add_chat", $res_add_chat->json());
-
-
-        // request DOIS
-        $res_check_chat = self::checkChat($res_add_chat["chat_add_id"], $dataEmail);
-        if (!$res_check_chat) return;
-
+        while ($res["code"] == "check" && $res["error"]);
 
         // request TRÊS
         sleep(1);
@@ -215,6 +219,63 @@ class ChatGuruController extends Controller
         return $text;
     }
 
+    private static function sendToChatGuru(string $name, string $phone, string $dialog_id, string $dataEmail)
+    {
+        // request UM
+        $res_add_chat = self::createChat($name, $phone, $dialog_id, $dataEmail);
+        self::log("info", "add_chat", $res_add_chat);
+
+        if ($res_add_chat["result"] == "error")
+        {
+            return [
+                "code"  => "create",
+                "error" => true
+            ];
+        }
+
+        // request DOIS
+        $res_check_chat = self::checkChat($res_add_chat["chat_add_id"], $dataEmail);
+
+        if (!$res_check_chat)
+        {
+            // self::sendMailNotification($dataEmail);
+            return [
+                "code"  => "check",
+                "error" => true
+            ];
+        }
+
+        return [
+            "code"  => "added",
+            "error" => false
+        ];
+    }
+
+    private static function createChat(string $name, string $phone, string $dialog_id, string $dataEmail)
+    {
+        $res_add_chat = Http::post(
+            self::URL .
+            "?key=" . self::KEY .
+            "&account_id=" . self::ACCOUNT_ID .
+            "&phone_id=" . self::PHONE_ID .
+            "&action=chat_add" .
+            "&name=$name" .
+            "&text=" . self::getFirstMessage($name) .
+            "&chat_number=$phone" .
+            "&dialog_id=$dialog_id"
+        );
+
+        if ($res_add_chat->failed() ||
+            $res_add_chat["code"] == 400 ||
+            $res_add_chat["result"] == "error")
+        {
+            self::log("error", "add_chat", $res_add_chat->json());
+            self::sendMailNotification($dataEmail);
+        }
+
+        return $res_add_chat->json();
+    }
+
     private static function checkChat(string $chat_id, string $dataEmail)
     {
         sleep(2.5);
@@ -233,19 +294,23 @@ class ChatGuruController extends Controller
             $res_check_chat["chat_add_status"] == "error")
         {
             self::log("error", "check_add_chat", $res_check_chat->json());
-            self::sendMailNotification($dataEmail);
+            // self::sendMailNotification($dataEmail);
             return false;
         }
         else if ($res_check_chat["chat_add_status"] == "fetched" ||
                  $res_check_chat["chat_add_status"] == "pending")
         {
-            self::checkChat($chat_id, $dataEmail);
+            return self::checkChat($chat_id, $dataEmail);
         }
         else
         {
             self::log("info", "check_add_chat", $res_check_chat->json());
             return true;
         }
+    }
+
+    private static function createNote()
+    {
     }
 
     private static function log(string $method, string $title, array $data)
