@@ -44,6 +44,7 @@ class ChatGuruController extends Controller
                 {
                     self::sendMailNotification($dataEmail);
                     return self::success();
+                    // exit();
                 }
 
                 $code = substr($phone, 0, 4);
@@ -68,6 +69,7 @@ class ChatGuruController extends Controller
         self::createNote($phone, $email, $segment["text"], $size, $objective, $physical, $dataEmail);
 
         return self::success();
+        // exit();
     }
 
 

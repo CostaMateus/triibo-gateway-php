@@ -256,9 +256,9 @@ class HomeController extends Controller
     // Cielo
     public static function gateway(Request $request)
     {
-        // $date    = date("Ymd-his");
-        // $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
-        // Storage::put("gateway-".$date.".json", $encoded);
+        $date    = date("Ymd-his");
+        $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
+        Storage::put("gateway-".$date.".json", $encoded);
 
         // STATUS - DESCRIÇÃO
         // 200      OK (Capture/Void/Get)
@@ -267,53 +267,53 @@ class HomeController extends Controller
         // 404      Resource Not Found
         // 500      Internal Server Error
 
-        $req = [
-            "totalAmount"    => ($request->totalAmount * 100),                  // 69.31, // recebe em reais e transforma para centavos
-            "orderId"        => $request->orderId,                              // 38963,
-            "senderEmail"    => $request->senderEmail,                          // mateus.costa@triibo.com.br,
-            "orderIp"        => $request->orderIp,                              // 189.111.43.160,
-            "callBack"       => $request->callBack,                             // https://dev-marketplace.triibo.com.br/checkout_01/order-received/38963/?key=wc_order_Ex5KUA4AbaUiv,
-            "cellPhone"      => $request->cellPhone,                            // (11) 3331-2370,
-            "name"           => $request->name,                                 // MATEUS LOPES COSTA,
-            "document"       => $request->document,                             // 00987654321,
-            "cardNumber"     => str_replace(" ", "", $request->cardNumber),     // 5162 9260 1111 3940, // recebe com espaços e já remove os msm
-            "expirationDate" => str_replace(" ", "", $request->expirationDate), // 10 / 2044,           // recebe com espaços e já remove os msm
-            "cvc"            => $request->cvc,                                  // 111,
+        // $req = [
+        //     "totalAmount"    => ($request->totalAmount * 100),                  // 69.31, // recebe em reais e transforma para centavos
+        //     "orderId"        => $request->orderId,                              // 38963,
+        //     "senderEmail"    => $request->senderEmail,                          // mateus.costa@triibo.com.br,
+        //     "orderIp"        => $request->orderIp,                              // 189.111.43.160,
+        //     "callBack"       => $request->callBack,                             // https://dev-marketplace.triibo.com.br/checkout_01/order-received/38963/?key=wc_order_Ex5KUA4AbaUiv,
+        //     "cellPhone"      => $request->cellPhone,                            // (11) 3331-2370,
+        //     "name"           => $request->name,                                 // MATEUS LOPES COSTA,
+        //     "document"       => $request->document,                             // 00987654321,
+        //     "cardNumber"     => str_replace(" ", "", $request->cardNumber),     // 5162 9260 1111 3940, // recebe com espaços e já remove os msm
+        //     "expirationDate" => str_replace(" ", "", $request->expirationDate), // 10 / 2044,           // recebe com espaços e já remove os msm
+        //     "cvc"            => $request->cvc,                                  // 111,
 
-            "gatewayId"      => $request->gatewayId, // -Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA,
-            "apiToken"       => $request->apiToken,  // 54723162306C6F6A7052646D4C6170693030
-        ];
+        //     "gatewayId"      => $request->gatewayId, // -Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA,
+        //     "apiToken"       => $request->apiToken,  // 54723162306C6F6A7052646D4C6170693030
+        // ];
 
-        if (empty($req["apiToken"]) || is_null($req["apiToken"]) || $req["apiToken"] != self::apiTokenConst)
-        {
-            return self::error([
-                "code"    => 500,
-                "message" => "'apiToken' inválida"
-            ]);
-        }
-
-
-        // ========================================================
-        $res1 = self::validateCardBrand($req);
-        if ($res1["code"] != 200)
-        {
-            self::updateOrder($req["orderId"], "failed");
-            Log::channel("marketplace")->info("Gateway", $res1["data"]);
-            return self::error($res1);
-        }
+        // if (empty($req["apiToken"]) || is_null($req["apiToken"]) || $req["apiToken"] != self::apiTokenConst)
+        // {
+        //     return self::error([
+        //         "code"    => 500,
+        //         "message" => "'apiToken' inválida"
+        //     ]);
+        // }
 
 
-        // ========================================================
-        $res2 = self::makePayment($req);
-        if ($res2["code"] != 200)
-        {
-            self::updateOrder($req["orderId"], "failed");
-            return self::error($res2);
-        }
+        // // ========================================================
+        // $res1 = self::validateCardBrand($req);
+        // if ($res1["code"] != 200)
+        // {
+        //     self::updateOrder($req["orderId"], "failed");
+        //     Log::channel("marketplace")->info("Gateway", $res1["data"]);
+        //     return self::error($res1);
+        // }
 
-        self::updateOrder($req["orderId"], "processing");
 
-        Log::channel("marketplace")->info("Gateway", $res2["data"]);
+        // // ========================================================
+        // $res2 = self::makePayment($req);
+        // if ($res2["code"] != 200)
+        // {
+        //     self::updateOrder($req["orderId"], "failed");
+        //     return self::error($res2);
+        // }
+
+        // self::updateOrder($req["orderId"], "processing");
+
+        // Log::channel("marketplace")->info("Gateway", $res2["data"]);
 
         return response()->json([
             "code"    => 200,
