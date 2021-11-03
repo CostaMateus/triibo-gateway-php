@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Notifications\ChatGuru;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class ChatGuruController extends Controller
 {
@@ -18,6 +19,7 @@ class ChatGuruController extends Controller
     public function index(Request $request)
     {
         $data      = $request->all()["fields"];
+        $meta      = $request->all()["meta"];
 
         $name      = $data["name"]["value"];
         $phone     = preg_replace("/\D/", "", $data["phone"]["value"]);
@@ -27,11 +29,15 @@ class ChatGuruController extends Controller
         $size      = self::getCompanySize($data["company_size"]["value"]);
         $objective = self::getCompanyObjective($data["objective"]["value"]);
 
-        $dataEmail = self::getEmailMessage($name, $phone, $email, $physical, $segment["text"], $size, $objective);
+        $dataEmail = self::getEmailMessage($name, $phone, $email, $physical, $segment["text"], $size, $objective, $meta);
 
         $count     = 0;
 
-        if (strlen($phone) > 13) return self::success();
+        if (strlen($phone) > 13)
+        {
+            self::sendMailNotification($dataEmail);
+            return self::success();
+        }
 
         do
         {
@@ -81,6 +87,8 @@ class ChatGuruController extends Controller
      */
     private static function getCompanySegment(string $id)
     {
+        $id = explode("-", $id)[0];
+
         $segments = [
             "0" => [
                 "text"      => "OUTROS",
@@ -149,6 +157,8 @@ class ChatGuruController extends Controller
      */
     private static function getCompanySize(string $id)
     {
+        $id = explode("-", $id)[0];
+
         $sizes = [
             "1" => "Autônomo",
             "2" => "2 a 3 colaboradores",
@@ -169,6 +179,8 @@ class ChatGuruController extends Controller
      */
     private static function getCompanyObjective(string $id)
     {
+        $id = explode("-", $id)[0];
+
         $objectives = [
             "1" => "Aquisição de novos clientes",
             "2" => "Fidelizar meus clientes",
@@ -185,7 +197,7 @@ class ChatGuruController extends Controller
         return "Olá $name! tudo bem?\nSou a *Carol* da Triibo, recebi seu formulário e a partir de agora vou te ajudar a engajar e fidelizar clientes.";
     }
 
-    private static function getEmailMessage(string $name, string $phone, string $email, string $physical, string $segment, string $size, string $objective)
+    private static function getEmailMessage(string $name, string $phone, string $email, string $physical, string $segment, string $size, string $objective, array $meta)
     {
         $text  = "<b>Nome</b>: $name\n";
         $text .= "<b>E-mail</b>: $email\n";
@@ -193,7 +205,19 @@ class ChatGuruController extends Controller
         $text .= "<b>Segmento da Empresa</b>: $segment\n";
         $text .= "<b>Tamanho da Empresa</b>: $size\n";
         $text .= "<b>Objetivo</b>: $objective\n";
-        $text .= "<b>Estabelecimento físico</b>: $physical";
+        $text .= "<b>Estabelecimento físico</b>: $physical\n\n";
+
+        $date  = $meta["date"]["value"];
+        $time  = $meta["time"]["value"];
+        $url   = $meta["page_url"]["value"];
+        $ip    = $meta["remote_ip"]["value"];
+        $user  = $meta["user_agent"]["value"];
+
+        $text .= "<b>Data</b>: $date\n";
+        $text .= "<b>Hora</b>: $time\n";
+        $text .= "<b>Página</b>: $url\n";
+        $text .= "<b>IP</b>: $ip\n";
+        $text .= "<b>User Agent</b>: $user";
 
         return $text;
     }
@@ -340,7 +364,6 @@ class ChatGuruController extends Controller
         // $users[1]->notify(new ChatGuru($mail));
         // $users[2]->notify(new ChatGuru($mail));
 
-        // $users = User::where("email", "mateus.costa@triibo.com.br")->get();
         $users = User::where("email", "pedro.lobato@triibo.com.br")
                      ->orWhere("email", "mateus.costa@triibo.com.br")->get();
         $users[0]->notify(new ChatGuru($mail));
@@ -350,7 +373,7 @@ class ChatGuruController extends Controller
     private static function success()
     {
         return response()->json([
-            "message" => "Apenas teste",
+            "message" => "Success",
             "code"    => 200
         ], 200);
     }
