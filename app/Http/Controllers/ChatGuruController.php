@@ -199,13 +199,13 @@ class ChatGuruController extends Controller
 
     private static function getEmailMessage(string $name, string $phone, string $email, string $physical, string $segment, string $size, string $objective, array $meta)
     {
-        $text  = "<b>Nome</b>: $name\n";
-        $text .= "<b>E-mail</b>: $email\n";
-        $text .= "<b>Telefone</b>: $phone\n\n";
-        $text .= "<b>Segmento da Empresa</b>: $segment\n";
-        $text .= "<b>Tamanho da Empresa</b>: $size\n";
-        $text .= "<b>Objetivo</b>: $objective\n";
-        $text .= "<b>Estabelecimento físico</b>: $physical\n\n";
+        $text  = "<b>Nome</b>: $name \n";
+        $text .= "<b>E-mail</b>: $email \n";
+        $text .= "<b>Telefone</b>: $phone \n\n";
+        $text .= "<b>Segmento da Empresa</b>: $segment \n";
+        $text .= "<b>Tamanho da Empresa</b>: $size \n";
+        $text .= "<b>Estabelecimento físico</b>: $physical \n";
+        $text .= "<b>Objetivo</b>: $objective \n\n";
 
         $date  = $meta["date"]["value"];
         $time  = $meta["time"]["value"];
@@ -213,10 +213,10 @@ class ChatGuruController extends Controller
         $ip    = $meta["remote_ip"]["value"];
         $user  = $meta["user_agent"]["value"];
 
-        $text .= "<b>Data</b>: $date\n";
-        $text .= "<b>Hora</b>: $time\n";
-        $text .= "<b>Página</b>: $url\n";
-        $text .= "<b>IP</b>: $ip\n";
+        $text .= "<b>Data</b>: $date \n";
+        $text .= "<b>Hora</b>: $time \n";
+        $text .= "<b>Página</b>: $url \n";
+        $text .= "<b>IP</b>: $ip \n";
         $text .= "<b>User Agent</b>: $user";
 
         return $text;
