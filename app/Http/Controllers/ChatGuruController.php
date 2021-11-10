@@ -357,17 +357,15 @@ class ChatGuruController extends Controller
             "params"     => $params,
         ];
 
-        // $users = User::where("email", "contato@triibo.com.br")
-        //              ->orWhere("email", "atendimento@triibo.com.br")
-        //              ->orWhere("email", "mateus.costa@triibo.com.br")->get();
-        // $users[0]->notify(new ChatGuru($mail));
-        // $users[1]->notify(new ChatGuru($mail));
-        // $users[2]->notify(new ChatGuru($mail));
-
-        $users = User::where("email", "pedro.lobato@triibo.com.br")
+        $users = User::where("email", "atendimento@triibo.com.br")
                      ->orWhere("email", "mateus.costa@triibo.com.br")->get();
         $users[0]->notify(new ChatGuru($mail));
         $users[1]->notify(new ChatGuru($mail));
+
+        // $users = User::where("email", "pedro.lobato@triibo.com.br")
+        //              ->orWhere("email", "mateus.costa@triibo.com.br")->get();
+        // $users[0]->notify(new ChatGuru($mail));
+        // $users[1]->notify(new ChatGuru($mail));
     }
 
     private static function success()
