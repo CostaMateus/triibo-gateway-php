@@ -18,6 +18,8 @@ class ChatGuruController extends Controller
 
     public function index(Request $request)
     {
+        if (!self::checkDataRequest($request->all())) return self::error();
+
         $data      = $request->all()["fields"];
         $meta      = $request->all()["meta"];
 
@@ -207,11 +209,11 @@ class ChatGuruController extends Controller
         $text .= "<b>Estabelecimento físico</b>: $physical \n";
         $text .= "<b>Objetivo</b>: $objective \n\n";
 
-        $date  = $meta["date"]["value"];
-        $time  = $meta["time"]["value"];
-        $url   = $meta["page_url"]["value"];
-        $ip    = $meta["remote_ip"]["value"];
-        $user  = $meta["user_agent"]["value"];
+        $date  = isset($meta["date"])       ? $meta["date"]["value"]       : "";
+        $time  = isset($meta["time"])       ? $meta["time"]["value"]       : "";
+        $url   = isset($meta["page_url"])   ? $meta["page_url"]["value"]   : "";
+        $ip    = isset($meta["remote_ip"])  ? $meta["remote_ip"]["value"]  : "";
+        $user  = isset($meta["user_agent"]) ? $meta["user_agent"]["value"] : "";
 
         $text .= "<b>Data</b>: $date \n";
         $text .= "<b>Hora</b>: $time \n";
@@ -352,9 +354,10 @@ class ChatGuruController extends Controller
     private static function sendMailNotification(string $params)
     {
         $mail = [
-            "subject"    => "Formulário de contato",
-            "title"      => "Os dados abaixo não puderam ser enviados para o ChatGuru",
-            "params"     => $params,
+            "subject" => "Formulário de contato",
+            "title"   => "Os dados abaixo não puderam ser enviados para o ChatGuru",
+            "params"  => $params,
+            "error"   => false
         ];
 
         $users = User::where("email", "atendimento@triibo.com.br")
@@ -368,11 +371,62 @@ class ChatGuruController extends Controller
         // $users[1]->notify(new ChatGuru($mail));
     }
 
+    private static function checkDataRequest(array $data)
+    {
+        if (!isset($data["fields"])) return false;
+
+        $data = $data["fields"];
+
+        $error = [
+            "name"            => false,
+            "phone"           => false,
+            "email"           => false,
+            "company_segment" => false,
+            "company_size"    => false,
+            "physical"        => false,
+            "objective"       => false,
+        ];
+
+        foreach ($error as $key => &$value)
+        {
+            if (!isset($data[$key])) $value = true;
+        }
+
+        if (in_array(true, $error))
+        {
+            self::log("error", "request_missing_data", $error);
+
+            $mail = [
+                "subject" => "Formulário de contato",
+                "title"   => "Erro na configuração do formulário",
+                "params"  => $error,
+                "error"   => true,
+            ];
+
+            $users = User::where("email", "mateus.costa@triibo.com.br")->get();
+            $users[0]->notify(new ChatGuru($mail));
+
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     private static function success()
     {
         return response()->json([
             "message" => "Success",
             "code"    => 200
         ], 200);
+    }
+
+    private static function error()
+    {
+        return response()->json([
+            "message" => "Fail",
+            "code"    => 500
+        ], 500);
     }
 }

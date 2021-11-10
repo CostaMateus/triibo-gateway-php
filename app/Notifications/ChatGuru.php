@@ -42,8 +42,10 @@ class ChatGuru extends Notification
      */
     public function toMail($notifiable)
     {
+        $blade = $this->details["error"] ? "chatguru_error" : "chatguru";
+
         return (new MailMessage)->subject($this->details["subject"])
-                                ->markdown("mail.triibo.chatguru",[
+                                ->markdown("mail.triibo.$blade", [
                                     "title"      => $this->details["title"],
                                     "params"     => $this->details["params"],
                                 ]);
