@@ -46,7 +46,11 @@ class ChatGuruController extends Controller
             // request UM e DOIS
             $res = self::sendToChatGuru($name, $phone, $segment["dialog_id"], $dataEmail);
 
-            if ($res["code"] == "create" && $res["error"]) return;
+            if ($res["code"] == "create" && $res["error"])
+            {
+                self::sendMailNotification($dataEmail);
+                return self::success();
+            }
 
             if ($res["code"] == "check"  && $res["error"])
             {
@@ -209,11 +213,11 @@ class ChatGuruController extends Controller
         $text .= "<b>Estabelecimento físico</b>: $physical \n";
         $text .= "<b>Objetivo</b>: $objective \n\n";
 
-        $date  = isset($meta["date"])       ? $meta["date"]["value"]       : "";
-        $time  = isset($meta["time"])       ? $meta["time"]["value"]       : "";
-        $url   = isset($meta["page_url"])   ? $meta["page_url"]["value"]   : "";
-        $ip    = isset($meta["remote_ip"])  ? $meta["remote_ip"]["value"]  : "";
-        $user  = isset($meta["user_agent"]) ? $meta["user_agent"]["value"] : "";
+        $date  = $meta["date"]["value"];
+        $time  = $meta["time"]["value"];
+        $url   = $meta["page_url"]["value"];
+        $ip    = $meta["remote_ip"]["value"];
+        $user  = $meta["user_agent"]["value"];
 
         $text .= "<b>Data</b>: $date \n";
         $text .= "<b>Hora</b>: $time \n";
@@ -340,7 +344,7 @@ class ChatGuruController extends Controller
             $res_add_note["result"] == "error")
         {
             self::log("error", "add_note", $res_add_note->json());
-            self::sendMailNotification($dataEmail);
+            self::sendMailNotification($dataEmail, "Chat criado com sucesso. \nFalha na criação da anotação.");
             return false;
         }
 
@@ -354,11 +358,11 @@ class ChatGuruController extends Controller
         Log::channel("triibo")->{$method}("ChatGuru", [ $title => $data ]);
     }
 
-    private static function sendMailNotification(string $params)
+    private static function sendMailNotification(string $params, string $title = null)
     {
         $mail = [
             "subject" => "Formulário de contato",
-            "title"   => "Os dados abaixo não puderam ser enviados para o ChatGuru",
+            "title"   => $title ?? "Os dados abaixo não puderam ser enviados para o ChatGuru",
             "params"  => $params,
             "error"   => false
         ];
