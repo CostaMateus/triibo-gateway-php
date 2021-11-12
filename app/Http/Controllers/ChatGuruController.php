@@ -18,7 +18,7 @@ class ChatGuruController extends Controller
 
     public function index(Request $request)
     {
-        if (!self::checkDataRequest($request->all())) return self::error();
+        if (!self::checkDataRequest($request->all())) return self::error($request->all());
 
         $data      = $request->all()["fields"];
         $meta      = $request->all()["meta"];
@@ -427,8 +427,10 @@ class ChatGuruController extends Controller
         ], 200);
     }
 
-    private static function error()
+    private static function error($data)
     {
+        self::log("error", "form", $data);
+
         return response()->json([
             "message" => "Fail",
             "code"    => 500
