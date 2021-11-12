@@ -18,7 +18,7 @@ class ChatGuruController extends Controller
 
     public function index(Request $request)
     {
-        if (!self::checkDataRequest($request->all())) return self::error();
+        if (!self::checkDataRequest($request->all())) return self::error($request->all());
 
         $data      = $request->all()["fields"];
         $meta      = $request->all()["meta"];
@@ -75,7 +75,7 @@ class ChatGuruController extends Controller
         while ($res["code"] == "check" && $res["error"]);
 
         // request TRÊS
-        self::createNote($phone, $email, $segment["text"], $size, $objective, $physical, $dataEmail);
+        self::createNote($phone, $email, $segment["text"], $size, $objective, $physical, $dataEmail, $meta["date"]["value"], $meta["time"]["value"], $meta["page_url"]["value"]);
 
         return self::success();
     }
@@ -312,7 +312,7 @@ class ChatGuruController extends Controller
         }
     }
 
-    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail)
+    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail, string $data, string $hora, string $url)
     {
         // request TRÊS
         sleep(1);
@@ -320,7 +320,10 @@ class ChatGuruController extends Controller
         $note_text .= "Segmento da Empresa: $segment\n\n";
         $note_text .= "Tamanho da Empresa: $size\n\n";
         $note_text .= "Objetivo: $objective\n\n";
-        $note_text .= "Estabelecimento físico: $physical";
+        $note_text .= "Estabelecimento físico: $physical\n\n";
+        $note_text .= "Data: $data\n\n";
+        $note_text .= "Hora: $hora\n\n";
+        $note_text .= "Página: $url";
 
         $res_add_note = Http::post(
             self::URL .
@@ -375,6 +378,8 @@ class ChatGuruController extends Controller
     {
         if (!isset($data["fields"])) return false;
 
+        if (!isset($data["meta"])) return false;
+
         $data = $data["fields"];
 
         $error = [
@@ -422,8 +427,10 @@ class ChatGuruController extends Controller
         ], 200);
     }
 
-    private static function error()
+    private static function error($data)
     {
+        self::log("error", "form", $data);
+
         return response()->json([
             "message" => "Fail",
             "code"    => 500
