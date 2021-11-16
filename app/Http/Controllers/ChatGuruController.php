@@ -35,7 +35,7 @@ class ChatGuruController extends Controller
 
         $count     = 0;
 
-        if (strlen($phone) > 13)
+        if ( !in_array( strlen($phone), [12, 13]) )
         {
             self::sendMailNotification($dataEmail);
             return self::success();
@@ -319,7 +319,7 @@ class ChatGuruController extends Controller
     private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail, string $data, string $hora, string $url)
     {
         // request TRÊS
-        sleep(1);
+        sleep(2.5);
         $note_text  = "E-mail: $email\n\n";
         $note_text .= "Segmento da Empresa: $segment\n\n";
         $note_text .= "Tamanho da Empresa: $size\n\n";
