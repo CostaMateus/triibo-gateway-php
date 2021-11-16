@@ -18,7 +18,7 @@ class ChatGuruController extends Controller
 
     public function index(Request $request)
     {
-        if (!self::checkDataRequest($request->all())) return self::error();
+        if (!self::checkDataRequest($request->all())) return self::error($request->all());
 
         $data      = $request->all()["fields"];
         $meta      = $request->all()["meta"];
@@ -46,7 +46,11 @@ class ChatGuruController extends Controller
             // request UM e DOIS
             $res = self::sendToChatGuru($name, $phone, $segment["dialog_id"], $dataEmail);
 
-            if ($res["code"] == "create" && $res["error"]) return;
+            if ($res["code"] == "create" && $res["error"])
+            {
+                self::sendMailNotification($dataEmail);
+                return self::success();
+            }
 
             if ($res["code"] == "check"  && $res["error"])
             {
@@ -75,7 +79,7 @@ class ChatGuruController extends Controller
         while ($res["code"] == "check" && $res["error"]);
 
         // request TRÊS
-        self::createNote($phone, $email, $segment["text"], $size, $objective, $physical, $dataEmail);
+        self::createNote($phone, $email, $segment["text"], $size, $objective, $physical, $dataEmail, $meta["date"]["value"], $meta["time"]["value"], $meta["page_url"]["value"]);
 
         return self::success();
     }
@@ -209,11 +213,11 @@ class ChatGuruController extends Controller
         $text .= "<b>Estabelecimento físico</b>: $physical \n";
         $text .= "<b>Objetivo</b>: $objective \n\n";
 
-        $date  = isset($meta["date"])       ? $meta["date"]["value"]       : "";
-        $time  = isset($meta["time"])       ? $meta["time"]["value"]       : "";
-        $url   = isset($meta["page_url"])   ? $meta["page_url"]["value"]   : "";
-        $ip    = isset($meta["remote_ip"])  ? $meta["remote_ip"]["value"]  : "";
-        $user  = isset($meta["user_agent"]) ? $meta["user_agent"]["value"] : "";
+        $date  = $meta["date"]["value"];
+        $time  = $meta["time"]["value"];
+        $url   = $meta["page_url"]["value"];
+        $ip    = $meta["remote_ip"]["value"];
+        $user  = $meta["user_agent"]["value"];
 
         $text .= "<b>Data</b>: $date \n";
         $text .= "<b>Hora</b>: $time \n";
@@ -312,15 +316,18 @@ class ChatGuruController extends Controller
         }
     }
 
-    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail)
+    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail, string $data, string $hora, string $url)
     {
         // request TRÊS
-        sleep(1);
+        sleep(2.5);
         $note_text  = "E-mail: $email\n\n";
         $note_text .= "Segmento da Empresa: $segment\n\n";
         $note_text .= "Tamanho da Empresa: $size\n\n";
         $note_text .= "Objetivo: $objective\n\n";
-        $note_text .= "Estabelecimento físico: $physical";
+        $note_text .= "Estabelecimento físico: $physical\n\n";
+        $note_text .= "Data: $data\n\n";
+        $note_text .= "Hora: $hora\n\n";
+        $note_text .= "Página: $url";
 
         $res_add_note = Http::post(
             self::URL .
@@ -337,7 +344,7 @@ class ChatGuruController extends Controller
             $res_add_note["result"] == "error")
         {
             self::log("error", "add_note", $res_add_note->json());
-            self::sendMailNotification($dataEmail);
+            self::sendMailNotification($dataEmail, "Chat criado com sucesso. \nFalha na criação da anotação.");
             return false;
         }
 
@@ -351,11 +358,11 @@ class ChatGuruController extends Controller
         Log::channel("triibo")->{$method}("ChatGuru", [ $title => $data ]);
     }
 
-    private static function sendMailNotification(string $params)
+    private static function sendMailNotification(string $params, string $title = null)
     {
         $mail = [
             "subject" => "Formulário de contato",
-            "title"   => "Os dados abaixo não puderam ser enviados para o ChatGuru",
+            "title"   => $title ?? "Os dados abaixo não puderam ser enviados para o ChatGuru",
             "params"  => $params,
             "error"   => false
         ];
@@ -374,6 +381,8 @@ class ChatGuruController extends Controller
     private static function checkDataRequest(array $data)
     {
         if (!isset($data["fields"])) return false;
+
+        if (!isset($data["meta"])) return false;
 
         $data = $data["fields"];
 
@@ -422,8 +431,10 @@ class ChatGuruController extends Controller
         ], 200);
     }
 
-    private static function error()
+    private static function error($data)
     {
+        self::log("error", "form", $data);
+
         return response()->json([
             "message" => "Fail",
             "code"    => 500
