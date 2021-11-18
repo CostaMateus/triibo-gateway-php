@@ -35,7 +35,7 @@ class ChatGuruController extends Controller
 
         $count     = 0;
 
-        if (strlen($phone) > 13)
+        if ( !in_array( strlen($phone), [12, 13]) )
         {
             self::sendMailNotification($dataEmail);
             return self::success();
