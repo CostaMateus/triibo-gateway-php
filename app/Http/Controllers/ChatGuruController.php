@@ -316,7 +316,7 @@ class ChatGuruController extends Controller
         }
     }
 
-    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail, string $data, string $hora, string $url)
+    private static function createNote(string $phone, string $email, string $segment, string $size, string $objective, string $physical, string $dataEmail, string $data, string $hora, string $url, int $count = 0)
     {
         // request TRÊS
         sleep(2.5);
@@ -343,9 +343,29 @@ class ChatGuruController extends Controller
             $res_add_note["code"]   == 400 ||
             $res_add_note["result"] == "error")
         {
-            self::log("error", "add_note", $res_add_note->json());
-            self::sendMailNotification($dataEmail, "Chat criado com sucesso. \nFalha na criação da anotação.");
-            return false;
+            if ($count == 1)
+            {
+                self::log("error", "add_note", $res_add_note->json());
+                self::sendMailNotification($dataEmail, "Chat criado com sucesso. \nFalha na criação da anotação.");
+                return false;
+            }
+
+            $code = substr($phone, 0, 4);
+
+            if (strlen($phone) == 13)
+            {
+                $count++;
+                $num   = substr($phone, 5, strlen($phone));
+                $phone = $code . $num;
+            }
+            else if (strlen($phone) == 12)
+            {
+                $count++;
+                $num   = substr($phone, 4, strlen($phone));
+                $phone = $code . "9" . $num;
+            }
+
+            return self::createNote($phone, $email, $segment, $size, $objective, $physical, $dataEmail, $data, $hora, $url, $count);
         }
 
         self::log("info", "add_note", $res_add_note->json());
