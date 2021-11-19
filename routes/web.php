@@ -1,18 +1,21 @@
 <?php
 
-use App\Helpers\Helper;
-use App\Models\User;
-use Mautic\MauticApi;
-use Mautic\Auth\ApiAuth;
-use Devio\Pipedrive\Pipedrive;
-use Triibo\Mautic\Facades\Mautic;
+// use App\Models\User;
+// use Mautic\MauticApi;
+// use App\Helpers\Helper;
+// use Mautic\Auth\ApiAuth;
+// use Devio\Pipedrive\Pipedrive;
+// use Triibo\Mautic\Facades\Mautic;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\UserController;
-use App\Notifications\WebhookMarketplace;
-use Triibo\Mautic\Models\MauticConsumer;
+// use Triibo\Mautic\Models\MauticConsumer;
+// use App\Notifications\WebhookMarketplace;
+use Codexshaper\WooCommerce\Facades\Coupon;
 use App\Http\Integrations\MauticIntegration;
+use Codexshaper\WooCommerce\Facades\Product;
+use Codexshaper\WooCommerce\Facades\PaymentGateway;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,51 +68,42 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get("/mautic", function () {
-    dd("mautic");
-});
+Route::get("/wc", function () {
 
-Route::get("/pipedrive", function () {
-    // $token   = config("pipedrive.token");
-    // $pipeApi = new Pipedrive($token);
+    // $data = [
+    //     'name' => 'Simple Product',
+    //     'type' => 'simple',
+    //     'regular_price' => '10.00',
+    //     'description' => 'Simple product full description.',
+    //     'short_description' => 'Simple product short description.',
+    //     'categories' => [
+    //         [
+    //             'id' => 1
+    //         ],
+    //         [
+    //             'id' => 3
+    //         ],
+    //         [
+    //             'id' => 5
+    //         ]
+    //     ],
+    //     'images' => [
+    //         [
+    //             'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg'
+    //         ],
+    //         [
+    //             'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg'
+    //         ]
+    //     ]
+    // ];
+    // $product = Product::create($data);
 
-    // try
-    // {
-    //     // // encontra o campo pelo ID "Fonte do Lead"
-    //     // $data = $pipeApi->OrganizationFields->find(4028)->getData();
-    //     // $data = $pipeApi->OrganizationFields->all()->getData();
-    //     // $data = $pipeApi->organizations->persons(2079)->getData();
-    //     // $data = $pipeApi->organizations->find(1512)->getData();
-    //     // $data = $pipeApi->organizations->all()->getData();
-    //     // $data = $pipeApi->DealFields->find(12464)->getData();
 
-    //     // $orgs = $pipeApi->organizations->all(["start" =>    0, "limit" =>  500])->getData();
-    //     // foreach ($orgs as $obj) MauticIntegration::updateOrCreate("contacts", json_decode(json_encode($obj), true), false);
 
-    //     // $deals = $pipeApi->deals->all(["start" =>    0, "limit" =>  500])->getData();
-    //     // foreach ($deals as $obj)
-    //     // {
-    //     //     $obj = json_decode(json_encode($obj), true);
-    //     //     if (!$obj || !$obj["org_id"] || !$obj["org_id"]["value"]) continue;
-    //     //     $org = $pipeApi->organizations->find($obj["org_id"]["value"])->getData();
-    //     //     $data["mautic_id"]    = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
-    //     //     $data["email"]        = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
-    //     //     if (!$data["mautic_id"] && !$data["email"]) continue;
-    //     //     $data["org_id"]       = $obj["org_id"]["value"];
-    //     //     $data["org_name"]     = $obj["org_name"];
-    //     //     $data["active"]       = $obj["active"];
-    //     //     $data["deleted"]      = $obj["deleted"];
-    //     //     $data["new_stage_id"] = $obj["stage_id"];
-    //     //     $data["new_status"]   = $obj["status"];
-    //     //     $data["new_label"]    = $obj["label"];
-    //     //     $data["old_stage_id"] = 0;
-    //     //     $data["old_status"]   = 0;
-    //     //     $data["old_label"]    = 0;
-    //     //     MauticIntegration::dealUpdate("deals", $data);
-    //     // }
-    // }
-    // catch(Exception $e)
-    // {
-    //     dd($e);
-    // }
+    $product = Product::all([
+        "sku" => "TRIIBO-DOCKINGSTATION"
+    ]);
+
+    dd($product->first()->id);
+
 });

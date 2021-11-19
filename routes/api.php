@@ -67,11 +67,11 @@ Route::prefix("marketplace")->group(function () {
         [FastshopController::class, "skuSuggestion"]
     )->name("marketplace.skusuggestion");
 
-    // Route::put("/skuupdate", [FastshopController::class, "skuUpdate"])->name("marketplace.skuupdate");
+    // Route::put("/updatesku", [FastshopController::class, "updateSku"])->name("marketplace.updatesku");
     Route::put(
-        "/skuupdate/suggestions/{sellerId}/{sellerSkuId}/update",
-        [FastshopController::class, "skuUpdate"]
-    )->name("marketplace.skuupdate");
+        "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
+        [FastshopController::class, "updateSku"]
+    )->name("marketplace.updatesku");
 
 });
 

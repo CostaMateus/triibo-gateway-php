@@ -8,7 +8,7 @@ class FastshopController extends Controller
 {
 
     /**
-     * Undocumented function
+     * Notificação de catálogo
      *
      * @param Request $request
      * @return void
@@ -17,10 +17,25 @@ class FastshopController extends Controller
     {
         //
         dd($request->all(), $sellerId, $sellerSkuId);
+
+        $sku_exist_mkt = true;
+
+        if (!$sku_exist_mkt)
+        {
+            return response()->json([
+                "message" => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
+            ], 400);
+        }
+
+        $this->updateStockPrice();
+
+        return response()->json([
+            "message" => "Ok",
+        ], 200);
     }
 
     /**
-     * Undocumented function
+     * Registro de catálogo
      *
      * @param Request $request
      * @return void
@@ -32,14 +47,20 @@ class FastshopController extends Controller
     }
 
     /**
-     * Undocumented function
+     * Atualização de catálogo
      *
      * @param Request $request
      * @return void
      */
-    public function skuUpdate(Request $request, $sellerId, $sellerSkuId)
+    public function updateSku(Request $request, $sellerId, $sellerSkuId)
     {
         //
         dd($request->all(), $sellerId, $sellerSkuId);
+    }
+
+
+    public function updateStockPrice()
+    {
+        //
     }
 }
