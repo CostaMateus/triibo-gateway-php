@@ -276,7 +276,9 @@ class CofryIntegration
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
-                "url"                => "{urlCofry}"
+                "url"                => "{urlCofry}",
+
+                "keywords"           => [ "clubmapfre" ]
             ];
         }
 
@@ -356,7 +358,9 @@ class CofryIntegration
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
-                "url"                => "{urlCofry}"
+                "url"                => "{urlCofry}",
+
+                "keywords"           => [ "clubmapfre" ]
             ];
         }
 
