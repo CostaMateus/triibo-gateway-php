@@ -278,7 +278,7 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keywords"           => [ "clubmapfre" ]
+                "keyWordsSet"        => [ "clubmapfre" ]
             ];
         }
 
@@ -360,7 +360,7 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keywords"           => [ "clubmapfre" ]
+                "keyWordsSet"        => [ "clubmapfre" ]
             ];
         }
 
@@ -432,6 +432,10 @@ class CofryIntegration
 
                 "tags"          => [
                     ...$store["Segment"]
+                ],
+
+                "keyWordsSet"   => [
+                    "clubmapfre"
                 ]
             ];
         }
