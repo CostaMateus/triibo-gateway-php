@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Codexshaper\WooCommerce\Facades\Product;
+use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 class FastshopController extends Controller
 {
@@ -23,8 +24,6 @@ class FastshopController extends Controller
      */
     public function changeNotification(Request $request, $sellerId, $sellerSkuId)
     {
-        // dd($request->header(), $sellerId, $sellerSkuId);
-
         $appKey   = $request->header("x-vtex-api-appkey");
         $appToken = $request->header("x-vtex-api-apptoken");
 
@@ -37,9 +36,11 @@ class FastshopController extends Controller
             ], 400);
         }
 
-        // Buscar SKU marketplace
+        $sku = strtoupper($sellerSkuId);
+
+        // Procura produto no Marketplace pelo SKU
         $product = Product::all([
-            "sku" => "FS-$sellerSkuId"
+            "sku" => "FS-$sku"
         ])->first();
 
         if (!$product)
@@ -50,6 +51,7 @@ class FastshopController extends Controller
             ], 404);
         }
 
+        // Atualiza produto no Marketplace
         $this->updateStockPrice($product->id, $sellerSkuId);
 
         return response()->json([
@@ -102,7 +104,7 @@ class FastshopController extends Controller
 
         $body = json_encode([
             "items" => [[
-                "id"       => "SGQN49Q60RAB", // $sellerSkuId, // SGQN49Q60RAB
+                "id"       => $sellerSkuId,
                 "quantity" => 1,
                 "seller"   => "FSH"
             ]],
@@ -111,33 +113,24 @@ class FastshopController extends Controller
             "geoCoordinates" => []
         ]);
 
+        // Consulta produto na FS
         $response = Http::withHeaders($headers)->withBody($body, "application/json")->get($url);
 
         if ($response->successful())
         {
-            $dataFS = $response->json();
-            $price  = substr_replace($dataFS["items"][0]["price"], ".", -2, 0);
-            $data   = [
-                "sku"           => "FS-$sellerSkuId",
-                "price"         => $price,
-                "regular_price" => $price,
-                "sale_price"    => "",
+            $fsData  = $response->json();
 
-                "stock_quantity" => $dataFS["items"][0]["quantity"],
-                "stock_status" => "instock",
-                "categories" => [
-                    [
-                        "id" => 395,
-                        "name" => "Camisetas",
-                        "slug" => "camisetas-moda"
-                    ]
-                ],
-            ];
+            // Converte produto da FS para WC
+            $wcData  = DataTranslator::translate("updateStockPrice", $fsData);
 
-            // Atualizar SKU no marketplace
-            $product = Product::update($productId, $data);
+            // Atualiza produto no Marketplace
+            $product = Product::update($productId, $wcData);
 
-            dd($product);
+            // Registrar log de sucesso
+            //
         }
+
+        // Registrar log de falha
+        //
     }
 }
