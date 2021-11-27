@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Codexshaper\WooCommerce\Facades\Product;
+use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 class FastshopController extends Controller
@@ -52,7 +53,7 @@ class FastshopController extends Controller
         }
 
         // Atualiza produto no Marketplace
-        $this->updateStockPrice($product->id, $sellerSkuId);
+        $this->updateStockPrice($product, $sellerSkuId);
 
         return response()->json([
             "errorCode" => "200",
@@ -91,7 +92,7 @@ class FastshopController extends Controller
      * @param Request $request
      * @return void
      */
-    public function updateStockPrice($productId, $sellerSkuId)
+    public function updateStockPrice($product, $sellerSkuId)
     {
         $headers = [
             "Accept"              => "application/json",
@@ -124,13 +125,15 @@ class FastshopController extends Controller
             $wcData  = DataTranslator::translate("updateStockPrice", $fsData);
 
             // Atualiza produto no Marketplace
-            $product = Product::update($productId, $wcData);
+            $new     = Product::update($product->id, $wcData);
 
             // Registrar log de sucesso
-            //
+            Log::updateStockPrice($product, $new);
         }
-
-        // Registrar log de falha
-        //
+        else
+        {
+            // Registrar log de falha
+            Log::updateStockPrice($product, null, true);
+        }
     }
 }
