@@ -2,9 +2,9 @@
 
 namespace App\Http\Integrations\FastshopIntegration;
 
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Log as LogSys;
 
-class LogFs
+class Log
 {
 
     /**
@@ -21,7 +21,7 @@ class LogFs
         {
             $new = json_decode($new->toJson());
 
-            Log::channel("fastshop")->info("StockPrice", [
+            LogSys::channel("fastshop")->info("StockPrice", [
                 $old->sku => [
                     "old" => [
                         "regular_price"  => $old->regular_price,
@@ -40,7 +40,7 @@ class LogFs
         }
         else
         {
-            Log::channel("fastshop")->info("StockPrice", [
+            LogSys::channel("fastshop")->info("StockPrice", [
                 $old->sku => [
                     "old" => [
                         "regular_price"  => $old->regular_price,
