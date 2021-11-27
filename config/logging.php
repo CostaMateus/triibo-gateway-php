@@ -118,6 +118,12 @@ return [
             'path'   => storage_path('logs/triibo.log'),
             'level'  => 'debug'
         ],
+
+        'fastshop' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/fastshop.log'),
+            'level'  => 'debug'
+        ],
     ],
 
 ];

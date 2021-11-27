@@ -3,34 +3,61 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Http;
+use Codexshaper\WooCommerce\Facades\Product;
+use App\Http\Integrations\FastshopIntegration\Log;
+use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 class FastshopController extends Controller
 {
 
     /**
      * Notificação de catálogo
+     * Fastshop sugere novos SKUs a serem vendidos no Marketplace e
+     * informa ao Marketplace sobre as mudanças em seus SKUs que já foram integrados
+     * como alterações de cadastro, estoque e preço. Ambas as ações começam com uma notificação de catálogo.
      *
      * @param Request $request
-     * @return void
+     * @param string $sellerId
+     * @param string $sellerSkuId
+     * @return Response
      */
     public function changeNotification(Request $request, $sellerId, $sellerSkuId)
     {
-        //
-        dd($request->all(), $sellerId, $sellerSkuId);
+        $appKey   = $request->header("x-vtex-api-appkey");
+        $appToken = $request->header("x-vtex-api-apptoken");
 
-        $sku_exist_mkt = true;
-
-        if (!$sku_exist_mkt)
+        // Verifição de chaves
+        if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
         {
             return response()->json([
-                "message" => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
+                "errorCode" => "400",
+                "message"   => "invalid credentials"
             ], 400);
         }
 
-        $this->updateStockPrice();
+        $sku = strtoupper($sellerSkuId);
+
+        // Procura produto no Marketplace pelo SKU
+        $product = Product::all([
+            "sku" => "FS-$sku"
+        ])->first();
+
+        if (!$product)
+        {
+            return response()->json([
+                "errorCode" => "404",
+                "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
+            ], 404);
+        }
+
+        // Atualiza produto no Marketplace
+        $this->updateStockPrice($product, $sellerSkuId);
 
         return response()->json([
-            "message" => "Ok",
+            "errorCode" => "200",
+            "message"   => "Ok",
         ], 200);
     }
 
@@ -59,8 +86,54 @@ class FastshopController extends Controller
     }
 
 
-    public function updateStockPrice()
+    /**
+     * Atualização de preço/estoque
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function updateStockPrice($product, $sellerSkuId)
     {
-        //
+        $headers = [
+            "Accept"              => "application/json",
+            "Content-Type"        => "application/json",
+            "X-VTEX-API-AppKey"   => config("fastshop.hml.key"),
+            "X-VTEX-API-AppToken" => config("fastshop.hml.token")
+        ];
+
+        $url  = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+
+        $body = json_encode([
+            "items" => [[
+                "id"       => $sellerSkuId,
+                "quantity" => 1,
+                "seller"   => "FSH"
+            ]],
+            "postalCode"     => "",
+            "country"        => "",
+            "geoCoordinates" => []
+        ]);
+
+        // Consulta produto na FS
+        $response = Http::withHeaders($headers)->withBody($body, "application/json")->get($url);
+
+        if ($response->successful())
+        {
+            $fsData  = $response->json();
+
+            // Converte produto da FS para WC
+            $wcData  = DataTranslator::translate("updateStockPrice", $fsData);
+
+            // Atualiza produto no Marketplace
+            $new     = Product::update($product->id, $wcData);
+
+            // Registrar log de sucesso
+            Log::updateStockPrice($product, $new);
+        }
+        else
+        {
+            // Registrar log de falha
+            Log::updateStockPrice($product, null, true);
+        }
     }
 }
