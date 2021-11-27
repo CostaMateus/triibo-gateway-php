@@ -36,6 +36,7 @@ class DataTranslator
             "sale_price"     => $sale,
             "stock_quantity" => $qntty,
             "stock_status"   => $status,
+            "manage_stock"   => true
         ];
 
         return $wcData;
