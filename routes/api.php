@@ -55,19 +55,19 @@ Route::prefix("triibo")->group(function () {
  */
 Route::prefix("marketplace")->group(function () {
 
-    // Route-api: 35.155.174.239/api/changenotification
+    // Route-api: php.triibo.com.br/api/marketplace/changenotification
     Route::post(
         "/changenotification/api/catalog_system/pvt/skuseller/changenotification/{sellerId}/{sellerSkuId}",
         [FastshopController::class, "changeNotification"]
     )->name("marketplace.changenotification");
 
-    // Route-api: 35.155.174.239/api/skusuggestion
+    // Route-api: php.triibo.com.br/api/marketplace/skusuggestion
     Route::put(
         "/skusuggestion/suggestions/{sellerId}/{sellerSkuId}",
         [FastshopController::class, "skuSuggestion"]
     )->name("marketplace.skusuggestion");
 
-    // Route-api: 35.155.174.239/api/updatesku
+    // Route-api: php.triibo.com.br/api/marketplace/updatesku
     Route::put(
         "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
         [FastshopController::class, "updateSku"]
