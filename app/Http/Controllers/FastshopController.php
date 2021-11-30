@@ -31,6 +31,8 @@ class FastshopController extends Controller
         // Verifição de chaves
         if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
         {
+            Log::invalidCredentials($appKey, $appToken);
+
             return response()->json([
                 "errorCode" => "400",
                 "message"   => "invalid credentials"
@@ -69,8 +71,26 @@ class FastshopController extends Controller
      */
     public function skuSuggestion(Request $request, $sellerId, $sellerSkuId)
     {
-        //
-        dd($request->all(), $sellerId, $sellerSkuId);
+        $appKey   = $request->header("x-vtex-api-appkey");
+        $appToken = $request->header("x-vtex-api-apptoken");
+
+        // Verifição de chaves
+        if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
+        {
+            Log::invalidCredentials($appKey, $appToken);
+
+            return response()->json([
+                "errorCode" => "400",
+                "message"   => "invalid credentials"
+            ], 400);
+        }
+
+        return response()->json([
+            "errorCode" => "200",
+            "message"   => "Ok",
+        ], 200);
+
+        // dd($request->all(), $sellerId, $sellerSkuId);
     }
 
     /**
