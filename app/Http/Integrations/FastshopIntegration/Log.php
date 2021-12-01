@@ -56,6 +56,13 @@ class Log
         }
     }
 
+    /**
+     * Registra log quando credenciais invalidas
+     *
+     * @param string|null $key
+     * @param string|null $token
+     * @return void
+     */
     public static function invalidCredentials(string $key = null, string $token = null)
     {
         LogSys::channel("fastshop")->error("Invalid Credentials", [
