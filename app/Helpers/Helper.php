@@ -264,4 +264,9 @@ class Helper
 
         return preg_replace('/-+/', '-', $str);
     }
+
+    public static function insertDecimal(string $number)
+    {
+        return substr_replace($number, ".", -2, 0);
+    }
 }
