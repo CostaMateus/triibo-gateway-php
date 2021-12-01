@@ -56,7 +56,7 @@ class Log
         }
     }
 
-    public static function invalidCredentials(string $key, string $token)
+    public static function invalidCredentials(string $key = null, string $token = null)
     {
         LogSys::channel("fastshop")->error("Invalid Credentials", [
             "appKey"   => $key,
