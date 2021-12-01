@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Codexshaper\WooCommerce\Facades\Product;
+use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
@@ -85,6 +87,18 @@ class FastshopController extends Controller
             ], 400);
         }
 
+        $fsData = $request->all();
+
+        $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+
+        // Converte produto da FS para WC
+        $wcData = DataTranslator::translate("newProduct", $fsData);
+
+        // Atualiza produto no Marketplace
+        $new    = Product::create($wcData);
+
+        // dd($new);
+
         return response()->json([
             "errorCode" => "200",
             "message"   => "Ok",
@@ -121,9 +135,9 @@ class FastshopController extends Controller
             "X-VTEX-API-AppToken" => config("fastshop.hml.token")
         ];
 
-        $url  = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
 
-        $body = json_encode([
+        $body    = json_encode([
             "items" => [[
                 "id"       => $sellerSkuId,
                 "quantity" => 1,
@@ -139,13 +153,13 @@ class FastshopController extends Controller
 
         if ($response->successful())
         {
-            $fsData  = $response->json();
+            $fsData = $response->json();
 
             // Converte produto da FS para WC
-            $wcData  = DataTranslator::translate("updateStockPrice", $fsData);
+            $wcData = DataTranslator::translate("updateStockPrice", $fsData);
 
             // Atualiza produto no Marketplace
-            $new     = Product::update($product->id, $wcData);
+            $new    = Product::update($product->id, $wcData);
 
             // Registrar log de sucesso
             Log::updateStockPrice($product, $new);
@@ -155,5 +169,33 @@ class FastshopController extends Controller
             // Registrar log de falha
             Log::updateStockPrice($product, null, true);
         }
+    }
+
+
+
+    private static function getCategoriesId(string $data)
+    {
+        $auxData    = explode("/", $data);
+        $categories = [];
+
+        foreach ($auxData as $ctg)
+        {
+            $slug = Helper::hyphenize($ctg);
+
+            $searchCategory = Category::all(["slug" => $slug]);
+
+            if (!$searchCategory->first())
+            {
+                $new = Category::create(["name" => $ctg]);
+
+                $categories[] = $new["id"];
+            }
+            else
+            {
+                $categories[] = $searchCategory->first()->id;
+            }
+        }
+
+        return $categories;
     }
 }
