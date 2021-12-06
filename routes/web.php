@@ -107,3 +107,5 @@ Route::get("/wc", function () {
     dd($product->first()->id);
 
 });
+
+//
