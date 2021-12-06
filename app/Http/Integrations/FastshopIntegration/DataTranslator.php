@@ -50,6 +50,7 @@ class DataTranslator
 
     public static function newProductFsToWc(array $data)
     {
+        $attributes = [];
         $categories = [];
         $images     = [];
 
@@ -69,6 +70,46 @@ class DataTranslator
                 "alt"  => $img["imageName"]
             ];
         }
+
+        // TRATAR ISSO AQUI
+        foreach ($data["SkuSpecifications"] as $key => $attr)
+        {
+            // if (empty($attributes))
+            // {
+                $attributes[] = [
+                    "name"      => $attr["fieldName"],
+                    "position"  => $key,
+                    "visible"   => true,
+                    "variation" => true,
+                    "options"   => [
+                        $attr["fieldValue"]
+                    ],
+                ];
+            // }
+            // else
+            // {
+            //     foreach ($attributes as &$a)
+            //     {
+            //         if (strtolower($a["name"]) == strtolower($attr["fieldName"]))
+            //         {
+            //             $a["options"][] = $attr["fieldValue"];
+            //         }
+            //         else
+            //         {
+            //             $attributes[] = [
+            //                 "name"      => $attr["fieldName"],
+            //                 "position"  => $key,
+            //                 "visible"   => true,
+            //                 "variation" => true,
+            //                 "options"   => [
+            //                     $attr["fieldValue"]
+            //                 ],
+            //             ];
+            //         }
+            //     }
+            // }
+        }
+        // dd($attributes);
 
         $wcData = [
             "name" => $data["ProductName"],
@@ -127,7 +168,8 @@ class DataTranslator
             "tags"           => [ [ "id" => 289 ] ], // tag: novo
 
             "categories"     => $categories,
-            "imgaes"         => $images,
+            "images"         => $images,
+            "attributes"     => $attributes,
 
         ];
 
