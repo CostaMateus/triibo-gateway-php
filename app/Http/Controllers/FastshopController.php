@@ -180,7 +180,7 @@ class FastshopController extends Controller
         $auxData    = explode("/", $data);
         $categories = [];
 
-        foreach ($auxData as $ctg)
+        foreach ($auxData as $key => $ctg)
         {
             $slug = Helper::hyphenize($ctg);
 
@@ -188,7 +188,10 @@ class FastshopController extends Controller
 
             if (!$searchCategory->first())
             {
-                $new = Category::create(["name" => $ctg]);
+                $new = Category::create([
+                    "name"   => $ctg,
+                    "parent" => ($key == 0) ? 0 : $categories[$key - 1]
+                ]);
 
                 $categories[] = $new["id"];
             }
