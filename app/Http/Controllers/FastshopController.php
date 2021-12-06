@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Codexshaper\WooCommerce\Facades\Product;
+use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
@@ -31,6 +34,8 @@ class FastshopController extends Controller
         // Verifição de chaves
         if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
         {
+            Log::invalidCredentials($appKey, $appToken);
+
             return response()->json([
                 "errorCode" => "400",
                 "message"   => "invalid credentials"
@@ -38,6 +43,8 @@ class FastshopController extends Controller
         }
 
         $sku = strtoupper($sellerSkuId);
+
+        Storage::append("fs-skus.txt", $sku);
 
         // Procura produto no Marketplace pelo SKU
         $product = Product::all([
@@ -69,8 +76,37 @@ class FastshopController extends Controller
      */
     public function skuSuggestion(Request $request, $sellerId, $sellerSkuId)
     {
-        //
-        dd($request->all(), $sellerId, $sellerSkuId);
+        $appKey   = $request->header("x-vtex-api-appkey");
+        $appToken = $request->header("x-vtex-api-apptoken");
+
+        // Verifição de chaves
+        if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
+        {
+            Log::invalidCredentials($appKey, $appToken);
+
+            return response()->json([
+                "errorCode" => "400",
+                "message"   => "invalid credentials"
+            ], 400);
+        }
+
+        $fsData = $request->all();
+
+        Storage::put("fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+
+        $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+
+        // Converte produto da FS para WC
+        $wcData = DataTranslator::translate("newProduct", $fsData);
+
+        // Atualiza produto no Marketplace
+        // TRATAR OS ATRIBUTOS
+        $new    = Product::create($wcData);
+
+        return response()->json([
+            "errorCode" => "200",
+            "message"   => "Ok",
+        ], 200);
     }
 
     /**
@@ -101,9 +137,9 @@ class FastshopController extends Controller
             "X-VTEX-API-AppToken" => config("fastshop.hml.token")
         ];
 
-        $url  = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
 
-        $body = json_encode([
+        $body    = json_encode([
             "items" => [[
                 "id"       => $sellerSkuId,
                 "quantity" => 1,
@@ -119,13 +155,13 @@ class FastshopController extends Controller
 
         if ($response->successful())
         {
-            $fsData  = $response->json();
+            $fsData = $response->json();
 
             // Converte produto da FS para WC
-            $wcData  = DataTranslator::translate("updateStockPrice", $fsData);
+            $wcData = DataTranslator::translate("updateStockPrice", $fsData);
 
             // Atualiza produto no Marketplace
-            $new     = Product::update($product->id, $wcData);
+            $new    = Product::update($product->id, $wcData);
 
             // Registrar log de sucesso
             Log::updateStockPrice($product, $new);
@@ -135,5 +171,36 @@ class FastshopController extends Controller
             // Registrar log de falha
             Log::updateStockPrice($product, null, true);
         }
+    }
+
+
+
+    private static function getCategoriesId(string $data)
+    {
+        $auxData    = explode("/", $data);
+        $categories = [];
+
+        foreach ($auxData as $key => $ctg)
+        {
+            $slug = Helper::hyphenize($ctg);
+
+            $searchCategory = Category::all(["slug" => $slug]);
+
+            if (!$searchCategory->first())
+            {
+                $new = Category::create([
+                    "name"   => $ctg,
+                    "parent" => ($key == 0) ? 0 : $categories[$key - 1]
+                ]);
+
+                $categories[] = $new["id"];
+            }
+            else
+            {
+                $categories[] = $searchCategory->first()->id;
+            }
+        }
+
+        return $categories;
     }
 }

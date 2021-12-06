@@ -216,4 +216,57 @@ class Helper
 
         return " ";
     }
+
+    /**
+     * Retira acentos e caracteres especiais
+     *
+     * @param string $text
+     * @return string
+     */
+    private static function cleanString($text) {
+        $utf8 = array(
+            '/[áàâãªä]/u' => 'a',
+            '/[ÁÀÂÃÄ]/u'  => 'A',
+            '/[ÍÌÎÏ]/u'   => 'I',
+            '/[íìîï]/u'   => 'i',
+            '/[éèêë]/u'   => 'e',
+            '/[ÉÈÊË]/u'   => 'E',
+            '/[óòôõºö]/u' => 'o',
+            '/[ÓÒÔÕÖ]/u'  => 'O',
+            '/[úùûü]/u'   => 'u',
+            '/[ÚÙÛÜ]/u'   => 'U',
+            '/ç/'         => 'c',
+            '/Ç/'         => 'C',
+            '/ñ/'         => 'n',
+            '/Ñ/'         => 'N',
+            '/–/'         => '-',
+            '/[’‘‹›‚]/u'  => ' ',
+            '/[“”«»„]/u'  => ' ',
+            '/ /'         => ' ',
+        );
+        return preg_replace(array_keys($utf8), array_values($utf8), $text);
+    }
+
+    /**
+     * Substitui espaços e dois ou mais traços com traços
+     *
+     * @param string $string
+     * @return string
+     */
+    public static function hyphenize($string) {
+        $str = strtolower(
+            preg_replace(
+                array('#[\\s-]+#', '#[^A-Za-z0-9. -]+#'),
+                array('-', ''),
+                self::cleanString(urldecode($string))
+            )
+        );
+
+        return preg_replace('/-+/', '-', $str);
+    }
+
+    public static function insertDecimal(string $number)
+    {
+        return substr_replace($number, ".", -2, 0);
+    }
 }
