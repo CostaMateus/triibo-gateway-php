@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\Log;
@@ -42,6 +43,8 @@ class FastshopController extends Controller
         }
 
         $sku = strtoupper($sellerSkuId);
+
+        Storage::append("fs-skus.txt", $sku);
 
         // Procura produto no Marketplace pelo SKU
         $product = Product::all([
@@ -89,22 +92,21 @@ class FastshopController extends Controller
 
         $fsData = $request->all();
 
+        Storage::put("fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+
         $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
         // Converte produto da FS para WC
         $wcData = DataTranslator::translate("newProduct", $fsData);
 
         // Atualiza produto no Marketplace
+        // TRATAR OS ATRIBUTOS
         $new    = Product::create($wcData);
-
-        // dd($new);
 
         return response()->json([
             "errorCode" => "200",
             "message"   => "Ok",
         ], 200);
-
-        // dd($request->all(), $sellerId, $sellerSkuId);
     }
 
     /**
