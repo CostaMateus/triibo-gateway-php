@@ -107,13 +107,9 @@ class FastshopController extends Controller
         $searchSku = Product::all(["sku" => $wcData["sku"]]);
 
         if (!$searchSku->first())
-        {
             $new = Product::create($wcData);
-        }
         else
-        {
             $new = Product::update($searchSku->first()->id, $wcData);
-        }
 
         return response()->json([
             "message"   => "Ok",
