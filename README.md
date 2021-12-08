@@ -1,2 +1,6 @@
-# triibo-mautic-pipe
-Ponte entre o Mautic e o Pipedrive da Triibo
+# Triibo Gateway PHP
+
+- Integração Pipedrive => Mautic
+- Integração Cofry => Triibo
+- Integração Triibo => ChatGuru
+- Integração Fastshop <=> Marketplace
