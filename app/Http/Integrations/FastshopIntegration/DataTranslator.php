@@ -71,45 +71,33 @@ class DataTranslator
             ];
         }
 
-        // TRATAR ISSO AQUI
+        // VERIFICAR OUTROS PRODUTOS
         foreach ($data["SkuSpecifications"] as $key => $attr)
         {
-            // if (empty($attributes))
-            // {
-                $attributes[] = [
-                    "name"      => $attr["fieldName"],
-                    "position"  => $key,
-                    "visible"   => true,
-                    "variation" => true,
-                    "options"   => [
-                        $attr["fieldValue"]
-                    ],
-                ];
-            // }
-            // else
-            // {
-            //     foreach ($attributes as &$a)
-            //     {
-            //         if (strtolower($a["name"]) == strtolower($attr["fieldName"]))
-            //         {
-            //             $a["options"][] = $attr["fieldValue"];
-            //         }
-            //         else
-            //         {
-            //             $attributes[] = [
-            //                 "name"      => $attr["fieldName"],
-            //                 "position"  => $key,
-            //                 "visible"   => true,
-            //                 "variation" => true,
-            //                 "options"   => [
-            //                     $attr["fieldValue"]
-            //                 ],
-            //             ];
-            //         }
-            //     }
-            // }
+            $attributes[] = [
+                "name"      => $attr["fieldName"],
+                "position"  => $key,
+                "visible"   => true,
+                "variation" => true,
+                "options"   => [
+                    $attr["fieldValue"]
+                ],
+            ];
         }
-        // dd($attributes);
+        foreach ($data["ProductSpecifications"] as $key => $attr)
+        {
+            if ($attr["fieldName"] == "ProductLineId") continue;
+
+            $fieldValue   = ($attr["fieldValue"] === "true") ? "SIM" : $attr["fieldValue"];
+
+            $attributes[] = [
+                "name"      => $attr["fieldName"],
+                "position"  => $key,
+                "visible"   => true,
+                "variation" => true,
+                "options"   => [ $fieldValue ],
+            ];
+        }
 
         $wcData = [
             "name" => $data["ProductName"],
@@ -143,14 +131,13 @@ class DataTranslator
             // "tax_status" => "taxable",
             // "tax_class"  => "",
 
-            "manage_stock"      => true, // false
+            "manage_stock"      => true,
             "stock_quantity"    => $data["AvailableQuantity"],
             "stock_status"      => $data["AvailableQuantity"] > 0 ? "instock" : "outofstock",
             "backorders"        => "no",
             "sold_individually" => false,
 
-            // mkt_gr == fs_kg
-            "weight"     => (string) ($data["WeightKg"] * 1000),
+            "weight"     => Helper::convertWeight($data["WeightKg"]),
             "dimensions" => [
                 "length" => (string) $data["Length"],
                 "width"  => (string) $data["Width"],
@@ -165,15 +152,14 @@ class DataTranslator
             "parent_id"      => 0,
             "purchase_note"  => "",
 
-            "tags"           => [ [ "id" => 289 ] ], // tag: novo
+            // tag: novo
+            "tags"           => [ [ "id" => 289 ] ],
 
             "categories"     => $categories,
             "images"         => $images,
             "attributes"     => $attributes,
 
         ];
-
-        // dd($wcData);
 
         return $wcData;
     }
