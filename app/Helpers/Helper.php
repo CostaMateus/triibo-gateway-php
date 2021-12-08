@@ -269,4 +269,11 @@ class Helper
     {
         return substr_replace($number, ".", -2, 0);
     }
+
+    public static function convertWeight(int $weight)
+    {
+        $weight = (strlen($weight) == 2) ? "0" . $weight : ((strlen($weight) == 1) ? "00" . $weight : $weight);
+
+        return self::insertDecimal($weight);
+    }
 }

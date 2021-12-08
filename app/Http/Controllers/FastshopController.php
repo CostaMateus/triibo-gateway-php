@@ -63,7 +63,6 @@ class FastshopController extends Controller
         $this->updateStockPrice($product, $sellerSkuId);
 
         return response()->json([
-            "errorCode" => "200",
             "message"   => "Ok",
         ], 200);
     }
@@ -99,12 +98,11 @@ class FastshopController extends Controller
         // Converte produto da FS para WC
         $wcData = DataTranslator::translate("newProduct", $fsData);
 
+        // VERIFICAR E TRATAR OS SkuSpecifications
         // Atualiza produto no Marketplace
-        // TRATAR OS ATRIBUTOS
         $new    = Product::create($wcData);
 
         return response()->json([
-            "errorCode" => "200",
             "message"   => "Ok",
         ], 200);
     }
@@ -182,13 +180,13 @@ class FastshopController extends Controller
 
         foreach ($auxData as $key => $ctg)
         {
-            $slug = Helper::hyphenize($ctg);
+            $slug           = Helper::hyphenize($ctg);
 
             $searchCategory = Category::all(["slug" => $slug]);
 
             if (!$searchCategory->first())
             {
-                $new = Category::create([
+                $new          = Category::create([
                     "name"   => $ctg,
                     "parent" => ($key == 0) ? 0 : $categories[$key - 1]
                 ]);
