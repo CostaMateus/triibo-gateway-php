@@ -67,11 +67,11 @@ Route::prefix("marketplace")->group(function () {
         [FastshopController::class, "skuSuggestion"]
     )->name("marketplace.skusuggestion");
 
-    // Route-api: php.triibo.com.br/api/marketplace/updatesku
-    Route::put(
-        "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
-        [FastshopController::class, "updateSku"]
-    )->name("marketplace.updatesku");
+    // // Route-api: php.triibo.com.br/api/marketplace/updatesku
+    // Route::put(
+    //     "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
+    //     [FastshopController::class, "updateSku"]
+    // )->name("marketplace.updatesku");
 
 });
 
