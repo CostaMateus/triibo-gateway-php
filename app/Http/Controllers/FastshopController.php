@@ -107,17 +107,16 @@ class FastshopController extends Controller
         ], 200);
     }
 
-    /**
-     * Atualização de catálogo
-     *
-     * @param Request $request
-     * @return void
-     */
-    public function updateSku(Request $request, $sellerId, $sellerSkuId)
-    {
-        //
-        dd($request->all(), $sellerId, $sellerSkuId);
-    }
+    // /**
+    //  * Atualização de catálogo
+    //  *
+    //  * @param Request $request
+    //  * @return void
+    //  */
+    // public function updateSku(Request $request, $sellerId, $sellerSkuId)
+    // {
+    //     //
+    // }
 
 
     /**
