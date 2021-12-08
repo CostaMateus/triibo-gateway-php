@@ -11,6 +11,7 @@ use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
+use Exception;
 
 class FastshopController extends Controller
 {
@@ -101,18 +102,28 @@ class FastshopController extends Controller
         // Converte produto da FS para WC
         $wcData = DataTranslator::translate("newProduct", $fsData);
 
-        // VERIFICAR E TRATAR OS SkuSpecifications
-        // Atualiza produto no Marketplace
-        // $new    = Product::create($wcData);
-        $searchSku = Product::all(["sku" => $wcData["sku"]]);
+        try
+        {
+            // VERIFICAR E TRATAR OS SkuSpecifications
+            // Atualiza produto no Marketplace
+            // $new    = Product::create($wcData);
+            $searchSku = Product::all(["sku" => $wcData["sku"]]);
 
-        if (!$searchSku->first())
-            $new = Product::create($wcData);
-        else
-            $new = Product::update($searchSku->first()->id, $wcData);
+            if (!$searchSku->first())
+                $new = Product::create($wcData);
+            else
+                $new = Product::update($searchSku->first()->id, $wcData);
+        }
+        catch (Exception $e)
+        {
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong on create/update product"
+            ], 400);
+        }
 
         return response()->json([
-            "message"   => "Ok",
+            "message" => "Ok",
         ], 200);
     }
 
