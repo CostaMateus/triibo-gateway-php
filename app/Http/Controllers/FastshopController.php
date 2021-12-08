@@ -43,8 +43,7 @@ class FastshopController extends Controller
             ], 400);
         }
 
-        $sku = strtoupper($sellerSkuId);
-
+        $sku = "[" . date("Y-m-d H:i:s") . "] " . strtoupper($sellerSkuId);
         Storage::append("fs-skus.txt", $sku);
 
         // Procura produto no Marketplace pelo SKU
@@ -94,7 +93,8 @@ class FastshopController extends Controller
 
         $fsData = $request->all();
 
-        Storage::put("fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+        $date   = date("Y-m-d H:i:s");
+        Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
         $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
