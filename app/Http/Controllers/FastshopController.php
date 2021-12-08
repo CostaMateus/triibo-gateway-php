@@ -103,7 +103,13 @@ class FastshopController extends Controller
 
         // VERIFICAR E TRATAR OS SkuSpecifications
         // Atualiza produto no Marketplace
-        $new    = Product::create($wcData);
+        // $new    = Product::create($wcData);
+        $searchSku = Product::all(["sku" => $wcData["sku"]]);
+
+        if (!$searchSku->first())
+            $new = Product::create($wcData);
+        else
+            $new = Product::update($searchSku->first()->id, $wcData);
 
         return response()->json([
             "message"   => "Ok",
