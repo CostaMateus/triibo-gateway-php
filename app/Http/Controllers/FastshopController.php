@@ -15,6 +15,7 @@ use App\Http\Integrations\FastshopIntegration\DataTranslator;
 class FastshopController extends Controller
 {
 
+    // --------- METODOS ABAIXO SÂO CONSUMIDOS PELA FASTSHOP
     /**
      * Notificação de catálogo
      * Fastshop sugere novos SKUs a serem vendidos no Marketplace e
@@ -69,6 +70,8 @@ class FastshopController extends Controller
 
     /**
      * Registro de catálogo
+     * Recebe sugestão de um novo produto para o Marketplace.
+     * Toda vez que changeNotification() retornar o status 404.
      *
      * @param Request $request
      * @return void
@@ -119,8 +122,11 @@ class FastshopController extends Controller
     // }
 
 
+    // --------- METODOS ABAIXO CONSULTAM AS APIs DA FASTSHOP
     /**
      * Atualização de preço/estoque
+     * Consulta a Fastshop para atualizar os dados do produto.
+     * Toda vez que changeNotification() retornar o status 200.
      *
      * @param Request $request
      * @return void
@@ -170,8 +176,60 @@ class FastshopController extends Controller
         }
     }
 
+    /**
+     * Cálculo de frete
+     * Consulta a Fastshop para obter informações comerciais sobre SKUs, tais como, preço, estoque, frete e prazos de entrega.
+     * O "postalCode" deve ser preenchido no request e será obrigatório para o retorno das informações de logística.
+     *
+     * @return void
+     */
+    public function freightCalculation()
+    {
+        //
+    }
+
+    /**
+     * Criação de pedido
+     * Notifica a Fastshop para validar e processar o pedido.
+     * Deve-se enviará informações como os itens contidos no carrinho, dados do perfil do cliente, dados de envio e os dados de pagamento.
+     *
+     * @return void
+     */
+    public function orderCreation()
+    {
+        //
+    }
+
+    /**
+     * Pedido Aprovado e Pago
+     * Após o pagamento ser concluído e aprovado, notifica a Fastshop avisando que este pode iniciar o processo de faturamento e entrega do pedido.
+     *
+     * @return void
+     */
+    public function orderApproved()
+    {
+        //
+    }
+
+    /**
+     * Pedido Cancelado pelo Marketplace
+     * Notifica a Fastshop de que o pedido foi cancelado.
+     *
+     * @return void
+     */
+    public function orderCanceledByMarketplace()
+    {
+        //
+    }
 
 
+    // --------- METODOS DE USO INTERNO
+    /**
+     * Consulta e cria categorias no Marketplace
+     *
+     * @param string $data
+     * @return array
+     */
     private static function getCategoriesId(string $data)
     {
         $auxData    = explode("/", $data);
@@ -200,4 +258,5 @@ class FastshopController extends Controller
 
         return $categories;
     }
+
 }
