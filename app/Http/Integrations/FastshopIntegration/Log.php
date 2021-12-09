@@ -78,8 +78,8 @@ class Log
      * @param Exception $e
      * @return void
      */
-    public static function exception(Exception $e)
+    public static function exception(string $func, Exception $e)
     {
-        LogSys::channel("fastshop")->error("Exception", [$e]);
+        LogSys::channel("fastshop")->error("Exception - $func", [$e]);
     }
 }
