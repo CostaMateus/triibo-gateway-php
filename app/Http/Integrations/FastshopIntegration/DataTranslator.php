@@ -99,7 +99,10 @@ class DataTranslator
             ];
         }
 
-        $wcData = [
+        $shortDescript = explode("\r\n", $data["ProductDescription"])[0];
+        $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
+
+        $wcData        = [
             "name" => $data["ProductName"],
             "slug" => $slug,
 
@@ -109,7 +112,7 @@ class DataTranslator
             // "catalog_visibility" => "visible",
 
             "description"       => $data["ProductDescription"],
-            "short_description" => $data["ProductDescription"],
+            "short_description" => $shortDescript,
             "sku"               => "FS-$sku",
 
             "regular_price" => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
