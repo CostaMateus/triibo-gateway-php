@@ -30,42 +30,41 @@ class FastshopController extends Controller
      */
     public function changeNotification(Request $request, $sellerId, $sellerSkuId)
     {
-        $appKey   = $request->header("x-vtex-api-appkey");
-        $appToken = $request->header("x-vtex-api-apptoken");
-
         // Verifição de chaves
-        if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
+        if (($verify = self::keysVerification($request)) !== TRUE) return $verify;
+
+        try
         {
-            Log::invalidCredentials($appKey, $appToken);
+            // Procura produto no Marketplace pelo SKU
+            $product = Product::all(["sku" => "FS-" . strtoupper($sellerSkuId)])->first();
+
+            if (!$product)
+            {
+                $sku = "[" . date("Y-m-d H:i:s") . "] " . strtoupper($sellerSkuId) . " NOT FOUND";
+                Storage::append("fs-skus.txt", $sku);
+
+                return response()->json([
+                    "errorCode" => "404",
+                    "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
+                ], 404);
+            }
+
+            // Atualiza produto no Marketplace
+            $this->updateStockPrice($product, $sellerSkuId);
 
             return response()->json([
-                "errorCode" => "400",
-                "message"   => "invalid credentials"
-            ], 400);
+                "message" => "Ok",
+            ], 200);
         }
-
-        $sku = "[" . date("Y-m-d H:i:s") . "] " . strtoupper($sellerSkuId);
-        Storage::append("fs-skus.txt", $sku);
-
-        // Procura produto no Marketplace pelo SKU
-        $product = Product::all([
-            "sku" => "FS-$sku"
-        ])->first();
-
-        if (!$product)
+        catch (Exception $e)
         {
+            Log::exception("changeNotification", $e);
+
             return response()->json([
-                "errorCode" => "404",
-                "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
-            ], 404);
+                "errorCode" => "500",
+                "message"   => "something wrong",
+            ], 500);
         }
-
-        // Atualiza produto no Marketplace
-        $this->updateStockPrice($product, $sellerSkuId);
-
-        return response()->json([
-            "message"   => "Ok",
-        ], 200);
     }
 
     /**
@@ -78,65 +77,106 @@ class FastshopController extends Controller
      */
     public function skuSuggestion(Request $request, $sellerId, $sellerSkuId)
     {
-        $appKey   = $request->header("x-vtex-api-appkey");
-        $appToken = $request->header("x-vtex-api-apptoken");
-
         // Verifição de chaves
-        if ($appKey != config("fastshop.hml.key") && $appToken != config("fastshop.hml.token"))
-        {
-            Log::invalidCredentials($appKey, $appToken);
-
-            return response()->json([
-                "errorCode" => "400",
-                "message"   => "invalid credentials"
-            ], 400);
-        }
-
-        $fsData = $request->all();
-
-        $date   = date("Y-m-d H:i:s");
-        Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
-
-        $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
-
-        // Converte produto da FS para WC
-        $wcData = DataTranslator::translate("newProduct", $fsData);
+        if (($verify = self::keysVerification($request)) !== TRUE) return $verify;
 
         try
         {
+            // Recupera dados do produto
+            $fsData    = $request->all();
+
+            // LOG
+            $date      = date("Y-m-d H:i:s");
+            Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+
+            $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+
+            // Converte produto da FS para WC
+            $wcData    = DataTranslator::translate("newProduct", $fsData);
+
             // VERIFICAR E TRATAR OS SkuSpecifications
             // Atualiza produto no Marketplace
             // $new    = Product::create($wcData);
             $searchSku = Product::all(["sku" => $wcData["sku"]]);
 
             if (!$searchSku->first())
+            {
                 $new = Product::create($wcData);
+            }
             else
+            {
                 $new = Product::update($searchSku->first()->id, $wcData);
+            }
+
+            return response()->json([
+                "message" => "Ok",
+            ], 200);
         }
         catch (Exception $e)
         {
+            Log::exception("skuSuggestion", $e);
+
             return response()->json([
                 "errorCode" => "500",
-                "message"   => "something wrong on create/update product"
-            ], 400);
+                "message"   => "something wrong",
+            ], 500);
         }
-
-        return response()->json([
-            "message" => "Ok",
-        ], 200);
     }
 
-    // /**
-    //  * Atualização de catálogo
-    //  *
-    //  * @param Request $request
-    //  * @return void
-    //  */
-    // public function updateSku(Request $request, $sellerId, $sellerSkuId)
-    // {
-    //     //
-    // }
+    /**
+     * Atualização de catálogo
+     *
+     * @param Request $request
+     * @return void
+     */
+    public function updateSku(Request $request, $sellerId, $sellerSkuId)
+    {
+        // Verifição de chaves
+        if (($verify = self::keysVerification($request)) !== TRUE) return $verify;
+
+        try
+        {
+            // Recupera dados do produto
+            $fsData = $request->all();
+
+            // LOG
+            $date   = date("Y-m-d H:i:s");
+            Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+
+            $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+
+            // Converte produto da FS para WC
+            $wcData = DataTranslator::translate("newProduct", $fsData);
+
+            // VERIFICAR E TRATAR OS SkuSpecifications
+            // Atualiza produto no Marketplace
+            // $new    = Product::create($wcData);
+            $searchSku = Product::all(["sku" => $wcData["sku"]]);
+
+            if (!$searchSku->first())
+            {
+                return response()->json([
+                    "errorCode" => "404",
+                    "message"   => "something wrong on update product"
+                ], 404);
+            }
+
+            $new = Product::update($searchSku->first()->id, $wcData);
+
+            return response()->json([
+                "message" => "Ok",
+            ], 200);
+        }
+        catch (Exception $e)
+        {
+            Log::exception("updateSku", $e);
+
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong",
+            ], 500);
+        }
+    }
 
 
     // --------- METODOS ABAIXO CONSULTAM AS APIs DA FASTSHOP
@@ -276,4 +316,24 @@ class FastshopController extends Controller
         return $categories;
     }
 
+    private static function keysVerification(Request $request)
+    {
+        $appKey   = $request->header("x-vtex-api-appkey");
+        $appToken = $request->header("x-vtex-api-apptoken");
+
+        // Verifição de chaves
+        if ($appKey != config("fastshop.hml.key") || $appToken != config("fastshop.hml.token"))
+        {
+            Log::invalidCredentials($appKey, $appToken);
+
+            return response()->json([
+                "errorCode" => "400",
+                "message"   => "invalid credentials"
+            ], 400);
+        }
+        else
+        {
+            return TRUE;
+        }
+    }
 }

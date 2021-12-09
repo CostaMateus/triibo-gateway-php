@@ -2,6 +2,7 @@
 
 namespace App\Http\Integrations\FastshopIntegration;
 
+use Exception;
 use Illuminate\Support\Facades\Log as LogSys;
 
 class Log
@@ -69,5 +70,16 @@ class Log
             "appKey"   => $key,
             "appToken" => $token
         ]);
+    }
+
+    /**
+     * Registra log quando erros imprevistos
+     *
+     * @param Exception $e
+     * @return void
+     */
+    public static function exception(string $func, Exception $e)
+    {
+        LogSys::channel("fastshop")->error("Exception - $func", [$e]);
     }
 }
