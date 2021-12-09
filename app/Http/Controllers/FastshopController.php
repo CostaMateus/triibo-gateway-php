@@ -40,7 +40,7 @@ class FastshopController extends Controller
 
             if (!$product)
             {
-                $sku = "[" . date("Y-m-d H:i:s") . "] " . strtoupper($sellerSkuId) . " NOT FOUND";
+                $sku = "[" . date("Ymd-his") . "] " . strtoupper($sellerSkuId) . " NOT FOUND";
                 Storage::append("fs-skus.txt", $sku);
 
                 return response()->json([
@@ -86,7 +86,7 @@ class FastshopController extends Controller
             $fsData    = $request->all();
 
             // LOG
-            $date      = date("Y-m-d H:i:s");
+            $date      = date("Ymd-his");
             Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
@@ -140,7 +140,7 @@ class FastshopController extends Controller
             $fsData = $request->all();
 
             // LOG
-            $date   = date("Y-m-d H:i:s");
+            $date   = date("Ymd-his");
             Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
