@@ -85,28 +85,30 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            // LOG
-            $date      = date("Ymd-his");
-            Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+            // // LOG
+            // $date      = date("Ymd-his");
+            // Storage::put("fs-$sellerSkuId.$date.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData    = DataTranslator::translate("newProduct", $fsData);
 
-            // VERIFICAR E TRATAR OS SkuSpecifications
             // Atualiza produto no Marketplace
-            // $new    = Product::create($wcData);
             $searchSku = Product::all(["sku" => $wcData["sku"]]);
 
             if (!$searchSku->first())
             {
                 $new = Product::create($wcData);
+                $upd = false;
             }
             else
             {
                 $new = Product::update($searchSku->first()->id, $wcData);
+                $upd = true;
             }
+
+            Log::createOrUpdateProduct("skuSuggestion", $new["sku"], $upd);
 
             return response()->json([
                 "message" => "Ok",
@@ -162,6 +164,8 @@ class FastshopController extends Controller
             }
 
             $new = Product::update($searchSku->first()->id, $wcData);
+
+            Log::createOrUpdateProduct("updateSku", $new["sku"], true);
 
             return response()->json([
                 "message" => "Ok",
