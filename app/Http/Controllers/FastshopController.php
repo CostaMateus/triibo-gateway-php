@@ -205,7 +205,7 @@ class FastshopController extends Controller
                 "quantity" => 1,
                 "seller"   => "FSH"
             ]],
-            "postalCode"     => "",
+            "postalCode"     => "{{postcode}}",
             "country"        => "",
             "geoCoordinates" => []
         ]);
@@ -240,9 +240,90 @@ class FastshopController extends Controller
      *
      * @return void
      */
-    public function freightCalculation()
+    public function freightCalculation(Request $request)
     {
-        //
+        $headers = [
+            "Accept"              => "application/json",
+            "Content-Type"        => "application/json",
+            "X-VTEX-API-AppKey"   => config("fastshop.hml.key"),
+            "X-VTEX-API-AppToken" => config("fastshop.hml.token")
+        ];
+
+        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+
+        $wcData = $request->all();
+        dd($wcData);
+        
+        $cep = $wcData["postalCode"];
+        $aux_itens = $wcData["items"];
+        $itens = [];
+
+        foreach ($aux_itens as $item) {
+            $itens[] = [
+                "id"       => $item['sku'],
+                "quantity" => $item['quantity'],
+                "seller"   => "FSH"
+            ];
+        }
+
+        $body    = json_encode([
+            "items" => $itens,
+            "postalCode"     => $cep,
+            "country"        => "BRA",
+            "geoCoordinates" => []
+        ]);
+
+        $response = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
+        
+        dd($response);
+
+        /* if($cep == ""){ 
+            return response()->json([
+                "errorCode" => "404",
+                "message" => "something wrong on update product"
+            ], 404);
+        } else {
+            return response()->json([
+                "message" => "OK",
+            ], 200);
+        } */
+
+        /* 
+         if (!$searchSku->first())
+            {
+                return response()->json([
+                    "errorCode" => "404",
+                    "message"   => "something wrong on update product"
+                ], 404);
+            }
+
+            $new = Product::update($searchSku->first()->id, $wcData);
+
+            return response()->json([
+                "message" => "Ok",
+            ], 200);
+        }
+           
+
+        /* NOTATION 
+        
+        shipping_total	- corda	- Valor total do envio para o pedido.
+        postcode -	corda -	Código postal.
+
+        "shipping": {
+    
+    "first_name": "John",
+    "last_name": "Doe",
+    "company": "",
+    "address_1": "969 Market",
+    "address_2": "",
+    "city": "San Francisco",
+    "state": "CA",
+    "postcode": "94103",
+    "country": "US"
+  },
+        
+        */
     }
 
     /**
