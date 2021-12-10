@@ -205,7 +205,7 @@ class FastshopController extends Controller
                 "quantity" => 1,
                 "seller"   => "FSH"
             ]],
-            "postalCode"     => "{{postcode}}",
+            "postalCode"     => "",
             "country"        => "",
             "geoCoordinates" => []
         ]);
@@ -249,11 +249,11 @@ class FastshopController extends Controller
             "X-VTEX-API-AppToken" => config("fastshop.hml.token")
         ];
 
-        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+        $url  = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
 
-        $wcData = $request->all();
+        $wcData = $request -> all();
         dd($wcData);
-        
+
         $cep = $wcData["postalCode"];
         $aux_itens = $wcData["items"];
         $itens = [];
@@ -267,7 +267,7 @@ class FastshopController extends Controller
         }
 
         $body    = json_encode([
-            "items" => $itens,
+            "items"          => $itens,
             "postalCode"     => $cep,
             "country"        => "BRA",
             "geoCoordinates" => []
