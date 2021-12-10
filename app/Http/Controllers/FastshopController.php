@@ -194,14 +194,9 @@ class FastshopController extends Controller
      */
     public function updateStockPrice($product, $sellerSkuId)
     {
-        $headers = [
-            "Accept"              => "application/json",
-            "Content-Type"        => "application/json",
-            "X-VTEX-API-AppKey"   => config("fastshop.hml.key"),
-            "X-VTEX-API-AppToken" => config("fastshop.hml.token")
-        ];
-
-        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+        $env     = config("fastshop.env");
+        $headers = config("fastshop.$env.headers");
+        $url     = config("fastshop.$env.url") . "/pvt/orderForms/simulation";
 
         $body    = json_encode([
             "items" => [[
@@ -322,11 +317,12 @@ class FastshopController extends Controller
 
     private static function keysVerification(Request $request)
     {
+        $env      = config("fastshop.env");
         $appKey   = $request->header("x-vtex-api-appkey");
         $appToken = $request->header("x-vtex-api-apptoken");
 
         // Verifição de chaves
-        if ($appKey != config("fastshop.hml.key") || $appToken != config("fastshop.hml.token"))
+        if ($appKey != config("fastshop.$env.key") || $appToken != config("fastshop.$env.token"))
         {
             Log::invalidCredentials($appKey, $appToken);
 
