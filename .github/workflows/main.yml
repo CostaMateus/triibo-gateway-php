@@ -1,44 +1,44 @@
-on:
-  push:
-    branches:
-      - main
-      - homol
-name: Deploy on push on main or homol
-jobs:
-  deploy-on-prod:
-    if: ${{ github.ref_name == 'main' }}
-    name: Deploy prod
-    runs-on: ubuntu-latest
-    steps:
-    - name: Get latest code
-      uses: actions/checkout@v2
+# on:
+#   push:
+#     branches:
+#       - main
+#       - homol
+# name: Deploy on push on main or homol
+# jobs:
+#   deploy-on-prod:
+#     if: ${{ github.ref_name == 'main' }}
+#     name: Deploy prod
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Get latest code
+#       uses: actions/checkout@v2
 
-    - name: SFTP Deploy
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.1
+#     - name: SFTP Deploy
+#       uses: wlixcc/SFTP-Deploy-Action@v1.2.1
 
-      with:
-        server: ${{ secrets.SFTP_HOST }}
-        username: ${{ secrets.SFTP_USER }}
-        ssh_private_key: ${{ secrets.SFTP_PASS }}
-        local_path: './*'
-        remote_path: '/var/www/html/laravel'
-        args: '-o ConnectTimeout=5'
+#       with:
+#         server: ${{ secrets.SFTP_HOST }}
+#         username: ${{ secrets.SFTP_USER }}
+#         ssh_private_key: ${{ secrets.SFTP_PASS }}
+#         local_path: './*'
+#         remote_path: '/var/www/html/laravel'
+#         args: '-o ConnectTimeout=5'
 
-  deploy-on-homol:
-    if: ${{ github.ref_name == 'homol' }}
-    name: Deploy homol
-    runs-on: ubuntu-latest
-    steps:
-    - name: Get latest code
-      uses: actions/checkout@v2
+#   deploy-on-homol:
+#     if: ${{ github.ref_name == 'homol' }}
+#     name: Deploy homol
+#     runs-on: ubuntu-latest
+#     steps:
+#     - name: Get latest code
+#       uses: actions/checkout@v2
 
-    - name: SFTP Deploy
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.1
+#     - name: SFTP Deploy
+#       uses: wlixcc/SFTP-Deploy-Action@v1.2.1
 
-      with:
-        server: ${{ secrets.SFTP_HOST_HML }}
-        username: ${{ secrets.SFTP_USER_HML }}
-        ssh_private_key: ${{ secrets.SFTP_PASS_HML }}
-        local_path: './*'
-        remote_path: '/var/www/html/laravel'
-        args: '-o ConnectTimeout=5'
+#       with:
+#         server: ${{ secrets.SFTP_HOST_HML }}
+#         username: ${{ secrets.SFTP_USER_HML }}
+#         ssh_private_key: ${{ secrets.SFTP_PASS_HML }}
+#         local_path: './*'
+#         remote_path: '/var/www/html/laravel'
+#         args: '-o ConnectTimeout=5'
