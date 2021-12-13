@@ -209,26 +209,33 @@ class FastshopController extends Controller
             "geoCoordinates" => []
         ]);
 
-        // Consulta produto na FS
-        $response = Http::withHeaders($headers)->withBody($body, "application/json")->get($url);
-
-        if ($response->successful())
+        try
         {
-            $fsData = $response->json();
+            // Consulta produto na FS
+            $response = Http::withHeaders($headers)->withBody($body, "application/json")->get($url);
 
-            // Converte produto da FS para WC
-            $wcData = DataTranslator::translate("updateStockPrice", $fsData);
+            if ($response->successful())
+            {
+                $fsData = $response->json();
 
-            // Atualiza produto no Marketplace
-            $new    = Product::update($product->id, $wcData);
+                // Converte produto da FS para WC
+                $wcData = DataTranslator::translate("updateStockPrice", $fsData);
 
-            // Registrar log de sucesso
-            Log::updateStockPrice($product, $new);
+                // Atualiza produto no Marketplace
+                $new    = Product::update($product->id, $wcData);
+
+                // Registrar log de sucesso
+                Log::updateStockPrice($product, $new);
+            }
+            else
+            {
+                // Registrar log de falha
+                Log::updateStockPrice($product, null, true);
+            }
         }
-        else
+        catch (Exception $e)
         {
-            // Registrar log de falha
-            Log::updateStockPrice($product, null, true);
+            Log::exception("updateStockPrice", $e);
         }
     }
 
@@ -251,9 +258,24 @@ class FastshopController extends Controller
      *
      * @return void
      */
-    public function orderCreation()
+    public function orderCreation(Request $request)
     {
-        //
+        // Verifição de chaves
+        if (($verify = self::keysVerification($request, true)) !== TRUE) return $verify;
+
+        try
+        {
+            $wcData = $request->all();
+        }
+        catch (Exception $e)
+        {
+            Log::exception("orderCreation", $e);
+
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong",
+            ], 500);
+        }
     }
 
     /**
@@ -315,25 +337,49 @@ class FastshopController extends Controller
         return $categories;
     }
 
-    private static function keysVerification(Request $request)
+    private static function keysVerification(Request $request, bool $wc = false)
     {
-        $env      = config("fastshop.env");
-        $appKey   = $request->header("x-vtex-api-appkey");
-        $appToken = $request->header("x-vtex-api-apptoken");
+        $env = config("fastshop.env");
 
-        // Verifição de chaves
-        if ($appKey != config("fastshop.$env.key") || $appToken != config("fastshop.$env.token"))
+        if (!$wc)
         {
-            Log::invalidCredentials($appKey, $appToken);
+            $appKey   = $request->header("x-vtex-api-appkey");
+            $appToken = $request->header("x-vtex-api-apptoken");
 
-            return response()->json([
-                "errorCode" => "400",
-                "message"   => "invalid credentials"
-            ], 400);
+            // Verifição de chaves
+            if ($appKey != config("fastshop.$env.key") || $appToken != config("fastshop.$env.token"))
+            {
+                Log::invalidCredentials($appKey, $appToken);
+
+                return response()->json([
+                    "errorCode" => "400",
+                    "message"   => "invalid credentials"
+                ], 400);
+            }
+            else
+            {
+                return TRUE;
+            }
         }
         else
         {
-            return TRUE;
+            $appKey   = $request->header("appkey");
+            $appToken = $request->header("apptoken");
+
+            // Verifição de chaves
+            if ($appKey != config("fastshop.wc.$env.key") || $appToken != config("fastshop.wc.$env.token"))
+            {
+                Log::invalidCredentials($appKey, $appToken);
+
+                return response()->json([
+                    "errorCode" => "400",
+                    "message"   => "invalid credentials"
+                ], 400);
+            }
+            else
+            {
+                return TRUE;
+            }
         }
     }
 }
