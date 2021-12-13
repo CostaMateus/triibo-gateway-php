@@ -284,9 +284,24 @@ class FastshopController extends Controller
      *
      * @return void
      */
-    public function orderApproved()
+    public function orderApproved(Request $request)
     {
-        //
+        // Verifição de chaves
+        if (($verify = self::keysVerification($request, true)) !== TRUE) return $verify;
+
+        try
+        {
+            $wcData = $request->all();
+        }
+        catch (Exception $e)
+        {
+            Log::exception("orderCreation", $e);
+
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong",
+            ], 500);
+        }
     }
 
     /**
@@ -295,9 +310,24 @@ class FastshopController extends Controller
      *
      * @return void
      */
-    public function orderCanceledByMarketplace()
+    public function orderCanceledByMarketplace(Request $request)
     {
-        //
+        // Verifição de chaves
+        if (($verify = self::keysVerification($request, true)) !== TRUE) return $verify;
+
+        try
+        {
+            $wcData = $request->all();
+        }
+        catch (Exception $e)
+        {
+            Log::exception("orderCreation", $e);
+
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong",
+            ], 500);
+        }
     }
 
 
