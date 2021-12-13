@@ -28,4 +28,15 @@ return [
         ],
     ],
 
+    'wc' => [
+        'local' => [
+            'key'     => env('FS_API_KEY_HML',   ''),
+            'token'   => env('FS_API_TOKEN_HML', ''),
+        ],
+        'production' => [
+            'key'     => env('FS_API_KEY',   ''),
+            'token'   => env('FS_API_TOKEN', ''),
+        ]
+    ],
+
 ];
