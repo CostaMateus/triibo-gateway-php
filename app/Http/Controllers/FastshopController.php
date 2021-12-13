@@ -92,7 +92,7 @@ class FastshopController extends Controller
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
-            $wcData    = DataTranslator::translate("newProduct", $fsData);
+            $wcData  = DataTranslator::translate("newProduct", $fsData);
 
             // VERIFICAR E TRATAR OS SkuSpecifications
             // Atualiza produto no Marketplace
@@ -184,7 +184,7 @@ class FastshopController extends Controller
      * Atualização de preço/estoque
      * Consulta a Fastshop para atualizar os dados do produto.
      * Toda vez que changeNotification() retornar o status 200.
-     *
+     * 
      * @param Request $request
      * @return void
      */
@@ -252,7 +252,6 @@ class FastshopController extends Controller
         $url  = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
 
         $wcData = $request -> all();
-        dd($wcData);
 
         $cep = $wcData["postalCode"];
         $aux_itens = $wcData["items"];
@@ -266,64 +265,33 @@ class FastshopController extends Controller
             ];
         }
 
-        $body    = json_encode([
+        $body  = json_encode([
             "items"          => $itens,
             "postalCode"     => $cep,
             "country"        => "BRA",
             "geoCoordinates" => []
         ]);
-
+        
         $response = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
-        
-        dd($response);
 
-        /* if($cep == ""){ 
-            return response()->json([
-                "errorCode" => "404",
-                "message" => "something wrong on update product"
-            ], 404);
-        } else {
-            return response()->json([
-                "message" => "OK",
-            ], 200);
-        } */
-
-        /* 
-         if (!$searchSku->first())
-            {
-                return response()->json([
-                    "errorCode" => "404",
-                    "message"   => "something wrong on update product"
-                ], 404);
-            }
-
-            $new = Product::update($searchSku->first()->id, $wcData);
-
-            return response()->json([
-                "message" => "Ok",
-            ], 200);
+        if($cep == "") {
+            return response() -> json ([
+                "errorCode" => "400",
+                "message"   => "request does not meet the necessary requirements"
+            ],400);
         }
-           
-
-        /* NOTATION 
+        elseif ($response -> successful()) {
+            $wcData = $response->json();
+            
+        }
+        else {
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong"
+            ],500);
+        }
+        dd($response -> json());
         
-        shipping_total	- corda	- Valor total do envio para o pedido.
-        postcode -	corda -	Código postal.
-
-        "shipping": {
-    
-    "first_name": "John",
-    "last_name": "Doe",
-    "company": "",
-    "address_1": "969 Market",
-    "address_2": "",
-    "city": "San Francisco",
-    "state": "CA",
-    "postcode": "94103",
-    "country": "US"
-  },
-        
-        */
     }
 
     /**
