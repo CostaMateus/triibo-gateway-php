@@ -274,6 +274,31 @@ class FastshopController extends Controller
 
         $response = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
 
+        // response com mensagens de itens sem estoque e região não atendida.
+
+        $fsData = $response -> json();
+        $logistics = $fsData["logisticsInfo"];
+
+        foreach ($logistics as $key) {
+            $region_info = [
+                "slas" => $key['slas'],
+            ];
+        }
+        
+        if(empty($region_info["slas"])) {
+            return response() -> json([
+                 "message" => "We do not deliver in your region"
+            ]);
+        }
+
+        if(empty($logistics)) {
+            return response() -> json([
+                 "message" => "Missing product
+                 "
+            ]);
+        }
+        // response de erros 400, 500
+
         if(empty($cep)) {
             return response() -> json ([
                 "errorCode" => "400",
@@ -282,7 +307,6 @@ class FastshopController extends Controller
         }
         elseif ($response -> successful()) {
             $wcData = $response->json();
-            
         }
         else {
             return response()->json([
