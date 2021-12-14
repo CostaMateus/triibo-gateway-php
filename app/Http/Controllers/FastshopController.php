@@ -261,7 +261,7 @@ class FastshopController extends Controller
             $itens[] = [
                 "id"       => $item['sku'],
                 "quantity" => $item['quantity'],
-                "seller"   => "FSH"
+                "seller"   => "FSH",
             ];
         }
 
@@ -271,10 +271,10 @@ class FastshopController extends Controller
             "country"        => "BRA",
             "geoCoordinates" => []
         ]);
-        
+
         $response = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
 
-        if($cep == "") {
+        if(empty($cep)) {
             return response() -> json ([
                 "errorCode" => "400",
                 "message"   => "request does not meet the necessary requirements"
@@ -291,7 +291,6 @@ class FastshopController extends Controller
             ],500);
         }
         dd($response -> json());
-        
     }
 
     /**
@@ -316,6 +315,7 @@ class FastshopController extends Controller
     {
         //
     }
+    
 
     /**
      * Pedido Cancelado pelo Marketplace
