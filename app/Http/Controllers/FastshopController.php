@@ -184,7 +184,7 @@ class FastshopController extends Controller
      * Atualização de preço/estoque
      * Consulta a Fastshop para atualizar os dados do produto.
      * Toda vez que changeNotification() retornar o status 200.
-     * 
+     *
      * @param Request $request
      * @return void
      */
@@ -242,6 +242,7 @@ class FastshopController extends Controller
      */
     public function freightCalculation(Request $request)
     {
+        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
         $headers = [
             "Accept"              => "application/json",
             "Content-Type"        => "application/json",
@@ -249,34 +250,93 @@ class FastshopController extends Controller
             "X-VTEX-API-AppToken" => config("fastshop.hml.token")
         ];
 
-        $url  = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+        // Exemplo do body recebido do marketplace
+        // [
+        //     "postalCode" => "01218011",
+        //     "items"      => [
+        //         [
+        //             "sku"      => "FS-SKU-11",
+        //             "quantity" => 1
+        //         ]
+        //     ],
+        // ]
 
-        $wcData = $request -> all();
+        $wcData = $request->all();
+        $items  = [];
 
-        $cep = $wcData["postalCode"];
-        $aux_itens = $wcData["items"];
-        $itens = [];
-
-        foreach ($aux_itens as $item) {
-            $itens[] = [
+        foreach ($wcData["items"] as $item)
+        {
+            $items[] = [
                 "id"       => $item['sku'],
                 "quantity" => $item['quantity'],
                 "seller"   => "FSH",
             ];
         }
 
-        $body  = json_encode([
-            "items"          => $itens,
-            "postalCode"     => $cep,
+        // Exemplo do body enviado a FS
+        // [
+        //     "geoCoordinates" => [],
+        //     "country"        => "BRA",
+        //     "postalCode"     => "01218011",
+        //     "items"      => [
+        //         [
+        //             "id"       => "SKU-11",
+        //             "quantity" => 1,
+        //             "seller"   => "FSH",
+        //         ]
+        //     ],
+        // ]
+
+        $body = json_encode([
+            "items"          => $items,
+            "postalCode"     => $wcData["postalCode"],
             "country"        => "BRA",
             "geoCoordinates" => []
         ]);
 
-        $response = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
+        $response  = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
 
-        // response com mensagens de itens sem estoque e região não atendida.
+        // verificar, antes de qualquer coisa
+        // a request foi com sucesso? ($response->successful())
+        // caso não, já retornar erro para o marketplace
+        // caso sim, tratar os dados
+        
+        if (!$response->successful())
+        {
+            return response()->json([
+                "errorCode" => "400",
+                "message"   => "something wrong when consulting the delivery price"
+            ],400);
+        }
 
-        $fsData = $response -> json();
+        $fsData    = $response->json();
+
+        // como o fsData, precisa validar:
+        //
+        // o $fsData["logisticsInfo"] está vazio?
+        // se sim, significa que não tem estoque, conforme o penultimo ponto da doc da FS (https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/calculo-de-frete)
+        // retornar erro 400, "sem estoque"
+        //
+        // o $fsData["logisticsInfo"]["sla"] está vazio?
+        // se sim, significa que não há métodos de entrega, conforme o ultimo ponto da doc da FS (https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/calculo-de-frete)
+        // retornar erro 400, "sem metodo de entrega"
+        //
+        // se passou nas duas verificações, montar o retorno para o marketplace
+        // algo como:
+        // [
+        //     "items" => [
+        //         [
+        //             "sku"          => "FS-SKU-11",
+        //             "quantity"     => 1,
+        //             "price"        => $fsData["logisticsInfo"]["sla"][0]["price"], // tratar valor com centavos
+        //             "deliveryTime" => $fsData["logisticsInfo"]["sla"][0]["shippingEstimate"], // tratar string com bd
+        //         ]
+        //     ],
+        //     "postalCode" => "01218011"
+        // ];
+
+
+        // ===================================
         $logistics = $fsData["logisticsInfo"];
 
         foreach ($logistics as $key) {
@@ -284,15 +344,20 @@ class FastshopController extends Controller
                 "slas" => $key['slas'],
             ];
         }
-        
+
         if(empty($region_info["slas"])) {
-            return response() -> json([
+            return response()->json([
                  "message" => "We do not deliver in your region"
             ]);
         }
 
+<<<<<<< HEAD
         if(empty($logistics)) { 
             return response() -> json([
+=======
+        if(empty($logistics)) {
+            return response()->json([
+>>>>>>> 5b70cf70525e7a7ecdce44102ad80343b6caff4e
                  "message" => "Missing product
                  "
             ]);
@@ -300,12 +365,12 @@ class FastshopController extends Controller
         // response de erros 400, 500
 
         if(empty($cep)) {
-            return response() -> json ([
+            return response()->json ([
                 "errorCode" => "400",
                 "message"   => "request does not meet the necessary requirements"
             ],400);
         }
-        elseif ($response -> successful()) {
+        elseif ($response->successful()) {
             $wcData = $response->json();
         }
         else {
@@ -314,7 +379,7 @@ class FastshopController extends Controller
                 "message"   => "something wrong"
             ],500);
         }
-        dd($response -> json());
+        dd($response->json());
     }
 
     /**
@@ -339,7 +404,7 @@ class FastshopController extends Controller
     {
         //
     }
-    
+
 
     /**
      * Pedido Cancelado pelo Marketplace
