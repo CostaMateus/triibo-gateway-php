@@ -291,7 +291,7 @@ class FastshopController extends Controller
             ]);
         }
 
-        if(empty($logistics)) {
+        if(empty($logistics)) { 
             return response() -> json([
                  "message" => "Missing product
                  "
