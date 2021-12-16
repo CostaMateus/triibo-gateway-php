@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use App\Http\Controllers\CofryController;
 
 class CofryIntegration
 {
@@ -219,6 +220,10 @@ class CofryIntegration
             $idStore           = "-cofry" . $promo["uuid"];
             $id                = $idStore . str_replace(".", "", $promo["ProductAPIID"]);
 
+            $establishmentName = trim($promo["Advertiser"]);
+
+            $denylist          = CofryController::getDenylist("Mapfre");
+
             $promo["ItemCode"] = str_replace(" ",      "", $promo["ItemCode"]);
             $promo["ItemCode"] = str_replace("Cupom:", "", $promo["ItemCode"]);
 
@@ -249,7 +254,7 @@ class CofryIntegration
 
             $res[$id]           = [
                 "establishmentId"    => $idStore,
-                "establishmentName"  => trim($promo["Advertiser"]),
+                "establishmentName"  => $establishmentName,
 
                 "title"              => "Ganhe " . $cashback . "% de volta!",
                 "detailsTitle"       => "Ganhe " . $cashback . "% de volta!",
@@ -263,7 +268,7 @@ class CofryIntegration
                 "disableDate"        => $dateDis,
                 "dueDate"            => $dateDis,
 
-                "isPublished"        => true,
+                "isPublished"        => (in_array($establishmentName, $denylist)) ? false : true,
                 "active"             => true,
 
                 "lat"                => -15.52047783763576,
@@ -302,9 +307,11 @@ class CofryIntegration
         {
             $idStore             = "-cofry" . $store["uuid"];
 
-            $cashback            = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
+            $establishmentName   = trim($store["Advertiser"]);
 
-            $store["Advertiser"] = trim($store["Advertiser"]);
+            $denylist            = CofryController::getDenylist("Mapfre");
+
+            $cashback            = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
 
             $auxAdv              = preg_replace("/[^\w\s]/", "", iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $store["Advertiser"]));
             $idPromo             = $idStore . strtolower(str_replace(" ", "", $auxAdv));
@@ -333,7 +340,7 @@ class CofryIntegration
 
             $res[$idPromo] = [
                 "establishmentId"    => $idStore,
-                "establishmentName"  => $store["Advertiser"],
+                "establishmentName"  => $establishmentName,
 
                 "title"              => "Ganhe " . $cashback . "% de volta!",
                 "detailsTitle"       => "Ganhe " . $cashback . "% de volta!",
@@ -345,7 +352,7 @@ class CofryIntegration
                 "disableDate"        => $dateDis,
                 "dueDate"            => $dateDis,
 
-                "isPublished"        => true,
+                "isPublished"        => (in_array($establishmentName, $denylist)) ? false : true,
                 "active"             => true,
 
                 "lat"                => -15.52047783763576,
@@ -384,6 +391,10 @@ class CofryIntegration
         {
             $id               = "-cofry" . $store["uuid"];
 
+            $storeName        = trim($store["Advertiser"]);
+
+            $denylist         = CofryController::getDenylist("Mapfre");
+
             $cashback         = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
 
             $store["Logo"]    = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
@@ -409,13 +420,13 @@ class CofryIntegration
                 "dataInclusao"  => $dateEn,
 
                 "idGestor"      => "+5511949289507@sms,triibo,com,br",
-                "isPublished"   => $store["Active"] ? true : false,
+                "isPublished"   => (in_array($storeName, $denylist)) ? false : ($store["Active"] ? true : false),
 
                 "endereco"      => "Brasil",
                 "lat"           => -15.52047783763576,
                 "long"          => -48.015408891158984,
 
-                "nome"          => trim($store["Advertiser"]),
+                "nome"          => $storeName,
                 "descricao"     => $descricao,
 
                 "fotoThumb"     => $store["Logo"],
