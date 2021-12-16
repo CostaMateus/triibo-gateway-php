@@ -236,7 +236,7 @@ class FastshopController extends Controller
         catch (Exception $e)
         {
             Log::exception("updateStockPrice", $e);
-        a}
+        }
     }
 
     /**
