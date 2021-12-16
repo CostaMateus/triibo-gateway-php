@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper;
@@ -250,18 +249,7 @@ class FastshopController extends Controller
             "X-VTEX-API-AppToken" => config("fastshop.hml.token")
         ];
 
-        // Exemplo do body recebido do marketplace
-        // [
-        //     "postalCode" => "01218011",
-        //     "items"      => [
-        //         [
-        //             "sku"      => "FS-SKU-11",
-        //             "quantity" => 1
-        //         ]
-        //     ],
-        // ]
-
-        $wcData = $request->all();
+        $wcData = $request->all();   
         $items  = [];
 
         foreach ($wcData["items"] as $item)
@@ -273,20 +261,6 @@ class FastshopController extends Controller
             ];
         }
 
-        // Exemplo do body enviado a FS
-        // [
-        //     "geoCoordinates" => [],
-        //     "country"        => "BRA",
-        //     "postalCode"     => "01218011",
-        //     "items"      => [
-        //         [
-        //             "id"       => "SKU-11",
-        //             "quantity" => 1,
-        //             "seller"   => "FSH",
-        //         ]
-        //     ],
-        // ]
-
         $body = json_encode([
             "items"          => $items,
             "postalCode"     => $wcData["postalCode"],
@@ -295,48 +269,16 @@ class FastshopController extends Controller
         ]);
 
         $response  = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
-
-        // verificar, antes de qualquer coisa
-        // a request foi com sucesso? ($response->successful())
-        // caso não, já retornar erro para o marketplace
-        // caso sim, tratar os dados
-        
+     
         if (!$response->successful())
         {
             return response()->json([
-                "errorCode" => "400",
-                "message"   => "something wrong when consulting the delivery price"
-            ],400);
+                "errorCode" => "500",
+                "message"   => "Something wrong when consulting the delivery price"
+            ],500);
         }
-
-        $fsData    = $response->json();
-
-        // como o fsData, precisa validar:
-        //
-        // o $fsData["logisticsInfo"] está vazio?
-        // se sim, significa que não tem estoque, conforme o penultimo ponto da doc da FS (https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/calculo-de-frete)
-        // retornar erro 400, "sem estoque"
-        //
-        // o $fsData["logisticsInfo"]["sla"] está vazio?
-        // se sim, significa que não há métodos de entrega, conforme o ultimo ponto da doc da FS (https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/calculo-de-frete)
-        // retornar erro 400, "sem metodo de entrega"
-        //
-        // se passou nas duas verificações, montar o retorno para o marketplace
-        // algo como:
-        // [
-        //     "items" => [
-        //         [
-        //             "sku"          => "FS-SKU-11",
-        //             "quantity"     => 1,
-        //             "price"        => $fsData["logisticsInfo"]["sla"][0]["price"], // tratar valor com centavos
-        //             "deliveryTime" => $fsData["logisticsInfo"]["sla"][0]["shippingEstimate"], // tratar string com bd
-        //         ]
-        //     ],
-        //     "postalCode" => "01218011"
-        // ];
-
-
-        // ===================================
+    
+        $fsData  = $response->json();
         $logistics = $fsData["logisticsInfo"];
 
         foreach ($logistics as $key) {
@@ -345,41 +287,60 @@ class FastshopController extends Controller
             ];
         }
 
-        if(empty($region_info["slas"])) {
-            return response()->json([
-                 "message" => "We do not deliver in your region"
-            ]);
-        }
-
-<<<<<<< HEAD
         if(empty($logistics)) { 
             return response() -> json([
-=======
-        if(empty($logistics)) {
-            return response()->json([
->>>>>>> 5b70cf70525e7a7ecdce44102ad80343b6caff4e
-                 "message" => "Missing product
-                 "
-            ]);
-        }
-        // response de erros 400, 500
-
-        if(empty($cep)) {
-            return response()->json ([
                 "errorCode" => "400",
-                "message"   => "request does not meet the necessary requirements"
+                "message" => "Sem estoque"
             ],400);
         }
-        elseif ($response->successful()) {
-            $wcData = $response->json();
+
+        if(empty($region_info["slas"])) {
+            return response()->json([
+                "errorCode" => "400",
+                "message" => "Sem metodos de entrega"
+            ],400);
+        }
+        
+        $produto = $fsData["items"][0];  //acessa os items enviados pela FS
+        $envio = $fsData["logisticsInfo"][0]["slas"][0]; //acessa os slas -> (informações do frete) enviados pela FS
+        $tempoDeEnvio = $envio['shippingEstimate'];
+        
+        // Tratamento do tempo de envio
+        if($tempoDeEnvio === '1bd'){
+            $tempoDeEnvio = preg_replace('/bd/', ' dia util', $tempoDeEnvio);
+
+        } 
+        elseif(substr($tempoDeEnvio, -1) == 'h') {
+            $tempoDeEnvio = preg_replace('/h/', ' hora(s)', $tempoDeEnvio);
+
+        }
+        elseif(substr($tempoDeEnvio, -1) == 'm'){
+            $tempoDeEnvio = preg_replace('/m/', ' minutos', $tempoDeEnvio);
+
         }
         else {
-            return response()->json([
-                "errorCode" => "500",
-                "message"   => "something wrong"
-            ],500);
+            $tempoDeEnvio = preg_replace('/bd/', ' dias uteis', $tempoDeEnvio);
+
         }
-        dd($response->json());
+        // End tratamento tempo de envio
+        // Tratamento valor do frete
+         $valorFrete = preg_replace("/^([0-9]+)*?([0-9]{2})$/", "$1,$2", $envio['price']);
+        // End tratamento valor do frete
+       return [
+          "items" => [
+            [
+                "sku"           => $produto['id'],
+                "quantity"      => $produto['quantity'],
+                "deliveryTime"  => $tempoDeEnvio,
+                "price"         => $valorFrete
+                ]
+            ],
+                 "postalCode"   => $fsData['postalCode'],          
+        ];
+        
+        
+        // dd($response -> json());
+        
     }
 
     /**
