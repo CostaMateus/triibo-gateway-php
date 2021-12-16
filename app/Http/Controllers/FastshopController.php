@@ -195,8 +195,8 @@ class FastshopController extends Controller
     public function updateStockPrice($product, $sellerSkuId)
     {
         $env     = config("fastshop.env");
-        $headers = config("fastshop.$env.headers");
-        $url     = config("fastshop.$env.url") . "/pvt/orderForms/simulation";
+        $headers = config("fastshop.$env.fs.headers");
+        $url     = config("fastshop.$env.fs.url") . "/pvt/orderForms/simulation";
 
         $body    = json_encode([
             "items" => [[
@@ -236,7 +236,7 @@ class FastshopController extends Controller
         catch (Exception $e)
         {
             Log::exception("updateStockPrice", $e);
-        }
+        a}
     }
 
     /**
@@ -266,6 +266,12 @@ class FastshopController extends Controller
         try
         {
             $wcData = $request->all();
+
+            Storage::put("wc-order-" . date("Ymd-his") . ".json", json_encode($wcData, JSON_UNESCAPED_SLASHES));
+
+            return response()->json([
+                "message" => "ok"
+            ], 200);
         }
         catch (Exception $e)
         {
@@ -377,7 +383,7 @@ class FastshopController extends Controller
             $appToken = $request->header("x-vtex-api-apptoken");
 
             // Verifição de chaves
-            if ($appKey != config("fastshop.$env.key") || $appToken != config("fastshop.$env.token"))
+            if ($appKey != config("fastshop.$env.fs.key") || $appToken != config("fastshop.$env.fs.token"))
             {
                 Log::invalidCredentials($appKey, $appToken);
 
@@ -393,11 +399,11 @@ class FastshopController extends Controller
         }
         else
         {
-            $appKey   = $request->header("appkey");
-            $appToken = $request->header("apptoken");
+            $appKey   = $request->header("api-key");
+            $appToken = $request->header("api-token");
 
             // Verifição de chaves
-            if ($appKey != config("fastshop.wc.$env.key") || $appToken != config("fastshop.wc.$env.token"))
+            if ($appKey != config("fastshop.$env.wc.key") || $appToken != config("fastshop.$env.wc.token"))
             {
                 Log::invalidCredentials($appKey, $appToken);
 
