@@ -161,7 +161,7 @@ class CofryIntegration
         /** Lojas tag Destaques */
             // - 123  Booking
             // - 137  Nike
-            // - 347  Amazon
+            // - 347  Amazon - removido
             // - 349  Americanas
             // - 351  Submarino
             // - 357  Centauro
@@ -169,7 +169,7 @@ class CofryIntegration
             // - 503  Cobasi
         /************************/
 
-        $highlights = [123, 137, 347, 349, 351, 357, 445, 503];
+        $highlights = [123, 137, 349, 351, 357, 445, 503];
 
         foreach ($stores as $id => &$store)
         {
