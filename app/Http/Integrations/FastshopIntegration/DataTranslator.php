@@ -65,6 +65,12 @@ class DataTranslator
         return $wcData;
     }
 
+    /**
+     * Prepara a consulta de preço e estoque
+     *
+     * @param string $sku
+     * @return void
+     */
     private static function queryStockPrice(string $sku)
     {
         return [
@@ -264,7 +270,7 @@ class DataTranslator
             $availableQuantity = ($lg["quantity"] <= $stock)        ? true                      : false;
 
             $logistics[]       = [
-                "sku"               => $products[$lg["itemIndex"]],
+                "sku"               => "FS-" . $products[$lg["itemIndex"]],
                 "quantity"          => $lg["quantity"],
                 "stock"             => $stock,
                 "deliveryPrice"     => Helper::convertPrice($price),
