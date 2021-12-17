@@ -80,6 +80,7 @@ Route::prefix("marketplace")->group(function () {
     /**
      * APIs chamadas pelo marketplace
      */
+
     // Route-api: php.triibo.com.br/api/marketplace/freightcalculation
     Route::post(
         "/freightcalculation",
@@ -91,6 +92,7 @@ Route::prefix("marketplace")->group(function () {
         "/ordercreation",
         [FastshopController::class, "orderCreation"]
     )->name("marketplace.ordercreation");
+
 });
 
 
