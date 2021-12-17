@@ -88,6 +88,17 @@ class Log
     }
 
     /**
+     * Log de falha na consulta de frete
+     *
+     * @param array $data
+     * @return void
+     */
+    public static function freightCalculation(array $data)
+    {
+        LogSys::channel("fastshop")->info("Shipping query failed", $data);
+    }
+
+    /**
      * Log erros imprevistos
      *
      * @param Exception $e
