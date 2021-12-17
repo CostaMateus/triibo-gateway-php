@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Helpers\Helper;
@@ -92,7 +91,7 @@ class FastshopController extends Controller
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
-            $wcData    = DataTranslator::translate("newProduct", $fsData);
+            $wcData  = DataTranslator::translate("newProduct", $fsData);
 
             // VERIFICAR E TRATAR OS SkuSpecifications
             // Atualiza produto no Marketplace
@@ -240,9 +239,108 @@ class FastshopController extends Controller
      *
      * @return void
      */
-    public function freightCalculation()
+    public function freightCalculation(Request $request)
     {
-        //
+        $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
+        $headers = [
+            "Accept"              => "application/json",
+            "Content-Type"        => "application/json",
+            "X-VTEX-API-AppKey"   => config("fastshop.hml.key"),
+            "X-VTEX-API-AppToken" => config("fastshop.hml.token")
+        ];
+
+        $wcData = $request->all();   
+        $items  = [];
+
+        foreach ($wcData["items"] as $item)
+        {
+            $items[] = [
+                "id"       => $item['sku'],
+                "quantity" => $item['quantity'],
+                "seller"   => "FSH",
+            ];
+        }
+
+        $body = json_encode([
+            "items"          => $items,
+            "postalCode"     => $wcData["postalCode"],
+            "country"        => "BRA",
+            "geoCoordinates" => []
+        ]);
+
+        $response  = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
+     
+        if (!$response->successful())
+        {
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "Something wrong when consulting the delivery price"
+            ],500);
+        }
+    
+        $fsData  = $response->json();
+        $logistics = $fsData["logisticsInfo"];
+
+        foreach ($logistics as $key) {
+            $region_info = [
+                "slas" => $key['slas'],
+            ];
+        }
+
+        if(empty($logistics)) { 
+            return response() -> json([
+                "errorCode" => "400",
+                "message" => "Sem estoque"
+            ],400);
+        }
+
+        if(empty($region_info["slas"])) {
+            return response()->json([
+                "errorCode" => "400",
+                "message" => "Sem metodos de entrega"
+            ],400);
+        }
+        
+        $produto = $fsData["items"][0];  //acessa os items enviados pela FS
+        $envio = $fsData["logisticsInfo"][0]["slas"][0]; //acessa os slas -> (informações do frete) enviados pela FS
+        $tempoDeEnvio = $envio['shippingEstimate'];
+        
+        // Tratamento do tempo de envio
+        if($tempoDeEnvio === '1bd'){
+            $tempoDeEnvio = preg_replace('/bd/', ' dia util', $tempoDeEnvio);
+
+        } 
+        elseif(substr($tempoDeEnvio, -1) == 'h') {
+            $tempoDeEnvio = preg_replace('/h/', ' hora(s)', $tempoDeEnvio);
+
+        }
+        elseif(substr($tempoDeEnvio, -1) == 'm'){
+            $tempoDeEnvio = preg_replace('/m/', ' minutos', $tempoDeEnvio);
+
+        }
+        else {
+            $tempoDeEnvio = preg_replace('/bd/', ' dias uteis', $tempoDeEnvio);
+
+        }
+        // End tratamento tempo de envio
+        // Tratamento valor do frete
+         $valorFrete = preg_replace("/^([0-9]+)*?([0-9]{2})$/", "$1,$2", $envio['price']);
+        // End tratamento valor do frete
+       return [
+          "items" => [
+            [
+                "sku"           => $produto['id'],
+                "quantity"      => $produto['quantity'],
+                "deliveryTime"  => $tempoDeEnvio,
+                "price"         => $valorFrete
+                ]
+            ],
+                 "postalCode"   => $fsData['postalCode'],          
+        ];
+        
+        
+        // dd($response -> json());
+        
     }
 
     /**
@@ -267,6 +365,7 @@ class FastshopController extends Controller
     {
         //
     }
+
 
     /**
      * Pedido Cancelado pelo Marketplace

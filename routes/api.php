@@ -72,7 +72,12 @@ Route::prefix("marketplace")->group(function () {
         "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
         [FastshopController::class, "updateSku"]
     )->name("marketplace.updatesku");
-
+    
+    // Route-api: php.triibo.com.br/api/marketplace/freightcalculation
+    Route::post(
+        "/freightcalculation",
+        [FastshopController::class, "freightCalculation"]
+    )->name("marketplace.freightcalculation");
 });
 
 
