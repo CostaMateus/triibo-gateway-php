@@ -13,13 +13,30 @@ class DataTranslator
             case "updateStockPrice":
                 return self::updateStockPrice($data);
             break;
+            case "queryStockPrice":
+                return self::queryStockPrice($data[0]);
+            break;
 
             case "newProduct":
                 return self::newProductFsToWc($data);
             break;
+
+            case "freightCalcFs":
+                return self::freightCalcFs($data);
+            break;
+
+            case "freightCalcWc":
+                return self::freightCalcWc($data);
+            break;
         }
     }
 
+    /**
+     * Converte a atualização de um produto da Fastshop em WooCommerce
+     *
+     * @param array $data
+     * @return array
+     */
     private static function updateStockPrice(array $data)
     {
         if (isset($data["logisticsInfo"]) && count($data["logisticsInfo"]) > 0)
@@ -48,7 +65,27 @@ class DataTranslator
         return $wcData;
     }
 
-    public static function newProductFsToWc(array $data)
+    private static function queryStockPrice(string $sku)
+    {
+        return [
+            "items" => [[
+                "id"       => $sku,
+                "quantity" => 1,
+                "seller"   => "FSH"
+            ]],
+            "postalCode"     => "",
+            "country"        => "",
+            "geoCoordinates" => []
+        ];
+    }
+
+    /**
+     * Converte um produto da Fastshop em WooCommerce
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function newProductFsToWc(array $data)
     {
         $attributes = [];
         $categories = [];
@@ -165,6 +202,78 @@ class DataTranslator
         ];
 
         return $wcData;
+    }
+
+    /**
+     * Prepara uma consulta de frete do WooCommerce para a Fastshop
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function freightCalcFs(array $data)
+    {
+        $items = [];
+
+        foreach ($data["items"] as $item)
+        {
+            $items[] = [
+                "id"       => explode("FS-", $item["sku"])[1],
+                "quantity" => $item["quantity"],
+                "seller"   => "FSH",
+            ];
+        }
+
+        return [
+            "items"          => $items,
+            "postalCode"     => $data["postalCode"],
+            "country"        => "BRA",
+            "geoCoordinates" => []
+        ];
+    }
+
+    /**
+     * Converte retorno de frete da Fastshop para WooCommerce
+     *
+     * @param array $data
+     * @return void
+     */
+    private static function freightCalcWc(array $data)
+    {
+        $products  = [];
+        $logistics = [];
+
+        foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
+
+        foreach ($data["logisticsInfo"] as $key => $lg)
+        {
+            $delivery  = null;
+
+            $idChannel = array_search("delivery", array_column($lg["deliveryChannels"], "id"));
+            $idSlas    = array_search("delivery", array_column($lg["slas"], "deliveryChannel"));
+
+            if ($idChannel !== false && $idSlas !== false)
+            {
+                $delivery["stock"]        = $lg["deliveryChannels"][$idChannel]["stockBalance"];
+                $delivery["price"]        = $lg["slas"][$idSlas]["price"];
+                $delivery["deliveryTime"] = $lg["slas"][$idSlas]["shippingEstimate"];
+            }
+
+            $stock             = (isset($delivery["stock"]))        ? $delivery["stock"]        : 0;
+            $price             = (isset($delivery["price"]))        ? $delivery["price"]        : 0;
+            $deliveryTime      = (isset($delivery["deliveryTime"])) ? $delivery["deliveryTime"] : 0;
+            $availableQuantity = ($lg["quantity"] <= $stock)        ? true                      : false;
+
+            $logistics[]       = [
+                "sku"               => $products[$lg["itemIndex"]],
+                "quantity"          => $lg["quantity"],
+                "stock"             => $stock,
+                "deliveryPrice"     => Helper::convertPrice($price),
+                "deliveryTime"      => Helper::convertDeliveryTime($deliveryTime),
+                "availableQuantity" => $availableQuantity
+            ];
+        }
+
+        return $logistics;
     }
 
     public static function dataFastshopToWoocommerce(array $data)
