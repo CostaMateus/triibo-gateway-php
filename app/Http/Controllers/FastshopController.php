@@ -304,6 +304,8 @@ class FastshopController extends Controller
         $produto = $fsData["items"][0];  //acessa os items enviados pela FS
         $envio = $fsData["logisticsInfo"][0]["slas"][0]; //acessa os slas -> (informações do frete) enviados pela FS
         $tempoDeEnvio = $envio['shippingEstimate'];
+        $valorFrete = preg_replace("/^([0-9]+)*?([0-9]{2})$/", "$1,$2", $envio['price']); // Tratamento valor do frete
+       
         
         // Tratamento do tempo de envio
         if($tempoDeEnvio === '1bd'){
@@ -323,9 +325,7 @@ class FastshopController extends Controller
 
         }
         // End tratamento tempo de envio
-        // Tratamento valor do frete
-         $valorFrete = preg_replace("/^([0-9]+)*?([0-9]{2})$/", "$1,$2", $envio['price']);
-        // End tratamento valor do frete
+        
        return [
           "items" => [
             [
