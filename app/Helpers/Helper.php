@@ -276,4 +276,21 @@ class Helper
 
         return self::insertDecimal($weight);
     }
+
+    public static function convertPrice(int $price)
+    {
+        return self:: convertWeight($price);
+    }
+
+    public static function convertDeliveryTime(string $time)
+    {
+        if (strpos($time, "bd") !== false)
+        {
+            return explode("bd", $time)[0];
+        }
+        else
+        {
+            return "1";
+        }
+    }
 }
