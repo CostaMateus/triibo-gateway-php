@@ -98,6 +98,11 @@ class Log
         LogSys::channel("fastshop")->info("Shipping query failed", $data);
     }
 
+    public static function orderCanceledByMarketplace(array $data)
+    {
+        LogSys::channel("fastshop")->info("Order inquiry failed", $data);
+    }
+
     /**
      * Log erros imprevistos
      *

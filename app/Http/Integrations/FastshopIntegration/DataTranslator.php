@@ -28,6 +28,10 @@ class DataTranslator
             case "freightCalcWc":
                 return self::freightCalcWc($data);
             break;
+
+            case "wcCanceledOrder":
+                return self::wcCanceledOrder($data);
+            break;
         }
     }
 

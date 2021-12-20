@@ -241,7 +241,7 @@ class FastshopController extends Controller
      */
     public function freightCalculation()
     {
-    //
+        //
     }
     
 
@@ -277,19 +277,40 @@ class FastshopController extends Controller
      */
     public function orderCanceledByMarketplace(Request $request)
     {
+        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+
         try
         {
             $wcData = $request->all();
-            dd($wcData);
+
+            $body     = DataTranslator::translate("wcCanceledOrder", $wcData);
 
             $url   = "$this->fsUrl/pvt/orders/{orderId}/cancel"; 
+            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+            dd($response->json());
+            
+            if(!$response->successful()) 
+            {   
+                log::orderCanceledByMarketplace($body);
+
+                return response()->json([
+                    "errorCode" => "4001",
+                    "message"   => "Order inquiry failed"
+                ],400);
+            }
+
             $fsData = $response->json();
-            dd($fsData);
+
         }
 
         catch (Exception $e)
         {
+            Log::exception("orderCanceledByMarketplace", $e);
 
+            return response()->json([
+                "errorCode" => "5001", // codigo para tratar no WooCommerce
+                "message"   => "something wrong",
+            ], 500);
         }
     }
 
