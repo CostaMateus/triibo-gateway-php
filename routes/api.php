@@ -55,6 +55,9 @@ Route::prefix("triibo")->group(function () {
  */
 Route::prefix("marketplace")->group(function () {
 
+    /**
+     * APIs chamadas pela Fastshop
+     */
     // Route-api: php.triibo.com.br/api/marketplace/changenotification
     Route::post(
         "/changenotification/api/catalog_system/pvt/skuseller/changenotification/{sellerId}/{sellerSkuId}",
@@ -72,6 +75,23 @@ Route::prefix("marketplace")->group(function () {
         "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
         [FastshopController::class, "updateSku"]
     )->name("marketplace.updatesku");
+
+
+    /**
+     * APIs chamadas pelo marketplace
+     */
+
+    // Route-api: php.triibo.com.br/api/marketplace/freightcalculation
+    Route::post(
+        "/freightcalculation",
+        [FastshopController::class, "freightCalculation"]
+    )->name("marketplace.freightcalculation");
+
+    // Route-api: php.triibo.com.br/api/marketplace/ordercreation
+    Route::post(
+        "/ordercreation",
+        [FastshopController::class, "orderCreation"]
+    )->name("marketplace.ordercreation");
 
 });
 
