@@ -254,10 +254,10 @@ class FastshopController extends Controller
         // Verifição de chaves
         if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
+        $wcData = $request->all();
+
         try
         {
-            $wcData   = $request->all();
-
             // Converte dados do WC para FS
             $body     = DataTranslator::translate("freightCalcFs", $wcData);
 
@@ -271,17 +271,21 @@ class FastshopController extends Controller
 
                 return response()->json([
                     "errorCode" => "5001", // codigo para tratar no WooCommerce
-                    "message"   => "Something wrong when consulting the delivery price"
+                    "message"   => "Something wrong when consulting the delivery price",
+                    "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
                 ], 500);
             }
 
             $fsData = $response->json();
 
-            if (empty($fsData["logisticsInfo"]))
+            $itemWithoutStock = array_search(0, array_column($fsData["logisticsInfo"], "stockBalance"));
+
+            if (empty($fsData["logisticsInfo"]) || $itemWithoutStock !== false)
             {
                 return response()->json([
                     "errorCode" => "4001", // codigo para tratar no WooCommerce
-                    "message"   => "SKUs, currently out-of-stock"
+                    "message"   => "SKUs, currently out-of-stock",
+                    "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
                 ], 400);
             }
 
@@ -291,7 +295,8 @@ class FastshopController extends Controller
                 {
                     return response()->json([
                         "errorCode" => "4002", // codigo para tratar no WooCommerce
-                        "message"   => "Delivery unavailable for this zip code"
+                        "message"   => "Delivery unavailable for this zip code",
+                        "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
                     ], 400);
                 }
             }
@@ -311,132 +316,10 @@ class FastshopController extends Controller
 
             return response()->json([
                 "errorCode" => "5002", // codigo para tratar no WooCommerce
-                "message"   => "something wrong",
+                "message"   => "Something wrong",
+                "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
             ], 500);
         }
-
-
-        // =================================
-        // Tente manter o seguinte:
-        // - padrao da estrutura do codigo
-        // - indentaçao do codigo
-        // - padrao das mensagens de retorno
-        // - mensagens e variaveis em ingles
-        // =================================
-
-        // =================================
-        // Adicionei, nas primeiras linhas,
-        // uma verificação do header enviado pelo marketplace,
-        // para evitar chamadas externas não autorizadas.
-        // =================================
-
-        // =================================
-        // O $url se tornou um atributo da classe, assim como o $header.
-        // =================================
-        // $url     = config("fastshop.hml.url") . "/pvt/orderForms/simulation";
-        // $headers = [
-        //     "Accept"              => "application/json",
-        //     "Content-Type"        => "application/json",
-        //     "X-VTEX-API-AppKey"   => config("fastshop.hml.key"),
-        //     "X-VTEX-API-AppToken" => config("fastshop.hml.token")
-        // ];
-
-        // =================================
-        // O tratamento dos dados recebidos foram transferido para a classe DataTranslator
-        // =================================
-        // $wcData = $request->all();
-        // $items  = [];
-        // foreach ($wcData["items"] as $item)
-        // {
-        //     $items[] = [
-        //         "id"       => $item['sku'],
-        //         "quantity" => $item['quantity'],
-        //         "seller"   => "FSH",
-        //     ];
-        // }
-        // $body = json_encode([
-        //     "items"          => $items,
-        //     "postalCode"     => $wcData["postalCode"],
-        //     "country"        => "BRA",
-        //     "geoCoordinates" => []
-        // ]);
-
-        // =================================
-        // Continuou a mesma coisa, apenas adicionei um log, para qnd erro na chamada da FS.
-        // =================================
-        // $response  = Http::withHeaders($headers)->withBody($body, "application/json")->post($url);
-        // if (!$response->successful())
-        // {
-        //     return response()->json([
-        //         "errorCode" => "500",
-        //         "message"   => "Something wrong when consulting the delivery price"
-        //     ],500);
-        // }
-
-        // =================================
-        // A logica aqui está invertida.
-        // Tu primeiro tenta fazer um for no $logistics, pra depois verificar se ele está vazio.
-        // =================================
-        // $fsData  = $response->json();
-        // $logistics = $fsData["logisticsInfo"];
-        // foreach ($logistics as $key) {
-        //     $region_info = [
-        //         "slas" => $key['slas'],
-        //     ];
-        // }
-        // if(empty($logistics)) {
-        //     return response() -> json([
-        //         "errorCode" => "400",
-        //         "message" => "Sem estoque"
-        //     ],400);
-        // }
-
-        // if(empty($region_info["slas"])) {
-        //     return response()->json([
-        //         "errorCode" => "400",
-        //         "message" => "Sem metodos de entrega"
-        //     ],400);
-        // }
-
-        // ====================================
-        // Tratou apenas o primeiro produto. O marketplace pode enviar varios.
-        // ====================================
-        // $produto = $fsData["items"][0];  //acessa os items enviados pela FS
-        // $envio = $fsData["logisticsInfo"][0]["slas"][0]; //acessa os slas -> (informações do frete) enviados pela FS
-        // $tempoDeEnvio = $envio['shippingEstimate'];
-
-        // ====================================
-        // Não precisa tratar o texto, apenas retornar o valor, o marketplace irá tratar isso.
-        // ====================================
-        // Tratamento do tempo de envio
-        // if($tempoDeEnvio === '1bd'){
-        //     $tempoDeEnvio = preg_replace('/bd/', ' dia util', $tempoDeEnvio);
-        // }
-        // elseif(substr($tempoDeEnvio, -1) == 'h') {
-        //     $tempoDeEnvio = preg_replace('/h/', ' hora(s)', $tempoDeEnvio);
-        // }
-        // elseif(substr($tempoDeEnvio, -1) == 'm'){
-        //     $tempoDeEnvio = preg_replace('/m/', ' minutos', $tempoDeEnvio);
-        // }
-        // else {
-        //     $tempoDeEnvio = preg_replace('/bd/', ' dias uteis', $tempoDeEnvio);
-        // }
-        // // End tratamento tempo de envio
-        // // Tratamento valor do frete
-        //  $valorFrete = preg_replace("/^([0-9]+)*?([0-9]{2})$/", "$1,$2", $envio['price']);
-        // // End tratamento valor do frete
-        //    return [
-        //       "items" => [
-        //         [
-        //             "sku"           => $produto['id'],
-        //             "quantity"      => $produto['quantity'],
-        //             "deliveryTime"  => $tempoDeEnvio,
-        //             "price"         => $valorFrete
-        //             ]
-        //         ],
-        //              "postalCode"   => $fsData['postalCode'],
-        //     ];
-        //     // dd($response -> json());
     }
 
     /**
