@@ -108,4 +108,9 @@ class Log
     {
         LogSys::channel("fastshop")->error("Exception - $func", [$e]);
     }
+
+    public static function default(string $func, array $data)
+    {
+        LogSys::channel("fastshop")->info($func, $data);
+    }
 }
