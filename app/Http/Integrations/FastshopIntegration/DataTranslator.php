@@ -3,6 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use App\Helpers\Helper;
+use App\Http\Integrations\FastshopIntegration\Log;
 
 class DataTranslator
 {
@@ -24,9 +25,11 @@ class DataTranslator
             case "freightCalcFs":
                 return self::freightCalcFs($data);
             break;
-
             case "freightCalcWc":
                 return self::freightCalcWc($data);
+            break;
+            case "freightCalcFailed":
+                return self::freightCalcFailed($data);
             break;
         }
     }
@@ -107,6 +110,8 @@ class DataTranslator
 
         foreach ($data["Images"] as $img)
         {
+            Log::default("newProductFsToWc - image loop", [$img]);
+
             $images[] = [
                 "src"  => $img["imageUrl"],
                 "name" => $img["imageName"],
@@ -277,6 +282,49 @@ class DataTranslator
                 "deliveryTime"      => Helper::convertDeliveryTime($deliveryTime),
                 "availableQuantity" => $availableQuantity
             ];
+        }
+
+        return $logistics;
+    }
+
+    private static function freightCalcFailed(array $data)
+    {
+        $products  = [];
+        $logistics = [];
+
+        if (isset($data["logisticsInfo"]))
+        {
+            foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
+
+            foreach ($data["logisticsInfo"] as $key => $lg)
+            {
+                $idChannel = array_search("delivery", array_column($lg["deliveryChannels"], "id"));
+
+                $stock = ($idChannel !== false) ? $lg["deliveryChannels"][$idChannel]["stockBalance"] : 0;
+
+                $logistics[] = [
+                    "sku"               => "FS-" . $products[$lg["itemIndex"]],
+                    "quantity"          => $lg["quantity"],
+                    "stock"             => $stock,
+                    "deliveryPrice"     => "0.00",
+                    "deliveryTime"      => "0",
+                    "availableQuantity" => false
+                ];
+            }
+        }
+        else
+        {
+            foreach ($data["items"] as $key => $p)
+            {
+                $logistics[] = [
+                    "sku"               => $p["sku"],
+                    "quantity"          => $p["quantity"],
+                    "stock"             => 0,
+                    "deliveryPrice"     => "0.00",
+                    "deliveryTime"      => "0",
+                    "availableQuantity" => false
+                ];
+            }
         }
 
         return $logistics;
