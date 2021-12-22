@@ -226,6 +226,7 @@ class CofryIntegration
 
             $promo["ItemCode"] = str_replace(" ",      "", $promo["ItemCode"]);
             $promo["ItemCode"] = str_replace("Cupom:", "", $promo["ItemCode"]);
+            $promo["ItemCode"] = str_replace("\t",     "", $promo["ItemCode"]);
 
             if ($promo["ItemTitle"] === "******") $promo["ItemTitle"] = "Cupom: ******";
 
@@ -314,6 +315,7 @@ class CofryIntegration
             $cashback            = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
 
             $auxAdv              = preg_replace("/[^\w\s]/", "", iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $store["Advertiser"]));
+            $auxAdv              = str_replace("\t", "", $auxAdv);
             $idPromo             = $idStore . strtolower(str_replace(" ", "", $auxAdv));
 
             $store["Logo"]       = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
@@ -324,6 +326,7 @@ class CofryIntegration
 
             $rules               = str_replace("\t", "", $store["GeneralRules"]);
             $rules               = json_decode($rules, true);
+            $rules["general"]    = str_replace("\t",         "",   $rules["general"]);
             $rules["general"]    = str_replace("<ol><li>",   "",   $rules["general"]);
             $rules["general"]    = str_replace("</li></ol>", "",   $rules["general"]);
             $rules["general"]    = str_replace("</li><li>",  "\n", $rules["general"]);
