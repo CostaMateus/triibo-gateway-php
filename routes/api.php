@@ -53,7 +53,7 @@ Route::prefix("triibo")->group(function () {
 /**
  *Integração MarketplaceTriibo <=> Fastshop
  */
-Route::prefix("marketplace")->group(function () {
+Route::name("marketplace.")->prefix("marketplace")->group(function () {
 
     /**
      * APIs chamadas pela Fastshop
@@ -62,36 +62,45 @@ Route::prefix("marketplace")->group(function () {
     Route::post(
         "/changenotification/api/catalog_system/pvt/skuseller/changenotification/{sellerId}/{sellerSkuId}",
         [FastshopController::class, "changeNotification"]
-    )->name("marketplace.changenotification");
+    )->name("changenotification");
 
     // Route-api: php.triibo.com.br/api/marketplace/skusuggestion
     Route::put(
         "/skusuggestion/suggestions/{sellerId}/{sellerSkuId}",
         [FastshopController::class, "skuSuggestion"]
-    )->name("marketplace.skusuggestion");
+    )->name("skusuggestion");
 
     // Route-api: php.triibo.com.br/api/marketplace/updatesku
     Route::put(
         "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
         [FastshopController::class, "updateSku"]
-    )->name("marketplace.updatesku");
+    )->name("updatesku");
 
 
     /**
      * APIs chamadas pelo marketplace
      */
+    Route::name("wc.")->prefix("wc")->group(function () {
 
-    // Route-api: php.triibo.com.br/api/marketplace/freightcalculation
-    Route::post(
-        "/freightcalculation",
-        [FastshopController::class, "freightCalculation"]
-    )->name("marketplace.freightcalculation");
+        // Route-api: php.triibo.com.br/api/marketplace/freightcalculation
+        Route::post(
+            "/freightcalculation",
+            [FastshopController::class, "freightCalculation"]
+        )->name("freightcalculation");
 
-    // Route-api: php.triibo.com.br/api/marketplace/ordercreation
-    Route::post(
-        "/ordercreation",
-        [FastshopController::class, "orderCreation"]
-    )->name("marketplace.ordercreation");
+        // Route-api: php.triibo.com.br/api/marketplace/mkt-updatesku/{sku}
+        Route::post(
+            "/updatesku/{sku}",
+            [FastshopController::class, "updateSkuWc"]
+        )->name("updatesku");
+
+        // Route-api: php.triibo.com.br/api/marketplace/ordercreation
+        Route::post(
+            "/ordercreation",
+            [FastshopController::class, "orderCreation"]
+        )->name("ordercreation");
+
+    });
 
 });
 
