@@ -199,45 +199,48 @@ class FastshopController extends Controller
 
     // --------- METODOS ABAIXO SÃO CONSUMIDOS PELO WOOCOMMERCE, CONSULTAM AS APIs DA FASTSHOP
     /**
-     * Atualização de preço/estoque
-     * Consulta a Fastshop para atualizar os dados do produto.
-     * Toda vez que changeNotification() retornar o status 200.
+     * Atualiza preço e estoque
      *
      * @param Request $request
+     * @param string $sku
      * @return void
      */
-    public function updateStockPrice($product, $sellerSkuId)
+    public function updateSkuWc(Request $request, $sku)
     {
-        $url  = "$this->fsUrl/pvt/orderForms/simulation";
-        $body = DataTranslator::translate("queryStockPrice", [$sellerSkuId]);
+        // Verifição de chaves
+        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         try
         {
-            // Consulta produto na FS
-            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->get($url);
+            // Procura produto no Marketplace pelo SKU
+            $product = Product::all(["sku" => strtoupper($sku)])->first();
 
-            if ($response->successful())
+            if (!$product)
             {
-                $fsData = $response->json();
-
-                // Converte produto da FS para WC
-                $wcData = DataTranslator::translate("updateStockPrice", $fsData);
-
-                // Atualiza produto no Marketplace
-                $new    = Product::update($product->id, $wcData);
-
-                // Registrar log de sucesso
-                Log::updateStockPrice($product, $new);
+                return response()->json([
+                    "errorCode" => "404",
+                    "message"   => "Unable to retrieve product data",
+                ], 404);
             }
-            else
-            {
-                // Registrar log de falha
-                Log::updateStockPrice($product, null, true);
-            }
+
+            $sku     = explode("FS-", $sku)[1];
+
+            // Atualiza produto no Marketplace
+            $this->updateStockPrice($product, $sku);
+
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "Ok",
+            ], 200);
         }
         catch (Exception $e)
         {
-            Log::exception("updateStockPrice", $e);
+            Log::exception("updateSkuWc", $e);
+
+            return response()->json([
+                "errorCode" => "500",
+                "message"   => "something wrong",
+            ], 500);
         }
     }
 
@@ -499,6 +502,49 @@ class FastshopController extends Controller
             {
                 return TRUE;
             }
+        }
+    }
+
+    /**
+     * Atualização de preço/estoque
+     * Consulta a Fastshop para atualizar os dados do produto.
+     * Toda vez que changeNotification() retornar o status 200.
+     *
+     * @param Request $request
+     * @return void
+     */
+    private function updateStockPrice($product, $sellerSkuId)
+    {
+        $url  = "$this->fsUrl/pvt/orderForms/simulation";
+        $body = DataTranslator::translate("queryStockPrice", [$sellerSkuId]);
+
+        try
+        {
+            // Consulta produto na FS
+            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->get($url);
+
+            if ($response->successful())
+            {
+                $fsData = $response->json();
+
+                // Converte produto da FS para WC
+                $wcData = DataTranslator::translate("updateStockPrice", $fsData);
+
+                // Atualiza produto no Marketplace
+                $new    = Product::update($product->id, $wcData);
+
+                // Registrar log de sucesso
+                Log::updateStockPrice($product, $new);
+            }
+            else
+            {
+                // Registrar log de falha
+                Log::updateStockPrice($product, null, true);
+            }
+        }
+        catch (Exception $e)
+        {
+            Log::exception("updateStockPrice", $e);
         }
     }
 }
