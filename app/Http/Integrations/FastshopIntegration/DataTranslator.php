@@ -110,8 +110,6 @@ class DataTranslator
 
         foreach ($data["Images"] as $img)
         {
-            Log::default("newProductFsToWc - image loop", [$img]);
-
             $images[] = [
                 "src"  => $img["imageUrl"],
                 "name" => $img["imageName"],
