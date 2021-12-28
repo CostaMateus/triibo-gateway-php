@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\Log;
@@ -333,14 +334,15 @@ class FastshopController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function orderCreation(Request $request)
+    public function orderCreation(Request $request, $orderId)
     {
         // Verifição de chaves
         if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         try
         {
-            $wcData = $request->all();
+            $wcData = Order::find($orderId);
+            $wcData = json_decode(json_encode($wcData), true);
 
             Storage::put("wc-order-" . date("Ymd-his") . ".json", json_encode($wcData, JSON_UNESCAPED_SLASHES));
 

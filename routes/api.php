@@ -82,21 +82,21 @@ Route::name("marketplace.")->prefix("marketplace")->group(function () {
      */
     Route::name("wc.")->prefix("wc")->group(function () {
 
-        // Route-api: php.triibo.com.br/api/marketplace/freightcalculation
+        // Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
         Route::post(
             "/freightcalculation",
             [FastshopController::class, "freightCalculation"]
         )->name("freightcalculation");
 
-        // Route-api: php.triibo.com.br/api/marketplace/mkt-updatesku/{sku}
+        // Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
         Route::post(
             "/updatesku/{sku}",
             [FastshopController::class, "updateSkuWc"]
         )->name("updatesku");
 
-        // Route-api: php.triibo.com.br/api/marketplace/ordercreation
+        // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation
         Route::post(
-            "/ordercreation",
+            "/ordercreation/{orderId}",
             [FastshopController::class, "orderCreation"]
         )->name("ordercreation");
 
