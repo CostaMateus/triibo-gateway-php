@@ -83,12 +83,14 @@ Route::name("marketplace.")->prefix("marketplace")->group(function () {
     Route::name("wc.")->prefix("wc")->group(function () {
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
+        // API chamada a partir do ../plugins/triibo-fastshop-shipping/
         Route::post(
             "/freightcalculation",
             [FastshopController::class, "freightCalculation"]
         )->name("freightcalculation");
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
+        // API chamada a partir do ../plugins/triibo-fastshop-shipping/
         Route::post(
             "/updatesku/{sku}",
             [FastshopController::class, "updateSkuWc"]

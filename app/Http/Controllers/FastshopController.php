@@ -202,6 +202,8 @@ class FastshopController extends Controller
     /**
      * Atualiza preço e estoque
      *
+     * API chamada a partir do ../plugins/triibo-fastshop-shipping/
+     *
      * @param Request $request
      * @param string $sku
      * @return void
@@ -249,6 +251,8 @@ class FastshopController extends Controller
      * Cálculo de frete
      * Consulta a Fastshop para obter informações comerciais sobre SKUs, tais como, preço, estoque, frete e prazos de entrega.
      * O "postalCode" deve ser preenchido no request e será obrigatório para o retorno das informações de logística.
+     *
+     * API chamada a partir do ../plugins/triibo-fastshop-shipping/
      *
      * @param Request $request
      * @return Response
