@@ -331,6 +331,8 @@ class FastshopController extends Controller
      * Notifica a Fastshop para validar e processar o pedido.
      * Deve-se enviará informações como os itens contidos no carrinho, dados do perfil do cliente, dados de envio e os dados de pagamento.
      *
+     * API chamada a partir do ../themes/martfury-child/functions.php
+     *
      * @param Request $request
      * @return Response
      */

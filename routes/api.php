@@ -95,6 +95,7 @@ Route::name("marketplace.")->prefix("marketplace")->group(function () {
         )->name("updatesku");
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation
+        // API chamada a partir do ../themes/martfury-child/functions.php
         Route::post(
             "/ordercreation/{orderId}",
             [FastshopController::class, "orderCreation"]
