@@ -86,6 +86,8 @@ class FastshopController extends Controller
      * Toda vez que changeNotification() retornar o status 404.
      *
      * @param Request $request
+     * @param string $sellerId
+     * @param string $sellerSkuId
      * @return Response
      */
     public function skuSuggestion(Request $request, $sellerId, $sellerSkuId)
@@ -143,6 +145,8 @@ class FastshopController extends Controller
      * Atualização de catálogo
      *
      * @param Request $request
+     * @param string $sellerId
+     * @param string $sellerSkuId
      * @return Response
      */
     public function updateSku(Request $request, $sellerId, $sellerSkuId)
@@ -206,7 +210,7 @@ class FastshopController extends Controller
      *
      * @param Request $request
      * @param string $sku
-     * @return void
+     * @return Response
      */
     public function updateSkuWc(Request $request, $sku)
     {
@@ -337,7 +341,10 @@ class FastshopController extends Controller
      *
      * API chamada a partir do ../themes/martfury-child/functions.php
      *
+     * orderId para testes: 39731, 59798, 59799, 59800, 59858
+     *
      * @param Request $request
+     * @param string $orderId
      * @return Response
      */
     public function orderCreation(Request $request, $orderId)
@@ -347,10 +354,36 @@ class FastshopController extends Controller
 
         try
         {
-            $wcData = Order::find($orderId);
-            $wcData = json_decode(json_encode($wcData), true);
+            $data = $this->getOrder($orderId);
 
-            Storage::put("wc-order-" . date("Ymd-his") . ".json", json_encode($wcData, JSON_UNESCAPED_SLASHES));
+            // retira os pedidos que não são da FastShop
+            foreach ($data["order"] as $key => $order)
+            {
+                $id = config("fastshop.$this->env.wc.storeId");
+                // id da FS no dev-marketplace
+                if ($order["store"]["id"] != $id)
+                {
+                    unset($data["order"][$key]);
+                }
+            }
+
+            if (empty($data["order"])) return;
+
+            $data["order"] = $this->getOrderFreight($data["order"][0]);
+
+            if ($data["order"]["fs_error"]["error"]) return;
+
+            /**
+             * tratar erro
+             *
+             * fazer conversao dos dados
+             */
+
+            $fsData = DataTranslator::translate("newOrderFs", $data);
+
+            /**
+             * enviar pedido para Fast Shop
+             */
 
             return response()->json([
                 "errorCode" => null,
@@ -464,7 +497,7 @@ class FastshopController extends Controller
      * Valida as chaves das requisições recebidas
      *
      * @param Request $request
-     * @param boolean $wc       Chaves do WooCommerce
+     * @param boolean $wc       Valida chaves do WooCommerce
      * @return true|Response
      */
     private function keysVerification(Request $request, bool $wc = false)
@@ -518,7 +551,8 @@ class FastshopController extends Controller
      * Consulta a Fastshop para atualizar os dados do produto.
      * Toda vez que changeNotification() retornar o status 200.
      *
-     * @param Request $request
+     * @param Product $Product
+     * @param string $sellerSkuId
      * @return void
      */
     private function updateStockPrice($product, $sellerSkuId)
@@ -554,5 +588,101 @@ class FastshopController extends Controller
         {
             Log::exception("updateStockPrice", $e);
         }
+    }
+
+    /**
+     * Recupera o pedido no WooCommerce
+     *
+     * @param string $orderId
+     * @return array
+     */
+    private function getOrder(string $orderId)
+    {
+        $parent = null;
+        $data   = Order::all(["parent" => $orderId]);
+
+        if ($data->count() != 0)
+        {
+            $parent = Order::find($orderId);
+        }
+        else
+        {
+            $data   = [ Order::find($orderId) ];
+        }
+
+        return [
+            "order"  => json_decode(json_encode($data), true),
+            "parent" => json_decode(json_encode($parent), true)
+        ];
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param array $data
+     * @return array
+     */
+    private function getOrderFreight(array $data)
+    {
+        $fs_error  = [
+            "error"     => false,
+            "message"   => "",
+            "errorCode" => 0,
+        ];
+
+        $body      = DataTranslator::translate("freightCalcNewOrder", $data);
+        $url       = "$this->fsUrl/pvt/orderForms/simulation";
+        $response  = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+
+        if (!$response->successful())
+        {
+            $fs_error = [
+                "error"     => true,
+                "message"   => "Something wrong when consulting the delivery price",
+                "errorCode" => "5001",
+            ];
+        }
+        else
+        {
+            $fsData = $response->json();
+
+            $itemWithoutStock = array_search(0, array_column($fsData["logisticsInfo"], "stockBalance"));
+
+            if (empty($fsData["logisticsInfo"]) || $itemWithoutStock !== false)
+            {
+                $fs_error = [
+                    "error"     => true,
+                    "message"   => "SKUs, currently out-of-stock",
+                    "errorCode" => "4001",
+                ];
+            }
+            else
+            {
+                foreach ($fsData["logisticsInfo"] as $items)
+                {
+                    if (empty($items["slas"]))
+                    {
+                        $fs_error = [
+                            "error"     => true,
+                            "message"   => "Delivery unavailable for this zip code",
+                            "errorCode" => "4002",
+                        ];
+                    }
+                }
+            }
+        }
+
+        if ($fs_error["error"])
+        {
+            $data["fs_error"] = $fs_error;
+            $data["fs_info"]  = null;
+
+            return $data;
+        }
+
+        $data["fs_error"] = $fs_error;
+        $data["fs_info"]  = $fsData;
+
+        return $data;
     }
 }
