@@ -31,6 +31,9 @@ class DataTranslator
             case "freightCalcFailed":
                 return self::freightCalcFailed($data);
             break;
+            case "freightCalcNewOrder":
+                return self::freightCalcNewOrder($data);
+            break;
 
             case "newOrderFs":
                 return self::newOrderFs($data);
@@ -313,6 +316,33 @@ class DataTranslator
         }
 
         return $logistics;
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function freightCalcNewOrder(array $data)
+    {
+        $items = [];
+
+        foreach ($data["line_items"] as $item)
+        {
+            $items[] = [
+                "id"       => explode("FS-", $item["sku"])[1],
+                "quantity" => $item["quantity"],
+                "seller"   => "FSH",
+            ];
+        }
+
+        return [
+            "items"          => $items,
+            "postalCode"     => $data["shipping"]["postcode"],
+            "country"        => "BRA",
+            "geoCoordinates" => []
+        ];
     }
 
     /**
