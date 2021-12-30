@@ -31,6 +31,10 @@ class DataTranslator
             case "freightCalcFailed":
                 return self::freightCalcFailed($data);
             break;
+
+            case "newOrderFs":
+                return self::newOrderFs($data);
+            break;
         }
     }
 
@@ -72,7 +76,7 @@ class DataTranslator
      * Prepara a consulta de preço e estoque
      *
      * @param string $sku
-     * @return void
+     * @return array
      */
     private static function queryStockPrice(string $sku)
     {
@@ -149,36 +153,15 @@ class DataTranslator
         $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
 
         $wcData        = [
-            "name" => $data["ProductName"],
-            "slug" => $slug,
-
-            // "type"               => "simple",
-            // "status"             => "publish",
-            // "featured"           => false,
-            // "catalog_visibility" => "visible",
+            "name"              => $data["ProductName"],
+            "slug"              => $slug,
 
             "description"       => $data["ProductDescription"],
             "short_description" => $shortDescript,
             "sku"               => "FS-$sku",
 
-            "regular_price" => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
-            "sale_price"    => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
-            // "date_on_sale_from"     => null,
-            // "date_on_sale_from_gmt" => null,
-            // "date_on_sale_to"       => null,
-            // "date_on_sale_to_gmt"   => null,
-
-            // "virtual"         => false,
-            // "downloadable"    => false,
-            // "downloads"       => [],
-            // "download_limit"  => -1,
-            // "download_expiry" => -1,
-
-            // "external_url" => "",
-            // "button_text"  => "",
-
-            // "tax_status" => "taxable",
-            // "tax_class"  => "",
+            "regular_price"     => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
+            "sale_price"        => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
 
             "manage_stock"      => true,
             "stock_quantity"    => $data["AvailableQuantity"],
@@ -186,28 +169,25 @@ class DataTranslator
             "backorders"        => "no",
             "sold_individually" => false,
 
-            "weight"     => Helper::convertWeight($data["WeightKg"]),
-            "dimensions" => [
+            "weight"            => Helper::convertWeight($data["WeightKg"]),
+            "dimensions"        => [
                 "length" => (string) $data["Length"],
                 "width"  => (string) $data["Width"],
                 "height" => (string) $data["Height"]
             ],
 
-            "shipping_class" => "fast-shop",
-            // "reviews_allowed" => true,
+            "shipping_class"    => "fast-shop",
 
-            "upsell_ids"     => [],
-            "cross_sell_ids" => [],
-            "parent_id"      => 0,
-            "purchase_note"  => "",
+            "upsell_ids"        => [],
+            "cross_sell_ids"    => [],
+            "parent_id"         => 0,
+            "purchase_note"     => "",
 
-            // tag: novo
-            "tags"           => [ [ "id" => 289 ] ],
+            "tags"              => [ [ "id" => 289 ] ],
 
-            "categories"     => $categories,
-            "images"         => $images,
-            "attributes"     => $attributes,
-
+            "categories"        => $categories,
+            "images"            => $images,
+            "attributes"        => $attributes,
         ];
 
         return $wcData;
@@ -244,7 +224,7 @@ class DataTranslator
      * Converte retorno de frete da Fastshop para WooCommerce
      *
      * @param array $data
-     * @return void
+     * @return array
      */
     private static function freightCalcWc(array $data)
     {
@@ -285,6 +265,13 @@ class DataTranslator
         return $logistics;
     }
 
+    /**
+     * Converte retorno de frete da Fastshop para WooCommerce
+     * Quando há falta de estoque ou entrega indisponivel
+     *
+     * @param array $data
+     * @return array
+     */
     private static function freightCalcFailed(array $data)
     {
         $products  = [];
@@ -328,15 +315,14 @@ class DataTranslator
         return $logistics;
     }
 
-    public static function dataFastshopToWoocommerce(array $data)
+    /**
+     * Undocumented function
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function newOrderFs(array $data)
     {
-
-        return [];
-    }
-
-    public static function dataWoocommerceToFastshop(array $data)
-    {
-
-        return [];
+        return [""];
     }
 }
