@@ -38,6 +38,9 @@ class DataTranslator
             case "newOrderFs":
                 return self::newOrderFs($data);
             break;
+            case "newOrderError":
+                return self::newOrderError($data);
+            break;
         }
     }
 
@@ -319,7 +322,7 @@ class DataTranslator
     }
 
     /**
-     * Undocumented function
+     * Converte retorno de frete da Fastshop para WooCommerce, novo pedido
      *
      * @param array $data
      * @return array
@@ -346,7 +349,7 @@ class DataTranslator
     }
 
     /**
-     * Undocumented function
+     * Converte os dados do pedido WC para enviar a FS
      *
      * @param array $data
      * @return array
@@ -354,5 +357,34 @@ class DataTranslator
     private static function newOrderFs(array $data)
     {
         return [""];
+    }
+
+    /**
+     * Converte os dados do pedido para enviar email
+     *
+     * @package array $data
+     * @return array
+     */
+    private static function newOrderError(array $data)
+    {
+        if (empty($data["parent"]))
+        {
+            $orderId    = $data["order"]["id"];
+            $subOrderId = "";
+        }
+        else
+        {
+            $orderId    = $data["parent"]["id"];
+            $subOrderId = $data["order"]["id"];
+        }
+
+        return [
+            "orderId"     => $orderId,
+            "subOrderId"  => $subOrderId,
+            "customer_id" => $data["order"]["customer_id"],
+            "name"        => $data["order"]["billing"]["first_name"] . " " . $data["order"]["billing"]["last_name"],
+            "email"       => $data["order"]["billing"]["email"],
+            "phone"       => $data["order"]["billing"]["phone"],
+        ];
     }
 }
