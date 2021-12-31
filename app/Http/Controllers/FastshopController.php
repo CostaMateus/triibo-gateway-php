@@ -12,6 +12,7 @@ use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\Log;
+use App\Http\Integrations\FastshopIntegration\Notification;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 class FastshopController extends Controller
@@ -341,7 +342,7 @@ class FastshopController extends Controller
      *
      * API chamada a partir do ../themes/martfury-child/functions.php
      *
-     * orderId para testes: 39731, 59798, 59799, 59800, 59858
+     * orderId para testes: 39731, 59798, 59858
      *
      * @param Request $request
      * @param string $orderId
@@ -367,15 +368,24 @@ class FastshopController extends Controller
                 }
             }
 
+            // quando vazio não é pedido da FS
             if (empty($data["order"])) return;
 
             $data["order"] = $this->getOrderFreight($data["order"][0]);
 
-            if ($data["order"]["fs_error"]["error"]) return;
+            if ($data["order"]["fs_error"]["error"])
+            {
+                Log::orderCreation($data["order"]["fs_error"], $data);
+                Notification::notify("newOrderError", $data);
+
+                return response()->json([
+                    "errorCode" => "500",
+                    "message"   => "something wrong",
+                ], 500);
+            }
+
 
             /**
-             * tratar erro
-             *
              * fazer conversao dos dados
              */
 
@@ -427,7 +437,6 @@ class FastshopController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * Pedido Cancelado pelo Marketplace
