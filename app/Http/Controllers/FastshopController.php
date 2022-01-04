@@ -281,13 +281,13 @@ class FastshopController extends Controller
 
         try
         {
-            $wcData = $request->all();
+            $wcData = $request->only('marketplaceOrderId');
 
             $body     = DataTranslator::translate("wcCanceledOrder", $wcData);
 
             $url   = "$this->fsUrl/pvt/orders/{orderId}/cancel"; 
             $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
-            dd($response->json());
+            //dd($response->json());
             
             if(!$response->successful()) 
             {   
@@ -295,7 +295,7 @@ class FastshopController extends Controller
 
                 return response()->json([
                     "errorCode" => "4001",
-                    "message"   => "Order inquiry failed"
+                    "message"   => "Something wrong when consulting the order"
                 ],400);
             }
 
@@ -313,7 +313,6 @@ class FastshopController extends Controller
             ], 500);
         }
     }
-
 
     // --------- METODOS DE USO INTERNO
     /**
