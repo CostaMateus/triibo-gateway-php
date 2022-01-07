@@ -381,6 +381,7 @@ class FastshopController extends Controller
                 return response()->json([
                     "errorCode" => "500",
                     "message"   => "something wrong",
+                    "data"      => $data["order"]["fs_error"]
                 ], 500);
             }
 
@@ -634,7 +635,7 @@ class FastshopController extends Controller
     private function getOrderFreight(array $data)
     {
         $fs_error  = [
-            "error"     => false,
+            "error"     => true, // para teste, erro fixo
             "message"   => "",
             "errorCode" => 0,
         ];
