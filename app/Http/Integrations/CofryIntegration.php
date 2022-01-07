@@ -284,7 +284,7 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keyWordsSet"        => [ "clubmapfre" ]
+                "keyWordsSet"        => []
             ];
         }
 
@@ -370,7 +370,7 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keyWordsSet"        => [ "clubmapfre" ]
+                "keyWordsSet"        => []
             ];
         }
 
@@ -415,42 +415,32 @@ class CofryIntegration
 
             $res[$id]         = [
                 "partnerEstablishmentId" => $store["uuid"],
-                "cashbackDefault" => $cashback,
+                "cashbackDefault"        => $cashback,
 
-                "enableDate"    => $dateEn,
-                "disableDate"   => $dateDis,
-                "dataAlteracao" => $dateEn,
-                "dataInclusao"  => $dateEn,
+                "enableDate"             => $dateEn,
+                "disableDate"            => $dateDis,
+                "dataAlteracao"          => $dateEn,
+                "dataInclusao"           => $dateEn,
 
-                "idGestor"      => "+5511949289507@sms,triibo,com,br",
-                "isPublished"   => (in_array($storeName, $denylist)) ? false : ($store["Active"] ? true : false),
+                "idGestor"               => "+5511949289507@sms,triibo,com,br",
+                "isPublished"            => (in_array($storeName, $denylist)) ? false : ($store["Active"] ? true : false),
 
-                "endereco"      => "Brasil",
-                "lat"           => -15.52047783763576,
-                "long"          => -48.015408891158984,
+                "endereco"               => "Brasil",
+                "lat"                    => -15.52047783763576,
+                "long"                   => -48.015408891158984,
 
-                "nome"          => $storeName,
-                "descricao"     => $descricao,
+                "nome"                   => $storeName,
+                "descricao"              => $descricao,
 
-                "fotoThumb"     => $store["Logo"],
-                "listaFotos"    => [
-                    $store["Logo"],
-                ],
+                "fotoThumb"              => $store["Logo"],
+                "listaFotos"             => [$store["Logo"],],
 
-                "funcionamento" => [
-                    ...self::getSchedulesOperation()
-                ],
-                "horarios"      => [
-                    ...self::getSchedulesOperation(false)
-                ],
+                "funcionamento"          => [...self::getSchedulesOperation()],
+                "horarios"               => [...self::getSchedulesOperation(false)],
 
-                "tags"          => [
-                    ...$store["Segment"]
-                ],
+                "tags"                   => [...$store["Segment"]],
 
-                "keyWordsSet"   => [
-                    "clubmapfre"
-                ]
+                "keyWordsSet"            => []
             ];
         }
 
