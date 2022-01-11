@@ -52,7 +52,7 @@ class DataTranslator
      */
     private static function updateStockPrice(array $data)
     {
-        if (isset($data["logisticsInfo"]) && count($data["logisticsInfo"]) > 0)
+        if (!empty($data["logisticsInfo"]))
         {
             $status = "instock";
             $qntty  = $data["logisticsInfo"][0]["stockBalance"];
@@ -63,17 +63,28 @@ class DataTranslator
             $qntty  = 0;
         }
 
-        $item    = $data["items"][0];
-        $regular = Helper::insertDecimal($item["listPrice"]);
-        $sale    = Helper::insertDecimal($item["price"]);
+        if (!empty($data["items"]))
+        {
+            $item    = $data["items"][0];
+            $regular = Helper::insertDecimal($item["listPrice"]);
+            $sale    = Helper::insertDecimal($item["price"]);
 
-        $wcData  = [
-            "regular_price"  => $regular,
-            "sale_price"     => $sale,
-            "stock_quantity" => $qntty,
-            "stock_status"   => $status,
-            "manage_stock"   => true
-        ];
+            $wcData  = [
+                "regular_price"  => $regular,
+                "sale_price"     => $sale,
+                "stock_quantity" => $qntty,
+                "stock_status"   => $status,
+                "manage_stock"   => true
+            ];
+        }
+        else
+        {
+            $wcData  = [
+                "stock_quantity" => $qntty,
+                "stock_status"   => $status,
+                "manage_stock"   => true
+            ];
+        }
 
         return $wcData;
     }
@@ -283,7 +294,7 @@ class DataTranslator
         $products  = [];
         $logistics = [];
 
-        if (isset($data["logisticsInfo"]))
+        if (!empty($data["logisticsInfo"]) && !empty($data["items"]))
         {
             foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
 
@@ -303,7 +314,7 @@ class DataTranslator
                 ];
             }
         }
-        else
+        elseif (!empty($data["items"]))
         {
             foreach ($data["items"] as $key => $p)
             {
@@ -316,6 +327,10 @@ class DataTranslator
                     "availableQuantity" => false
                 ];
             }
+        }
+        else
+        {
+            $logistics = $data;
         }
 
         return $logistics;
