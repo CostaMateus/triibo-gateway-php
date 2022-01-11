@@ -356,7 +356,77 @@ class DataTranslator
      */
     private static function newOrderFs(array $data)
     {
-        return [""];
+        $url           = route("api.marketplace.invoicenotification", [ "orderId" => $data["id"] ]);
+        $name          = $data["billing"]["first_name"] . " " . $data["billing"]["last_name"];
+        $auxData       = $data["fs_info"];
+
+        $items         = [];
+        $logisticsInfo = [];
+        foreach ($auxData["logisticsInfo"] as $item)
+        {
+            $idItem  = $item["itemIndex"];
+            $auxItem = $auxData["items"][$idItem];
+
+            $items[] = [
+                "id"                => $auxItem["id"],
+                "quantity"          => $auxItem["quantity"],
+                "price"             => 10000, // $auxItem["price"], // teste
+                "unitMultiplier"    => $auxItem["unitMultiplier"],
+                "Seller"            => $auxItem["seller"],
+                "priceTags"         => $auxItem["priceTags"],
+                "isGift"            => false,
+            ];
+
+            $idSla           = array_search("delivery", array_column($item["slas"], "deliveryChannel"));
+            $selectedSla     = $item["slas"][$idSla]["id"];
+            $eta             = $item["slas"][$idSla]["shippingEstimate"];
+            $price           = $item["slas"][$idSla]["price"];
+
+            $logisticsInfo[] = [
+                "itemIndex"        => $idItem,
+                "selectedSla"      => $selectedSla,
+                "lockTTL"          => "5d",
+                "shippingEstimate" => $eta,
+                "price"            => $price,
+                "deliveryWindow"   => []
+            ];
+        }
+
+        $new = [
+            "marketplaceOrderId"          => $data["id"], // id do pedido no mkt
+            "marketplaceServicesEndpoint" => $url,        // api que recebe a "Order Invoice Notification"
+            "marketplacePaymentValue"     => (int) str_replace(".", "", $data["total"]),
+            "items"                       => $items,
+            // wc_order billing
+            "clientProfileData" => [
+                "firstName"    => $data["billing"]["first_name"],
+                "lastName"     => $data["billing"]["last_name"],
+                "email"        => $data["billing"]["email"],
+                "documentType" => "cpf",
+                "document"     => $data["billing"]["cpf"] ?: "00987654321",
+                "phone"        => $data["billing"]["phone"],
+                "isCorporate"  => false,
+            ],
+            "shippingData"      => [
+                // wc_order shipping
+                "address"       => [
+                    "addressType"  => "addrType",
+                    "addressId"    => "addrId",
+                    "receiverName" => $name,
+                    "street"       => $data["shipping"]["address_1"],
+                    "number"       => $data["shipping"]["number"]       ?: 0,   // número é obrigatório
+                    "complement"   => $data["shipping"]["address_2"],
+                    "neighborhood" => $data["shipping"]["neighborhood"] ?: "A", // bairro é obrigatório
+                    "city"         => $data["shipping"]["city"],
+                    "state"        => $data["shipping"]["state"],
+                    "country"      => "BRA",
+                    "postalCode"   => $data["shipping"]["postcode"],
+                ],
+                "logisticsInfo" => $logisticsInfo,
+            ],
+        ];
+
+        return $new;
     }
 
     /**
