@@ -680,9 +680,10 @@ class FastshopController extends Controller
     private function getOrderFreight(array $data)
     {
         $fs_error  = [
-            "error"     => true, // para teste, erro fixo
+            "error"     => false, // para teste, erro fixo
             "message"   => "",
             "errorCode" => 0,
+            "orderId"   => null,
         ];
 
         $body      = DataTranslator::translate("freightCalcNewOrder", $data);
@@ -695,6 +696,7 @@ class FastshopController extends Controller
                 "error"     => true,
                 "message"   => "Something wrong when consulting the delivery price",
                 "errorCode" => "5001",
+                "orderId"   => $data["id"],
             ];
         }
         else
@@ -709,6 +711,7 @@ class FastshopController extends Controller
                     "error"     => true,
                     "message"   => "SKUs, currently out-of-stock",
                     "errorCode" => "4001",
+                    "orderId"   => $data["id"],
                 ];
             }
             else
@@ -721,6 +724,7 @@ class FastshopController extends Controller
                             "error"     => true,
                             "message"   => "Delivery unavailable for this zip code",
                             "errorCode" => "4002",
+                            "orderId"   => $data["id"],
                         ];
                     }
                 }
