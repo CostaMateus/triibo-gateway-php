@@ -202,6 +202,51 @@ class FastshopController extends Controller
         }
     }
 
+    /**
+     *
+     *
+     * @param Request $request
+     * @param string $orderId
+     * @return Response
+     */
+    public function invoiceNotification(Request $request, $orderId)
+    {
+        return response()->json([
+            "errorCode" => null,
+            "message"   => "Ok",
+        ], 200);
+    }
+
+    /**
+     *
+     *
+     * @param Request $request
+     * @param string $orderId
+     * @return Response
+     */
+    public function deliveredNotification(Request $request, $orderId)
+    {
+        return response()->json([
+            "errorCode" => null,
+            "message"   => "Ok",
+        ], 200);
+    }
+
+    /**
+     *
+     *
+     * @param Request $request
+     * @param string $orderId
+     * @return Response
+     */
+    public function cancellationNotification(Request $request, $orderId)
+    {
+        return response()->json([
+            "errorCode" => null,
+            "message"   => "Ok",
+        ], 200);
+    }
+
 
     // --------- METODOS ABAIXO SÃO CONSUMIDOS PELO WOOCOMMERCE, CONSULTAM AS APIs DA FASTSHOP
     /**
