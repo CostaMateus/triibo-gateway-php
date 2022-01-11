@@ -40,6 +40,9 @@ class DataTranslator
             break;
             case "newOrderError":
                 return self::newOrderError($data);
+
+            case "wcCanceledOrder":
+                return self::wcCanceledOrder($data);
             break;
         }
     }
@@ -471,5 +474,10 @@ class DataTranslator
             "email"       => $data["order"]["billing"]["email"],
             "phone"       => $data["order"]["billing"]["phone"],
         ];
+    }
+
+    public static function wcCanceledOrder(array $data)
+    {
+        // ???
     }
 }

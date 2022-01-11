@@ -101,9 +101,9 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            // LOG
-            $date      = date("Ymd-his");
-            Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+            // // LOG
+            // $date      = date("Ymd-his");
+            // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
@@ -166,9 +166,9 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData = $request->all();
 
-            // remover em PROD
-            $date   = date("Ymd-his");
-            Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+            // // remover em PROD
+            // $date   = date("Ymd-his");
+            // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
 
@@ -534,11 +534,29 @@ class FastshopController extends Controller
 
         try
         {
-            $wcData = $request->all();
+            $wcData   = $request->only('marketplaceOrderId');
+
+            $body     = DataTranslator::translate("wcCanceledOrder", $wcData);
+
+            $url      = "$this->fsUrl/pvt/orders/{orderId}/cancel";
+            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+            //dd($response->json());
+
+            if(!$response->successful())
+            {
+                log::orderCanceledByMarketplace($body);
+
+                return response()->json([
+                    "errorCode" => "4001",
+                    "message"   => "Something wrong when consulting the order"
+                ],400);
+            }
+
+            $fsData = $response->json();
         }
         catch (Exception $e)
         {
-            Log::exception("orderCreation", $e);
+            Log::exception("orderCanceledByMarketplace", $e);
 
             return response()->json([
                 "errorCode" => "5000", // erro generico
