@@ -113,6 +113,12 @@ class FastshopController extends Controller
             // Atualiza produto no Marketplace
             $searchSku = Product::all(["sku" => $wcData["sku"]]);
 
+            /**
+             * TODO
+             * Verificar problema com duplicação de SKU no WooCommerce
+             * Acompanhar issue #27295
+             * https://github.com/woocommerce/woocommerce/issues/27295
+             */
             if (!$searchSku->first())
             {
                 $new = Product::create($wcData);
@@ -169,9 +175,7 @@ class FastshopController extends Controller
             // Converte produto da FS para WC
             $wcData = DataTranslator::translate("newProduct", $fsData);
 
-            // VERIFICAR E TRATAR OS SkuSpecifications
             // Atualiza produto no Marketplace
-            // $new    = Product::create($wcData);
             $searchSku = Product::all(["sku" => $wcData["sku"]]);
 
             if (!$searchSku->first())
@@ -421,7 +425,10 @@ class FastshopController extends Controller
                 Log::orderCreation($data["order"]["fs_error"], $data);
                 Notification::notify("newOrderError", $data);
 
-                // VALIDAr SE É PARA CANCELAR O PEDIDO, NESSE ESTÁGIO
+                /**
+                 * TODO
+                 * Validar se é para cancelar o pedido neste estágio
+                 */
                 Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
 
                 return response()->json([
@@ -438,25 +445,37 @@ class FastshopController extends Controller
             // Consulta produto na FS
             $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
+            /**
+             * TODO
+             * Validar com a FS os retornos
+             * Falha na criação do pedido, retornando sempre 400
+             * Ex: {
+             *     "ErrorCode": "400",
+             *     "Message": "Condição comercial não encontrada para o produto 'qlqr_SKU' (seller: 'FASTSHOP_APIGEE')"
+             * },
+             */
             if (!$response->successful())
             {
-                Log::orderCreation(json_decode($response->json(), true), $body);
+                Log::orderCreation($response->json(), $body);
                 Notification::notify("newOrderError", $data);
 
-                // VALIDA SE É PARA CANCELAR O PEDIDO, NESSE ESTÁGIO
-                Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
+                // // VALIDA SE É PARA CANCELAR O PEDIDO, NESSE ESTÁGIO
+                // Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
 
                 return response()->json([
                     "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
                     "message"   => "something wrong",
-                    "data"      => $body
+                    "data"      => [$response->json(), $body]
                 ], 500);
             }
 
-            //
-            // $wcData = $response->json();
-            // tratar response antes
-            //
+            // //
+            // // $wcData = $response->json();
+            // // tratar response antes
+            // //
+            // $encoded = json_encode(json_decode($response->json(), true), JSON_UNESCAPED_SLASHES);
+            // Storage::put(date("Ymd") . "-fs-order-criation.json", $encoded);
+
             return response()->json([
                 "errorCode" => null,
                 "message"   => "ok",
