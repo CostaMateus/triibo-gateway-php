@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
@@ -275,7 +276,7 @@ class FastshopController extends Controller
             if (!$product)
             {
                 return response()->json([
-                    "errorCode" => "404",
+                    "errorCode" => "4001",
                     "message"   => "Unable to retrieve product data",
                 ], 404);
             }
@@ -332,7 +333,7 @@ class FastshopController extends Controller
                 Log::freightCalculation($body);
 
                 return response()->json([
-                    "errorCode" => "5001", // 5001 - erro na consulta do frete na FS
+                    "errorCode" => "5001",
                     "message"   => "Something wrong when consulting the delivery price",
                     "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
                 ], 500);
@@ -345,7 +346,7 @@ class FastshopController extends Controller
             if (empty($fsData["logisticsInfo"]) || $itemWithoutStock !== false)
             {
                 return response()->json([
-                    "errorCode" => "4001", // codigo para tratar no WooCommerce
+                    "errorCode" => "4001",
                     "message"   => "SKUs, currently out-of-stock",
                     "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
                 ], 400);
@@ -356,7 +357,7 @@ class FastshopController extends Controller
                 if (empty($items["slas"]))
                 {
                     return response()->json([
-                        "errorCode" => "4002", // codigo para tratar no WooCommerce
+                        "errorCode" => "4002",
                         "message"   => "Delivery unavailable for this zip code",
                         "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
                     ], 400);
@@ -367,7 +368,7 @@ class FastshopController extends Controller
             $wcData = DataTranslator::translate("freightCalcWc", $fsData);
 
             return response()->json([
-                "errorCode" => null, // codigo para tratar no WooCommerce
+                "errorCode" => null,
                 "message"   => "ok",
                 "data"      => $wcData,
             ], 200);
@@ -422,19 +423,17 @@ class FastshopController extends Controller
 
             if ($data["order"]["fs_error"]["error"])
             {
-                Log::orderCreation($data["order"]["fs_error"], $data);
+                $error = $data["order"]["fs_error"];
+
+                Log::orderCreation($error, $data);
                 Notification::notify("newOrderError", $data);
 
-                /**
-                 * TODO
-                 * Validar se é para cancelar o pedido neste estágio
-                 */
-                Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
+                Note::create($data["order"]["id"], [ "note" => Helper::getErrorNewOrderFS($error) ]);
 
                 return response()->json([
                     "errorCode" => "5001", // 5001 - erro na consulta dos dados de frete na FS
                     "message"   => "something wrong",
-                    "data"      => $data["order"]["fs_error"]
+                    "data"      => $error
                 ], 500);
             }
 
@@ -456,16 +455,19 @@ class FastshopController extends Controller
              */
             if (!$response->successful())
             {
-                Log::orderCreation($response->json(), $body);
+                $error = $response->json();
+
+                Log::orderCreation($error, $body);
                 Notification::notify("newOrderError", $data);
 
-                // // VALIDA SE É PARA CANCELAR O PEDIDO, NESSE ESTÁGIO
-                // Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
+                $msg = "ERROR\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"];
+
+                Note::create($data["order"]["id"], [ "note" => $msg ]);
 
                 return response()->json([
                     "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
                     "message"   => "something wrong",
-                    "data"      => [$response->json(), $body]
+                    "data"      => [$error, $body]
                 ], 500);
             }
 
@@ -734,7 +736,7 @@ class FastshopController extends Controller
     private function getOrderFreight(array $data)
     {
         $fs_error  = [
-            "error"     => false, // para teste, erro fixo
+            "error"     => false,
             "message"   => "",
             "errorCode" => 0,
             "orderId"   => null,
