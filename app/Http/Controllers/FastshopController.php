@@ -291,7 +291,7 @@ class FastshopController extends Controller
             Log::exception("updateSkuWc", $e);
 
             return response()->json([
-                "errorCode" => "500",
+                "errorCode" => "5000", // 5000 - erro generico
                 "message"   => "something wrong",
             ], 500);
         }
@@ -328,7 +328,7 @@ class FastshopController extends Controller
                 Log::freightCalculation($body);
 
                 return response()->json([
-                    "errorCode" => "5001", // codigo para tratar no WooCommerce
+                    "errorCode" => "5001", // 5001 - erro na consulta do frete na FS
                     "message"   => "Something wrong when consulting the delivery price",
                     "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
                 ], 500);
@@ -373,7 +373,7 @@ class FastshopController extends Controller
             Log::exception("freightCalculation", $e);
 
             return response()->json([
-                "errorCode" => "5002", // codigo para tratar no WooCommerce
+                "errorCode" => "5000", // 5000 - erro generico
                 "message"   => "Something wrong",
                 "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
             ], 500);
@@ -405,12 +405,10 @@ class FastshopController extends Controller
             // retira os pedidos que não são da FastShop
             foreach ($data["order"] as $key => $order)
             {
-                $id = config("fastshop.$this->env.wc.storeId");
                 // id da FS no dev-marketplace
-                if ($order["store"]["id"] != $id)
-                {
-                    unset($data["order"][$key]);
-                }
+                $id = config("fastshop.$this->env.wc.storeId");
+
+                if ($order["store"]["id"] != $id) unset($data["order"][$key]);
             }
 
             // quando vazio, não é pedido da FS
@@ -423,10 +421,11 @@ class FastshopController extends Controller
                 Log::orderCreation($data["order"]["fs_error"], $data);
                 Notification::notify("newOrderError", $data);
 
+                // VALIDAr SE É PARA CANCELAR O PEDIDO, NESSE ESTÁGIO
                 Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
 
                 return response()->json([
-                    "errorCode" => "500",
+                    "errorCode" => "5001", // 5001 - erro na consulta dos dados de frete na FS
                     "message"   => "something wrong",
                     "data"      => $data["order"]["fs_error"]
                 ], 500);
@@ -436,32 +435,32 @@ class FastshopController extends Controller
             $body = DataTranslator::translate("newOrderFs", $data["order"]);
             $url  = "$this->fsUrl/pvt/orders";
 
-            try
+            // Consulta produto na FS
+            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+
+            if (!$response->successful())
             {
-                // Consulta produto na FS
-                $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+                Log::orderCreation(json_decode($response->json(), true), $body);
+                Notification::notify("newOrderError", $data);
 
-                if (!$response->successful())
-                {
-                    dd($response->json());
-                }
-
-                dd($response->json());
-
-            }
-            catch (Exception $e)
-            {
-                Log::exception("orderCreation", $e);
+                // VALIDA SE É PARA CANCELAR O PEDIDO, NESSE ESTÁGIO
+                Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
 
                 return response()->json([
-                    "errorCode" => "500",
+                    "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
                     "message"   => "something wrong",
+                    "data"      => $body
                 ], 500);
             }
 
+            //
+            // $wcData = $response->json();
+            // tratar response antes
+            //
             return response()->json([
                 "errorCode" => null,
-                "message"   => "ok"
+                "message"   => "ok",
+                "data"      => $response->json(),
             ], 200);
         }
         catch (Exception $e)
@@ -469,7 +468,7 @@ class FastshopController extends Controller
             Log::exception("orderCreation", $e);
 
             return response()->json([
-                "errorCode" => "500",
+                "errorCode" => "5000", // 5000 - falha generica
                 "message"   => "something wrong",
             ], 500);
         }
@@ -496,7 +495,7 @@ class FastshopController extends Controller
             Log::exception("orderCreation", $e);
 
             return response()->json([
-                "errorCode" => "500",
+                "errorCode" => "5000", // erro generico
                 "message"   => "something wrong",
             ], 500);
         }
@@ -523,7 +522,7 @@ class FastshopController extends Controller
             Log::exception("orderCreation", $e);
 
             return response()->json([
-                "errorCode" => "500",
+                "errorCode" => "5000", // erro generico
                 "message"   => "something wrong",
             ], 500);
         }
