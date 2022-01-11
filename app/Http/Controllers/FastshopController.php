@@ -413,15 +413,17 @@ class FastshopController extends Controller
                 }
             }
 
-            // quando vazio não é pedido da FS
+            // quando vazio, não é pedido da FS
             if (empty($data["order"])) return;
 
-            $data["order"] = $this->getOrderFreight($data["order"][0]);
+            $data["order"] = $this->getOrderFreight($data["order"][key($data["order"])]);
 
             if ($data["order"]["fs_error"]["error"])
             {
                 Log::orderCreation($data["order"]["fs_error"], $data);
                 Notification::notify("newOrderError", $data);
+
+                Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
 
                 return response()->json([
                     "errorCode" => "500",
@@ -430,16 +432,32 @@ class FastshopController extends Controller
                 ], 500);
             }
 
+            // converte pedido WC para FS
+            $body = DataTranslator::translate("newOrderFs", $data["order"]);
+            $url  = "$this->fsUrl/pvt/orders";
 
-            /**
-             * fazer conversao dos dados
-             */
+            try
+            {
+                // Consulta produto na FS
+                $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
-            $fsData = DataTranslator::translate("newOrderFs", $data);
+                if (!$response->successful())
+                {
+                    dd($response->json());
+                }
 
-            /**
-             * enviar pedido para Fast Shop
-             */
+                dd($response->json());
+
+            }
+            catch (Exception $e)
+            {
+                Log::exception("orderCreation", $e);
+
+                return response()->json([
+                    "errorCode" => "500",
+                    "message"   => "something wrong",
+                ], 500);
+            }
 
             return response()->json([
                 "errorCode" => null,
