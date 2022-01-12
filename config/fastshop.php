@@ -19,8 +19,9 @@ return [
         ],
 
         'wc' => [
-            'key'   => env('WC_API_KEY_HML',   ''),
-            'token' => env('WC_API_TOKEN_HML', ''),
+            'key'     => env('WC_API_KEY_HML',   ''),
+            'token'   => env('WC_API_TOKEN_HML', ''),
+            'storeId' => "3158",
         ],
     ],
 
@@ -39,8 +40,9 @@ return [
         ],
 
         'wc' => [
-            'key'   => env('WC_API_KEY',   ''),
-            'token' => env('WC_API_TOKEN', ''),
+            'key'     => env('WC_API_KEY',   ''),
+            'token'   => env('WC_API_TOKEN', ''),
+            'storeId' => "???",
         ],
     ],
 
