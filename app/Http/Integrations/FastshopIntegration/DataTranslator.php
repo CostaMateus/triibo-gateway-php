@@ -3,6 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use App\Helpers\Helper;
+use App\Http\Integrations\FastshopIntegration\Log;
 
 class DataTranslator
 {
@@ -24,9 +25,24 @@ class DataTranslator
             case "freightCalcFs":
                 return self::freightCalcFs($data);
             break;
-
             case "freightCalcWc":
                 return self::freightCalcWc($data);
+            break;
+            case "freightCalcFailed":
+                return self::freightCalcFailed($data);
+            break;
+            case "freightCalcNewOrder":
+                return self::freightCalcNewOrder($data);
+            break;
+
+            case "newOrderFs":
+                return self::newOrderFs($data);
+            break;
+            case "newOrderError":
+                return self::newOrderError($data);
+
+            case "wcCanceledOrder":
+                return self::wcCanceledOrder($data);
             break;
         }
     }
@@ -39,7 +55,7 @@ class DataTranslator
      */
     private static function updateStockPrice(array $data)
     {
-        if (isset($data["logisticsInfo"]) && count($data["logisticsInfo"]) > 0)
+        if (!empty($data["logisticsInfo"]))
         {
             $status = "instock";
             $qntty  = $data["logisticsInfo"][0]["stockBalance"];
@@ -50,17 +66,28 @@ class DataTranslator
             $qntty  = 0;
         }
 
-        $item    = $data["items"][0];
-        $regular = Helper::insertDecimal($item["listPrice"]);
-        $sale    = Helper::insertDecimal($item["price"]);
+        if (!empty($data["items"]))
+        {
+            $item    = $data["items"][0];
+            $regular = Helper::insertDecimal($item["listPrice"]);
+            $sale    = Helper::insertDecimal($item["price"]);
 
-        $wcData  = [
-            "regular_price"  => $regular,
-            "sale_price"     => $sale,
-            "stock_quantity" => $qntty,
-            "stock_status"   => $status,
-            "manage_stock"   => true
-        ];
+            $wcData  = [
+                "regular_price"  => $regular,
+                "sale_price"     => $sale,
+                "stock_quantity" => $qntty,
+                "stock_status"   => $status,
+                "manage_stock"   => true
+            ];
+        }
+        else
+        {
+            $wcData  = [
+                "stock_quantity" => $qntty,
+                "stock_status"   => $status,
+                "manage_stock"   => true
+            ];
+        }
 
         return $wcData;
     }
@@ -69,7 +96,7 @@ class DataTranslator
      * Prepara a consulta de preço e estoque
      *
      * @param string $sku
-     * @return void
+     * @return array
      */
     private static function queryStockPrice(string $sku)
     {
@@ -146,36 +173,15 @@ class DataTranslator
         $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
 
         $wcData        = [
-            "name" => $data["ProductName"],
-            "slug" => $slug,
-
-            // "type"               => "simple",
-            // "status"             => "publish",
-            // "featured"           => false,
-            // "catalog_visibility" => "visible",
+            "name"              => $data["ProductName"],
+            "slug"              => $slug,
 
             "description"       => $data["ProductDescription"],
             "short_description" => $shortDescript,
             "sku"               => "FS-$sku",
 
-            "regular_price" => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
-            "sale_price"    => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
-            // "date_on_sale_from"     => null,
-            // "date_on_sale_from_gmt" => null,
-            // "date_on_sale_to"       => null,
-            // "date_on_sale_to_gmt"   => null,
-
-            // "virtual"         => false,
-            // "downloadable"    => false,
-            // "downloads"       => [],
-            // "download_limit"  => -1,
-            // "download_expiry" => -1,
-
-            // "external_url" => "",
-            // "button_text"  => "",
-
-            // "tax_status" => "taxable",
-            // "tax_class"  => "",
+            "regular_price"     => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
+            "sale_price"        => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
 
             "manage_stock"      => true,
             "stock_quantity"    => $data["AvailableQuantity"],
@@ -183,28 +189,25 @@ class DataTranslator
             "backorders"        => "no",
             "sold_individually" => false,
 
-            "weight"     => Helper::convertWeight($data["WeightKg"]),
-            "dimensions" => [
+            "weight"            => Helper::convertWeight($data["WeightKg"]),
+            "dimensions"        => [
                 "length" => (string) $data["Length"],
                 "width"  => (string) $data["Width"],
                 "height" => (string) $data["Height"]
             ],
 
-            "shipping_class" => "fast-shop",
-            // "reviews_allowed" => true,
+            "shipping_class"    => "fast-shop",
 
-            "upsell_ids"     => [],
-            "cross_sell_ids" => [],
-            "parent_id"      => 0,
-            "purchase_note"  => "",
+            "upsell_ids"        => [],
+            "cross_sell_ids"    => [],
+            "parent_id"         => 0,
+            "purchase_note"     => "",
 
-            // tag: novo
-            "tags"           => [ [ "id" => 289 ] ],
+            "tags"              => [ [ "id" => 289 ] ],
 
-            "categories"     => $categories,
-            "images"         => $images,
-            "attributes"     => $attributes,
-
+            "categories"        => $categories,
+            "images"            => $images,
+            "attributes"        => $attributes,
         ];
 
         return $wcData;
@@ -241,7 +244,7 @@ class DataTranslator
      * Converte retorno de frete da Fastshop para WooCommerce
      *
      * @param array $data
-     * @return void
+     * @return array
      */
     private static function freightCalcWc(array $data)
     {
@@ -282,15 +285,199 @@ class DataTranslator
         return $logistics;
     }
 
-    public static function dataFastshopToWoocommerce(array $data)
+    /**
+     * Converte retorno de frete da Fastshop para WooCommerce
+     * Quando há falta de estoque ou entrega indisponivel
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function freightCalcFailed(array $data)
     {
+        $products  = [];
+        $logistics = [];
 
-        return [];
+        if (!empty($data["logisticsInfo"]) && !empty($data["items"]))
+        {
+            foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
+
+            foreach ($data["logisticsInfo"] as $key => $lg)
+            {
+                $idChannel = array_search("delivery", array_column($lg["deliveryChannels"], "id"));
+
+                $stock = ($idChannel !== false) ? $lg["deliveryChannels"][$idChannel]["stockBalance"] : 0;
+
+                $logistics[] = [
+                    "sku"               => "FS-" . $products[$lg["itemIndex"]],
+                    "quantity"          => $lg["quantity"],
+                    "stock"             => $stock,
+                    "deliveryPrice"     => "0.00",
+                    "deliveryTime"      => "0",
+                    "availableQuantity" => false
+                ];
+            }
+        }
+        elseif (!empty($data["items"]))
+        {
+            foreach ($data["items"] as $key => $p)
+            {
+                $logistics[] = [
+                    "sku"               => $p["sku"],
+                    "quantity"          => $p["quantity"],
+                    "stock"             => 0,
+                    "deliveryPrice"     => "0.00",
+                    "deliveryTime"      => "0",
+                    "availableQuantity" => false
+                ];
+            }
+        }
+        else
+        {
+            $logistics = $data;
+        }
+
+        return $logistics;
     }
 
-    public static function dataWoocommerceToFastshop(array $data)
+    /**
+     * Converte retorno de frete da Fastshop para WooCommerce, novo pedido
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function freightCalcNewOrder(array $data)
     {
+        $items = [];
 
-        return [];
+        foreach ($data["line_items"] as $item)
+        {
+            $items[] = [
+                "id"       => explode("FS-", $item["sku"])[1],
+                "quantity" => $item["quantity"],
+                "seller"   => "FSH",
+            ];
+        }
+
+        return [
+            "items"          => $items,
+            "postalCode"     => $data["shipping"]["postcode"],
+            "country"        => "BRA",
+            "geoCoordinates" => []
+        ];
+    }
+
+    /**
+     * Converte os dados do pedido WC para enviar a FS
+     *
+     * @param array $data
+     * @return array
+     */
+    private static function newOrderFs(array $data)
+    {
+        $url           = route("api.marketplace.invoicenotification", [ "orderId" => $data["id"] ]);
+        $name          = $data["billing"]["first_name"] . " " . $data["billing"]["last_name"];
+        $auxData       = $data["fs_info"];
+
+        $items         = [];
+        $logisticsInfo = [];
+        foreach ($auxData["logisticsInfo"] as $item)
+        {
+            $idItem  = $item["itemIndex"];
+            $auxItem = $auxData["items"][$idItem];
+
+            $items[] = [
+                "id"                => $auxItem["id"],
+                "quantity"          => $auxItem["quantity"],
+                "price"             => 10000, // $auxItem["price"], // teste
+                "unitMultiplier"    => $auxItem["unitMultiplier"],
+                "Seller"            => $auxItem["seller"],
+                "priceTags"         => $auxItem["priceTags"],
+                "isGift"            => false,
+            ];
+
+            $idSla           = array_search("delivery", array_column($item["slas"], "deliveryChannel"));
+            $selectedSla     = $item["slas"][$idSla]["id"];
+            $eta             = $item["slas"][$idSla]["shippingEstimate"];
+            $price           = $item["slas"][$idSla]["price"];
+
+            $logisticsInfo[] = [
+                "itemIndex"        => $idItem,
+                "selectedSla"      => $selectedSla,
+                "lockTTL"          => "5d",
+                "shippingEstimate" => $eta,
+                "price"            => $price,
+                "deliveryWindow"   => []
+            ];
+        }
+
+        $new = [
+            "marketplaceOrderId"          => $data["id"], // id do pedido no mkt
+            "marketplaceServicesEndpoint" => $url,        // api que recebe a "Order Invoice Notification"
+            "marketplacePaymentValue"     => (int) str_replace(".", "", $data["total"]),
+            "items"                       => $items,
+            // wc_order billing
+            "clientProfileData" => [
+                "firstName"    => $data["billing"]["first_name"],
+                "lastName"     => $data["billing"]["last_name"],
+                "email"        => $data["billing"]["email"],
+                "documentType" => "cpf",
+                "document"     => $data["billing"]["cpf"] ?: "00987654321",
+                "phone"        => $data["billing"]["phone"],
+                "isCorporate"  => false,
+            ],
+            "shippingData"      => [
+                // wc_order shipping
+                "address"       => [
+                    "addressType"  => "addrType",
+                    "addressId"    => "addrId",
+                    "receiverName" => $name,
+                    "street"       => $data["shipping"]["address_1"],
+                    "number"       => $data["shipping"]["number"]       ?: 0,   // número é obrigatório
+                    "complement"   => $data["shipping"]["address_2"],
+                    "neighborhood" => $data["shipping"]["neighborhood"] ?: "A", // bairro é obrigatório
+                    "city"         => $data["shipping"]["city"],
+                    "state"        => $data["shipping"]["state"],
+                    "country"      => "BRA",
+                    "postalCode"   => $data["shipping"]["postcode"],
+                ],
+                "logisticsInfo" => $logisticsInfo,
+            ],
+        ];
+
+        return $new;
+    }
+
+    /**
+     * Converte os dados do pedido para enviar email
+     *
+     * @package array $data
+     * @return array
+     */
+    private static function newOrderError(array $data)
+    {
+        if (empty($data["parent"]))
+        {
+            $orderId    = $data["order"]["id"];
+            $subOrderId = "";
+        }
+        else
+        {
+            $orderId    = $data["parent"]["id"];
+            $subOrderId = $data["order"]["id"];
+        }
+
+        return [
+            "orderId"     => $orderId,
+            "subOrderId"  => $subOrderId,
+            "customer_id" => $data["order"]["customer_id"],
+            "name"        => $data["order"]["billing"]["first_name"] . " " . $data["order"]["billing"]["last_name"],
+            "email"       => $data["order"]["billing"]["email"],
+            "phone"       => $data["order"]["billing"]["phone"],
+        ];
+    }
+
+    public static function wcCanceledOrder(array $data)
+    {
+        // ???
     }
 }

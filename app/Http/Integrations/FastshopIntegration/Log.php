@@ -3,6 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use Exception;
+use App\Models\User;
 use Illuminate\Support\Facades\Log as LogSys;
 
 class Log
@@ -98,6 +99,23 @@ class Log
         LogSys::channel("fastshop")->info("Shipping query failed", $data);
     }
 
+    public static function orderCanceledByMarketplace(array $data)
+    {
+        LogSys::channel("fastshop")->info("Order inquiry failed", $data);
+    }
+
+    /**
+     * Log de novo pedido
+     *
+     * @param string|null $key
+     * @param string|null $token
+     * @return void
+     */
+    public static function orderCreation(array $error, array $data)
+    {
+        LogSys::channel("fastshop")->error("new order error", [$error, $data]);
+    }
+
     /**
      * Log erros imprevistos
      *
@@ -107,5 +125,17 @@ class Log
     public static function exception(string $func, Exception $e)
     {
         LogSys::channel("fastshop")->error("Exception - $func", [$e]);
+    }
+
+    /**
+     * Log padrão, apenas informativo
+     *
+     * @param string $func
+     * @param array $data
+     * @return void
+     */
+    public static function default(string $func, array $data)
+    {
+        LogSys::channel("fastshop")->info($func, $data);
     }
 }
