@@ -98,6 +98,11 @@ class Log
         LogSys::channel("fastshop")->info("Shipping query failed", $data);
     }
 
+    /** 
+     * Log de falha ao enviar pedido de cancelamento do MP para o FS
+     * *@param array $data
+     * *@return void
+      */
     public static function orderCanceledByMarketplace(array $data)
     {
         LogSys::channel("fastshop")->info("Order inquiry failed", $data);

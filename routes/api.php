@@ -93,6 +93,10 @@ Route::prefix("marketplace")->group(function () {
         [FastshopController::class, "orderCreation"]
     )->name("marketplace.ordercreation");
 
+    //Route-api: php.triibo.com.br/api/marketplace/ordercancelation-mp
+    Route::post("/ordercancelation-mp",
+    [FastshopController::class, "orderCanceledByMarketplace"])->name("marketplace.ordercancelation-mp");
+
 });
 
 

@@ -210,7 +210,7 @@ class FastshopController extends Controller
         ]);
 
         // Consulta produto na FS
-        $response = Http::withHeaders($headers)->withBody($body, "application/json")->get($url);
+        $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
         if ($response->successful())
         {
@@ -272,22 +272,21 @@ class FastshopController extends Controller
     /**
      * Pedido Cancelado pelo Marketplace
      * Notifica a Fastshop de que o pedido foi cancelado.
-     *
+     * @param Request $requests
+     * @param string $orderId
      * @return void
      */
-    public function orderCanceledByMarketplace(Request $request)
+    public function orderCanceledByMarketplace(Request $request, $orderId)
     {
         if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         try
-        {
-            $wcData = $request->only('marketplaceOrderId');
+        {   
+            $data = $this->getOrder($orderId); //?
 
-            $body     = DataTranslator::translate("wcCanceledOrder", $wcData);
+            $url  = "$this->fsUrl/pvt/orders/$orderId/cancel"; 
 
-            $url   = "$this->fsUrl/pvt/orders/{orderId}/cancel"; 
             $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
-            //dd($response->json());
             
             if(!$response->successful()) 
             {   
@@ -299,18 +298,17 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            $fsData = $response->json();
-
+            Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
         }
-
         catch (Exception $e)
         {
             Log::exception("orderCanceledByMarketplace", $e);
 
             return response()->json([
-                "errorCode" => "5001", // codigo para tratar no WooCommerce
+                "errorCode" => "5000",
                 "message"   => "something wrong",
             ], 500);
+            
         }
     }
 
