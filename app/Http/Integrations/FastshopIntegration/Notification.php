@@ -16,6 +16,10 @@ class Notification
                 return self::newOrderError($data);
             break;
 
+            case "cancelationOrderError":
+                return self::cancelationOrderError($data);
+            break;
+
         }
     }
 
@@ -32,6 +36,26 @@ class Notification
         $mail = [
             "subject" => "Falha em pedido FastShop",
             "title"   => "Falha na criação do pedido abaixo na Fast Shop",
+            "data"    => $data,
+        ];
+
+        $users = User::where("email", "mateus.costa@triibo.com.br")
+                    //  ->orWhere("email", "equipemarketplace@triibo.com.br")
+                     ->get();
+
+        foreach ($users as $user)
+        {
+            $user->notify(new NewOrderError($mail));
+        }
+    }
+
+    private static function cancelationOrderError(array $data)
+    {
+        $data = DataTranslator::translate("newOrderError", $data);
+
+        $mail = [
+            "subject" => "Falha em pedido FastShop",
+            "title"   => "Falha no cancelamento do pedido abaixo na Fast Shop",
             "data"    => $data,
         ];
 

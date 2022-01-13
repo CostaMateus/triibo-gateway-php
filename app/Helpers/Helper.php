@@ -320,4 +320,16 @@ class Helper
             return "1";
         }
     }
+
+    public static function getOrderCancelation(array $data)
+    {
+        $msg = "Pedido cancelado:\n";
+
+        foreach ($data as $key => $value)
+        {
+            $msg .= "$key: $value\n";
+        }
+
+        return $msg;
+    }
 }

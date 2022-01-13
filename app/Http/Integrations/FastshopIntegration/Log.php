@@ -106,7 +106,7 @@ class Log
       */
     public static function orderCancelation(array $data)
     {
-        LogSys::channel("fastshop")->info("Order inquiry failed", $data);
+        LogSys::channel("fastshop")->info("Cancelation order error", $data);
     }
 
     /**
@@ -118,7 +118,7 @@ class Log
      */
     public static function orderCreation(array $error, array $data)
     {
-        LogSys::channel("fastshop")->error("new order error", [$error, $data]);
+        LogSys::channel("fastshop")->error("New order error", [$error, $data]);
     }
 
     /**
