@@ -321,6 +321,7 @@ class FastshopController extends Controller
 
         try
         {
+
             // Converte dados do WC para FS
             $body     = DataTranslator::translate("freightCalcFs", $wcData);
 
