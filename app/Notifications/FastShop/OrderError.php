@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class NewOrderError extends Notification
+class OrderError extends Notification
 {
     use Queueable;
 
@@ -43,7 +43,7 @@ class NewOrderError extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)->subject($this->data["subject"])
-                                ->markdown("mail.marketplace.fastshop.new_order_error", [
+                                ->markdown("mail.marketplace.fastshop.order_error", [
                                     "title" => $this->data["title"],
                                     "data"  => $this->data["data"],
                                 ]);
