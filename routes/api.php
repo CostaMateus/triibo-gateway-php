@@ -113,18 +113,20 @@ Route::name("api.marketplace.")->prefix("marketplace")->group(function () {
             [FastshopController::class, "updateSkuWc"]
         )->name("updatesku");
 
-        // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation
+        // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation/{orderId}
         // API chamada a partir do ../themes/martfury-child/functions.php
         Route::post(
             "/ordercreation/{orderId}",
             [FastshopController::class, "orderCreation"]
         )->name("ordercreation");
 
+        //Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{orderId}
+        // API chamada a partir do ../themes/martfury-child/functions.php
+        Route::post(
+            "/ordercancelation/{orderId}",
+            [FastshopController::class, "orderCancelation"]
+        )->name("ordercancelation");
     });
-
-    //Route-api: php.triibo.com.br/api/marketplace/ordercancelation-mp
-    Route::post("/ordercancelation-mp",
-    [FastshopController::class, "orderCanceledByMarketplace"])->name("marketplace.ordercancelation-mp");
 
 });
 
