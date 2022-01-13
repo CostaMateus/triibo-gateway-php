@@ -38,11 +38,8 @@ class DataTranslator
             case "newOrderFs":
                 return self::newOrderFs($data);
             break;
-            case "newOrderError":
-                return self::newOrderError($data);
-
-            case "wcCanceledOrder":
-                return self::wcCanceledOrder($data);
+            case "orderError":
+                return self::orderError($data);
             break;
         }
     }
@@ -453,7 +450,7 @@ class DataTranslator
      * @package array $data
      * @return array
      */
-    private static function newOrderError(array $data)
+    private static function orderError(array $data)
     {
         if (empty($data["parent"]))
         {
@@ -474,10 +471,5 @@ class DataTranslator
             "email"       => $data["order"]["billing"]["email"],
             "phone"       => $data["order"]["billing"]["phone"],
         ];
-    }
-
-    public static function wcCanceledOrder(array $data)
-    {
-        // ???
     }
 }

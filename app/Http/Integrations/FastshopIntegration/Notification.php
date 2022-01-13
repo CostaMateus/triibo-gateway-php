@@ -3,7 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use App\Models\User;
-use App\Notifications\FastShop\NewOrderError;
+use App\Notifications\FastShop\OrderError;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 class Notification
@@ -13,13 +13,12 @@ class Notification
     {
         switch ($name) {
             case "newOrderError":
-                return self::newOrderError($data);
+                return self::orderError($data, 1);
             break;
 
             case "cancelationOrderError":
-                return self::cancelationOrderError($data);
+                return self::orderError($data, 2);
             break;
-
         }
     }
 
@@ -29,33 +28,25 @@ class Notification
      * @param Array $params
      * @return void
      */
-    private static function newOrderError(array $data)
+    private static function orderError(array $data, int $opt)
     {
-        $data = DataTranslator::translate("newOrderError", $data);
+        $data  = DataTranslator::translate("orderError", $data);
+        $title = "";
 
-        $mail = [
-            "subject" => "Falha em pedido FastShop",
-            "title"   => "Falha na criação do pedido abaixo na Fast Shop",
-            "data"    => $data,
-        ];
-
-        $users = User::where("email", "mateus.costa@triibo.com.br")
-                    //  ->orWhere("email", "equipemarketplace@triibo.com.br")
-                     ->get();
-
-        foreach ($users as $user)
+        switch ($opt)
         {
-            $user->notify(new NewOrderError($mail));
+            case 1:
+                $title = "Falha na criação do pedido abaixo na Fast Shop";
+            break;
+
+            case 2:
+                $title = "Falha no cancelamento do pedido abaixo na Fast Shop";
+            break;
         }
-    }
-
-    private static function cancelationOrderError(array $data)
-    {
-        $data = DataTranslator::translate("newOrderError", $data);
 
         $mail = [
             "subject" => "Falha em pedido FastShop",
-            "title"   => "Falha no cancelamento do pedido abaixo na Fast Shop",
+            "title"   => $title,
             "data"    => $data,
         ];
 
@@ -65,7 +56,7 @@ class Notification
 
         foreach ($users as $user)
         {
-            $user->notify(new NewOrderError($mail));
+            $user->notify(new OrderError($mail));
         }
     }
 }
