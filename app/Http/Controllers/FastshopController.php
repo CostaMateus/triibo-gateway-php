@@ -523,26 +523,27 @@ class FastshopController extends Controller
     /**
      * Pedido Cancelado pelo Marketplace
      * Notifica a Fastshop de que o pedido foi cancelado.
+     *
      * @param Request $requests
      * @param string $orderId
-     * @return void
+     * @return Response
      */
-    public function orderCanceledByMarketplace(Request $request, $orderId)
+    public function orderCancelation(Request $request, $orderId)
     {
         // Verifição de chaves
         if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         try
-        {   
+        {
             $data = $this->getOrder($orderId); //?
 
-            $url  = "$this->fsUrl/pvt/orders/$orderId/cancel"; 
+            $url  = "$this->fsUrl/pvt/orders/$orderId/cancel";
 
             $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
-            
-            if(!$response->successful()) 
-            {   
-                log::orderCanceledByMarketplace($body);
+
+            if(!$response->successful())
+            {
+                Log::orderCancelation($body);
 
                 return response()->json([
                     "errorCode" => "4001",
@@ -550,17 +551,17 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
+            // Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
         }
         catch (Exception $e)
         {
-            Log::exception("orderCanceledByMarketplace", $e);
+            Log::exception("orderCancelation", $e);
 
             return response()->json([
                 "errorCode" => "5000",
                 "message"   => "something wrong",
             ], 500);
-            
+
         }
     }
 
