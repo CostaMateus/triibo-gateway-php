@@ -472,12 +472,23 @@ class FastshopController extends Controller
                 ], 500);
             }
 
-            // //
-            // // $wcData = $response->json();
-            // // tratar response antes
-            // //
-            // $encoded = json_encode(json_decode($response->json(), true), JSON_UNESCAPED_SLASHES);
-            // Storage::put(date("Ymd") . "-fs-order-criation.json", $encoded);
+            $fsData = $response->json();
+
+            Note::create($data["order"]["id"], [ "note" => "Pedido criado na Fast Shop: #" . $fsData["orderId"] ]);
+
+            Order::update($$data["order"]["id"], [
+                "meta_data" => [[
+                    "key"   => "_fastshop_order_id",
+                    "value" => $fsData["orderId"]
+                ]]
+            ]);
+
+            /**
+             * TODO
+             * remover posteriormente
+             */
+            $encoded = json_encode(json_decode($response->json(), true), JSON_UNESCAPED_SLASHES);
+            Storage::put(date("Ymd") . "-fs-order-criation.json", $encoded);
 
             return response()->json([
                 "errorCode" => null,
