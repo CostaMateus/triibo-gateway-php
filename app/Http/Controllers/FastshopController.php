@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
+use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
@@ -535,15 +536,37 @@ class FastshopController extends Controller
 
         try
         {
-            $data = $this->getOrder($orderId); //?
+            $data = $this->getOrder($orderId);
 
-            $url  = "$this->fsUrl/pvt/orders/$orderId/cancel";
+            // retira os pedidos que não são da FastShop
+            foreach ($data["order"] as $key => $order)
+            {
+                // id da FS no dev-marketplace
+                $id = config("fastshop.$this->env.wc.storeId");
 
-            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+                if ($order["store"]["id"] != $id) unset($data["order"][$key]);
+            }
+
+            // quando vazio, não é pedido da FS
+            if (empty($data["order"])) return;
+
+            $data["order"] = $data["order"][key($data["order"])];
+
+            // busca o orderId da FS no meta_data
+            $meta          = $order["order"]["meta_data"];
+            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $fsOrderId     = $meta[$meta_key]["value"];
+
+            $url           = "$this->fsUrl/pvt/orders/$fsOrderId/cancel";
+            $body          = [ "marketplaceOrderId" => $data["order"]["id"] ];
+
+            // envia solicitação a FS
+            $response      = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
             if(!$response->successful())
             {
                 Log::orderCancelation($body);
+                Notification::notify("cancelationOrderError", $data);
 
                 return response()->json([
                     "errorCode" => "4001",
@@ -551,7 +574,14 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            // Order::update($data["order"]["id"], [ "status" => "cancelled" ]);
+            Log::orderCancelation($response->json());
+            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "ok",
+                "data"      => $response->json(),
+            ], 200);
         }
         catch (Exception $e)
         {
@@ -561,7 +591,6 @@ class FastshopController extends Controller
                 "errorCode" => "5000",
                 "message"   => "something wrong",
             ], 500);
-
         }
     }
 
