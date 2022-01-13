@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Artisan;
 // use Triibo\Mautic\Models\MauticConsumer;
 // use App\Notifications\WebhookMarketplace;
 use App\Http\Controllers\UserController;
+use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Term;
+use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Coupon;
 use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Product;
@@ -74,9 +76,17 @@ Route::group(["middleware" => "auth"], function() {
 
 Route::get("/wc", function () {
 
-    $product =  Product::all([ "sku" => "FS-FDCJGETA160100" ])->first();
+    $order = Order::find( 60127 );
 
-    dd($product);
+    $data  = [
+        "note" => "ERROR \nTeste"
+    ];
+
+    Note::create($order["id"], $data);
+
+    $notes = Note::all($order["id"]);
+
+    dd($order, $notes);
 
 });
 
