@@ -120,8 +120,15 @@ Route::name("api.marketplace.")->prefix("marketplace")->group(function () {
             [FastshopController::class, "orderCreation"]
         )->name("ordercreation");
 
+        // Route-api: php.triibo.com.br/api/marketplace/wc/orderapproved/{orderId}
+        // API chamada a partir do ../themes/martfury-child/functions.php           // confirmar
+        Route::post(
+            "/orderapproved/{orderId}",
+            [FastshopController::class, "orderApproved"]
+        )->name("orderapproved");
+
         //Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{orderId}
-        // API chamada a partir do ../themes/martfury-child/functions.php
+        // API chamada a partir do ../themes/martfury-child/functions.php           // confirmar
         Route::post(
             "/ordercancelation/{orderId}",
             [FastshopController::class, "orderCancelation"]
