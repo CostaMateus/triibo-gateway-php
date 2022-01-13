@@ -527,27 +527,48 @@ class FastshopController extends Controller
      * Pedido Cancelado pelo Marketplace
      * Notifica a Fastshop de que o pedido foi cancelado.
      *
-     * @param Request $request
+     * @param Request $requests
+     * @param string $orderId
      * @return Response
      */
-    public function orderCanceledByMarketplace(Request $request)
+    public function orderCancelation(Request $request, $orderId)
     {
         // Verifição de chaves
         if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         try
         {
-            $wcData   = $request->only('marketplaceOrderId');
+            $data = $this->getOrder($orderId);
 
-            $body     = DataTranslator::translate("wcCanceledOrder", $wcData);
+            // retira os pedidos que não são da FastShop
+            foreach ($data["order"] as $key => $order)
+            {
+                // id da FS no dev-marketplace
+                $id = config("fastshop.$this->env.wc.storeId");
 
-            $url      = "$this->fsUrl/pvt/orders/{orderId}/cancel";
-            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
-            //dd($response->json());
+                if ($order["store"]["id"] != $id) unset($data["order"][$key]);
+            }
+
+            // quando vazio, não é pedido da FS
+            if (empty($data["order"])) return;
+
+            $data["order"] = $data["order"][key($data["order"])];
+
+            // busca o orderId da FS no meta_data
+            $meta          = $order["order"]["meta_data"];
+            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $fsOrderId     = $meta[$meta_key]["value"];
+
+            $url           = "$this->fsUrl/pvt/orders/$fsOrderId/cancel";
+            $body          = [ "marketplaceOrderId" => $data["order"]["id"] ];
+
+            // envia solicitação a FS
+            $response      = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
             if(!$response->successful())
             {
-                log::orderCanceledByMarketplace($body);
+                Log::orderCancelation($body);
+                Notification::notify("cancelationOrderError", $data);
 
                 return response()->json([
                     "errorCode" => "4001",
@@ -555,14 +576,21 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            $fsData = $response->json();
+            Log::orderCancelation($response->json());
+            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "ok",
+                "data"      => $response->json(),
+            ], 200);
         }
         catch (Exception $e)
         {
-            Log::exception("orderCanceledByMarketplace", $e);
+            Log::exception("orderCancelation", $e);
 
             return response()->json([
-                "errorCode" => "5000", // erro generico
+                "errorCode" => "5000",
                 "message"   => "something wrong",
             ], 500);
         }

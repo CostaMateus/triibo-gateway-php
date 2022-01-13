@@ -321,6 +321,18 @@ class Helper
         }
     }
 
+    public static function getOrderCancelation(array $data)
+    {
+        $msg = "Pedido cancelado:\n";
+
+        foreach ($data as $key => $value)
+        {
+            $msg .= "$key: $value\n";
+        }
+
+        return $msg;
+    }
+  
     public static function getErrorNewOrderFS(array $data)
     {
         $code = $data["errorCode"];

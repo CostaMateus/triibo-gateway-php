@@ -99,9 +99,14 @@ class Log
         LogSys::channel("fastshop")->info("Shipping query failed", $data);
     }
 
-    public static function orderCanceledByMarketplace(array $data)
+    /**
+     * Log de falha ao enviar pedido de cancelamento do WC para o FS
+     * *@param array $data
+     * *@return void
+      */
+    public static function orderCancelation(array $data)
     {
-        LogSys::channel("fastshop")->info("Order inquiry failed", $data);
+        LogSys::channel("fastshop")->info("Cancelation order error", $data);
     }
 
     /**
@@ -113,7 +118,7 @@ class Log
      */
     public static function orderCreation(array $error, array $data)
     {
-        LogSys::channel("fastshop")->error("new order error", [$error, $data]);
+        LogSys::channel("fastshop")->error("New order error", [$error, $data]);
     }
 
     /**
