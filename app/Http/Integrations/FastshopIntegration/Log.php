@@ -104,21 +104,9 @@ class Log
      * *@param array $data
      * *@return void
       */
-    public static function orderCancelation(array $data)
+    public static function order(string $type, string $title, array $data,)
     {
-        LogSys::channel("fastshop")->info("Cancelation order error", $data);
-    }
-
-    /**
-     * Log de novo pedido
-     *
-     * @param string|null $key
-     * @param string|null $token
-     * @return void
-     */
-    public static function orderCreation(array $error, array $data)
-    {
-        LogSys::channel("fastshop")->error("New order error", [$error, $data]);
+        LogSys::channel("fastshop")->{$type}($title, $data);
     }
 
     /**
