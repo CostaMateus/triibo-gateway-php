@@ -19,6 +19,10 @@ class Notification
             case "cancelationOrderError":
                 return self::orderError($data, 2);
             break;
+
+            case "approvedOrderError":
+                return self::orderError($data, 3);
+            break;
         }
     }
 
@@ -41,6 +45,10 @@ class Notification
 
             case 2:
                 $title = "Falha no cancelamento do pedido abaixo na Fast Shop";
+            break;
+
+            case 2:
+                $title = "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop";
             break;
         }
 
