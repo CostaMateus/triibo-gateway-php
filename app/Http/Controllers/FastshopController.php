@@ -406,16 +406,7 @@ class FastshopController extends Controller
 
         try
         {
-            $data = $this->getOrder($orderId);
-
-            // retira os pedidos que não são da FastShop
-            foreach ($data["order"] as $key => $order)
-            {
-                // id da FS no dev-marketplace
-                $id = config("fastshop.$this->env.wc.storeId");
-
-                if ($order["store"]["id"] != $id) unset($data["order"][$key]);
-            }
+            $data = $this->getFsOrder($orderId);
 
             // quando vazio, não é pedido da FS
             if (empty($data["order"])) return;
@@ -514,14 +505,23 @@ class FastshopController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function orderApproved(Request $request)
+    public function orderApproved(Request $request, $orderId)
     {
         // Verifição de chaves
         if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         try
         {
-            $wcData = $request->all();
+            $data = $this->getFsOrder($orderId);
+
+            // quando vazio, não é pedido da FS
+            if (empty($data["order"])) return;
+
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "ok",
+                "data"      => $orderId,
+            ], 200);
         }
         catch (Exception $e)
         {
@@ -549,16 +549,7 @@ class FastshopController extends Controller
 
         try
         {
-            $data = $this->getOrder($orderId);
-
-            // retira os pedidos que não são da FastShop
-            foreach ($data["order"] as $key => $order)
-            {
-                // id da FS no dev-marketplace
-                $id = config("fastshop.$this->env.wc.storeId");
-
-                if ($order["store"]["id"] != $id) unset($data["order"][$key]);
-            }
+            $data          = $this->getFsOrder($orderId);
 
             // quando vazio, não é pedido da FS
             if (empty($data["order"])) return;
@@ -566,7 +557,7 @@ class FastshopController extends Controller
             $data["order"] = $data["order"][key($data["order"])];
 
             // busca o orderId da FS no meta_data
-            $meta          = $order["order"]["meta_data"];
+            $meta          = $data["order"]["meta_data"];
             $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
             $fsOrderId     = $meta[$meta_key]["value"];
 
@@ -837,6 +828,28 @@ class FastshopController extends Controller
 
         $data["fs_error"] = $fs_error;
         $data["fs_info"]  = $fsData;
+
+        return $data;
+    }
+
+    /**
+     * Recupera o pedido da Fast Shop
+     *
+     * @param string $orderId
+     * @return array
+     */
+    private function getFsOrder(string $orderId)
+    {
+        $data = $this->getOrder($orderId);
+
+        // retira os pedidos que não são da FastShop
+        foreach ($data["order"] as $key => $order)
+        {
+            // id da FS no dev-marketplace
+            $id = config("fastshop.$this->env.wc.storeId");
+
+            if ($order["store"]["id"] != $id) unset($data["order"][$key]);
+        }
 
         return $data;
     }
