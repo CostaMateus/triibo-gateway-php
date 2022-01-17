@@ -409,7 +409,7 @@ class FastshopController extends Controller
             $data = $this->getFsOrder($orderId);
 
             // quando vazio, não é pedido da FS
-            if (empty($data["order"])) return;
+            if (empty($data["order"])) return response()->json("", 200);
 
             $data["order"] = $this->getOrderFreight($data["order"][key($data["order"])]);
 
@@ -515,7 +515,7 @@ class FastshopController extends Controller
             $data = $this->getFsOrder($orderId);
 
             // quando vazio, não é pedido da FS
-            if (empty($data["order"])) return;
+            if (empty($data["order"])) return response()->json("", 200);
 
             return response()->json([
                 "errorCode" => null,
@@ -552,13 +552,24 @@ class FastshopController extends Controller
             $data          = $this->getFsOrder($orderId);
 
             // quando vazio, não é pedido da FS
-            if (empty($data["order"])) return;
+            if (empty($data["order"])) return response()->json("", 200);
 
             $data["order"] = $data["order"][key($data["order"])];
 
             // busca o orderId da FS no meta_data
             $meta          = $data["order"]["meta_data"];
             $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+
+            if ($meta_key === false)
+            {
+                Log::orderCancelation([$data["order"]["id"] => "meta_date '_fastshop_order_id' not found"]);
+
+                return response()->json([
+                    "errorCode" => "4002",
+                    "message"   => "Something wrong when consulting the order"
+                ],400);
+            }
+
             $fsOrderId     = $meta[$meta_key]["value"];
 
             $url           = "$this->fsUrl/pvt/orders/$fsOrderId/cancel";
