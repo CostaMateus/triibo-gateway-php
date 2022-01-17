@@ -417,7 +417,7 @@ class FastshopController extends Controller
             {
                 $error = $data["order"]["fs_error"];
 
-                Log::orderCreation($error, $data);
+                Log::order("error", "New order error", [$error, $data]);
                 Notification::notify("newOrderError", $data);
 
                 Note::create($data["order"]["id"], [ "note" => Helper::getErrorNewOrderFS($error) ]);
@@ -449,7 +449,7 @@ class FastshopController extends Controller
             {
                 $error = $response->json();
 
-                Log::orderCreation($error, $body);
+                Log::order("error", "New order error", [$error, $body]);
                 Notification::notify("newOrderError", $data);
 
                 $msg = "ERROR\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"];
@@ -512,15 +512,53 @@ class FastshopController extends Controller
 
         try
         {
-            $data = $this->getFsOrder($orderId);
+            $data          = $this->getFsOrder($orderId);
 
             // quando vazio, não é pedido da FS
             if (empty($data["order"])) return response()->json("", 200);
 
+            $data["order"] = $data["order"][key($data["order"])];
+
+            // busca o orderId da FS no meta_data
+            $meta          = $data["order"]["meta_data"];
+            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+
+            if ($meta_key === false)
+            {
+                $log = [ $data["order"]["id"] => "meta_data '_fastshop_order_id' not found" ];
+                Log::order("info", "Approved order error", $log);
+
+                return response()->json([
+                    "errorCode" => "4002",
+                    "message"   => "Order does not have meta_data '_fastshop_order_id'"
+                ],400);
+            }
+
+            $fsOrderId     = $meta[$meta_key]["value"];
+
+            $url           = "$this->fsUrl/pvt/orders/$fsOrderId/fulfill";
+            $body          = [ "marketplaceOrderId" => $data["order"]["id"] ];
+
+            // envia solicitação a FS
+            $response      = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+
+            if(!$response->successful())
+            {
+                Log::order("info", "Approved order error", $body);
+                Notification::notify("approvedOrderError", $data);
+
+                return response()->json([
+                    "errorCode" => "4001",
+                    "message"   => "Something went wrong when reporting order approval"
+                ],400);
+            }
+
+            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+
             return response()->json([
                 "errorCode" => null,
                 "message"   => "ok",
-                "data"      => $orderId,
+                "data"      => $response->json(),
             ], 200);
         }
         catch (Exception $e)
@@ -562,11 +600,12 @@ class FastshopController extends Controller
 
             if ($meta_key === false)
             {
-                Log::orderCancelation([$data["order"]["id"] => "meta_date '_fastshop_order_id' not found"]);
+                $log = [ $data["order"]["id"] => "meta_data '_fastshop_order_id' not found" ];
+                Log::order("info", "Cancelation order error", $log);
 
                 return response()->json([
                     "errorCode" => "4002",
-                    "message"   => "Something wrong when consulting the order"
+                    "message"   => "Order does not have meta_data '_fastshop_order_id'"
                 ],400);
             }
 
@@ -580,16 +619,15 @@ class FastshopController extends Controller
 
             if(!$response->successful())
             {
-                Log::orderCancelation($body);
+                Log::order("info", "Cancelation order error", $body);
                 Notification::notify("cancelationOrderError", $data);
 
                 return response()->json([
                     "errorCode" => "4001",
-                    "message"   => "Something wrong when consulting the order"
+                    "message"   => "Something wrong when canceling the order"
                 ],400);
             }
 
-            Log::orderCancelation($response->json());
             Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
 
             return response()->json([
