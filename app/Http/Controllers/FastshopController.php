@@ -219,6 +219,9 @@ class FastshopController extends Controller
      */
     public function invoiceNotification(Request $request, $orderId)
     {
+        // Verifição de chaves
+        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+
         return response()->json([
             "errorCode" => null,
             "message"   => "Ok",
@@ -235,6 +238,9 @@ class FastshopController extends Controller
      */
     public function deliveredNotification(Request $request, $orderId)
     {
+        // Verifição de chaves
+        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+
         return response()->json([
             "errorCode" => null,
             "message"   => "Ok",
@@ -253,6 +259,9 @@ class FastshopController extends Controller
      */
     public function cancellationNotification(Request $request, $orderId)
     {
+        // Verifição de chaves
+        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+
         return response()->json([
             "errorCode" => null,
             "message"   => "Ok",
