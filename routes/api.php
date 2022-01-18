@@ -77,22 +77,28 @@ Route::name("api.marketplace.")->prefix("marketplace")->group(function () {
     )->name("updatesku");
 
     // Route-api: php.triibo.com.br/api/marketplace/invoice
+    // FS informa pedido faturado ou despachado
     Route::post(
         "/invoice/api/oms/pub/orders/{orderId}/invoice",
         [FastshopController::class, "invoiceNotification"]
     )->name("invoicenotification");
 
     // Route-api: php.triibo.com.br/api/marketplace/delivered
+    // FS informa pedido entregue
     Route::post(
         "/delivered/api/oms/pub/orders/{orderId}/delivered",
         [FastshopController::class, "deliveredNotification"]
     )->name("deliverednotification");
 
     // Route-api: php.triibo.com.br/api/marketplace/cancel
+    // FS informa pedido cancelado
     Route::post(
         "/cancel/api/oms/pub/orders/{orderId}/cancel",
         [FastshopController::class, "cancellationNotification"]
     )->name("cancellationnotification");
+
+
+
 
     /**
      * APIs chamadas pelo marketplace
