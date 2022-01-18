@@ -222,10 +222,26 @@ class FastshopController extends Controller
         // Verifição de chaves
         if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
 
-        return response()->json([
-            "errorCode" => null,
-            "message"   => "Ok",
-        ], 200);
+        try
+        {
+            $fsData = $request->all();
+
+            $order  = $this->getFsOrder($orderId);
+
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "Ok1",
+            ], 200);
+        }
+        catch (Exception $e)
+        {
+            Log::exception("deliveredNotification", $e);
+
+            return response()->json([
+                "errorCode" => "5000", // 5000 - erro generico
+                "message"   => "something wrong",
+            ], 500);
+        }
     }
 
     /**
@@ -241,10 +257,26 @@ class FastshopController extends Controller
         // Verifição de chaves
         if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
 
-        return response()->json([
-            "errorCode" => null,
-            "message"   => "Ok",
-        ], 200);
+        try
+        {
+            $fsData = $request->all();
+
+            $order  = $this->getFsOrder($orderId);
+
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "Ok1",
+            ], 200);
+        }
+        catch (Exception $e)
+        {
+            Log::exception("deliveredNotification", $e);
+
+            return response()->json([
+                "errorCode" => "5000", // 5000 - erro generico
+                "message"   => "something wrong",
+            ], 500);
+        }
     }
 
     /**
@@ -262,10 +294,22 @@ class FastshopController extends Controller
         // Verifição de chaves
         if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
 
-        return response()->json([
-            "errorCode" => null,
-            "message"   => "Ok",
-        ], 200);
+        try
+        {
+            return response()->json([
+                "errorCode" => null,
+                "message"   => "Ok1",
+            ], 200);
+        }
+        catch (Exception $e)
+        {
+            Log::exception("cancellationNotification", $e);
+
+            return response()->json([
+                "errorCode" => "5000", // 5000 - erro generico
+                "message"   => "something wrong",
+            ], 500);
+        }
     }
 
 
