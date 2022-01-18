@@ -208,7 +208,10 @@ class FastshopController extends Controller
     }
 
     /**
-     *
+     * Pedido Faturado ou Despachado
+     * Quando o pedido for despachado pela FS, ou seja, entregue a transportadora,
+     * os dados de rastreamento serão atualizados utilizando este endpoint,
+     * com todas as informações de faturamento e rastreio do pedido, identificando o cenário de "Expedição".
      *
      * @param Request $request
      * @param string $orderId
@@ -223,7 +226,8 @@ class FastshopController extends Controller
     }
 
     /**
-     *
+     * Pedido Entregue
+     * Este endpoint será utilizado pela FS para informar que o pedido foi entregue.
      *
      * @param Request $request
      * @param string $orderId
@@ -238,7 +242,10 @@ class FastshopController extends Controller
     }
 
     /**
-     *
+     * Pedido Cancelado pela FS
+     * Caso a FS tenha problemas com o pedido e não possa, por algum, realizar a entrega,
+     * irá informar o cancelamento ao Marketplace. Tal ação só poderá ser realizada
+     * caso o pedido se encontre em um status que permita o cancelamento.
      *
      * @param Request $request
      * @param string $orderId
