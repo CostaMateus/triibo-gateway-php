@@ -41,6 +41,13 @@ class DataTranslator
             case "orderError":
                 return self::orderError($data);
             break;
+
+            case "invoice":
+                return self::invoice($data);
+            break;
+            case "tracking":
+                return self::tracking($data);
+            break;
         }
     }
 
@@ -390,6 +397,15 @@ class DataTranslator
                 "Seller"            => $auxItem["seller"],
                 "priceTags"         => $auxItem["priceTags"],
                 "isGift"            => false,
+                // "commission"        => 0,
+                // "freightCommission" => 0,
+                // "bundleItems"       => [],
+                // "itemAttachment"    => [
+                //     "name"    => null,
+                //     "content" => null
+                // ],
+                // "attachments"       => null,
+                // "measurementUnit"   => null,
             ];
 
             $idSla           = array_search("delivery", array_column($item["slas"], "deliveryChannel"));
@@ -421,6 +437,12 @@ class DataTranslator
                 "document"     => $data["billing"]["cpf"] ?: "00987654321",
                 "phone"        => $data["billing"]["phone"],
                 "isCorporate"  => false,
+                // "corporateName" => null,
+                // "tradeName" => null,
+                // "corporateDocument" => null,
+                // "stateInscription" => null,
+                // "corporatePhone" => null,
+                // "userProfileId" => null
             ],
             "shippingData"      => [
                 // wc_order shipping
@@ -436,6 +458,8 @@ class DataTranslator
                     "state"        => $data["shipping"]["state"],
                     "country"      => "BRA",
                     "postalCode"   => $data["shipping"]["postcode"],
+                    // "reference" => null,
+                    // "geoCoordinates" => []
                 ],
                 "logisticsInfo" => $logisticsInfo,
             ],
@@ -471,5 +495,31 @@ class DataTranslator
             "email"       => $data["order"]["billing"]["email"],
             "phone"       => $data["order"]["billing"]["phone"],
         ];
+    }
+
+    /**
+     * Nota fiscal
+     * Converte os dados da notificação da FS para a anotação do WC
+     */
+    private static function invoice(array $data)
+    {
+        $invoiceNumber = $data["invoiceNumber"];
+        $invoiceKey    = $data["invoiceKey"];
+        $invoiceUrl    = $data["invoiceUrl"];
+
+        return "NOTA FISCAL\n Nº: $invoiceNumber\n Chave: $invoiceKey\n URL: $invoiceUrl";
+    }
+
+    /**
+     * Rastreamento
+     * Converte os dados da notificação da FS para a anotação do WC
+     */
+    private static function tracking(array $data)
+    {
+        $courier        = $data["courier"];
+        $trackingNumber = $data["trackingNumber"];
+        $trackingUrl    = $data["trackingUrl"];
+
+        return "RASTREAMENTO\n Transportadora: $courier\n Código de rastreio: $trackingNumber\n URL: $trackingUrl";
     }
 }
