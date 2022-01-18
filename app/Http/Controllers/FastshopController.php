@@ -224,18 +224,30 @@ class FastshopController extends Controller
 
         try
         {
-            $fsData = $request->all();
+            $fsData   = $request->all();
+            $invoice  = DataTranslator::translate("invoice",  $fsData);
+            $tracking = DataTranslator::translate("tracking", $fsData);
 
-            $order  = $this->getFsOrder($orderId);
+            Note::create($orderId, [ "note" => $invoice  ]);
+            Note::create($orderId, [ "note" => $tracking ]);
+
+            $wcOrder          = $this->getOrder($orderId);
+            $wcOrder["order"] = $wcOrder["order"][key($wcOrder["order"])];
+
+            // busca o orderId da FS no meta_data
+            $meta             = $wcOrder["order"]["meta_data"];
+            $meta_key         = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $fsOrderId        = $meta[$meta_key]["value"];
 
             return response()->json([
-                "errorCode" => null,
-                "message"   => "Ok1",
+                "date"    => date_format(now(), "Y-m-d\TH:i:s.uP"),
+                "orderId" => $fsOrderId,
+                "receipt" => null
             ], 200);
         }
         catch (Exception $e)
         {
-            Log::exception("deliveredNotification", $e);
+            Log::exception("invoiceNotification", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
