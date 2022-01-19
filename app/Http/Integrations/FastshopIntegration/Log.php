@@ -3,6 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use Exception;
+use App\Models\User;
 use Illuminate\Support\Facades\Log as LogSys;
 
 class Log
@@ -99,6 +100,16 @@ class Log
     }
 
     /**
+     * Log de falha ao enviar pedido de cancelamento do WC para o FS
+     * *@param array $data
+     * *@return void
+      */
+    public static function order(string $type, string $title, array $data,)
+    {
+        LogSys::channel("fastshop")->{$type}($title, $data);
+    }
+
+    /**
      * Log erros imprevistos
      *
      * @param Exception $e
@@ -109,6 +120,13 @@ class Log
         LogSys::channel("fastshop")->error("Exception - $func", [$e]);
     }
 
+    /**
+     * Log padrão, apenas informativo
+     *
+     * @param string $func
+     * @param array $data
+     * @return void
+     */
     public static function default(string $func, array $data)
     {
         LogSys::channel("fastshop")->info($func, $data);

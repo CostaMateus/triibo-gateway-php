@@ -320,4 +320,56 @@ class Helper
             return "1";
         }
     }
+
+    /**
+     * Converte data de entrega do pedido, FS para o WC
+     *
+     * @param string $time
+     * @return string
+     */
+    public static function convertDeliveryDate(string $time)
+    {
+        $time = explode("T", $time);
+
+        $hour = $time[1];
+        $date = implode("/", array_reverse(explode("-", $time[0])));
+
+        return "$date às $hour";
+    }
+
+    public static function getOrderCancelation(array $data)
+    {
+        $msg = "Pedido cancelado:\n";
+
+        foreach ($data as $key => $value)
+        {
+            $msg .= "$key: $value\n";
+        }
+
+        return $msg;
+    }
+
+    public static function getErrorNewOrderFS(array $data)
+    {
+        $code = $data["errorCode"];
+        $msg  = "ERROR\n";
+
+        switch ($code)
+        {
+            case "4001";
+                $msg .= "SKU fora de estoque";
+            break;
+
+            case "4002";
+                $msg .= "Entrega indisponível para o CEP informado";
+            break;
+
+            case "5001";
+                $msg .= "Não foi possível informar o pedido a Fast Shop";
+            break;
+        }
+
+        return "$msg \nCode: $code";
+    }
+
 }
