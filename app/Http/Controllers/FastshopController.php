@@ -319,9 +319,23 @@ class FastshopController extends Controller
 
         try
         {
+            $data          = $this->getFsOrder($orderId);
+            $data["order"] = $data["order"][key($data["order"])];
+
+            Notification::notify("cancelationOrderFS", $data);
+            Note::create($orderId, [ "note" => "PEDIDO CANCELADO PELA FASTSHOP\n" . date_format(now(), "d/m/Y à\s H:i:s") ]);
+
+            // busca o orderId da FS no meta_data
+            $order         = Order::find($orderId);
+            $meta          = json_decode(json_encode($order["meta_data"]), true);
+            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $fsOrderId     = $meta[$meta_key]["value"];
+
             return response()->json([
-                "errorCode" => null,
-                "message"   => "Ok1",
+                "date"               => date_format(now(), "Y-m-d\TH:i:s.uP"),
+                "marketPlaceOrderId" => $orderId,
+                "orderId"            => $fsOrderId,
+                "receipt"            => null
             ], 200);
         }
         catch (Exception $e)
@@ -884,6 +898,11 @@ class FastshopController extends Controller
         else
         {
             $data   = [ Order::find($orderId) ];
+
+            if (($id = $data[0]["parent_id"]) != 0)
+            {
+                $parent = Order::find($id);
+            }
         }
 
         return [
