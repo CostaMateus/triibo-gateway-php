@@ -224,20 +224,18 @@ class FastshopController extends Controller
 
         try
         {
-            $fsData   = $request->all();
-            $invoice  = DataTranslator::translate("invoice",  $fsData);
-            $tracking = DataTranslator::translate("tracking", $fsData);
+            $fsData    = $request->all();
+            $invoice   = DataTranslator::translate("invoice",  $fsData);
+            $tracking  = DataTranslator::translate("tracking", $fsData);
 
             Note::create($orderId, [ "note" => $invoice  ]);
             Note::create($orderId, [ "note" => $tracking ]);
 
-            $wcOrder          = $this->getOrder($orderId);
-            $wcOrder["order"] = $wcOrder["order"][key($wcOrder["order"])];
-
             // busca o orderId da FS no meta_data
-            $meta             = $wcOrder["order"]["meta_data"];
-            $meta_key         = array_search("_fastshop_order_id", array_column($meta, "key"));
-            $fsOrderId        = $meta[$meta_key]["value"];
+            $order     = Order::find($orderId);
+            $meta      = json_decode(json_encode($order["meta_data"]), true);
+            $meta_key  = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $fsOrderId = $meta[$meta_key]["value"];
 
             return response()->json([
                 "date"    => date_format(now(), "Y-m-d\TH:i:s.uP"),
@@ -271,13 +269,26 @@ class FastshopController extends Controller
 
         try
         {
-            $fsData = $request->all();
+            $deliveredDate = $request->all()["deliveredDate"];
+            $deliveredDate = Helper::convertDeliveryDate($deliveredDate);
 
-            $order  = $this->getFsOrder($orderId);
+            Order::update($orderId, [ "status" => "completed" ]);
+
+            Note::create($orderId, [
+                "note"          => "ENTREGA REALIZADA\n $deliveredDate",
+                "customer_note" => false,
+            ]);
+
+            // busca o orderId da FS no meta_data
+            $order         = Order::find($orderId);
+            $meta          = json_decode(json_encode($order["meta_data"]), true);
+            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $fsOrderId     = $meta[$meta_key]["value"];
 
             return response()->json([
-                "errorCode" => null,
-                "message"   => "Ok1",
+                "date"    => date_format(now(), "Y-m-d\TH:i:s.uP"),
+                "orderId" => $fsOrderId,
+                "receipt" => null
             ], 200);
         }
         catch (Exception $e)
@@ -323,6 +334,7 @@ class FastshopController extends Controller
             ], 500);
         }
     }
+
 
 
     // --------- METODOS ABAIXO SÃO CONSUMIDOS PELO WOOCOMMERCE, CONSULTAM AS APIs DA FASTSHOP
@@ -720,6 +732,7 @@ class FastshopController extends Controller
     }
 
 
+
     // --------- METODOS DE USO INTERNO
     /**
      * Consulta e cria categorias no Marketplace
@@ -880,7 +893,7 @@ class FastshopController extends Controller
     }
 
     /**
-     * Undocumented function
+     * Recupera o frete do pedido
      *
      * @param array $data
      * @return array
