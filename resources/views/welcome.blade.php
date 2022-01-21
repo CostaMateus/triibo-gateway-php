@@ -23,9 +23,9 @@
             <div class="position-fixed mx-auto p-3" style="z-index: 1005; top: 0; left: 0; right: 0;">
                 <div id="liveToast" class="mx-auto toast show" role="alert" aria-live="assertive" aria-atomic="true" data-delay="2000">
                     <div class="toast-header">
-                        <strong class="mr-auto">Triibo</strong>
+                        <strong class="me-auto">Triibo</strong>
                         <small>agora</small>
-                        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
+                        <button type="button" class="ms-2 mb-1 close" data-dismiss="toast" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
