@@ -4,16 +4,8 @@
 // Variables
 @import 'variables';
 
-// $triibo: #6E3296 !default;
-// $cc:  ("triibo": $triibo) !default;
-// $ctc: ("triibo": $triibo) !default;
-
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
-
-// $colors:       map-merge($colors, $cc);
-// $theme-colors: map-merge($theme-colors, $ctc);
-
 @import '~bootstrap-icons/font/bootstrap-icons';
 
 .h7   { font-size: 0.7rem;     }
