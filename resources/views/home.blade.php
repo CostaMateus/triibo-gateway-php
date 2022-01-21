@@ -5,7 +5,7 @@
     <div class="row justify-content-center">
 
         <div class="col-md-8">
-            <h2 class="text-left">Documentação</h2>
+            <h2 class="text-start">Documentação</h2>
         </div>
         <div class="col-md-8">
 
@@ -13,14 +13,13 @@
                 <div class="card">
                     <div class="card-header" id="headingOne">
                         <h2 class="mb-0">
-                            <button class="btn btn-link btn-block text-left text-triibo"
-                                type="button" data-toggle="collapse" data-target="#collapseCofry"
+                            <button class="btn btn-link btn-block text-start text-triibo" type="button"
+                                data-toggle="collapse" data-target="#collapseCofry"
                                 aria-expanded="true" aria-controls="collapseCofry" >
                                 Integração Confry
                             </button>
                         </h2>
                     </div>
-
                     <div id="collapseCofry" class="collapse" aria-labelledby="headingOne" data-parent="#accordionTriibo">
                         <div class="card-body">
                             <div id="cofry">
@@ -44,9 +43,9 @@
                 <div class="card">
                     <div class="card-header" id="headingTwo">
                         <h2 class="mb-0">
-                            <button class="btn btn-link btn-block text-left text-triibo collapsed" type="button"
+                            <button class="btn btn-link btn-block text-start text-triibo " type="button"
                                 data-toggle="collapse" data-target="#collapseMauticPipe"
-                                aria-expanded="false" aria-controls="collapseMauticPipe" >
+                                aria-expanded="true" aria-controls="collapseMauticPipe" >
                                 Integração Mautic-Pipedrive
                             </button>
                         </h2>
@@ -137,94 +136,94 @@
                                 <table class="table table-sm col-12 col-md-10 mx-auto" >
                                     <thead>
                                         <tr>
-                                            <th class="text-right w-50" colspan="2" scope="col">Mautic</th>
-                                            <th class="text-left  w-50" colspan="2" scope="col">Pipedrive</th>
+                                            <th class="text-end w-50"   colspan="2" scope="col">Mautic</th>
+                                            <th class="text-start w-50" colspan="2" scope="col">Pipedrive</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {{-- <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >ID</td>
-                                            <td class="text-left  w-40"               >Mautic Id</td>
-                                            <td class="text-muted h7 text-right w-10" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                >ID</td>
+                                            <td class="text-start w-40"               >Mautic Id</td>
+                                            <td class="text-muted h7 text-end w-10" >(Pessoa)</td>
                                         </tr> --}}
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >ID</td>
-                                            <td class="text-left  w-40"               >Mautic Id</td>
-                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >ID</td>
+                                            <td class="text-start w-40"               >Mautic Id</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive ID Organization</td>
-                                            <td class="text-left  w-40"               >ID</td>
-                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive ID Organization</td>
+                                            <td class="text-start w-40"               >ID</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Nome</td>
-                                            <td class="text-left  w-40"               > - </td>
-                                            <td class="text-muted h7 text-right w-10" >(não usado)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Nome</td>
+                                            <td class="text-start w-40"               > - </td>
+                                            <td class="text-muted h7 text-end w-10"   >(não usado)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Sobrenome</td>
-                                            <td class="text-left  w-40"               > - </td>
-                                            <td class="text-muted h7 text-right w-10" >(não usado)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Sobrenome</td>
+                                            <td class="text-start w-40"               > - </td>
+                                            <td class="text-muted h7 text-end w-10"   >(não usado)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Email</td>
-                                            <td class="text-left  w-40"               >E-mail</td>
-                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Email</td>
+                                            <td class="text-start w-40"               >E-mail</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Nome da Empresa</td>
-                                            <td class="text-left  w-40"               >Nome da organização</td>
-                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Nome da Empresa</td>
+                                            <td class="text-start w-40"               >Nome da organização</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Telefone</td>
-                                            <td class="text-left  w-40"               >Telefone</td>
-                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Telefone</td>
+                                            <td class="text-start w-40"               >Telefone</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Funil</td>
-                                            <td class="text-left  w-40"               >Etapa do funil</td>
-                                            <td class="text-muted h7 text-right w-10" >(Negócio)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Funil</td>
+                                            <td class="text-start w-40"               >Etapa do funil</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Negócio)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Funil Status</td>
-                                            <td class="text-left  w-40"               >Status do negócio</td>
-                                            <td class="text-muted h7 text-right w-10" >(Negócio)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Funil Status</td>
+                                            <td class="text-start w-40"               >Status do negócio</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Negócio)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Funil Etiqueta</td>
-                                            <td class="text-left  w-40"               >Etiqueta do negócio</td>
-                                            <td class="text-muted h7 text-right w-10" >(Negócio)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Funil Etiqueta</td>
+                                            <td class="text-start w-40"               >Etiqueta do negócio</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Negócio)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Fonte do Lead</td>
-                                            <td class="text-left  w-40"               >Fonte do Lead</td>
-                                            <td class="text-muted h7 text-right w-10" >(Organização)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Fonte do Lead</td>
+                                            <td class="text-start w-40"               >Fonte do Lead</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Organização)</td>
                                         </tr>
                                         <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive Vendedor Resp.</td>
-                                            <td class="text-left  w-40"               >Etiqueta do negócio</td>
-                                            <td class="text-muted h7 text-right w-10" >(Negócio)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive Vendedor Resp.</td>
+                                            <td class="text-start w-40"               >Etiqueta do negócio</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Negócio)</td>
                                         </tr>
                                         {{-- <tr>
-                                            <td class="text-muted h7 text-left  w-10" >(Contato)</td>
-                                            <td class="text-right w-40"               >Pipedrive ID Person</td>
-                                            <td class="text-left  w-40"               >ID</td>
-                                            <td class="text-muted h7 text-right w-10" >(Pessoa)</td>
+                                            <td class="text-muted h7 text-start w-10" >(Contato)</td>
+                                            <td class="text-end w-40"                 >Pipedrive ID Person</td>
+                                            <td class="text-start w-40"               >ID</td>
+                                            <td class="text-muted h7 text-end w-10"   >(Pessoa)</td>
                                         </tr> --}}
                                     </tbody>
                                 </table>

@@ -74,28 +74,28 @@
                     <form id="add-user-form" action="" method="" >
                         @csrf
                         <div class="row">
-                            <div class="col-12 col-md-6 pr-md-2">
+                            <div class="col-12 col-md-6 pe-md-2">
                                 <div class="form-group">
                                     <label for="add_name" class="text-muted">{{ __('common.name') }}</label>
                                     <input type="text" id="add_name" class="form-control form-control-sm" name="name" >
                                     <span id="span_add_name" class="invalid-feedback"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 pl-md-2">
+                            <div class="col-12 col-md-6 ps-md-2">
                                 <div class="form-group">
                                     <label for="add_email" class="text-muted">{{ __('common.email') }}</label>
                                     <input type="text" id="add_email" class="form-control form-control-sm" name="email" >
                                     <span id="span_add_email" class="invalid-feedback"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 pr-md-2">
+                            <div class="col-12 col-md-6 pe-md-2">
                                 <div class="form-group">
                                     <label for="add_password" class="text-muted">{{ __('common.user.password') }}</label>
                                     <input type="password" id="add_password" class="form-control form-control-sm" name="password" autocomplete="off" >
                                     <span id="span_add_password" class="invalid-feedback"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 pl-md-2">
+                            <div class="col-12 col-md-6 ps-md-2">
                                 <div class="form-group">
                                     <label for="add_password_confirmation" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
                                     <input type="password" id="add_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
@@ -105,7 +105,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-6 pl-2 ml-auto">
+                            <div class="col-6 ps-2 ms-auto">
                                 <button type="submit" class="btn btn-success btn-sm btn-block" >{{ __('common.confirm') }}</button>
                             </div>
                         </div>
@@ -131,28 +131,28 @@
                     <form id="edit-user-form" action="" method="" >
                         @csrf
                         <div class="row">
-                            <div class="col-12 col-md-6 pr-md-2">
+                            <div class="col-12 col-md-6 pe-md-2">
                                 <div class="form-group">
                                     <label for="edit_name" class="text-muted">{{ __('common.name') }}</label>
                                     <input type="text" id="edit_name" class="form-control form-control-sm" name="name" >
                                     <span id="span_edit_name" class="invalid-feedback"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 pl-md-2">
+                            <div class="col-12 col-md-6 ps-md-2">
                                 <div class="form-group">
                                     <label for="edit_email" class="text-muted">{{ __('common.edit') }}</label>
                                     <input type="text" id="edit_email" class="form-control form-control-sm" name="email" >
                                     <span id="span_edit_email" class="invalid-feedback"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 pr-md-2">
+                            <div class="col-12 col-md-6 pe-md-2">
                                 <div class="form-group">
                                     <label for="edit_password" class="text-muted">{{ __('common.user.password') }}</label>
                                     <input type="password" id="edit_password" class="form-control form-control-sm" name="password" autocomplete="off" >
                                     <span id="span_edit_password" class="invalid-feedback"></span>
                                 </div>
                             </div>
-                            <div class="col-12 col-md-6 pl-md-2">
+                            <div class="col-12 col-md-6 ps-md-2">
                                 <div class="form-group">
                                     <label for="edit_password_confirmation" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
                                     <input type="password" id="edit_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
@@ -162,7 +162,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-6 pl-2 ml-auto">
+                            <div class="col-6 ps-2 ms-auto">
                                 <button type="submit" class="btn btn-success btn-sm btn-block" >{{ __('common.save') }}</button>
                             </div>
                         </div>
