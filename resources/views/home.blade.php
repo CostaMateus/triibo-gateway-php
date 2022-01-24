@@ -5,25 +5,24 @@
     <div class="row justify-content-center">
 
         <div class="col-md-8">
-            <h2 class="text-start">Documentação</h2>
+            <h2 class="text-left">Documentação</h2>
         </div>
         <div class="col-md-8">
 
-            <div class="accordion" id="accordionTriibo">
-                <div class="card">
-                    <div class="card-header" id="headingOne">
-                        <h2 class="mb-0">
-                            <button class="btn btn-link btn-block text-start text-triibo" type="button"
-                                data-toggle="collapse" data-target="#collapseCofry"
-                                aria-expanded="true" aria-controls="collapseCofry" >
-                                Integração Confry
-                            </button>
-                        </h2>
-                    </div>
-                    <div id="collapseCofry" class="collapse" aria-labelledby="headingOne" data-parent="#accordionTriibo">
-                        <div class="card-body">
+            <div class="accordion accordion-flush " id="accordionTriibo">
+
+                <div class="accordion-item">
+                    <p class="accordion-header h2" id="headingCofry">
+                        <button class="accordion-button" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseCofry"
+                            aria-expanded="true" aria-controls="collapseCofry" >
+                            Integração Confry
+                        </button>
+                    </p>
+                    <div id="collapseCofry" class="accordion-collapse collapse" aria-labelledby="headingCofry" data-bs-parent="#accordionTriibo" >
+                        <div class="accordion-body">
                             <div id="cofry">
-                                <h2 class="text-center" >Integração Confry</h2>
+                                <h3 class="text-center" >Integração Confry</h3>
                                 <p class="mb-0" >Ações automáticas</p>
                                 <ul class="mb-0" >
                                     <li>
@@ -40,21 +39,42 @@
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header" id="headingTwo">
-                        <h2 class="mb-0">
-                            <button class="btn btn-link btn-block text-start text-triibo " type="button"
-                                data-toggle="collapse" data-target="#collapseMauticPipe"
-                                aria-expanded="true" aria-controls="collapseMauticPipe" >
-                                Integração Mautic-Pipedrive
-                            </button>
-                        </h2>
+                <div class="accordion-item">
+                    <p class="accordion-header h2" id="headingChatGuru">
+                        <button class="accordion-button" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseChatGuru"
+                            aria-expanded="true" aria-controls="collapseChatGuru" >
+                            Integração ChatGuru
+                        </button>
+                    </p>
+                    <div id="collapseChatGuru" class="accordion-collapse collapse" aria-labelledby="headingChatGuru" data-bs-parent="#accordionTriibo" >
+                        <div class="accordion-body">
+                            <div id="chatguru">
+                                <h3 class="text-center" >Integração ChatGuru</h3>
+                                <p class="mb-0" >
+                                    Os dados do formulário (<a href="https://triibo.com.br/cadastre-seu-negocio" class="text-muted h6" target="_blank" >triibo.com.br/cadastre-seu-negocio)</a>
+                                    são enviados pelo plugin "Triibo Elementor Form Webhook". <br>
+                                    As informações são tratadas e enviadas para o ChatGuru. <br>
+                                    <br>
+                                    Caso haja falha ao criar um chat no ChatGuru, um e-mail, com os dados do formulário, será enviado para atendimento@triibo.com.br
+                                </p>
+                            </div>
+                        </div>
                     </div>
-                    <div id="collapseMauticPipe" class="collapse show" aria-labelledby="headingTwo" data-parent="#accordionTriibo">
-                        <div class="card-body">
+                </div>
 
+                <div class="accordion-item">
+                    <p class="accordion-header h2" id="headingMauticPipe">
+                        <button class="accordion-button" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#collapseMauticPipe"
+                            aria-expanded="true" aria-controls="collapseMauticPipe" >
+                            Integração Mauti-Pipe
+                        </button>
+                    </p>
+                    <div id="collapseMauticPipe" class="accordion-collapse collapse" aria-labelledby="headingMauticPipe" data-bs-parent="#accordionTriibo" >
+                        <div class="accordion-body">
                             <div id="marketplace">
-                                <h2 class="text-center mb-3" >Integração Mautic-Pipedrive</h2>
+                                <h3 class="text-center mb-3" >Integração Mautic-Pipedrive</h3>
                                 <p class="text-center d-none" >Os dados fluem do Pipedrive para Comunica.Mautic apenas.</p>
                                 <p class="mb-0" >Ações automáticas</p>
                                 <ul class="" >
@@ -237,10 +257,10 @@
                                     </li>
                                 </ul>
                             </div>
-
                         </div>
                     </div>
                 </div>
+
             </div>
 
         </div>
