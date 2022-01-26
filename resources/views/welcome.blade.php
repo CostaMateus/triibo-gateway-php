@@ -9,7 +9,9 @@
         <script src="{{ asset('js/app.js') }}" defer></script>
 
         <!-- Styles -->
-        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+        <link href="{{ asset('css/app.css')    }}" rel="stylesheet">
+        <link href="{{ asset('css/triibo.css') }}" rel="stylesheet">
+
         <style>
             body{font-family:Nunito,sans-serif;margin:0}*,:after,:before{box-sizing:border-box}.flex{display:flex}.items-center{align-items:center}.justify-center{justify-content:center}.h-100{min-height:100vh}.triibo-logo{width:300px}
         </style>
