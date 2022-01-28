@@ -27,9 +27,7 @@
                     <div class="toast-header">
                         <strong class="me-auto">Triibo</strong>
                         <small>agora</small>
-                        <button type="button" class="ms-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                     </div>
                     <div class="toast-body">
                         {{ $message }}
@@ -41,7 +39,7 @@
                 // jQuery('#liveToast').toast('show');
                 window.setTimeout(function () {
                     location.href = "/";
-                }, 3000);
+                }, 10000);
             </script>
         @endif
     </body>
