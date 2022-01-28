@@ -2,9 +2,7 @@
 
 @section('custom_css')
     <style>
-        table tr td {
-            vertical-align: middle!important;
-        }
+        table tr td { vertical-align: middle!important; }
     </style>
 @endsection
 
@@ -24,7 +22,7 @@
                         </div>
                         @endif
 
-                        <table class="table table-borderless table-sm mb-0">
+                        <table class="table table-borderless table-striped table-sm mb-0">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -59,54 +57,61 @@
         </div>
     </div>
 
-    <div id="add-user" class="modal fade " tabindex="-1" role="dialog" aria-labelledby="add-user-title" aria-hidden="true" >
+    <div id="add-user" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="add-user-title"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" >
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">
+                    <h5 id="add-user-title" class="modal-title">
                         {{ __('common.user.create') }}
                     </h5>
-                    <button type="button" class="close my-auto py-0" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="add-user-form" action="" method="" >
                         @csrf
                         <div class="row">
                             <div class="col-12 col-md-6 pe-md-2">
-                                <div class="form-group">
-                                    <label for="add_name" class="text-muted">{{ __('common.name') }}</label>
-                                    <input type="text" id="add_name" class="form-control form-control-sm" name="name" >
-                                    <span id="span_add_name" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="add_name" class="col-12 col-form-label text-muted">{{ __('common.name') }}</label>
+                                    <div class="col-12">
+                                        <input type="text" id="add_name" class="form-control form-control-sm" name="name" >
+                                        <span id="span_add_name" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6 ps-md-2">
-                                <div class="form-group">
-                                    <label for="add_email" class="text-muted">{{ __('common.email') }}</label>
-                                    <input type="text" id="add_email" class="form-control form-control-sm" name="email" >
-                                    <span id="span_add_email" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="add_email" class="col-12 col-form-label text-muted">{{ __('common.email') }}</label>
+                                    <div class="col-12">
+                                        <input type="text" id="add_email" class="form-control form-control-sm" name="email" >
+                                        <span id="span_add_email" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6 pe-md-2">
-                                <div class="form-group">
-                                    <label for="add_password" class="text-muted">{{ __('common.user.password') }}</label>
-                                    <input type="password" id="add_password" class="form-control form-control-sm" name="password" autocomplete="off" >
-                                    <span id="span_add_password" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="add_password" class="col-12 col-form-label text-muted">{{ __('common.user.password') }}</label>
+                                    <div class="col-12">
+                                        <input type="password" id="add_password" class="form-control form-control-sm" name="password" autocomplete="off" >
+                                        <span id="span_add_password" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6 ps-md-2">
-                                <div class="form-group">
-                                    <label for="add_password_confirmation" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
-                                    <input type="password" id="add_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
-                                    <span id="span_add_password_confirmation" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="add_password_confirmation" class="col-12 col-form-label text-muted">{{ __('common.user.confirm_pass') }}</label>
+                                    <div class="col-12">
+                                        <input type="password" id="add_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
+                                        <span id="span_add_password_confirmation" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-6 ps-2 ms-auto">
-                                <button type="submit" class="btn btn-success btn-sm btn-block" >{{ __('common.confirm') }}</button>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success btn-sm btn-block float-end" >{{ __('common.confirm') }}</button>
                             </div>
                         </div>
                     </form>
@@ -115,7 +120,8 @@
         </div>
     </div>
 
-    <div id="edit-user" class="modal fade " tabindex="-1" role="dialog" aria-labelledby="edit-user-title" aria-hidden="true" >
+    <div id="edit-user" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="edit-user-title"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" >
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -123,47 +129,53 @@
                         {{ __('common.user.edit') }}
                         <span id="edit-user-title" class="text-primary"></span>
                     </h5>
-                    <button type="button" class="close my-auto py-0" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="edit-user-form" action="" method="" >
                         @csrf
                         <div class="row">
                             <div class="col-12 col-md-6 pe-md-2">
-                                <div class="form-group">
-                                    <label for="edit_name" class="text-muted">{{ __('common.name') }}</label>
-                                    <input type="text" id="edit_name" class="form-control form-control-sm" name="name" >
-                                    <span id="span_edit_name" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="edit_name" class="col-12 col-form-label text-muted">{{ __('common.name') }}</label>
+                                    <div class="col-12">
+                                        <input type="text" id="edit_name" class="form-control form-control-sm" name="name" >
+                                        <span id="span_edit_name" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6 ps-md-2">
-                                <div class="form-group">
-                                    <label for="edit_email" class="text-muted">{{ __('common.edit') }}</label>
-                                    <input type="text" id="edit_email" class="form-control form-control-sm" name="email" >
-                                    <span id="span_edit_email" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="edit_email" class="col-12 col-form-label text-muted">{{ __('common.edit') }}</label>
+                                    <div class="col-12">
+                                        <input type="text" id="edit_email" class="form-control form-control-sm" name="email" >
+                                        <span id="span_edit_email" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6 pe-md-2">
-                                <div class="form-group">
-                                    <label for="edit_password" class="text-muted">{{ __('common.user.password') }}</label>
-                                    <input type="password" id="edit_password" class="form-control form-control-sm" name="password" autocomplete="off" >
-                                    <span id="span_edit_password" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="edit_password" class="col-12 col-form-label text-muted">{{ __('common.user.password') }}</label>
+                                    <div class="col-12">
+                                        <input type="password" id="edit_password" class="form-control form-control-sm" name="password" autocomplete="off" >
+                                        <span id="span_edit_password" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-12 col-md-6 ps-md-2">
-                                <div class="form-group">
-                                    <label for="edit_password_confirmation" class="text-muted">{{ __('common.user.confirm_pass') }}</label>
-                                    <input type="password" id="edit_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
-                                    <span id="span_edit_password_confirmation" class="invalid-feedback"></span>
+                                <div class="row mb-3">
+                                    <label for="edit_password_confirmation" class="col-12 col-form-label text-muted">{{ __('common.user.confirm_pass') }}</label>
+                                    <div class="col-12">
+                                        <input type="password" id="edit_password_confirmation" class="form-control form-control-sm" name="password_confirmation" autocomplete="off" >
+                                        <span id="span_edit_password_confirmation" class="invalid-feedback"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="row">
-                            <div class="col-6 ps-2 ms-auto">
-                                <button type="submit" class="btn btn-success btn-sm btn-block" >{{ __('common.save') }}</button>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success btn-sm btn-block float-end" >{{ __('common.save') }}</button>
                             </div>
                         </div>
                     </form>
@@ -172,7 +184,8 @@
         </div>
     </div>
 
-    <div id="del-user" class="modal fade teste" tabindex="-1" role="dialog" aria-labelledby="del-user-title" aria-hidden="true" >
+    <div id="del-user" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="del-user-title"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false" >
         <div class="modal-dialog modal-dialog-centered modal-md">
             <div class="modal-content">
                 <div class="modal-header">
@@ -180,20 +193,18 @@
                         {{ __('common.user.delete') }}
                         <span id="del-user-title" class="text-danger"></span>
                     </h5>
-                    <button type="button" class="close my-auto py-0" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <form id="del-user-form" action="" method="" >
                         @csrf
                         <div class="row">
-                            <div class="col-12 text-center">
+                            <div class="col-12 text-start">
                                 <p>{{ __('common.user.confirm_delete') }}</p>
                             </div>
-                            <div class="col-3 mx-auto">
+                            <div class="col-12">
                                 <span id="span_delete" class="mb-2 invalid-feedback"></span>
-                                <button type="submit" class="btn btn-danger btn-sm btn-block" >{{ __('common.confirm') }}</button>
+                                <button type="submit" class="btn btn-danger btn-sm btn-block float-end" >{{ __('common.confirm') }}</button>
                             </div>
                         </div>
                     </form>
@@ -218,7 +229,7 @@
                 const url  = '{{ url("/users") }}';
                 const data = $('#add-user-form').serialize();
 
-                $('#add-user-form button').html('<div class="spinner-border spinner-border-sm text-light" role="status"></div>').prop('disabled', 'disabled');
+                $('#add-user-form button').html('<div class="spinner-border spinner-border-sm text-light align-middle" role="status"></div>').prop('disabled', 'disabled');
 
                 $.ajax({
                     type: 'POST',
@@ -247,10 +258,10 @@
             $('#edit-user-form').on('submit', function(e) {
                 e.preventDefault();
                 const id   = $(this).data('id');
-                const url  = '{{ url("/users") }}' + '/' + id;
+                const url  = `{{ url("/users") }}/${id}`;
                 const data = $('#edit-user-form').serialize();
 
-                $('#edit-user-form button').html('<div class="spinner-border spinner-border-sm text-light" role="status"></div>').prop('disabled', 'disabled');
+                $('#edit-user-form button').html('<div class="spinner-border spinner-border-sm text-light align-middle" role="status"></div>').prop('disabled', 'disabled');
 
                 $.ajax({
                     type: 'PATCH',
@@ -276,10 +287,10 @@
             $('#del-user-form').on('submit', function(e) {
                 e.preventDefault();
                 const id   = $(this).data('id');
-                const url  = '{{ url("/users") }}' + '/' + id;
+                const url  = `{{ url("/users") }}/${id}`;
                 const data = $('#del-user-form').serialize();
 
-                $('#del-user-form button').html('<div class="spinner-border spinner-border-sm text-light" role="status"></div>').prop('disabled', 'disabled');
+                $('#del-user-form button').html('<div class="spinner-border spinner-border-sm text-light align-middle" role="status"></div>').prop('disabled', 'disabled');
 
                 $.ajax({
                     type: 'DELETE',
