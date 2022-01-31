@@ -565,7 +565,7 @@ class FastshopController extends Controller
 
             Note::create($data["order"]["id"], [ "note" => "Pedido criado na Fast Shop: #" . $fsData["orderId"] ]);
 
-            Order::update($$data["order"]["id"], [
+            Order::update($data["order"]["id"], [
                 "meta_data" => [[
                     "key"   => "_fastshop_order_id",
                     "value" => $fsData["orderId"]
