@@ -106,7 +106,7 @@ class FastshopController extends Controller
             // $date      = date("Ymd-his");
             // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
-            $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? "" : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData    = DataTranslator::translate("newProduct", $fsData);
@@ -171,7 +171,7 @@ class FastshopController extends Controller
             // $date   = date("Ymd-his");
             // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
-            $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? "" : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData = DataTranslator::translate("newProduct", $fsData);
