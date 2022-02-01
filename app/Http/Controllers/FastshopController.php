@@ -534,15 +534,6 @@ class FastshopController extends Controller
             // Consulta produto na FS
             $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
-            /**
-             * TODO
-             * Validar com a FS os retornos
-             * Falha na criação do pedido, retornando sempre 400
-             * Ex: {
-             *     "ErrorCode": "400",
-             *     "Message": "Condição comercial não encontrada para o produto 'qlqr_SKU' (seller: 'FASTSHOP_APIGEE')"
-             * },
-             */
             if (!$response->successful())
             {
                 $error = $response->json();
@@ -550,9 +541,9 @@ class FastshopController extends Controller
                 Log::order("error", "New order error", [$error, $body]);
                 Notification::notify("newOrderError", $data);
 
-                $msg = "ERROR\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"];
-
-                Note::create($data["order"]["id"], [ "note" => $msg ]);
+                Note::create($data["order"]["id"], [
+                    "note"      => "ERROR FS\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"]
+                ]);
 
                 return response()->json([
                     "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
@@ -563,7 +554,9 @@ class FastshopController extends Controller
 
             $fsData = $response->json();
 
-            Note::create($data["order"]["id"], [ "note" => "Pedido criado na Fast Shop: #" . $fsData["orderId"] ]);
+            Note::create($data["order"]["id"], [
+                "note"      => "PEDIDO CRIADO NA FAST SHOP: #" . $fsData["orderId"]
+            ]);
 
             Order::update($data["order"]["id"], [
                 "meta_data" => [[
@@ -571,13 +564,6 @@ class FastshopController extends Controller
                     "value" => $fsData["orderId"]
                 ]]
             ]);
-
-            /**
-             * TODO
-             * remover posteriormente
-             */
-            $encoded = json_encode(json_decode($response->json(), true), JSON_UNESCAPED_SLASHES);
-            Storage::put(date("Ymd") . "-fs-order-criation.json", $encoded);
 
             return response()->json([
                 "errorCode" => null,

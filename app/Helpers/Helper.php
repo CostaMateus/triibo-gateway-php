@@ -339,7 +339,7 @@ class Helper
 
     public static function getOrderCancelation(array $data)
     {
-        $msg = "Pedido cancelado:\n";
+        $msg = "PEDIDO CANCELADO NA FAST SHOP:\n";
 
         foreach ($data as $key => $value)
         {
@@ -352,7 +352,7 @@ class Helper
     public static function getErrorNewOrderFS(array $data)
     {
         $code = $data["errorCode"];
-        $msg  = "ERROR\n";
+        $msg  = "ERROR FS\n";
 
         switch ($code)
         {
