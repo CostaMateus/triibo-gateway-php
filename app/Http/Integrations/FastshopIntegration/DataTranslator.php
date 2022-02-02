@@ -3,7 +3,6 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use App\Helpers\Helper;
-use App\Http\Integrations\FastshopIntegration\Log;
 
 class DataTranslator
 {
@@ -37,6 +36,12 @@ class DataTranslator
 
             case "newOrderFs":
                 return self::newOrderFs($data);
+            break;
+            case "newOrderFsError":
+                return self::newOrderFsError($data);
+            break;
+            case "orderStatusChange":
+                return self::orderStatusChange($data);
             break;
             case "orderError":
                 return self::orderError($data);
@@ -321,7 +326,7 @@ class DataTranslator
                 ];
             }
         }
-        elseif (!empty($data["items"]))
+        else if (!empty($data["items"]))
         {
             foreach ($data["items"] as $key => $p)
             {
@@ -466,6 +471,73 @@ class DataTranslator
         ];
 
         return $new;
+    }
+
+    /**
+     * Converte o erro retornado na criação do pedido
+     *
+     * @param array $data
+     * @return string
+     */
+    private static function newOrderFsError(array $data)
+    {
+        $code    = $data["errorCode"];
+        $message = "ERROR FS\n";
+
+        switch ($code)
+        {
+            case "4001";
+                $message .= "SKU fora de estoque";
+            break;
+
+            case "4002";
+                $message .= "Entrega indisponível para o CEP informado";
+            break;
+
+            case "5001";
+                $message .= "Não foi possível informar o pedido a Fast Shop";
+            break;
+        }
+
+        return "$message \nCode: $code";
+    }
+
+    /**
+     * Converte retorno da FS para alteração do status do pedido
+     *
+     * @param array $data
+     * @return string
+     */
+    private static function orderStatusChange(array $data)
+    {
+        $message = "";
+
+        foreach ($data as $key => $value)
+        {
+            if ($key == "date")
+            {
+                $value    = Helper::convertDeliveryDate($value);
+                $message .= "$value\n";
+            }
+            else if ($key == "marketPlaceOrderId")
+            {
+                $message .= "Pedido: #$value\n";
+            }
+            else if ($key == "orderId")
+            {
+                $message .= "FS Pedido: #$value\n";
+            }
+            else if ($key == "receipt")
+            {
+                $message .= "Protocolo: $value\n";
+            }
+            else
+            {
+                $message .= "$key: $value\n";
+            }
+        }
+
+        return $message;
     }
 
     /**
