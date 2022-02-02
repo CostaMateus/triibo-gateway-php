@@ -518,7 +518,9 @@ class FastshopController extends Controller
                 Log::order("error", "New order error", [$error, $data]);
                 Notification::notify("newOrderError", $data);
 
-                Note::create($data["order"]["id"], [ "note" => Helper::getErrorNewOrderFS($error) ]);
+                Note::create($data["order"]["id"], [
+                    "note" => DataTranslator::translate("newOrderFsError", $error)
+                ]);
 
                 return response()->json([
                     "errorCode" => "5001", // 5001 - erro na consulta dos dados de frete na FS
@@ -555,7 +557,7 @@ class FastshopController extends Controller
             $fsData = $response->json();
 
             Note::create($data["order"]["id"], [
-                "note"      => "PEDIDO CRIADO NA FAST SHOP: #" . $fsData["orderId"]
+                "note"      => "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData["orderId"]
             ]);
 
             Order::update($data["order"]["id"], [
@@ -637,7 +639,11 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+            $note  = "PEDIDO APROVADO NA FAST SHOP:\n";
+            $note .= DataTranslator::translate("orderStatusChange", $response->json());
+            Note::create($data["order"]["id"], [
+                "note" => $note
+            ]);
 
             return response()->json([
                 "errorCode" => null,
@@ -712,7 +718,11 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+            $note  = "PEDIDO CANCELADO NA FAST SHOP:\n";
+            $note .= DataTranslator::translate("orderStatusChange", $response->json());
+            Note::create($data["order"]["id"], [
+                "note" => $note
+            ]);
 
             return response()->json([
                 "errorCode" => null,
