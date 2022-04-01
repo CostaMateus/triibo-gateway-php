@@ -49,6 +49,11 @@ class Kernel extends ConsoleKernel
         // $schedule->command("unset:updateDate")->dailyAt("03:00")->timezone("America/Sao_Paulo")->runInBackground();
         // // Diariamente às 03h02
         // $schedule->command("unset:vouchers")->dailyAt("03:02")->timezone("America/Sao_Paulo")->runInBackground();
+
+
+        // Marketplace
+        $schedule->command("sku:delete")->dailyAt("03:03")->timezone("America/Sao_Paulo")->runInBackground();
+
     }
 
     /**
