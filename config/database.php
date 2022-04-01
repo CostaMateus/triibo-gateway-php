@@ -63,6 +63,46 @@ return [
             ]) : [],
         ],
 
+        'dev-mkt' => [
+            'driver'         => 'mysql',
+            'url'            => '',
+            'host'           => '54.190.225.250',
+            'port'           => '3306',
+            'database'       => 'triibomarketplace',
+            'username'       => 'triibomarketplace',
+            'password'       => 'z^!dG7$8HXcP-YBU',
+            'unix_socket'    => '',
+            'charset'        => 'utf8mb4',
+            'collation'      => 'utf8mb4_unicode_ci',
+            'prefix'         => '',
+            'prefix_indexes' => true,
+            'strict'         => true,
+            'engine'         => null,
+            'options'        => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
+        'prd-mkt' => [
+            'driver'         => 'mysql',
+            'url'            => '',
+            'host'           => '34.211.57.220',
+            'port'           => '3306',
+            'database'       => 'triibomarketplace',
+            'username'       => 'triibomarketplace',
+            'password'       => 'z^!dG7$8HXcP-YBU',
+            'unix_socket'    => '',
+            'charset'        => 'utf8mb4',
+            'collation'      => 'utf8mb4_unicode_ci',
+            'prefix'         => '',
+            'prefix_indexes' => true,
+            'strict'         => true,
+            'engine'         => null,
+            'options'        => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DATABASE_URL'),
