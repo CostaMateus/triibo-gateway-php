@@ -225,11 +225,17 @@ class FastshopController extends Controller
         try
         {
             $fsData    = $request->all();
-            $invoice   = DataTranslator::translate("invoice",  $fsData);
-            $tracking  = DataTranslator::translate("tracking", $fsData);
 
-            Note::create($orderId, [ "note" => $invoice  ]);
-            Note::create($orderId, [ "note" => $tracking ]);
+            if (!empty($fsData["trackingNumber"]))
+            {
+                $tracking = DataTranslator::translate("tracking", $fsData);
+                Note::create($orderId, [ "note" => $tracking ]);
+            }
+            else
+            {
+                $invoice  = DataTranslator::translate("invoice",  $fsData);
+                Note::create($orderId, [ "note" => $invoice  ]);
+            }
 
             // busca o orderId da FS no meta_data
             $order     = Order::find($orderId);
