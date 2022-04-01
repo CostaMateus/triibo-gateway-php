@@ -397,13 +397,13 @@ class DataTranslator
             $items[] = [
                 "id"                => $auxItem["id"],
                 "quantity"          => $auxItem["quantity"],
-                "price"             => 10000, // $auxItem["price"], // teste
+                "price"             => $auxItem["price"],
                 "unitMultiplier"    => $auxItem["unitMultiplier"],
                 "Seller"            => $auxItem["seller"],
                 "priceTags"         => $auxItem["priceTags"],
                 "isGift"            => false,
-                // "commission"        => 0,
-                // "freightCommission" => 0,
+                "commission"        => 10,
+                "freightCommission" => 0,
                 // "bundleItems"       => [],
                 // "itemAttachment"    => [
                 //     "name"    => null,
@@ -421,7 +421,7 @@ class DataTranslator
             $logisticsInfo[] = [
                 "itemIndex"        => $idItem,
                 "selectedSla"      => $selectedSla,
-                "lockTTL"          => "5d",
+                "lockTTL"          => "3d",
                 "shippingEstimate" => $eta,
                 "price"            => $price,
                 "deliveryWindow"   => []
