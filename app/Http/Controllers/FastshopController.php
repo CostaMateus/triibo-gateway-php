@@ -106,7 +106,7 @@ class FastshopController extends Controller
             // $date      = date("Ymd-his");
             // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
-            $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? "" : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData    = DataTranslator::translate("newProduct", $fsData);
@@ -171,7 +171,7 @@ class FastshopController extends Controller
             // $date   = date("Ymd-his");
             // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
-            $fsData["CategoryFullPath"] = self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? "" : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData = DataTranslator::translate("newProduct", $fsData);
@@ -225,11 +225,17 @@ class FastshopController extends Controller
         try
         {
             $fsData    = $request->all();
-            $invoice   = DataTranslator::translate("invoice",  $fsData);
-            $tracking  = DataTranslator::translate("tracking", $fsData);
 
-            Note::create($orderId, [ "note" => $invoice  ]);
-            Note::create($orderId, [ "note" => $tracking ]);
+            if (!empty($fsData["trackingNumber"]))
+            {
+                $tracking = DataTranslator::translate("tracking", $fsData);
+                Note::create($orderId, [ "note" => $tracking ]);
+            }
+            else
+            {
+                $invoice  = DataTranslator::translate("invoice",  $fsData);
+                Note::create($orderId, [ "note" => $invoice  ]);
+            }
 
             // busca o orderId da FS no meta_data
             $order     = Order::find($orderId);
@@ -518,7 +524,9 @@ class FastshopController extends Controller
                 Log::order("error", "New order error", [$error, $data]);
                 Notification::notify("newOrderError", $data);
 
-                Note::create($data["order"]["id"], [ "note" => Helper::getErrorNewOrderFS($error) ]);
+                Note::create($data["order"]["id"], [
+                    "note" => DataTranslator::translate("newOrderFsError", $error)
+                ]);
 
                 return response()->json([
                     "errorCode" => "5001", // 5001 - erro na consulta dos dados de frete na FS
@@ -534,15 +542,6 @@ class FastshopController extends Controller
             // Consulta produto na FS
             $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
 
-            /**
-             * TODO
-             * Validar com a FS os retornos
-             * Falha na criação do pedido, retornando sempre 400
-             * Ex: {
-             *     "ErrorCode": "400",
-             *     "Message": "Condição comercial não encontrada para o produto 'qlqr_SKU' (seller: 'FASTSHOP_APIGEE')"
-             * },
-             */
             if (!$response->successful())
             {
                 $error = $response->json();
@@ -550,9 +549,9 @@ class FastshopController extends Controller
                 Log::order("error", "New order error", [$error, $body]);
                 Notification::notify("newOrderError", $data);
 
-                $msg = "ERROR\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"];
-
-                Note::create($data["order"]["id"], [ "note" => $msg ]);
+                Note::create($data["order"]["id"], [
+                    "note"      => "ERROR FS\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"]
+                ]);
 
                 return response()->json([
                     "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
@@ -563,21 +562,16 @@ class FastshopController extends Controller
 
             $fsData = $response->json();
 
-            Note::create($data["order"]["id"], [ "note" => "Pedido criado na Fast Shop: #" . $fsData["orderId"] ]);
+            Note::create($data["order"]["id"], [
+                "note"      => "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData["orderId"]
+            ]);
 
-            Order::update($$data["order"]["id"], [
+            Order::update($data["order"]["id"], [
                 "meta_data" => [[
                     "key"   => "_fastshop_order_id",
                     "value" => $fsData["orderId"]
                 ]]
             ]);
-
-            /**
-             * TODO
-             * remover posteriormente
-             */
-            $encoded = json_encode(json_decode($response->json(), true), JSON_UNESCAPED_SLASHES);
-            Storage::put(date("Ymd") . "-fs-order-criation.json", $encoded);
 
             return response()->json([
                 "errorCode" => null,
@@ -651,7 +645,11 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+            $note  = "PEDIDO APROVADO NA FAST SHOP:\n";
+            $note .= DataTranslator::translate("orderStatusChange", $response->json());
+            Note::create($data["order"]["id"], [
+                "note" => $note
+            ]);
 
             return response()->json([
                 "errorCode" => null,
@@ -726,7 +724,11 @@ class FastshopController extends Controller
                 ],400);
             }
 
-            Note::create($data["order"]["id"], [ "note" => Helper::getOrderCancelation($response->json()) ]);
+            $note  = "PEDIDO CANCELADO NA FAST SHOP:\n";
+            $note .= DataTranslator::translate("orderStatusChange", $response->json());
+            Note::create($data["order"]["id"], [
+                "note" => $note
+            ]);
 
             return response()->json([
                 "errorCode" => null,
