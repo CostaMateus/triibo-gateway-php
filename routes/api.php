@@ -53,25 +53,93 @@ Route::prefix("triibo")->group(function () {
 /**
  *Integração MarketplaceTriibo <=> Fastshop
  */
-Route::prefix("marketplace")->group(function () {
+Route::name("api.marketplace.")->prefix("marketplace")->group(function () {
 
+    /**
+     * APIs chamadas pela Fastshop
+     */
     // Route-api: php.triibo.com.br/api/marketplace/changenotification
     Route::post(
         "/changenotification/api/catalog_system/pvt/skuseller/changenotification/{sellerId}/{sellerSkuId}",
         [FastshopController::class, "changeNotification"]
-    )->name("marketplace.changenotification");
+    )->name("changenotification");
 
     // Route-api: php.triibo.com.br/api/marketplace/skusuggestion
     Route::put(
         "/skusuggestion/suggestions/{sellerId}/{sellerSkuId}",
         [FastshopController::class, "skuSuggestion"]
-    )->name("marketplace.skusuggestion");
+    )->name("skusuggestion");
 
     // Route-api: php.triibo.com.br/api/marketplace/updatesku
     Route::put(
         "/updatesku/suggestions/{sellerId}/{sellerSkuId}/update",
         [FastshopController::class, "updateSku"]
-    )->name("marketplace.updatesku");
+    )->name("updatesku");
+
+    // Route-api: php.triibo.com.br/api/marketplace/invoice
+    // FS informa pedido faturado ou despachado
+    Route::post(
+        "/invoice/api/oms/pub/orders/{orderId}/invoice",
+        [FastshopController::class, "invoiceNotification"]
+    )->name("invoicenotification");
+
+    // Route-api: php.triibo.com.br/api/marketplace/delivered
+    // FS informa pedido entregue
+    Route::post(
+        "/delivered/api/oms/pub/orders/{orderId}/delivered",
+        [FastshopController::class, "deliveredNotification"]
+    )->name("deliverednotification");
+
+    // Route-api: php.triibo.com.br/api/marketplace/cancel
+    // FS informa pedido cancelado
+    Route::post(
+        "/cancel/api/oms/pub/orders/{orderId}/cancel",
+        [FastshopController::class, "cancellationNotification"]
+    )->name("cancellationnotification");
+
+
+
+
+    /**
+     * APIs chamadas pelo marketplace
+     */
+    Route::name("wc.")->prefix("wc")->group(function () {
+
+        // Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
+        // API chamada a partir do ../plugins/triibo-fastshop-shipping/
+        Route::post(
+            "/freightcalculation",
+            [FastshopController::class, "freightCalculation"]
+        )->name("freightcalculation");
+
+        // Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
+        // API chamada a partir do ../plugins/triibo-fastshop-shipping/
+        Route::post(
+            "/updatesku/{sku}",
+            [FastshopController::class, "updateSkuWc"]
+        )->name("updatesku");
+
+        // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation/{orderId}
+        // API chamada a partir do ../plugins/triibo-fastshop-orders
+        Route::post(
+            "/ordercreation/{orderId}",
+            [FastshopController::class, "orderCreation"]
+        )->name("ordercreation");
+
+        // Route-api: php.triibo.com.br/api/marketplace/wc/orderapproved/{orderId}
+        // API chamada a partir do ../plugins/triibo-fastshop-orders
+        Route::post(
+            "/orderapproved/{orderId}",
+            [FastshopController::class, "orderApproved"]
+        )->name("orderapproved");
+
+        //Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{orderId}
+        // API chamada a partir do ../plugins/triibo-fastshop-orders
+        Route::post(
+            "/ordercancelation/{orderId}",
+            [FastshopController::class, "orderCancelation"]
+        )->name("ordercancelation");
+    });
 
 });
 

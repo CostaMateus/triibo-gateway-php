@@ -389,13 +389,11 @@ class ChatGuruController extends Controller
 
         $users = User::where("email", "atendimento@triibo.com.br")
                      ->orWhere("email", "mateus.costa@triibo.com.br")->get();
-        $users[0]->notify(new ChatGuru($mail));
-        $users[1]->notify(new ChatGuru($mail));
 
-        // $users = User::where("email", "pedro.lobato@triibo.com.br")
-        //              ->orWhere("email", "mateus.costa@triibo.com.br")->get();
-        // $users[0]->notify(new ChatGuru($mail));
-        // $users[1]->notify(new ChatGuru($mail));
+        foreach ($users as $user)
+        {
+            $user->notify(new ChatGuru($mail));
+        }
     }
 
     private static function checkDataRequest(array $data)

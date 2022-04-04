@@ -9,7 +9,9 @@
         <script src="{{ asset('js/app.js') }}" defer></script>
 
         <!-- Styles -->
-        <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+        <link href="{{ asset('css/app.css')    }}" rel="stylesheet">
+        <link href="{{ asset('css/triibo.css') }}" rel="stylesheet">
+
         <style>
             body{font-family:Nunito,sans-serif;margin:0}*,:after,:before{box-sizing:border-box}.flex{display:flex}.items-center{align-items:center}.justify-center{justify-content:center}.h-100{min-height:100vh}.triibo-logo{width:300px}
         </style>
@@ -23,11 +25,9 @@
             <div class="position-fixed mx-auto p-3" style="z-index: 1005; top: 0; left: 0; right: 0;">
                 <div id="liveToast" class="mx-auto toast show" role="alert" aria-live="assertive" aria-atomic="true" data-delay="2000">
                     <div class="toast-header">
-                        <strong class="mr-auto">Triibo</strong>
+                        <strong class="me-auto">Triibo</strong>
                         <small>agora</small>
-                        <button type="button" class="ml-2 mb-1 close" data-dismiss="toast" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
                     </div>
                     <div class="toast-body">
                         {{ $message }}
@@ -39,7 +39,7 @@
                 // jQuery('#liveToast').toast('show');
                 window.setTimeout(function () {
                     location.href = "/";
-                }, 3000);
+                }, 10000);
             </script>
         @endif
     </body>
