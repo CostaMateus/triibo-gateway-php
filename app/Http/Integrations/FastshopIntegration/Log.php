@@ -104,7 +104,7 @@ class Log
      * *@param array $data
      * *@return void
       */
-    public static function order(string $type, string $title, array $data,)
+    public static function order(string $type, string $title, array $data)
     {
         LogSys::channel("fastshop")->{$type}($title, $data);
     }

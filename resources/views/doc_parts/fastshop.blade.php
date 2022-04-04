@@ -7,7 +7,7 @@
                 Integração Fast Shop
             </button>
         </p>
-        <div id="collapseFastshop" class="accordion-collapse collapsed " aria-labelledby="headingFastshop" data-bs-parent="#accordionTriibo" >
+        <div id="collapseFastshop" class="accordion-collapse collapse" aria-labelledby="headingFastshop" data-bs-parent="#accordionTriibo" >
             <div class="accordion-body">
                 <div id="fastshop">
                     <h3 class="text-center" >Integração Fast Shop</h3>
