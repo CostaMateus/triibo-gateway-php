@@ -76,17 +76,17 @@ Route::group(["middleware" => "auth"], function() {
 
 Route::get("/wc", function () {
 
-    $order = Order::find( 60127 );
+    // $order = Order::find( 60127 );
 
-    $data  = [
-        "note" => "ERROR \nTeste"
-    ];
+    // $data  = [
+    //     "note" => "ERROR \nTeste"
+    // ];
 
-    Note::create($order["id"], $data);
+    // Note::create($order["id"], $data);
 
-    $notes = Note::all($order["id"]);
+    // $notes = Note::all($order["id"]);
 
-    dd($order, $notes);
+    // dd($order, $notes);
 
 });
 
