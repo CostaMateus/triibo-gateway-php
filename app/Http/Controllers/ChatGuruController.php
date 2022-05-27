@@ -29,7 +29,7 @@ class ChatGuruController extends Controller
         $physical  = $data["physical"]["value"] ? "Sim" : "Não";
         $segment   = self::getCompanySegment($data["company_segment"]["value"]);
         $size      = self::getCompanySize($data["company_size"]["value"]);
-        $objective = self::getCompanyObjective($data["objective"]["value"]);
+        $objective = ""; // self::getCompanyObjective($data["objective"]["value"]);
 
         $dataEmail = self::getEmailMessage($name, $phone, $email, $physical, $segment["text"], $size, $objective, $meta);
 
@@ -210,8 +210,8 @@ class ChatGuruController extends Controller
         $text .= "<b>Telefone</b>: $phone \n\n";
         $text .= "<b>Segmento da Empresa</b>: $segment \n";
         $text .= "<b>Tamanho da Empresa</b>: $size \n";
-        $text .= "<b>Estabelecimento físico</b>: $physical \n";
-        $text .= "<b>Objetivo</b>: $objective \n\n";
+        $text .= "<b>Estabelecimento físico</b>: $physical \n\n";
+        // $text .= "<b>Objetivo</b>: $objective \n\n";
 
         $date  = $meta["date"]["value"];
         $time  = $meta["time"]["value"];
@@ -323,7 +323,7 @@ class ChatGuruController extends Controller
         $note_text  = "E-mail: $email\n\n";
         $note_text .= "Segmento da Empresa: $segment\n\n";
         $note_text .= "Tamanho da Empresa: $size\n\n";
-        $note_text .= "Objetivo: $objective\n\n";
+        // $note_text .= "Objetivo: $objective\n\n";
         $note_text .= "Estabelecimento físico: $physical\n\n";
         $note_text .= "Data: $data\n\n";
         $note_text .= "Hora: $hora\n\n";
@@ -413,7 +413,7 @@ class ChatGuruController extends Controller
             "company_segment" => false,
             "company_size"    => false,
             "physical"        => false,
-            "objective"       => false,
+            // "objective"       => false,
         ];
 
         foreach ($error as $key => &$value)
