@@ -210,7 +210,7 @@ class ChatGuruController extends Controller
         $text .= "<b>Telefone</b>: $phone \n\n";
         $text .= "<b>Segmento da Empresa</b>: $segment \n";
         $text .= "<b>Tamanho da Empresa</b>: $size \n";
-        $text .= "<b>Estabelecimento físico</b>: $physical \n";
+        $text .= "<b>Estabelecimento físico</b>: $physical \n\n";
         // $text .= "<b>Objetivo</b>: $objective \n\n";
 
         $date  = $meta["date"]["value"];

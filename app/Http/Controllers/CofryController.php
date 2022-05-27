@@ -297,6 +297,21 @@ class CofryController extends Controller
     }
 
     /**
+     * Recupera uma lista de exclusão de lojas, dado o parceiro
+     *
+     * @param string $partner
+     * @return array
+     */
+    public static function getDenylist($partner)
+    {
+        $db       = Firebase::database();
+        $firebase = $db->getReference("/Partners-Denylist/$partner");
+        $denylist = $firebase->getValue();
+
+        return $denylist;
+    }
+
+    /**
      * Get the file names from list of files
      *
      * @param Array $files
