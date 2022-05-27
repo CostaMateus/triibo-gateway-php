@@ -4,13 +4,10 @@
 // Variables
 @import 'variables';
 
-$theme-colors: (
-  "triibo": #6E3296,
-);
-
-.h7   { font-size: 0.7rem; }
-.w-10 { width: 10% !important; }
-.w-40 { width: 40% !important; }
-
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
+@import '~bootstrap-icons/font/bootstrap-icons';
+
+.h7   { font-size: 0.7rem;     }
+.w-10 { width: 10% !important; }
+.w-40 { width: 40% !important; }

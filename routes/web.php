@@ -13,7 +13,9 @@ use Illuminate\Support\Facades\Artisan;
 // use Triibo\Mautic\Models\MauticConsumer;
 // use App\Notifications\WebhookMarketplace;
 use App\Http\Controllers\UserController;
+use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Term;
+use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Coupon;
 use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Product;
@@ -74,95 +76,17 @@ Route::group(["middleware" => "auth"], function() {
 
 Route::get("/wc", function () {
 
-    // $data = [
-    //     'name' => 'Simple Product',
-    //     'type' => 'simple',
-    //     'regular_price' => '10.00',
-    //     'description' => 'Simple product full description.',
-    //     'short_description' => 'Simple product short description.',
-    //     'categories' => [
-    //         [
-    //             'id' => 1
-    //         ],
-    //         [
-    //             'id' => 3
-    //         ],
-    //         [
-    //             'id' => 5
-    //         ]
-    //     ],
-    //     'images' => [
-    //         [
-    //             'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_front.jpg'
-    //         ],
-    //         [
-    //             'src' => 'http://demo.woothemes.com/woocommerce/wp-content/uploads/sites/56/2013/06/T_2_back.jpg'
-    //         ]
-    //     ]
+    // $order = Order::find( 60127 );
+
+    // $data  = [
+    //     "note" => "ERROR \nTeste"
     // ];
-    // $product = Product::create($data);
 
+    // Note::create($order["id"], $data);
 
-    // $categories = Category::all(["per_page" => 100,]);
-    // dd($categories);
+    // $notes = Note::all($order["id"]);
 
-    $product = Product::all([
-        "sku" => "FS-SGCJSMA515FZ01"
-    ]);
-    dd($product->first()->id);
-
-    // $attrs = Attribute::all();
-    // $all_t = [];
-    // foreach ($attrs as $attr)
-    // {
-    //     $all_t[] = Term::all($attr->id);
-    // }
-    // dd($all_t);
-
-
-    // // $aux_c = explode("/", "Eletrodomésticos/Tramontina/Forno & Microondas");
-    // // $aux_c = explode("/", "Cama, Mesa & Banho/Mesa/Toalha de Mesa");
-    // $aux_c = explode("/", "Air Cooler 4/Cortina de Ar 2");
-
-    // $categories = [];
-
-    // foreach ($aux_c as $c)
-    // {
-    //     $slug = Helper::hyphenize($c);
-
-    //     $searchCategory = Category::all(["slug" => $slug]);
-
-    //     if (!$searchCategory->first())
-    //     {
-    //         $new = Category::create(["name" => $c]);
-
-    //         $categories[] = $new["id"];
-    //     }
-    //     else
-    //     {
-    //         $categories[] = $searchCategory->first()->id;
-    //     }
-
-
-    //     // try
-    //     // {
-    //     //     $categories[] = Category::create(["name" => $c])->first()->id;
-    //     //     // dd($categories);
-    //     // }
-    //     // catch (Exception $e)
-    //     // {
-    //     //     dd($e);
-    //     //     $c = Helper::hyphenize($c);
-    //     //     $categories[] = Category::all(["slug" => $c])->first()->id;
-    //     // }
-    // }
-
-    // dd($categories);
-
-
-    $attrs = Attribute::all();
-
-    dd($attrs);
+    // dd($order, $notes);
 
 });
 

@@ -3,13 +3,14 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use Exception;
+use App\Models\User;
 use Illuminate\Support\Facades\Log as LogSys;
 
 class Log
 {
 
     /**
-     * Registra log de atualização de preço/estoque dos produtos
+     * Log de atualização de preço/estoque dos produtos
      *
      * @param object $old
      * @param object $new
@@ -22,7 +23,7 @@ class Log
         {
             $new = json_decode($new->toJson());
 
-            LogSys::channel("fastshop")->info("StockPrice", [
+            LogSys::channel("fastshop")->info("updateStockPrice", [
                 $old->sku => [
                     "old" => [
                         "regular_price"  => $old->regular_price,
@@ -41,7 +42,7 @@ class Log
         }
         else
         {
-            LogSys::channel("fastshop")->info("StockPrice", [
+            LogSys::channel("fastshop")->info("updateStockPrice", [
                 $old->sku => [
                     "old" => [
                         "regular_price"  => $old->regular_price,
@@ -58,7 +59,22 @@ class Log
     }
 
     /**
-     * Registra log quando credenciais invalidas
+     * Log de criação/atualização de produto
+     *
+     * @param string $func
+     * @param string $sku
+     * @param boolean $update
+     * @return void
+     */
+    public static function createOrUpdateProduct(string $func, string $sku, bool $update)
+    {
+        $update = ($update) ? "produtc update" : "product create";
+
+        LogSys::channel("fastshop")->info($func, [$sku => $update]);
+    }
+
+    /**
+     * Log de request com credenciais invalidas
      *
      * @param string|null $key
      * @param string|null $token
@@ -73,7 +89,28 @@ class Log
     }
 
     /**
-     * Registra log quando erros imprevistos
+     * Log de falha na consulta de frete
+     *
+     * @param array $data
+     * @return void
+     */
+    public static function freightCalculation(array $data)
+    {
+        LogSys::channel("fastshop")->info("Shipping query failed", $data);
+    }
+
+    /**
+     * Log de falha ao enviar pedido de cancelamento do WC para o FS
+     * *@param array $data
+     * *@return void
+      */
+    public static function order(string $type, string $title, array $data)
+    {
+        LogSys::channel("fastshop")->{$type}($title, $data);
+    }
+
+    /**
+     * Log erros imprevistos
      *
      * @param Exception $e
      * @return void
@@ -81,5 +118,17 @@ class Log
     public static function exception(string $func, Exception $e)
     {
         LogSys::channel("fastshop")->error("Exception - $func", [$e]);
+    }
+
+    /**
+     * Log padrão, apenas informativo
+     *
+     * @param string $func
+     * @param array $data
+     * @return void
+     */
+    public static function default(string $func, array $data)
+    {
+        LogSys::channel("fastshop")->info($func, $data);
     }
 }

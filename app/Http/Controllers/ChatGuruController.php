@@ -200,7 +200,7 @@ class ChatGuruController extends Controller
     {
         $name = explode(" ", $name)[0];
 
-        return "Olá $name! tudo bem?\nSou a *Carol* da Triibo, recebi seu formulário e a partir de agora vou te ajudar a engajar e fidelizar clientes.";
+        return "Olá $name! tudo bem?";
     }
 
     private static function getEmailMessage(string $name, string $phone, string $email, string $physical, string $segment, string $size, string $objective, array $meta)
@@ -389,13 +389,11 @@ class ChatGuruController extends Controller
 
         $users = User::where("email", "atendimento@triibo.com.br")
                      ->orWhere("email", "mateus.costa@triibo.com.br")->get();
-        $users[0]->notify(new ChatGuru($mail));
-        $users[1]->notify(new ChatGuru($mail));
 
-        // $users = User::where("email", "pedro.lobato@triibo.com.br")
-        //              ->orWhere("email", "mateus.costa@triibo.com.br")->get();
-        // $users[0]->notify(new ChatGuru($mail));
-        // $users[1]->notify(new ChatGuru($mail));
+        foreach ($users as $user)
+        {
+            $user->notify(new ChatGuru($mail));
+        }
     }
 
     private static function checkDataRequest(array $data)

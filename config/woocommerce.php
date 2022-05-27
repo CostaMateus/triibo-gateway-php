@@ -6,19 +6,19 @@ return [
      * Store URL eg: http://example.com
      *================================================================================.
      */
-    'store_url'         => env('WOOCOMMERCE_STORE_URL', 'YOUR_STORE_URL'),
+    'store_url'         => (env('MKT_ENV') == 'local') ? env('WOOCOMMERCE_STORE_URL_HML') : env('WOOCOMMERCE_STORE_URL'),
 
     /**
      *================================================================================
      * Consumer Key
      *================================================================================.
      */
-    'consumer_key'      => env('WOOCOMMERCE_CONSUMER_KEY', 'YOUR_CONSUMER_KEY'),
+    'consumer_key'      => (env('MKT_ENV') == 'local') ? env('WOOCOMMERCE_CONSUMER_KEY_HML') : env('WOOCOMMERCE_CONSUMER_KEY'),
 
     /**
      * Consumer Secret.
      */
-    'consumer_secret'   => env('WOOCOMMERCE_CONSUMER_SECRET', 'YOUR_CONSUMER_SECRET'),
+    'consumer_secret'   => (env('MKT_ENV') == 'local') ? env('WOOCOMMERCE_CONSUMER_SECRET_HML') : env('WOOCOMMERCE_CONSUMER_SECRET'),
 
     /**
      *================================================================================
