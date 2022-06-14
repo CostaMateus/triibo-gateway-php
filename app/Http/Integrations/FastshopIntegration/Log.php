@@ -68,7 +68,7 @@ class Log
      */
     public static function createOrUpdateProduct(string $func, string $sku, bool $update)
     {
-        $update = ($update) ? "produtc update" : "product create";
+        $update = ($update) ? "product update" : "product create";
 
         LogSys::channel("fastshop")->info($func, [$sku => $update]);
     }
