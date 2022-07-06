@@ -115,9 +115,10 @@ class Log
      * @param Exception $e
      * @return void
      */
-    public static function exception(string $func, Exception $e)
+    public static function exception(string $func, Exception $e, string $sku = null)
     {
-        LogSys::channel("fastshop")->error("Exception - $func", [$e]);
+        $err = $sku ? [$sku, $e] : [$e];
+        LogSys::channel("fastshop")->error("Exception - $func", $err);
     }
 
     /**
