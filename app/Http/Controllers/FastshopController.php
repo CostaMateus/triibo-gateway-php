@@ -56,18 +56,11 @@ class FastshopController extends Controller
 
             if (!$product)
             {
-                // remover em PROD
-                $sku = "[" . date("Ymd-his") . "] " . strtoupper($sellerSkuId) . " NOT FOUND";
-                Storage::append("fs-skus.txt", $sku);
-
                 return response()->json([
                     "errorCode" => "404",
                     "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
                 ], 404);
             }
-
-            // Atualiza produto no Marketplace
-            $this->updateStockPrice($product, $sellerSkuId);
 
             return response()->json([
                 "errorCode" => null,
@@ -120,15 +113,11 @@ class FastshopController extends Controller
              * https://github.com/woocommerce/woocommerce/issues/27295
              */
             if (!$searchSku->first())
-            {
-                $new = Product::create($wcData);
-                $upd = false;
-            }
+                Product::create($wcData);
+                // $upd = false;
             else
-            {
-                $new = Product::update($searchSku->first()->id, $wcData);
-                $upd = true;
-            }
+                Product::update($searchSku->first()->id, $wcData);
+                // $upd = true;
 
             return response()->json([
                 "errorCode" => null,
@@ -137,15 +126,7 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            $sku = "[" . date("Y/m/d-h:i:s") . "] " . strtoupper($sellerSkuId) . " " . $e->getMessage();
-            Storage::append("fs-skus-2.txt", $sku);
-
             Log::exception("FS - skuSuggestion", $e, $sellerSkuId);
-
-            if ( $e->getMessage() == "Error: Imagem inválida: Sem permissão para enviar esse tipo de arquivo. [woocommerce_product_image_upload_error]")
-            {
-                LogSys::channel("fastshop-img")->info("FS - skuSuggestion", $wcData["images"]);
-            }
 
             return response()->json([
                 "errorCode" => "500",
@@ -188,7 +169,7 @@ class FastshopController extends Controller
                 ], 404);
             }
 
-            $new = Product::update($searchSku->first()->id, $wcData);
+            Product::update($searchSku->first()->id, $wcData);
 
             return response()->json([
                 "errorCode" => null,
@@ -798,23 +779,30 @@ class FastshopController extends Controller
 
         if (!$wc)
         {
-            $appKey   = $request->header("x-vtex-api-appkey");
-            $appToken = $request->header("x-vtex-api-apptoken");
+            // if ( !is_null( $request->header( "x-triibo" ) ) )
+            // {
+            //     return TRUE;
+            // }
+            // else
+            // {
+                $appKey   = $request->header("x-vtex-api-appkey");
+                $appToken = $request->header("x-vtex-api-apptoken");
 
-            // Verifição de chaves
-            if ($appKey != config("fastshop.$env.fs.key") || $appToken != config("fastshop.$env.fs.token"))
-            {
-                Log::invalidCredentials($appKey, $appToken);
+                // Verifição de chaves
+                if ($appKey != config("fastshop.$env.fs.key") || $appToken != config("fastshop.$env.fs.token"))
+                {
+                    Log::invalidCredentials($appKey, $appToken);
 
-                return response()->json([
-                    "errorCode" => "400",
-                    "message"   => "invalid credentials"
-                ], 400);
-            }
-            else
-            {
-                return TRUE;
-            }
+                    return response()->json([
+                        "errorCode" => "400",
+                        "message"   => "invalid credentials"
+                    ], 400);
+                }
+                else
+                {
+                    return TRUE;
+                }
+            // }
         }
         else
         {

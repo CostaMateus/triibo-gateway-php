@@ -245,6 +245,7 @@ class Helper
             '/[“”«»„]/u'  => ' ',
             '/ /'         => ' ',
         );
+
         return preg_replace(array_keys($utf8), array_values($utf8), $text);
     }
 
