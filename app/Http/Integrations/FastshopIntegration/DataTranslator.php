@@ -133,7 +133,8 @@ class DataTranslator
         $categories = [];
         $images     = [];
 
-        $slug       = Helper::hyphenize($data["ProductName"]);
+        // $slug       = Helper::hyphenize($data["ProductName"]);
+        $slug       = \Str::slug($data["ProductName"]);
         $sku        = $data["ProductId"] == $data["SellerStockKeepingUnitId"] ? $data["ProductId"] : $data["SellerStockKeepingUnitId"];
 
         if (!empty($data["CategoryFullPath"]))
