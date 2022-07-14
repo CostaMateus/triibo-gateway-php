@@ -133,16 +133,22 @@ class DataTranslator
         $categories = [];
         $images     = [];
 
-        $slug       = Helper::hyphenize($data["ProductName"]);
+        // $slug       = Helper::hyphenize($data["ProductName"]);
+        $slug       = \Str::slug($data["ProductName"]);
         $sku        = $data["ProductId"] == $data["SellerStockKeepingUnitId"] ? $data["ProductId"] : $data["SellerStockKeepingUnitId"];
 
-        foreach ($data["CategoryFullPath"] as $ctg)
+        if (!empty($data["CategoryFullPath"]))
         {
-            $categories[] = [ "id" => $ctg ];
+            foreach ($data["CategoryFullPath"] as $ctg)
+            {
+                $categories[] = [ "id" => $ctg ];
+            }
         }
 
         foreach ($data["Images"] as $img)
         {
+            if (!Helper::validateImageUrl($img["imageUrl"])) continue;
+
             $images[] = [
                 "src"  => $img["imageUrl"],
                 "name" => $img["imageName"],
@@ -178,19 +184,23 @@ class DataTranslator
             ];
         }
 
-        $shortDescript = explode("\r\n", $data["ProductDescription"])[0];
+        $description   = $data["ProductDescription"];
+
+        $shortDescript = explode("\r\n", $description)[0];
         $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
 
         $wcData        = [
             "name"              => $data["ProductName"],
             "slug"              => $slug,
 
-            "description"       => $data["ProductDescription"],
+            "description"       => $description,
             "short_description" => $shortDescript,
             "sku"               => "FS-$sku",
 
             "regular_price"     => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
             "sale_price"        => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
+
+            "status"            => "private",
 
             "manage_stock"      => true,
             "stock_quantity"    => $data["AvailableQuantity"],
@@ -218,6 +228,9 @@ class DataTranslator
             "images"            => $images,
             "attributes"        => $attributes,
         ];
+
+        $wcData = json_encode($wcData, JSON_UNESCAPED_SLASHES);
+        $wcData = json_decode($wcData, true);
 
         return $wcData;
     }

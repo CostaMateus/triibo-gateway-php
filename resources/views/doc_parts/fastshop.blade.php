@@ -13,7 +13,11 @@
                     <h3 class="text-center" >Integração Fast Shop</h3>
                     <p>
                         URL base:<br>
-                        <span class="font-monospace" ><var>{{ env("APP_URL") }}api/marketplace</var></span>
+                        @if (config("app.env") == "local")
+                            <span class="font-monospace" ><var>php-hml.triibo.com.br/api/marketplace</var></span>
+                        @else
+                            <span class="font-monospace" ><var>php.triibo.com.br/api/marketplace</var></span>
+                        @endif
                     </p>
 
                     <hr>

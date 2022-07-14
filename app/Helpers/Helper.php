@@ -223,7 +223,8 @@ class Helper
      * @param string $text
      * @return string
      */
-    private static function cleanString($text) {
+    private static function cleanString($text)
+    {
         $utf8 = array(
             '/[áàâãªä]/u' => 'a',
             '/[ÁÀÂÃÄ]/u'  => 'A',
@@ -244,6 +245,7 @@ class Helper
             '/[“”«»„]/u'  => ' ',
             '/ /'         => ' ',
         );
+
         return preg_replace(array_keys($utf8), array_values($utf8), $text);
     }
 
@@ -253,7 +255,8 @@ class Helper
      * @param string $string
      * @return string
      */
-    public static function hyphenize($string) {
+    public static function hyphenize($string)
+    {
         $str = strtolower(
             preg_replace(
                 array('#[\\s-]+#', '#[^A-Za-z0-9. -]+#'),
@@ -335,6 +338,18 @@ class Helper
         $date = implode("/", array_reverse(explode("-", $time[0])));
 
         return "$date às $hour";
+    }
+
+    public static function validateImageUrl(string $url)
+    {
+        if (isset(explode(".jpg", $url)[1]))
+            return true;
+        else if (isset(explode(".jpeg", $url)[1]))
+            return true;
+        else if (isset(explode(".png", $url)[1]))
+            return true;
+        else
+            return false;
     }
 
 }

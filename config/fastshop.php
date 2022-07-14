@@ -42,7 +42,7 @@ return [
         'wc' => [
             'key'     => env('WC_API_KEY',   ''),
             'token'   => env('WC_API_TOKEN', ''),
-            'storeId' => "???",
+            'storeId' => "4265",
         ],
     ],
 

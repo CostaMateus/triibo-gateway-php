@@ -12,6 +12,7 @@ use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
+use Illuminate\Support\Facades\Log as LogSys;
 use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\Notification;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
@@ -21,6 +22,8 @@ class FastshopController extends Controller
     private $env;
     private $fsUrl;
     private $fsHeaders;
+
+    private $uspCount = 0; // updateStockPrice counter
 
     public function __construct()
     {
@@ -53,18 +56,11 @@ class FastshopController extends Controller
 
             if (!$product)
             {
-                // remover em PROD
-                $sku = "[" . date("Ymd-his") . "] " . strtoupper($sellerSkuId) . " NOT FOUND";
-                Storage::append("fs-skus.txt", $sku);
-
                 return response()->json([
                     "errorCode" => "404",
                     "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
                 ], 404);
             }
-
-            // Atualiza produto no Marketplace
-            $this->updateStockPrice($product, $sellerSkuId);
 
             return response()->json([
                 "errorCode" => null,
@@ -73,11 +69,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("changeNotification", $e);
+            Log::exception("FS - changeNotification", $e, $sellerSkuId);
 
             return response()->json([
                 "errorCode" => "500",
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -102,11 +98,7 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            // // LOG
-            // $date      = date("Ymd-his");
-            // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
-
-            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? "" : self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData    = DataTranslator::translate("newProduct", $fsData);
@@ -121,17 +113,11 @@ class FastshopController extends Controller
              * https://github.com/woocommerce/woocommerce/issues/27295
              */
             if (!$searchSku->first())
-            {
-                $new = Product::create($wcData);
-                $upd = false;
-            }
+                Product::create($wcData);
+                // $upd = false;
             else
-            {
-                $new = Product::update($searchSku->first()->id, $wcData);
-                $upd = true;
-            }
-
-            Log::createOrUpdateProduct("skuSuggestion", $new["sku"], $upd);
+                Product::update($searchSku->first()->id, $wcData);
+                // $upd = true;
 
             return response()->json([
                 "errorCode" => null,
@@ -140,11 +126,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("skuSuggestion", $e);
+            Log::exception("FS - skuSuggestion", $e, $sellerSkuId);
 
             return response()->json([
                 "errorCode" => "500",
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -167,11 +153,7 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData = $request->all();
 
-            // // remover em PROD
-            // $date   = date("Ymd-his");
-            // Storage::put("$date.fs-$sellerSkuId.json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
-
-            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? "" : self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
             $wcData = DataTranslator::translate("newProduct", $fsData);
@@ -187,9 +169,7 @@ class FastshopController extends Controller
                 ], 404);
             }
 
-            $new = Product::update($searchSku->first()->id, $wcData);
-
-            Log::createOrUpdateProduct("updateSku", $new["sku"], true);
+            Product::update($searchSku->first()->id, $wcData);
 
             return response()->json([
                 "errorCode" => null,
@@ -198,11 +178,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("updateSku", $e);
+            Log::exception("FS - updateSku", $e);
 
             return response()->json([
                 "errorCode" => "500",
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -251,11 +231,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("invoiceNotification", $e);
+            Log::exception("FS - invoiceNotification", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -299,11 +279,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("deliveredNotification", $e);
+            Log::exception("FS - deliveredNotification", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -346,11 +326,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("cancellationNotification", $e);
+            Log::exception("FS - cancellationNotification", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -397,11 +377,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("updateSkuWc", $e);
+            Log::exception("FS - updateSkuWc", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -480,11 +460,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("freightCalculation", $e);
+            Log::exception("FS - freightCalculation", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
-                "message"   => "Something wrong",
+                "message"   => $e->getMessage(),
                 "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
             ], 500);
         }
@@ -581,11 +561,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("orderCreation", $e);
+            Log::exception("FS - orderCreation", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - falha generica
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -647,6 +627,7 @@ class FastshopController extends Controller
 
             $note  = "PEDIDO APROVADO NA FAST SHOP:\n";
             $note .= DataTranslator::translate("orderStatusChange", $response->json());
+
             Note::create($data["order"]["id"], [
                 "note" => $note
             ]);
@@ -659,11 +640,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("orderCreation", $e);
+            Log::exception("FS - orderCreation", $e);
 
             return response()->json([
                 "errorCode" => "5000", // erro generico
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -738,11 +719,11 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("orderCancelation", $e);
+            Log::exception("FS - orderCancelation", $e);
 
             return response()->json([
                 "errorCode" => "5000",
-                "message"   => "something wrong",
+                "message"   => $e->getMessage(),
             ], 500);
         }
     }
@@ -798,23 +779,30 @@ class FastshopController extends Controller
 
         if (!$wc)
         {
-            $appKey   = $request->header("x-vtex-api-appkey");
-            $appToken = $request->header("x-vtex-api-apptoken");
+            // if ( !is_null( $request->header( "x-triibo" ) ) )
+            // {
+            //     return TRUE;
+            // }
+            // else
+            // {
+                $appKey   = $request->header("x-vtex-api-appkey");
+                $appToken = $request->header("x-vtex-api-apptoken");
 
-            // Verifição de chaves
-            if ($appKey != config("fastshop.$env.fs.key") || $appToken != config("fastshop.$env.fs.token"))
-            {
-                Log::invalidCredentials($appKey, $appToken);
+                // Verifição de chaves
+                if ($appKey != config("fastshop.$env.fs.key") || $appToken != config("fastshop.$env.fs.token"))
+                {
+                    Log::invalidCredentials($appKey, $appToken);
 
-                return response()->json([
-                    "errorCode" => "400",
-                    "message"   => "invalid credentials"
-                ], 400);
-            }
-            else
-            {
-                return TRUE;
-            }
+                    return response()->json([
+                        "errorCode" => "400",
+                        "message"   => "invalid credentials"
+                    ], 400);
+                }
+                else
+                {
+                    return TRUE;
+                }
+            // }
         }
         else
         {
@@ -849,6 +837,8 @@ class FastshopController extends Controller
      */
     private function updateStockPrice($product, $sellerSkuId)
     {
+        $this->uspCount++;
+
         $url  = "$this->fsUrl/pvt/orderForms/simulation";
         $body = DataTranslator::translate("queryStockPrice", [$sellerSkuId]);
 
@@ -868,18 +858,24 @@ class FastshopController extends Controller
                 $new    = Product::update($product->id, $wcData);
 
                 // Registrar log de sucesso
-                Log::updateStockPrice($product, $new);
+                // Log::updateStockPrice($product, $new);
             }
             else
             {
+                if ($this->uspCount < 3) $this->updateStockPrice($product, $sellerSkuId);
+
                 // Registrar log de falha
                 Log::updateStockPrice($product, null, true);
             }
         }
         catch (Exception $e)
         {
-            Log::exception("updateStockPrice", $e);
+            if ($this->uspCount < 3) $this->updateStockPrice($product, $sellerSkuId);
+
+            Log::exception("INT - updateStockPrice", $e, $sellerSkuId);
         }
+
+        $this->uspCount = 0;
     }
 
     /**

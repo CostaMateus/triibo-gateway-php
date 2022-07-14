@@ -74,20 +74,44 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get("/wc", function () {
+// Route::get("/wc", function () {
 
-    // $order = Order::find( 60127 );
+//     $pdts  = 0;
+//     $ended = false;
+//     $page  = 10;
+//     $per   = 100;
 
-    // $data  = [
-    //     "note" => "ERROR \nTeste"
-    // ];
+//     do
+//     {
+//         try
+//         {
+//             $aux = Product::all([
+//                 "per_page" => $per,
+//                 "page"     => $page,
+//             ]);
 
-    // Note::create($order["id"], $data);
+//             if ( $aux->count() < 100 ) $ended = true;
 
-    // $notes = Note::all($order["id"]);
+//             $page++;
 
-    // dd($order, $notes);
+//             foreach ( $aux as $p )
+//             {
+//                 if ( strpos( $p->sku, "FS-" ) !== false )
+//                 {
+//                     if ( $p->shipping_class != "fast-shop" )
+//                     {
+//                         Product::update( $p->id, [ "shipping_class" => "fast-shop" ]);
+//                         $pdts++;
+//                     }
+//                 }
+//             }
+//         }
+//         catch (Exception $e)
+//         {
+//             $ended = false;
+//         }
+//     }
+//     while ( !$ended );
 
-});
-
-//
+//     dd( $pdts );
+// });
