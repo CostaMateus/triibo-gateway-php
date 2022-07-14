@@ -3,6 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use App\Helpers\Helper;
+use Illuminate\Support\Str;
 
 class DataTranslator
 {
@@ -187,7 +188,7 @@ class DataTranslator
         $description   = $data["ProductDescription"];
 
         $shortDescript = explode("\r\n", $description)[0];
-        $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
+        $shortDescript = Str::limit($shortDescript, 50, " (...)");
 
         $wcData        = [
             "name"              => $data["ProductName"],
