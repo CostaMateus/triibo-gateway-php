@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Helpers\Helper;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
@@ -744,7 +745,7 @@ class FastshopController extends Controller
 
         foreach ($auxData as $key => $ctg)
         {
-            $slug           = Helper::hyphenize($ctg);
+            $slug           = Str::slug($ctg, "-");
 
             $searchCategory = Category::all(["slug" => $slug]);
 
