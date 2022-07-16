@@ -188,9 +188,27 @@ class DataTranslator
         $description   = $data["ProductDescription"];
 
         $shortDescript = explode("\r\n", $description)[0];
-        $shortDescript = Str::limit($shortDescript, 50, " (...)");
+        $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
+        $shortDescript = Str::limit($shortDescript, 140, " (...)");
 
-        $wcData        = [
+        $attr_name     = "";
+        $attr_val      = "";
+
+        foreach ($attributes as $att)
+        {
+            $name = Str::lower($att["name"]);
+
+            if ($name == "voltagem")
+            {
+                $attr_name = Str::ucfirst($name);
+                $val       = reset($att["options"]);
+                $attr_val  = ($val == "110" || $val == "220") ? $val . "V" : $val;
+            }
+        }
+
+        $shortDescript .= "\r\n\r\n$attr_name : $attr_val";
+
+        $wcData         = [
             "name"              => $data["ProductName"],
             "slug"              => $slug,
 
