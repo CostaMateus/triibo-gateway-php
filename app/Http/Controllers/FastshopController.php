@@ -116,11 +116,33 @@ class FastshopController extends Controller
              * https://github.com/woocommerce/woocommerce/issues/27295
              */
             if (!$searchSku->first())
-                Product::create($wcData);
-                // $upd = false;
+            {
+                $updFail  = true;
+                $updCount = 0;
+
+                do
+                {
+                    try
+                    {
+                        Product::create( $wcData );
+                        // $upd = false;
+                        $updFail = false;
+                    }
+                    catch ( Exception $e )
+                    {
+                        $updFail = true;
+                        $updCount++;
+
+                        if ( $updCount > 3 ) throw new Exception( $e->getMessage(), 1 );
+                    }
+                }
+                while ( $updFail );
+            }
             else
+            {
                 Product::update($searchSku->first()->id, $wcData);
                 // $upd = true;
+            }
 
             return response()->json([
                 "errorCode" => null,
@@ -129,12 +151,35 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("FS - skuSuggestion", $e, $sellerSkuId);
+            $error = true;
+            $ex    = Helper::treatExceptionMsgFS( $e->getMessage() );
 
-            return response()->json([
-                "errorCode" => "500",
-                "message"   => $e->getMessage(),
-            ], 500);
+            if ( $ex )
+            {
+                switch ( $ex )
+                {
+                    case "[product_invalid_sku]":
+                        $error = false;
+                    break;
+                }
+            }
+
+            if ( $error )
+            {
+                Log::exception("FS - skuSuggestion", $e, $sellerSkuId);
+
+                return response()->json([
+                    "errorCode" => "500",
+                    "message"   => $e->getMessage(),
+                ], 500);
+            }
+            else
+            {
+                return response()->json([
+                    "errorCode" => null,
+                    "message"   => "Ok",
+                ], 200);
+            }
         }
     }
 
@@ -174,7 +219,25 @@ class FastshopController extends Controller
                 ], 404);
             }
 
-            Product::update($searchSku->first()->id, $wcData);
+            $updFail  = true;
+            $updCount = 0;
+
+            do
+            {
+                try
+                {
+                    Product::update($searchSku->first()->id, $wcData);
+                    $updFail = false;
+                }
+                catch (Exception $e)
+                {
+                    $updFail = true;
+                    $updCount++;
+
+                    if ($updCount > 3) throw new Exception($e->getMessage(), 1);
+                }
+            }
+            while ($updFail);
 
             return response()->json([
                 "errorCode" => null,

@@ -352,4 +352,10 @@ class Helper
             return false;
     }
 
+    public static function treatExceptionMsgFS( string $message )
+    {
+        preg_match("/\[.*?\]/", $message, $matches);
+        return ( empty( $matches ) ) ? null : $matches[ 0 ];
+    }
+
 }
