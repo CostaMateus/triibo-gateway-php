@@ -53,7 +53,7 @@ Route::prefix("triibo")->group(function () {
 /**
  *Integração MarketplaceTriibo <=> Fastshop
  */
-Route::name("api.marketplace.")->prefix("marketplace")->group(function () {
+Route::name("api.marketplace.")->middleware("log.route")->prefix("marketplace")->group(function () {
 
     /**
      * APIs chamadas pela Fastshop
