@@ -206,7 +206,7 @@ class DataTranslator
             }
         }
 
-        $shortDescript .= "\r\n\r\n$attr_name : $attr_val";
+        if ( $attr_val != "NA" ) $shortDescript .= "\r\n\r\n$attr_name : $attr_val";
 
         $wcData         = [
             "name"              => $data["ProductName"],
