@@ -99,7 +99,7 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            Storage::put("pdt-ss-" . date("Ymd-his") . ".json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+            if ( $sellerSkuId == "JBLPBCORESPTOB" ) Storage::put("pdt-ss-" . date("Ymd-his") . ".json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
 
@@ -201,7 +201,7 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData = $request->all();
 
-            Storage::put("pdt-su-" . date("Ymd-his") . ".json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+            if ( $sellerSkuId == "JBLPBCORESPTOB" ) Storage::put("pdt-su-" . date("Ymd-his") . ".json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
 
