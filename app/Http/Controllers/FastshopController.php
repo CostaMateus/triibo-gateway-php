@@ -8,12 +8,10 @@ use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
-use Illuminate\Support\Facades\Log as LogSys;
 use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\Notification;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
@@ -98,8 +96,6 @@ class FastshopController extends Controller
         {
             // Recupera dados do produto
             $fsData    = $request->all();
-
-            if ( $sellerSkuId == "JBLPBCORESPTOB" ) Storage::put("pdt-ss-" . date("Ymd-his") . ".json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
 
             $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
 
@@ -199,14 +195,12 @@ class FastshopController extends Controller
         try
         {
             // Recupera dados do produto
-            $fsData = $request->all();
-
-            if ( $sellerSkuId == "JBLPBCORESPTOB" ) Storage::put("pdt-su-" . date("Ymd-his") . ".json", json_encode($fsData, JSON_UNESCAPED_SLASHES));
+            $fsData    = $request->all();
 
             $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
 
             // Converte produto da FS para WC
-            $wcData = DataTranslator::translate("newProduct", $fsData);
+            $wcData    = DataTranslator::translate("newProduct", $fsData);
 
             // Atualiza produto no Marketplace
             $searchSku = Product::all(["sku" => $wcData["sku"]]);
@@ -219,8 +213,8 @@ class FastshopController extends Controller
                 ], 404);
             }
 
-            $updFail  = true;
-            $updCount = 0;
+            $updFail   = true;
+            $updCount  = 0;
 
             do
             {
