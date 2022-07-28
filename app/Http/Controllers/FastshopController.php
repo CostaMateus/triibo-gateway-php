@@ -112,33 +112,9 @@ class FastshopController extends Controller
              * https://github.com/woocommerce/woocommerce/issues/27295
              */
             if (!$searchSku->first())
-            {
-                $updFail  = true;
-                $updCount = 0;
-
-                do
-                {
-                    try
-                    {
-                        Product::create( $wcData );
-                        // $upd = false;
-                        $updFail = false;
-                    }
-                    catch ( Exception $e )
-                    {
-                        $updFail = true;
-                        $updCount++;
-
-                        if ( $updCount > 3 ) throw new Exception( $e->getMessage(), 1 );
-                    }
-                }
-                while ( $updFail );
-            }
+                Product::create( $wcData );
             else
-            {
                 Product::update($searchSku->first()->id, $wcData);
-                // $upd = true;
-            }
 
             return response()->json([
                 "errorCode" => null,
@@ -213,25 +189,7 @@ class FastshopController extends Controller
                 ], 404);
             }
 
-            $updFail   = true;
-            $updCount  = 0;
-
-            do
-            {
-                try
-                {
-                    Product::update($searchSku->first()->id, $wcData);
-                    $updFail = false;
-                }
-                catch (Exception $e)
-                {
-                    $updFail = true;
-                    $updCount++;
-
-                    if ($updCount > 3) throw new Exception($e->getMessage(), 1);
-                }
-            }
-            while ($updFail);
+            Product::update($searchSku->first()->id, $wcData);
 
             return response()->json([
                 "errorCode" => null,
