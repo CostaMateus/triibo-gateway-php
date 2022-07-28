@@ -303,7 +303,7 @@ class Helper
      */
     public static function convertPrice(int $price)
     {
-        return self:: convertWeight($price);
+        return self::convertWeight($price);
     }
 
     /**

@@ -320,8 +320,8 @@ class DataTranslator
                 "deliveryPrice"     => Helper::convertPrice($price),
                 "deliveryTime"      => Helper::convertDeliveryTime($deliveryTime),
                 "availableQuantity" => $availableQuantity,
-                "regular_price"     => $data["items"][$lg["itemIndex"]]["listPrice"],
-                "sale_price"        => $data["items"][$lg["itemIndex"]]["price"],
+                "regular_price"     => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["listPrice"] ),
+                "sale_price"        => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["price"]     ),
             ];
         }
 
@@ -356,7 +356,9 @@ class DataTranslator
                     "stock"             => $stock,
                     "deliveryPrice"     => "0.00",
                     "deliveryTime"      => "0",
-                    "availableQuantity" => false
+                    "availableQuantity" => false,
+                    "regular_price"     => "0.00",
+                    "sale_price"        => "0.00",
                 ];
             }
         }
@@ -370,7 +372,9 @@ class DataTranslator
                     "stock"             => 0,
                     "deliveryPrice"     => "0.00",
                     "deliveryTime"      => "0",
-                    "availableQuantity" => false
+                    "availableQuantity" => false,
+                    "regular_price"     => "0.00",
+                    "sale_price"        => "0.00",
                 ];
             }
         }
