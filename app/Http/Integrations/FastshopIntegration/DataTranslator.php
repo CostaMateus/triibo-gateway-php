@@ -289,10 +289,10 @@ class DataTranslator
      */
     private static function freightCalcWc(array $data)
     {
-        $products  = [];
-        $logistics = [];
+        // $products  = [];
+        // foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
 
-        foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
+        $logistics = [];
 
         foreach ($data["logisticsInfo"] as $key => $lg)
         {
@@ -314,12 +314,14 @@ class DataTranslator
             $availableQuantity = ($lg["quantity"] <= $stock)        ? true                      : false;
 
             $logistics[]       = [
-                "sku"               => "FS-" . $products[$lg["itemIndex"]],
+                "sku"               => "FS-" . $data["items"][$lg["itemIndex"]]["id"],
                 "quantity"          => $lg["quantity"],
                 "stock"             => $stock,
                 "deliveryPrice"     => Helper::convertPrice($price),
                 "deliveryTime"      => Helper::convertDeliveryTime($deliveryTime),
-                "availableQuantity" => $availableQuantity
+                "availableQuantity" => $availableQuantity,
+                "regular_price"     => $data["items"][$lg["itemIndex"]]["listPrice"],
+                "sale_price"        => $data["items"][$lg["itemIndex"]]["price"],
             ];
         }
 
