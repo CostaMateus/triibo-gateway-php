@@ -857,8 +857,6 @@ class FastshopController extends Controller
      */
     private function updateStockPrice($product, $sellerSkuId)
     {
-        $this->uspCount++;
-
         $url  = "$this->fsUrl/pvt/orderForms/simulation";
         $body = DataTranslator::translate("queryStockPrice", [$sellerSkuId]);
 
@@ -876,26 +874,17 @@ class FastshopController extends Controller
 
                 // Atualiza produto no Marketplace
                 $new    = Product::update($product->id, $wcData);
-
-                // Registrar log de sucesso
-                // Log::updateStockPrice($product, $new);
             }
             else
             {
-                if ($this->uspCount < 3) $this->updateStockPrice($product, $sellerSkuId);
-
                 // Registrar log de falha
                 Log::updateStockPrice($product, null, true);
             }
         }
         catch (Exception $e)
         {
-            if ($this->uspCount < 3) $this->updateStockPrice($product, $sellerSkuId);
-
             Log::exception("INT - updateStockPrice", $e, $sellerSkuId);
         }
-
-        $this->uspCount = 0;
     }
 
     /**
