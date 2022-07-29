@@ -447,6 +447,15 @@ class FastshopController extends Controller
 
             if ( empty( $fsData[ "logisticsInfo" ] ) )
             {
+                if ( empty( $fsData[ "items" ] ) )
+                {
+                    return response()->json([
+                        "errorCode" => "4002",
+                        "message"   => "SKUs, all currently out-of-stock",
+                        "data"      => $wcData,
+                    ], 400);
+                }
+
                 return response()->json([
                     "errorCode" => "4001",
                     "message"   => "SKUs, all currently out-of-stock",
