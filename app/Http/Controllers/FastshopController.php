@@ -439,7 +439,7 @@ class FastshopController extends Controller
                 return response()->json([
                     "errorCode" => "5001",
                     "message"   => "Something wrong when consulting the delivery price",
-                    "data"      => $wcData,
+                    "data"      => $wcData[ "items" ],
                 ], 500);
             }
 
@@ -452,7 +452,7 @@ class FastshopController extends Controller
                     return response()->json([
                         "errorCode" => "4002",
                         "message"   => "SKUs, all currently out-of-stock",
-                        "data"      => $wcData,
+                        "data"      => $wcData[ "items" ],
                     ], 400);
                 }
 
@@ -479,7 +479,7 @@ class FastshopController extends Controller
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
-                "data"      => $wcData,
+                "data"      => $wcData[ "items" ],
             ], 500);
         }
     }
