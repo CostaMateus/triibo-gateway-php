@@ -439,33 +439,19 @@ class FastshopController extends Controller
                 return response()->json([
                     "errorCode" => "5001",
                     "message"   => "Something wrong when consulting the delivery price",
-                    "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
+                    "data"      => $wcData,
                 ], 500);
             }
 
             $fsData = $response->json();
 
-            $itemWithoutStock = array_search(0, array_column($fsData["logisticsInfo"], "stockBalance"));
-
-            if (empty($fsData["logisticsInfo"]) || $itemWithoutStock !== false)
+            if ( empty( $fsData[ "logisticsInfo" ] ) )
             {
                 return response()->json([
                     "errorCode" => "4001",
-                    "message"   => "SKUs, currently out-of-stock",
+                    "message"   => "SKUs, all currently out-of-stock",
                     "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
                 ], 400);
-            }
-
-            foreach ($fsData["logisticsInfo"] as $items)
-            {
-                if (empty($items["slas"]))
-                {
-                    return response()->json([
-                        "errorCode" => "4002",
-                        "message"   => "Delivery unavailable for this zip code",
-                        "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
-                    ], 400);
-                }
             }
 
             // Converte dados do frete da FS para WC
@@ -484,7 +470,7 @@ class FastshopController extends Controller
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
-                "data"      => DataTranslator::translate("freightCalcFailed", $wcData),
+                "data"      => $wcData,
             ], 500);
         }
     }

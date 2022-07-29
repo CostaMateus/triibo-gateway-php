@@ -289,9 +289,6 @@ class DataTranslator
      */
     private static function freightCalcWc(array $data)
     {
-        // $products  = [];
-        // foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
-
         $logistics = [];
 
         foreach ($data["logisticsInfo"] as $key => $lg)
@@ -337,13 +334,10 @@ class DataTranslator
      */
     private static function freightCalcFailed(array $data)
     {
-        $products  = [];
         $logistics = [];
 
         if (!empty($data["logisticsInfo"]) && !empty($data["items"]))
         {
-            foreach ($data["items"] as $key => $p) $products[$key] = $p["id"];
-
             foreach ($data["logisticsInfo"] as $key => $lg)
             {
                 $idChannel = array_search("delivery", array_column($lg["deliveryChannels"], "id"));
@@ -351,7 +345,7 @@ class DataTranslator
                 $stock = ($idChannel !== false) ? $lg["deliveryChannels"][$idChannel]["stockBalance"] : 0;
 
                 $logistics[] = [
-                    "sku"               => "FS-" . $products[$lg["itemIndex"]],
+                    "sku"               => "FS-" . $data["items"][$lg["itemIndex"]]["id"],
                     "quantity"          => $lg["quantity"],
                     "stock"             => $stock,
                     "deliveryPrice"     => "0.00",
@@ -359,6 +353,8 @@ class DataTranslator
                     "availableQuantity" => false,
                     "regular_price"     => "0.00",
                     "sale_price"        => "0.00",
+                    "regular_price"     => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["listPrice"] ),
+                    "sale_price"        => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["price"]     ),
                 ];
             }
         }
@@ -367,14 +363,14 @@ class DataTranslator
             foreach ($data["items"] as $key => $p)
             {
                 $logistics[] = [
-                    "sku"               => $p["sku"],
+                    "sku"               => "FS-" . $p["id"],
                     "quantity"          => $p["quantity"],
                     "stock"             => 0,
                     "deliveryPrice"     => "0.00",
                     "deliveryTime"      => "0",
                     "availableQuantity" => false,
-                    "regular_price"     => "0.00",
-                    "sale_price"        => "0.00",
+                    "regular_price"     => Helper::convertPrice( $p["listPrice"] ),
+                    "sale_price"        => Helper::convertPrice( $p["price"]     ),
                 ];
             }
         }
