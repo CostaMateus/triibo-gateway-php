@@ -74,44 +74,103 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-// Route::get("/wc", function () {
+Route::get("/wc", function () {
 
-//     $pdts  = 0;
-//     $ended = false;
-//     $page  = 10;
-//     $per   = 100;
+    $prd = Product::all( [ "sku" => "FS-SGQN55QN85BAGB" ] )->first();
+    dump( $prd );
+    Product::update( $prd->id, [ "status" => "private" ] );
+    $prd = Product::all( [ "sku" => "FS-SGQN55QN85BAGB" ] );
+    dd( $prd );
 
-//     do
-//     {
-//         try
-//         {
-//             $aux = Product::all([
-//                 "per_page" => $per,
-//                 "page"     => $page,
-//             ]);
 
-//             if ( $aux->count() < 100 ) $ended = true;
+    // $pdts  = 0;
+    // $ended = false;
+    // $page  = 1;
+    // $per   = 100;
 
-//             $page++;
+    // do
+    // {
+    //     try
+    //     {
+    //         $aux = Product::all([
+    //             "per_page" => $per,
+    //             "page"     => $page,
+    //         ]);
 
-//             foreach ( $aux as $p )
-//             {
-//                 if ( strpos( $p->sku, "FS-" ) !== false )
-//                 {
-//                     if ( $p->shipping_class != "fast-shop" )
-//                     {
-//                         Product::update( $p->id, [ "shipping_class" => "fast-shop" ]);
-//                         $pdts++;
-//                     }
-//                 }
-//             }
-//         }
-//         catch (Exception $e)
-//         {
-//             $ended = false;
-//         }
-//     }
-//     while ( !$ended );
+    //         if ( $aux->count() < 100 ) $ended = true;
 
-//     dd( $pdts );
-// });
+    //         $page++;
+
+    //         foreach ( $aux as $p )
+    //         {
+    //             if ( strpos( $p->sku, "FS-" ) !== false )
+    //             {
+    //                 if ( $p->status == "private" )
+    //                 {
+    //                     Product::update( $p->id, [ "status" => "publish" ]);
+
+    //                     dump( $p->id );
+
+    //                     $pdts++;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     catch (Exception $e)
+    //     {
+    //         $ended = false;
+    //     }
+    // }
+    // while ( !$ended );
+
+    // dd( $pdts );
+
+
+
+
+
+
+    // $data = [
+    //     "Eletrodomésticos/Cooktops/acima de 5 bocas",
+    //     // "Casa e Decoração/Eletrodomésticos/Cooktops/gás/acima de 5 bocas",
+
+    //     "Eletrodomésticos/Fornos e Fogões/5 bocas/Eletrodomésticos Planejados/Cooktops/gás/acima de 5 bocas",
+
+    //     "Informática e Digitais/Notebook/intel® core i3",
+    //     "Ar e Ventilação/Ar condicionado/Ar quente e frio/Ar Split Parede/split/quente / frio/até 30000 Btus",
+    //     "Informática e Digitais/Notebook/intel® core i3",
+    // ];
+
+    // foreach ( $data as $str )
+    // {
+    //     $auxData    = explode("/", $str);
+    //     $categories = [];
+    //     $slugs = [];
+
+    //     foreach ($auxData as $key => $ctg)
+    //     {
+    //         $slug           = Str::slug($ctg, "-");
+
+    //         $searchCategory = Category::all( [ "slug" => $slug ] );
+
+    //         if ( !$searchCategory->first() )
+    //         {
+    //             $new          = Category::create([
+    //                 "name"   => $ctg,
+    //                 "parent" => ( $key == 0 ) ? 0 : $categories[ $key - 1 ]
+    //             ]);
+
+    //             $categories[] = $new[ "id" ];
+    //         }
+    //         else
+    //         {
+    //             $categories[] = $searchCategory->first()->id;
+    //         }
+
+    //         $slugs[] = $slug;
+    //     }
+
+    //     dump( $str, $slugs, $categories );
+    //     echo "<br><br><br><br>";
+    // }
+});
