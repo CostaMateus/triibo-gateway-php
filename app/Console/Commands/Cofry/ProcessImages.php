@@ -1,26 +1,26 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cofry;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CofryController;
 
-class ProcessStoresPromos extends Command
+class ProcessImages extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "process:storepromo";
+    protected $signature = "process:images";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Processes Cofry stores and promotions";
+    protected $description = "Processes images from Cofry stores and promotions";
 
     /**
      * Create a new command instance.
@@ -39,13 +39,13 @@ class ProcessStoresPromos extends Command
      */
     public function handle()
     {
-        // echo "SP : Start processing of stores|promos\n";
-        Log::channel("cofry")->info("Stores|Promos", [ "Start processing of stores|promos" ]);
+        echo "IMG : Start processing of images\n";
+        Log::channel("cofry")->info("Images", [ "Start processing of images" ]);
 
         $cofry = new CofryController();
-        $cofry->index();
+        $cofry->uploadImages();
 
-        // echo "SP : End stores|promos processing\n";
-        Log::channel("cofry")->info("Stores|Promos", [ "End stores|promos processing" ]);
+        echo "IMG : End images processing\n";
+        Log::channel("cofry")->info("Images", [ "End images processing" ]);
     }
 }

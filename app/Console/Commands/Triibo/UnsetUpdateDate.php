@@ -1,26 +1,27 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Triibo;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CofryController;
+use App\Http\Controllers\TriiboController;
 
-class ProcessImages extends Command
+class UnsetUpdateDate extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "process:images";
+    protected $signature = 'unset:updateDate';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Processes images from Cofry stores and promotions";
+    protected $description = 'Unset updateDate';
 
     /**
      * Create a new command instance.
@@ -39,13 +40,11 @@ class ProcessImages extends Command
      */
     public function handle()
     {
-        echo "IMG : Start processing of images\n";
-        Log::channel("cofry")->info("Images", [ "Start processing of images" ]);
+        Log::channel("triibo")->info("unset-updateDate", [ "Start processing of unset-updateDate" ]);
 
-        $cofry = new CofryController();
-        $cofry->uploadImages();
+        $triibo = new TriiboController();
+        $triibo->unsetUpdateDate();
 
-        echo "IMG : End images processing\n";
-        Log::channel("cofry")->info("Images", [ "End images processing" ]);
+        Log::channel("triibo")->info("unset-updateDate", [ "End unset-updateDate processing" ]);
     }
 }

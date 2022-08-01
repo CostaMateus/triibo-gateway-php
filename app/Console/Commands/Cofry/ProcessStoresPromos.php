@@ -1,27 +1,26 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Cofry;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\CofryController;
-use App\Http\Controllers\TriiboController;
 
-class UnsetUpdateDate extends Command
+class ProcessStoresPromos extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'unset:updateDate';
+    protected $signature = "process:storepromo";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Unset updateDate';
+    protected $description = "Processes Cofry stores and promotions";
 
     /**
      * Create a new command instance.
@@ -40,11 +39,13 @@ class UnsetUpdateDate extends Command
      */
     public function handle()
     {
-        Log::channel("triibo")->info("unset-updateDate", [ "Start processing of unset-updateDate" ]);
+        // echo "SP : Start processing of stores|promos\n";
+        Log::channel("cofry")->info("Stores|Promos", [ "Start processing of stores|promos" ]);
 
-        $triibo = new TriiboController();
-        $triibo->unsetUpdateDate();
+        $cofry = new CofryController();
+        $cofry->index();
 
-        Log::channel("triibo")->info("unset-updateDate", [ "End unset-updateDate processing" ]);
+        // echo "SP : End stores|promos processing\n";
+        Log::channel("cofry")->info("Stores|Promos", [ "End stores|promos processing" ]);
     }
 }

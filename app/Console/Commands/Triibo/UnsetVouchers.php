@@ -1,26 +1,26 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Commands\Triibo;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use App\Http\Integrations\MauticIntegration;
+use App\Http\Controllers\TriiboController;
 
-class UpdatePipeStages extends Command
+class UnsetVouchers extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "update:stages";
+    protected $signature = 'unset:vouchers';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Update stages from Pipedrive to Mautic";
+    protected $description = 'Unset Vouchers';
 
     /**
      * Create a new command instance.
@@ -39,10 +39,11 @@ class UpdatePipeStages extends Command
      */
     public function handle()
     {
-        Log::channel("marketplace")->info("update-stages", [ "Start processing of update Stages/Status/Labels" ]);
+        Log::channel("triibo")->info("unset-vouchers", [ "Start processing of unset-vouchers" ]);
 
-        MauticIntegration::updateStages();
+        $triibo = new TriiboController();
+        $triibo->unsetVouchers();
 
-        Log::channel("marketplace")->info("update-stages", [ "End Stages/Status/Labels processing" ]);
+        Log::channel("triibo")->info("unset-vouchers", [ "End unset-vouchers processing" ]);
     }
 }
