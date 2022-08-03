@@ -40,7 +40,7 @@ class SetPublishProduct extends Command
     {
         $pdts  = 0;
         $ended = false;
-        $page  = 1;
+        $page  = 14;
         $per   = 100;
 
         do
@@ -85,6 +85,8 @@ class SetPublishProduct extends Command
                     $this->info( "Empty data[]" );
                 }
 
+                $this->info( "Sleep 3" );
+                sleep( 3 );
             }
             catch ( \Exception $e )
             {
