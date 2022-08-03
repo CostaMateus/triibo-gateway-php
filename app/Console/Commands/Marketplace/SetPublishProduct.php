@@ -40,7 +40,7 @@ class SetPublishProduct extends Command
     {
         $pdts  = 0;
         $ended = false;
-        $page  = 14;
+        $page  = 21;
         $per   = 100;
 
         do
@@ -90,8 +90,8 @@ class SetPublishProduct extends Command
             }
             catch ( \Exception $e )
             {
-                $page--;
-                $pdts--;
+                // $page--;
+                // $pdts--;
 
                 $ended = false;
                 $this->info( "Error: " . $e->getMessage() );
