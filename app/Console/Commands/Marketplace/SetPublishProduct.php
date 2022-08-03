@@ -56,13 +56,18 @@ class SetPublishProduct extends Command
 
                 $page++;
 
+                $data = [ "update" => [] ];
+
                 foreach ( $aux as $p )
                 {
                     if ( strpos( $p->sku, "FS-" ) !== false )
                     {
                         if ( $p->status == "private" )
                         {
-                            Product::update( $p->id, [ "status" => "publish" ] );
+                            $data[ "update" ][] = [
+                                "id"     => $p->id,
+                                "status" => "publish"
+                            ];
 
                             $this->info( "Product ID: $p->id" );
 
@@ -70,6 +75,8 @@ class SetPublishProduct extends Command
                         }
                     }
                 }
+
+                Product::batch( $data );
             }
             catch ( \Exception $e )
             {
