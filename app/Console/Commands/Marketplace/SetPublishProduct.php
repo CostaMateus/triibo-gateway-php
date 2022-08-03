@@ -40,7 +40,7 @@ class SetPublishProduct extends Command
     {
         $pdts  = 0;
         $ended = false;
-        $page  = 24;
+        $page  = 1;
         $per   = 100;
 
         do
@@ -50,13 +50,12 @@ class SetPublishProduct extends Command
                 $aux = Product::all( [
                     "per_page" => $per,
                     "page"     => $page,
+                    "status"   => "private"
                 ] );
 
                 if ( $aux->count() < 100 ) $ended = true;
 
                 $page++;
-
-                $data = [ "update" => [] ];
 
                 foreach ( $aux as $p )
                 {
@@ -64,10 +63,7 @@ class SetPublishProduct extends Command
                     {
                         if ( $p->status == "private" )
                         {
-                            $data[ "update" ][] = [
-                                "id"     => $p->id,
-                                "status" => "publish"
-                            ];
+                            Product::update( $p->id, [ "status" => "publish" ] );
 
                             $this->info( "Product ID: $p->id" );
 
@@ -76,28 +72,19 @@ class SetPublishProduct extends Command
                     }
                 }
 
-                if ( !empty( $data[ "update" ] ) )
-                {
-                    Product::batch( $data );
-                }
-                else
-                {
-                    $this->info( "Empty data[]" );
-                }
-
-                $this->info( "Sleep 3" );
-                sleep( 3 );
+                $this->info( "Sleep 1" );
+                sleep( 1 );
             }
             catch ( \Exception $e )
             {
-                // $page--;
-                // $pdts--;
-
-                $this->info( "Sleep 15" );
-                sleep( 15 );
+                $page--;
 
                 $ended = false;
+
                 $this->info( "Error: " . $e->getMessage() );
+                $this->info( "Sleep 15" );
+
+                sleep( 15 );
             }
         }
         while ( !$ended );
