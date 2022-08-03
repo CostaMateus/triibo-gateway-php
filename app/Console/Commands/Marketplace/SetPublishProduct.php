@@ -80,8 +80,11 @@ class SetPublishProduct extends Command
                 {
                     Product::batch( $data );
                 }
+                else
+                {
+                    $this->info( "Empty data[]" );
+                }
 
-                $this->info( "Empty data[]" );
             }
             catch ( \Exception $e )
             {
