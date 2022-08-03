@@ -40,7 +40,7 @@ class SetPublishProduct extends Command
     {
         $pdts  = 0;
         $ended = false;
-        $page  = 21;
+        $page  = 24;
         $per   = 100;
 
         do
@@ -92,6 +92,9 @@ class SetPublishProduct extends Command
             {
                 // $page--;
                 // $pdts--;
+
+                $this->info( "Sleep 15" );
+                sleep( 15 );
 
                 $ended = false;
                 $this->info( "Error: " . $e->getMessage() );
