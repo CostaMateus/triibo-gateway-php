@@ -76,10 +76,18 @@ class SetPublishProduct extends Command
                     }
                 }
 
-                Product::batch( $data );
+                if ( !empty( $data[ "update" ] ) )
+                {
+                    Product::batch( $data );
+                }
+
+                $this->info( "Empty data[]" );
             }
             catch ( \Exception $e )
             {
+                $page--;
+                $pdts--;
+
                 $ended = false;
                 $this->info( "Error: " . $e->getMessage() );
             }
