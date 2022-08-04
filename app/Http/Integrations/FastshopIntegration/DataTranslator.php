@@ -219,8 +219,6 @@ class DataTranslator
             "regular_price"     => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
             "sale_price"        => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
 
-            "status"            => "private",
-
             "manage_stock"      => true,
             "stock_quantity"    => $data["AvailableQuantity"],
             "stock_status"      => $data["AvailableQuantity"] > 0 ? "instock" : "outofstock",
