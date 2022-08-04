@@ -61,14 +61,11 @@ class SetPublishProduct extends Command
                 {
                     if ( strpos( $p->sku, "FS-" ) !== false )
                     {
-                        if ( $p->status == "private" )
-                        {
-                            Product::update( $p->id, [ "status" => "publish" ] );
+                        Product::update( $p->id, [ "status" => "publish" ] );
 
-                            $this->info( "Product ID: $p->id" );
+                        $this->info( "Product ID: $p->id" );
 
-                            $pdts++;
-                        }
+                        $pdts++;
                     }
                 }
 
