@@ -66,7 +66,7 @@ class Notification
         ];
 
         $users = User::where("email", "mateus.costa@triibo.com.br")
-                    //  ->orWhere("email", "equipemarketplace@triibo.com.br")
+                     ->orWhere("email", "equipemarketplace@triibo.com.br")
                      ->get();
 
         foreach ($users as $user)
