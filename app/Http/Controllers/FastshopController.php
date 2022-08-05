@@ -22,8 +22,6 @@ class FastshopController extends Controller
     private $fsUrl;
     private $fsHeaders;
 
-    private $uspCount = 0; // updateStockPrice counter
-
     public function __construct()
     {
         $this->env       = config("fastshop.env");
@@ -397,7 +395,7 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("FS - updateSkuWc", $e);
+            Log::exception("MP - updateSkuWc", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
@@ -474,7 +472,7 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("FS - freightCalculation", $e);
+            Log::exception("MP - freightCalculation", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - erro generico
@@ -575,7 +573,7 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("FS - orderCreation", $e);
+            Log::exception("MP - orderCreation", $e);
 
             return response()->json([
                 "errorCode" => "5000", // 5000 - falha generica
@@ -654,7 +652,7 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("FS - orderCreation", $e);
+            Log::exception("MP - orderCreation", $e);
 
             return response()->json([
                 "errorCode" => "5000", // erro generico
@@ -733,7 +731,7 @@ class FastshopController extends Controller
         }
         catch (Exception $e)
         {
-            Log::exception("FS - orderCancelation", $e);
+            Log::exception("MP - orderCancelation", $e);
 
             return response()->json([
                 "errorCode" => "5000",
