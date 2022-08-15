@@ -417,7 +417,7 @@ class FastshopController extends Controller
     public function freightCalculation(Request $request)
     {
         // Verifição de chaves
-        // if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         $wcData = $request->all();
 
