@@ -28,11 +28,14 @@ class DataTranslator
             case "freightCalcWc":
                 return self::freightCalcWc($data);
             break;
-            case "freightCalcFailed":
-                return self::freightCalcFailed($data);
-            break;
+            // case "freightCalcFailed":
+            //     return self::freightCalcFailed($data);
+            // break;
             case "freightCalcNewOrder":
                 return self::freightCalcNewOrder($data);
+            break;
+            case "breakingUpFreight":
+                return self::breakingUpFreight($data);
             break;
 
             case "newOrderFs":
@@ -285,40 +288,55 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function freightCalcWc(array $data)
+    private static function freightCalcWc( array $data )
     {
         $logistics = [];
 
-        foreach ($data["logisticsInfo"] as $key => $lg)
+        if ( !empty( $data[ "logisticsInfo" ] ) && !empty( $data[ "items" ] ) )
         {
-            $delivery  = null;
-
-            $idChannel = array_search("delivery", array_column($lg["deliveryChannels"], "id"));
-            $idSlas    = array_search("delivery", array_column($lg["slas"], "deliveryChannel"));
-
-            if ($idChannel !== false && $idSlas !== false)
+            foreach ( $data[ "logisticsInfo" ] as $key => $lg )
             {
-                $delivery["stock"]        = $lg["deliveryChannels"][$idChannel]["stockBalance"];
-                $delivery["price"]        = $lg["slas"][$idSlas]["price"];
-                $delivery["deliveryTime"] = $lg["slas"][$idSlas]["shippingEstimate"];
+                $idChannel = array_search( "delivery", array_column( $lg[ "deliveryChannels" ], "id" ) );
+                $idSlas    = array_search( "delivery", array_column( $lg[ "slas" ], "deliveryChannel" ) );
+
+                if ( $idChannel !== false && $idSlas !== false )
+                {
+                    $stock        = $lg[ "deliveryChannels" ][ $idChannel ][ "stockBalance"     ];
+                    $price        = $lg[ "slas"             ][ $idSlas    ][ "price"            ];
+                    $deliveryTime = $lg[ "slas"             ][ $idSlas    ][ "shippingEstimate" ];
+                    $hub          = $lg[ "slas"             ][ $idSlas    ][ "id"               ];
+                }
+                else
+                {
+                    $stock        = $lg[ "stockBalance" ];
+                    $price        = 0;
+                    $deliveryTime = 0;
+                    $hub          = "";
+                }
+
+                $availableQuantity = ( $lg[ "quantity" ] <= $stock ) ? true : false;
+                $logistics[]       = [
+                    "sku"               => "FS-" . $data[ "items" ][ $lg[ "itemIndex" ] ][ "id" ],
+                    "quantity"          => $lg[ "quantity" ],
+                    "stock"             => $stock,
+                    "deliveryPrice"     => Helper::convertPrice( $price ),
+                    "deliveryTime"      => Helper::convertDeliveryTime( $deliveryTime ),
+                    "availableQuantity" => $availableQuantity,
+                    "regular_price"     => Helper::convertPrice( $data[ "items" ][ $lg[ "itemIndex" ] ][ "listPrice" ] ),
+                    "sale_price"        => Helper::convertPrice( $data[ "items" ][ $lg[ "itemIndex" ] ][ "price"     ] ),
+                    "hub"               => $hub,
+
+                    "code"              => 2000,
+                    "message"           => "ok",
+                ];
             }
-
-            $stock             = (isset($delivery["stock"]))        ? $delivery["stock"]        : 0;
-            $price             = (isset($delivery["price"]))        ? $delivery["price"]        : 0;
-            $deliveryTime      = (isset($delivery["deliveryTime"])) ? $delivery["deliveryTime"] : 0;
-            $availableQuantity = ($lg["quantity"] <= $stock)        ? true                      : false;
-
-            $logistics[]       = [
-                "sku"               => "FS-" . $data["items"][$lg["itemIndex"]]["id"],
-                "quantity"          => $lg["quantity"],
-                "stock"             => $stock,
-                "deliveryPrice"     => Helper::convertPrice($price),
-                "deliveryTime"      => Helper::convertDeliveryTime($deliveryTime),
-                "availableQuantity" => $availableQuantity,
-                "regular_price"     => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["listPrice"] ),
-                "sale_price"        => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["price"]     ),
-            ];
         }
+        else
+        {
+            $logistics = self::freightCalcFailed( $data );
+        }
+
+        $logistics = count( $logistics ) > 1 ? $logistics : $logistics[ 0 ];
 
         return $logistics;
     }
@@ -330,51 +348,40 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function freightCalcFailed(array $data)
+    private static function freightCalcFailed( array $data )
     {
         $logistics = [];
 
-        if (!empty($data["logisticsInfo"]) && !empty($data["items"]))
+        if ( !empty( $data[ "items" ] ) )
         {
-            foreach ($data["logisticsInfo"] as $key => $lg)
-            {
-                $idChannel = array_search("delivery", array_column($lg["deliveryChannels"], "id"));
-
-                $stock = ($idChannel !== false) ? $lg["deliveryChannels"][$idChannel]["stockBalance"] : 0;
-
-                $logistics[] = [
-                    "sku"               => "FS-" . $data["items"][$lg["itemIndex"]]["id"],
-                    "quantity"          => $lg["quantity"],
-                    "stock"             => $stock,
-                    "deliveryPrice"     => "0.00",
-                    "deliveryTime"      => "0",
-                    "availableQuantity" => false,
-                    "regular_price"     => "0.00",
-                    "sale_price"        => "0.00",
-                    "regular_price"     => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["listPrice"] ),
-                    "sale_price"        => Helper::convertPrice( $data["items"][$lg["itemIndex"]]["price"]     ),
-                ];
-            }
-        }
-        else if (!empty($data["items"]))
-        {
-            foreach ($data["items"] as $key => $p)
+            foreach ( $data[ "items" ] as $key => $product )
             {
                 $logistics[] = [
-                    "sku"               => "FS-" . $p["id"],
-                    "quantity"          => $p["quantity"],
+                    "sku"               => "FS-" . $product[ "id" ],
+                    "quantity"          => $product[ "quantity" ],
                     "stock"             => 0,
                     "deliveryPrice"     => "0.00",
                     "deliveryTime"      => "0",
                     "availableQuantity" => false,
-                    "regular_price"     => Helper::convertPrice( $p["listPrice"] ),
-                    "sale_price"        => Helper::convertPrice( $p["price"]     ),
+                    "regular_price"     => Helper::convertPrice( $product[ "listPrice" ] ),
+                    "sale_price"        => Helper::convertPrice( $product[ "price"     ] ),
+                    "hub"               => "",
+                    "code"              => 4001,
+                    "message"           => "SKU currently out-of-stock",
                 ];
             }
         }
         else
         {
-            $logistics = $data;
+            $logistics[] = [
+                "stock"             => 0,
+                "deliveryPrice"     => "0.00",
+                "deliveryTime"      => "0",
+                "availableQuantity" => false,
+                "hub"               => "",
+                "code"              => 4002,
+                "message"           => "SKU currently out-of-stock",
+            ];
         }
 
         return $logistics;
@@ -405,6 +412,30 @@ class DataTranslator
             "country"        => "BRA",
             "geoCoordinates" => []
         ];
+    }
+
+    private static function breakingUpFreight( array $data )
+    {
+        $newData = [];
+
+        if ( count( $data[ "items" ] ) > 1 )
+        {
+            foreach ( $data[ "items" ] as $item )
+            {
+                $newData[] = [
+                    "items"          => [ $item ],
+                    "postalCode"     => $data[ "postalCode" ],
+                    "country"        => $data[ "country" ],
+                    "geoCoordinates" => []
+                ];
+            }
+        }
+        else
+        {
+            $newdata[] = $data;
+        }
+
+        return $newData;
     }
 
     /**

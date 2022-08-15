@@ -417,57 +417,71 @@ class FastshopController extends Controller
     public function freightCalculation(Request $request)
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+        // if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
 
         $wcData = $request->all();
 
         try
         {
             // Converte dados do WC para FS
-            $body     = DataTranslator::translate("freightCalcFs", $wcData);
+            $fsData = DataTranslator::translate( "freightCalcFs",     $wcData );
+            $fsData = DataTranslator::translate( "breakingUpFreight", $fsData );
 
-            // Consulta valor do frete na FS
-            $url      = "$this->fsUrl/pvt/orderForms/simulation";
-            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+            $resps  = [];
+            $data   = [];
 
-            if (!$response->successful())
+            foreach ( $fsData as $body )
             {
-                Log::freightCalculation($body);
-
-                return response()->json([
-                    "errorCode" => "5001",
-                    "message"   => "Something wrong when consulting the delivery price",
-                    "data"      => $wcData[ "items" ],
-                ], 500);
+                // Consulta valor do frete na FS
+                $url     = "$this->fsUrl/pvt/orderForms/simulation";
+                $resps[] = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
             }
 
-            $fsData = $response->json();
-
-            if ( empty( $fsData[ "logisticsInfo" ] ) )
+            foreach ( $resps as $key => $response )
             {
-                if ( empty( $fsData[ "items" ] ) )
+                // falha na consulta
+                // não altera nada no MKT
+                // não exibe frete
+                if ( !$response->successful() )
                 {
-                    return response()->json([
-                        "errorCode" => "4002",
-                        "message"   => "SKUs, all currently out-of-stock",
-                        "data"      => $wcData[ "items" ],
-                    ], 400);
+                    Log::freightCalculation( $fsData[ $key ] );
+
+                    $item         = $wcData["items"][ $key ];
+                    $sku          = $item[ "sku" ];
+                    $data[ $sku ] = [
+                        "errorCode" => "5001",
+                        "message"   => "Something wrong when consulting the delivery price",
+                        "data"      => $item
+                    ];
+
+                    continue;
                 }
 
-                return response()->json([
-                    "errorCode" => "4001",
-                    "message"   => "SKUs, all currently out-of-stock",
-                    "data"      => DataTranslator::translate("freightCalcFailed", $fsData),
-                ], 400);
-            }
+                $item                    = $wcData["items"][ $key ];
+                $sku                     = $item[ "sku" ];
 
-            // Converte dados do frete da FS para WC
-            $wcData = DataTranslator::translate("freightCalcWc", $fsData);
+                $auxFsData               = $response->json();
+
+                $auxWcData               = DataTranslator::translate( "freightCalcWc", $auxFsData );
+                $auxWcData[ "sku" ]      = isset( $auxWcData[ "sku"      ] ) ? $auxWcData[ "sku"      ] : $sku;
+                $auxWcData[ "quantity" ] = isset( $auxWcData[ "quantity" ] ) ? $auxWcData[ "quantity" ] : $item[ "quantity" ];
+
+                $code                    = $auxWcData[ "code"    ];
+                $message                 = $auxWcData[ "message" ];
+
+                unset( $auxWcData[ "code" ], $auxWcData[ "message" ] );
+
+                $data[ $sku ] = [
+                    "errorCode" => $code,
+                    "message"   => $message,
+                    "data"      => $auxWcData,
+                ];
+            }
 
             return response()->json([
                 "errorCode" => null,
                 "message"   => "ok",
-                "data"      => $wcData,
+                "data"      => $data,
             ], 200);
         }
         catch (Exception $e)
