@@ -432,7 +432,7 @@ class DataTranslator
         }
         else
         {
-            $newdata[] = $data;
+            $newData[] = $data;
         }
 
         return $newData;
