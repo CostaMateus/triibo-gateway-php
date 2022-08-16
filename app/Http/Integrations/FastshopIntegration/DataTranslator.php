@@ -306,7 +306,7 @@ class DataTranslator
                     $deliveryTime = $lg[ "slas"             ][ $idSlas    ][ "shippingEstimate" ];
                     $hub          = $lg[ "slas"             ][ $idSlas    ][ "id"               ];
 
-                    $code         = 2000;
+                    $code         = null;
                     $message      = "ok";
                 }
                 else
