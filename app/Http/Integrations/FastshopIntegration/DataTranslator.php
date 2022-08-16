@@ -296,8 +296,8 @@ class DataTranslator
         {
             foreach ( $data[ "logisticsInfo" ] as $key => $lg )
             {
-                $idChannel = array_search( "delivery", array_column( $lg[ "deliveryChannels" ], "id" ) );
-                $idSlas    = array_search( "delivery", array_column( $lg[ "slas" ], "deliveryChannel" ) );
+                $idChannel = array_search( "delivery", array_column( $lg[ "deliveryChannels" ], "id"              ) );
+                $idSlas    = array_search( "delivery", array_column( $lg[ "slas"             ], "deliveryChannel" ) );
 
                 if ( $idChannel !== false && $idSlas !== false )
                 {
@@ -305,6 +305,9 @@ class DataTranslator
                     $price        = $lg[ "slas"             ][ $idSlas    ][ "price"            ];
                     $deliveryTime = $lg[ "slas"             ][ $idSlas    ][ "shippingEstimate" ];
                     $hub          = $lg[ "slas"             ][ $idSlas    ][ "id"               ];
+
+                    $code         = 2000;
+                    $message      = "ok";
                 }
                 else
                 {
@@ -312,6 +315,9 @@ class DataTranslator
                     $price        = 0;
                     $deliveryTime = 0;
                     $hub          = "";
+
+                    $code         = 4000;
+                    $message      = "Delivery not found";
                 }
 
                 $availableQuantity = ( $lg[ "quantity" ] <= $stock ) ? true : false;
@@ -326,8 +332,8 @@ class DataTranslator
                     "sale_price"        => Helper::convertPrice( $data[ "items" ][ $lg[ "itemIndex" ] ][ "price"     ] ),
                     "hub"               => $hub,
 
-                    "code"              => 2000,
-                    "message"           => "ok",
+                    "code"              => $code,
+                    "message"           => $message,
                 ];
             }
         }
