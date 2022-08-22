@@ -22,6 +22,7 @@ use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use Codexshaper\WooCommerce\Facades\Attribute;
 use Codexshaper\WooCommerce\Facades\PaymentGateway;
+use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 /*
 |--------------------------------------------------------------------------
@@ -74,103 +75,121 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get("/wc", function () {
+Route::get( "/wc", function () {
 
-    $prd = Product::all( [ "sku" => "FS-SGQN55QN85BAGB" ] )->first();
-    dump( $prd );
-    Product::update( $prd->id, [ "status" => "private" ] );
-    $prd = Product::all( [ "sku" => "FS-SGQN55QN85BAGB" ] );
-    dd( $prd );
+    $env       = config("fastshop.env");
+    $fsUrl     = config("fastshop.$env.fs.url");
+    $fsHeaders = config("fastshop.$env.fs.headers");
 
+    $ended     = false;
+    $page      = 1;
+    $per       = 100;
 
-    // $pdts  = 0;
-    // $ended = false;
-    // $page  = 1;
-    // $per   = 100;
+    $hubs      = [];
+    $y         = 0;
 
-    // do
-    // {
-    //     try
-    //     {
-    //         $aux = Product::all([
-    //             "per_page" => $per,
-    //             "page"     => $page,
-    //         ]);
+    do
+    {
+        try
+        {
+            $aux = Product::all( [
+                "per_page" => $per,
+                "page"     => $page,
+            ] );
 
-    //         if ( $aux->count() < 100 ) $ended = true;
+            if ( $aux->count() < 100 ) $ended = true;
 
-    //         $page++;
+            $page++;
 
-    //         foreach ( $aux as $p )
-    //         {
-    //             if ( strpos( $p->sku, "FS-" ) !== false )
-    //             {
-    //                 if ( $p->status == "private" )
-    //                 {
-    //                     Product::update( $p->id, [ "status" => "publish" ]);
+            foreach ( $aux as $i => $p )
+            {
+                if ( strpos( $p->sku, "FS-" ) !== false )
+                {
+                    $y++;
 
-    //                     dump( $p->id );
+                    $wcData = [
+                        "postalCode" => "01218-011",
+                        "items"      => [ [
+                            "sku"      => $p->sku,
+                            "quantity" => 1
+                        ] ]
+                    ];
 
-    //                     $pdts++;
-    //                 }
-    //             }
-    //         }
-    //     }
-    //     catch (Exception $e)
-    //     {
-    //         $ended = false;
-    //     }
-    // }
-    // while ( !$ended );
+                    $body   = DataTranslator::translate( "freightCalcFs", $wcData );
 
-    // dd( $pdts );
+                    // Consulta valor do frete na FS
+                    $url      = "$fsUrl/pvt/orderForms/simulation";
+                    $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
+                    // falha na consulta
+                    // não altera nada no MKT
+                    // não exibe frete
+                    if ( !$response->successful() )
+                    {
+                        Log::freightCalculation( $body );
 
+                        $data = [
+                            "errorCode" => "5001",
+                            "message"   => "Something wrong when consulting the delivery price",
+                            "data"      => $wcData[ "items" ][ 0 ]
+                        ];
+                    }
+                    else
+                    {
+                        $fsData                = $response->json();
+                        $aWcData               = DataTranslator::translate( "freightCalcWc", $fsData );
 
+                        $aWcData[ "sku"      ] = isset( $aWcData[ "sku"      ] ) ? $aWcData[ "sku"      ] : $wcData[ "items" ][ 0 ][ "sku" ];
+                        $aWcData[ "quantity" ] = isset( $aWcData[ "quantity" ] ) ? $aWcData[ "quantity" ] : 1;
 
+                        $code                  = $aWcData[ "code"    ];
+                        $message               = $aWcData[ "message" ];
 
+                        unset( $aWcData[ "code" ], $aWcData[ "message" ] );
 
-    // $data = [
-    //     "Eletrodomésticos/Cooktops/acima de 5 bocas",
-    //     // "Casa e Decoração/Eletrodomésticos/Cooktops/gás/acima de 5 bocas",
+                        $data = [
+                            "errorCode" => $code,
+                            "message"   => $message,
+                            "data"      => $aWcData,
+                        ];
+                    }
 
-    //     "Eletrodomésticos/Fornos e Fogões/5 bocas/Eletrodomésticos Planejados/Cooktops/gás/acima de 5 bocas",
+                    if ( $data[ "errorCode" ] != null )
+                    {
+                        $value = "-";
+                        $class = "fast-shop";
+                    }
+                    else
+                    {
+                        $value  = $data[ "data" ][ "hub" ];
 
-    //     "Informática e Digitais/Notebook/intel® core i3",
-    //     "Ar e Ventilação/Ar condicionado/Ar quente e frio/Ar Split Parede/split/quente / frio/até 30000 Btus",
-    //     "Informática e Digitais/Notebook/intel® core i3",
-    // ];
+                        if ( array_search( $value, $hubs ) === false )
+                            $hubs[] = $value;
 
-    // foreach ( $data as $str )
-    // {
-    //     $auxData    = explode("/", $str);
-    //     $categories = [];
-    //     $slugs = [];
+                        // $hub   = explode( "_", $data[ "data" ][ "hub" ] );
+                        // $class = "fast-shop-" . $hub[ 2 ];
+                    }
 
-    //     foreach ($auxData as $key => $ctg)
-    //     {
-    //         $slug           = Str::slug($ctg, "-");
+                    // Product::update( $p->id, [
+                    //     "shipping_class" => $class,
+                    //     "meta_data"      => [ [
+                    //         "key"   => "_fastshop_hub",
+                    //         "value" => $value,
+                    //     ] ]
+                    // ] );
 
-    //         $searchCategory = Category::all( [ "slug" => $slug ] );
+                    if ( $y % 5 == 0 ) sleep( 1 );
+                }
+            }
+        }
+        catch (Exception $e)
+        {
+            $ended = false;
+        }
+    }
+    while ( !$ended );
 
-    //         if ( !$searchCategory->first() )
-    //         {
-    //             $new          = Category::create([
-    //                 "name"   => $ctg,
-    //                 "parent" => ( $key == 0 ) ? 0 : $categories[ $key - 1 ]
-    //             ]);
+    Storage::put( "hubs-" . date( "y-m-d" ) . ".json", json_encode( $hubs ) );
 
-    //             $categories[] = $new[ "id" ];
-    //         }
-    //         else
-    //         {
-    //             $categories[] = $searchCategory->first()->id;
-    //         }
-
-    //         $slugs[] = $slug;
-    //     }
-
-    //     dump( $str, $slugs, $categories );
-    //     echo "<br><br><br><br>";
-    // }
-});
+    dd( $hubs );
+} );
