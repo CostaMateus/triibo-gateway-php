@@ -101,7 +101,7 @@ Route::get( "/wc", function () {
 
             $page++;
 
-            foreach ( $aux as $i => $p )
+            foreach ( $aux as $p )
             {
                 if ( strpos( $p->sku, "FS-" ) !== false )
                 {
@@ -166,17 +166,17 @@ Route::get( "/wc", function () {
                         if ( array_search( $value, $hubs ) === false )
                             $hubs[] = $value;
 
-                        // $hub   = explode( "_", $data[ "data" ][ "hub" ] );
-                        // $class = "fast-shop-" . $hub[ 2 ];
+                        $hub   = explode( "_", $data[ "data" ][ "hub" ] );
+                        $class = "fast-shop-" . $hub[ 2 ];
                     }
 
-                    // Product::update( $p->id, [
-                    //     "shipping_class" => $class,
-                    //     "meta_data"      => [ [
-                    //         "key"   => "_fastshop_hub",
-                    //         "value" => $value,
-                    //     ] ]
-                    // ] );
+                    Product::update( $p->id, [
+                        "shipping_class" => $class,
+                        "meta_data"      => [ [
+                            "key"   => "_fastshop_hub",
+                            "value" => $value,
+                        ] ]
+                    ] );
 
                     if ( $y % 5 == 0 ) sleep( 1 );
                 }
@@ -191,5 +191,5 @@ Route::get( "/wc", function () {
 
     Storage::put( "hubs-" . date( "y-m-d" ) . ".json", json_encode( $hubs ) );
 
-    dd( $hubs );
+    dd( "final", $hubs );
 } );
