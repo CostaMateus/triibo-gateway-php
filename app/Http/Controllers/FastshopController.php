@@ -457,24 +457,25 @@ class FastshopController extends Controller
                     continue;
                 }
 
-                $item                    = $wcData["items"][ $key ];
-                $sku                     = $item[ "sku" ];
+                $item                  = $wcData["items"][ $key ];
+                $sku                   = $item[ "sku" ];
 
-                $auxFsData               = $response->json();
+                $fsData                = $response->json();
 
-                $auxWcData               = DataTranslator::translate( "freightCalcWc", $auxFsData );
-                $auxWcData[ "sku" ]      = isset( $auxWcData[ "sku"      ] ) ? $auxWcData[ "sku"      ] : $sku;
-                $auxWcData[ "quantity" ] = isset( $auxWcData[ "quantity" ] ) ? $auxWcData[ "quantity" ] : $item[ "quantity" ];
+                $aWcData               = DataTranslator::translate( "freightCalcWc", $fsData );
 
-                $code                    = $auxWcData[ "code"    ];
-                $message                 = $auxWcData[ "message" ];
+                $aWcData[ "sku"      ] = isset( $aWcData[ "sku"      ] ) ? $aWcData[ "sku"      ] : $sku;
+                $aWcData[ "quantity" ] = isset( $aWcData[ "quantity" ] ) ? $aWcData[ "quantity" ] : $item[ "quantity" ];
 
-                unset( $auxWcData[ "code" ], $auxWcData[ "message" ] );
+                $code                  = $aWcData[ "code"    ];
+                $message               = $aWcData[ "message" ];
+
+                unset( $aWcData[ "code" ], $aWcData[ "message" ] );
 
                 $data[ $sku ] = [
                     "errorCode" => $code,
                     "message"   => $message,
-                    "data"      => $auxWcData,
+                    "data"      => $aWcData,
                 ];
             }
 
