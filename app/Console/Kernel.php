@@ -13,7 +13,17 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        //
+        \App\Console\Commands\Cofry\DeleteImages::class,
+        \App\Console\Commands\Cofry\ProcessImages::class,
+        \App\Console\Commands\Cofry\ProcessStoresPromos::class,
+        \App\Console\Commands\Log\ClearLogFile::class,
+        \App\Console\Commands\Marketplace\DuplicateSKUs::class,
+        \App\Console\Commands\Marketplace\SetPublishProduct::class,
+        \App\Console\Commands\Marketplace\UpdatePipeStages::class,
+        \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
+        \App\Console\Commands\Triibo\SyncIdsMP::class,
+        \App\Console\Commands\Triibo\UnsetUpdateDate::class,
+        \App\Console\Commands\Triibo\UnsetVouchers::class,
     ];
 
     /**
@@ -59,7 +69,7 @@ class Kernel extends ConsoleKernel
             // Update FS products out-of-stock
             $schedule->command("sku:update")->dailyAt("05:03")->timezone("America/Sao_Paulo")->runInBackground();
 
-            
+
             // Clear Logs
             $schedule->command("log:clear")->weeklyOn(3, "16:00")->timezone("America/Sao_Paulo")->runInBackground();
         }
