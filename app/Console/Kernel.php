@@ -54,7 +54,8 @@ class Kernel extends ConsoleKernel
         // Marketplace
         // Delete duplicate SKUs
         $schedule->command("sku:delete")->dailyAt("03:03")->timezone("America/Sao_Paulo")->runInBackground();
-
+        // Update FS products out-of-stock
+        $schedule->command("sku:update")->dailyAt("05:03")->timezone("America/Sao_Paulo")->runInBackground();
 
         // Clear Logs
         $schedule->command("log:clear")->weeklyOn(3, "16:00")->timezone("America/Sao_Paulo")->runInBackground();
