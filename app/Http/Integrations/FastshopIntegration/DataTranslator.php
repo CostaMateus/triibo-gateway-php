@@ -452,40 +452,37 @@ class DataTranslator
      */
     private static function newOrderFs(array $data)
     {
-        $url           = route("api.marketplace.invoicenotification", [ "orderId" => $data["id"] ]);
-        $name          = $data["billing"]["first_name"] . " " . $data["billing"]["last_name"];
-        $auxData       = $data["fs_info"];
+        $parent        = $data[ "parent" ];
+        $data          = $data[ "order"  ];
+
+        $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $data[ "id" ] ] );
+        $name          = $data[ "billing" ][ "first_name" ] . " " . $data[ "billing" ][ "last_name" ];
+        $auxData       = $data[ "fs_info" ];
 
         $items         = [];
         $logisticsInfo = [];
-        foreach ($auxData["logisticsInfo"] as $item)
+
+        foreach ( $auxData[ "logisticsInfo" ] as $item )
         {
-            $idItem  = $item["itemIndex"];
-            $auxItem = $auxData["items"][$idItem];
+            $idItem  = $item[ "itemIndex" ];
+            $auxItem = $auxData[ "items" ][ $idItem ];
 
             $items[] = [
-                "id"                => $auxItem["id"],
-                "quantity"          => $auxItem["quantity"],
-                "price"             => $auxItem["price"],
-                "unitMultiplier"    => $auxItem["unitMultiplier"],
-                "Seller"            => $auxItem["seller"],
-                "priceTags"         => $auxItem["priceTags"],
+                "id"                => $auxItem[ "id"             ],
+                "quantity"          => $auxItem[ "quantity"       ],
+                "price"             => $auxItem[ "price"          ],
+                "unitMultiplier"    => $auxItem[ "unitMultiplier" ],
+                "Seller"            => $auxItem[ "seller"         ],
+                "priceTags"         => $auxItem[ "priceTags"      ],
                 "isGift"            => false,
                 "commission"        => 10,
                 "freightCommission" => 0,
-                // "bundleItems"       => [],
-                // "itemAttachment"    => [
-                //     "name"    => null,
-                //     "content" => null
-                // ],
-                // "attachments"       => null,
-                // "measurementUnit"   => null,
             ];
 
-            $idSla           = array_search("delivery", array_column($item["slas"], "deliveryChannel"));
-            $selectedSla     = $item["slas"][$idSla]["id"];
-            $eta             = $item["slas"][$idSla]["shippingEstimate"];
-            $price           = $item["slas"][$idSla]["price"];
+            $idSla           = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
+            $selectedSla     = $item[ "slas" ][ $idSla ][ "id"               ];
+            $eta             = $item[ "slas" ][ $idSla ][ "shippingEstimate" ];
+            $price           = $item[ "slas" ][ $idSla ][ "price"            ];
 
             $logisticsInfo[] = [
                 "itemIndex"        => $idItem,
@@ -498,25 +495,19 @@ class DataTranslator
         }
 
         $new = [
-            "marketplaceOrderId"          => $data["id"], // id do pedido no mkt
-            "marketplaceServicesEndpoint" => $url,        // api que recebe a "Order Invoice Notification"
-            "marketplacePaymentValue"     => (int) str_replace(".", "", $data["total"]),
+            "marketplaceOrderId"          => $data[ "id" ], // id do pedido no mkt
+            "marketplaceServicesEndpoint" => $url,          // api que recebe a "Order Invoice Notification"
+            "marketplacePaymentValue"     => (int) str_replace( ".", "", $data[ "total" ] ),
             "items"                       => $items,
             // wc_order billing
             "clientProfileData" => [
-                "firstName"    => $data["billing"]["first_name"],
-                "lastName"     => $data["billing"]["last_name"],
-                "email"        => $data["billing"]["email"],
+                "firstName"    => $data[ "billing" ][ "first_name" ],
+                "lastName"     => $data[ "billing" ][ "last_name"  ],
+                "email"        => $data[ "billing" ][ "email"      ],
+                "phone"        => $data[ "billing" ][ "phone"      ],
+                "document"     => ( $parent ) ? $parent[ "billing" ][ "cpf" ] : $data[ "billing" ][ "cpf" ],
                 "documentType" => "cpf",
-                "document"     => $data["billing"]["cpf"] ?: "00987654321",
-                "phone"        => $data["billing"]["phone"],
                 "isCorporate"  => false,
-                // "corporateName" => null,
-                // "tradeName" => null,
-                // "corporateDocument" => null,
-                // "stateInscription" => null,
-                // "corporatePhone" => null,
-                // "userProfileId" => null
             ],
             "shippingData"      => [
                 // wc_order shipping
@@ -524,16 +515,14 @@ class DataTranslator
                     "addressType"  => "addrType",
                     "addressId"    => "addrId",
                     "receiverName" => $name,
-                    "street"       => $data["shipping"]["address_1"],
-                    "number"       => $data["shipping"]["number"]       ?: 0,   // número é obrigatório
-                    "complement"   => $data["shipping"]["address_2"],
-                    "neighborhood" => $data["shipping"]["neighborhood"] ?: "A", // bairro é obrigatório
-                    "city"         => $data["shipping"]["city"],
-                    "state"        => $data["shipping"]["state"],
+                    "number"       => ( $parent ) ? $parent[ "shipping" ][ "number"       ] : $data[ "shipping" ][ "number"       ],
+                    "neighborhood" => ( $parent ) ? $parent[ "shipping" ][ "neighborhood" ] : $data[ "shipping" ][ "neighborhood" ],
+                    "street"       => $data[ "shipping" ][ "address_1" ],
+                    "complement"   => $data[ "shipping" ][ "address_2" ],
+                    "city"         => $data[ "shipping" ][ "city"      ],
+                    "state"        => $data[ "shipping" ][ "state"     ],
+                    "postalCode"   => $data[ "shipping" ][ "postcode"  ],
                     "country"      => "BRA",
-                    "postalCode"   => $data["shipping"]["postcode"],
-                    // "reference" => null,
-                    // "geoCoordinates" => []
                 ],
                 "logisticsInfo" => $logisticsInfo,
             ],
