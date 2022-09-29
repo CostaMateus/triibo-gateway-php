@@ -9,22 +9,23 @@ use App\Http\Integrations\FastshopIntegration\DataTranslator;
 class Notification
 {
 
-    public static function notify(string $name, array $data)
+    public static function notify( string $name, array $data )
     {
-        switch ($name) {
+        switch ( $name )
+        {
             case "newOrderError":
-                return self::orderError($data, 1);
+                return self::orderError( $data, 1 );
             break;
 
             case "cancelationOrderError":
-                return self::orderError($data, 2);
+                return self::orderError( $data, 2 );
             break;
             case "cancelationOrderFS":
-                return self::orderError($data, 4);
+                return self::orderError( $data, 4 );
             break;
 
             case "approvedOrderError":
-                return self::orderError($data, 3);
+                return self::orderError( $data, 3 );
             break;
         }
     }
@@ -35,12 +36,12 @@ class Notification
      * @param Array $params
      * @return void
      */
-    private static function orderError(array $data, int $opt)
+    private static function orderError( array $data, int $opt )
     {
-        $data  = DataTranslator::translate("orderError", $data);
+        $data  = DataTranslator::translate( "orderError", $data );
         $title = "";
 
-        switch ($opt)
+        switch ( $opt )
         {
             case 1:
                 $title = "Falha na criação do pedido abaixo na Fast Shop";
@@ -65,13 +66,10 @@ class Notification
             "data"    => $data,
         ];
 
-        $users = User::where("email", "mateus.costa@triibo.com.br")
-                     ->orWhere("email", "equipemarketplace@triibo.com.br")
+        $users = User::where( "email", "mateus.costa@triibo.com.br" )
+                     ->orWhere( "email", "equipemarketplace@triibo.com.br" )
                      ->get();
 
-        foreach ($users as $user)
-        {
-            $user->notify(new OrderError($mail));
-        }
+        foreach ( $users as $user ) $user->notify( new OrderError( $mail ) );
     }
 }

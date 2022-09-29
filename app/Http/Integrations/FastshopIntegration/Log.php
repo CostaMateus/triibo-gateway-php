@@ -17,13 +17,13 @@ class Log
      * @param bool $error
      * @return void
      */
-    public static function updateStockPrice(object $old, object $new = null, bool $error = false)
+    public static function updateStockPrice( object $old, object $new = null, bool $error = false )
     {
-        if (!$error)
+        if ( !$error )
         {
-            $new = json_decode($new->toJson());
+            $new = json_decode( $new->toJson() );
 
-            LogSys::channel("fastshop")->info("updateStockPrice", [
+            LogSys::channel( "fastshop" )->info( "updateStockPrice", [
                 $old->sku => [
                     "old" => [
                         "regular_price"  => $old->regular_price,
@@ -38,11 +38,11 @@ class Log
                         "stock_status"   => $new->stock_status,
                     ],
                 ],
-            ]);
+            ] );
         }
         else
         {
-            LogSys::channel("fastshop")->info("updateStockPrice", [
+            LogSys::channel( "fastshop" )->info( "updateStockPrice", [
                 $old->sku => [
                     "old" => [
                         "regular_price"  => $old->regular_price,
@@ -54,7 +54,7 @@ class Log
                         "failed to get data for update",
                     ],
                 ],
-            ]);
+            ] );
         }
     }
 
@@ -66,11 +66,11 @@ class Log
      * @param boolean $update
      * @return void
      */
-    public static function createOrUpdateProduct(string $func, string $sku, bool $update)
+    public static function createOrUpdateProduct( string $func, string $sku, bool $update )
     {
-        $update = ($update) ? "product update" : "product create";
+        $update = ( $update ) ? "product update" : "product create";
 
-        LogSys::channel("fastshop")->info($func, [$sku => $update]);
+        LogSys::channel( "fastshop" )->info( $func, [ $sku => $update ] );
     }
 
     /**
@@ -80,12 +80,12 @@ class Log
      * @param string|null $token
      * @return void
      */
-    public static function invalidCredentials(string $key = null, string $token = null)
+    public static function invalidCredentials( string $key = null, string $token = null )
     {
-        LogSys::channel("fastshop")->error("Invalid Credentials", [
+        LogSys::channel( "fastshop" )->error( "Invalid Credentials", [
             "appKey"   => $key,
             "appToken" => $token
-        ]);
+        ] );
     }
 
     /**
@@ -94,19 +94,19 @@ class Log
      * @param array $data
      * @return void
      */
-    public static function freightCalculation(array $data)
+    public static function freightCalculation( array $data )
     {
-        LogSys::channel("fastshop")->info("Shipping query failed", $data);
+        LogSys::channel( "fastshop" )->info( "Shipping query failed", $data );
     }
 
     /**
      * Log de falha ao enviar pedido de cancelamento do WC para o FS
-     * *@param array $data
-     * *@return void
-      */
-    public static function order(string $type, string $title, array $data)
+     * @param array $data
+     * @return void
+     */
+    public static function order( string $type, string $title, array $data )
     {
-        LogSys::channel("fastshop")->{$type}($title, $data);
+        LogSys::channel( "fastshop" )->{$type}( $title, $data );
     }
 
     /**
@@ -115,10 +115,10 @@ class Log
      * @param Exception $e
      * @return void
      */
-    public static function exception(string $func, Exception $e, string $sku = null)
+    public static function exception( string $func, Exception $e, string $sku = null )
     {
-        $err = $sku ? [$sku, $e] : [$e];
-        LogSys::channel("fastshop")->error("Exception - $func", $err);
+        $err = $sku ? [ $sku, $e ] : [ $e ];
+        LogSys::channel( "fastshop" )->error( "Exception - $func", $err );
     }
 
     /**
@@ -128,8 +128,8 @@ class Log
      * @param array $data
      * @return void
      */
-    public static function default(string $func, array $data)
+    public static function default( string $func, array $data )
     {
-        LogSys::channel("fastshop")->info($func, $data);
+        LogSys::channel( "fastshop" )->info( $func, $data );
     }
 }
