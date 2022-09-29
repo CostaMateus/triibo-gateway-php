@@ -8,54 +8,54 @@ use Illuminate\Support\Str;
 class DataTranslator
 {
 
-    public static function translate(string $type, array $data)
+    public static function translate( string $type, array $data )
     {
-        switch ($type) {
+        switch ( $type ) {
             case "updateStockPrice":
-                return self::updateStockPrice($data);
+                return self::updateStockPrice( $data );
             break;
             case "queryStockPrice":
-                return self::queryStockPrice($data[0]);
+                return self::queryStockPrice( $data[ 0 ] );
             break;
 
             case "newProduct":
-                return self::newProductFsToWc($data);
+                return self::newProductFsToWc( $data );
             break;
 
             case "freightCalcFs":
-                return self::freightCalcFs($data);
+                return self::freightCalcFs( $data );
             break;
             case "freightCalcWc":
-                return self::freightCalcWc($data);
+                return self::freightCalcWc( $data );
             break;
             // case "freightCalcFailed":
-            //     return self::freightCalcFailed($data);
+            //     return self::freightCalcFailed( $data );
             // break;
             case "freightCalcNewOrder":
-                return self::freightCalcNewOrder($data);
+                return self::freightCalcNewOrder( $data );
             break;
             case "breakingUpFreight":
-                return self::breakingUpFreight($data);
+                return self::breakingUpFreight( $data );
             break;
 
             case "newOrderFs":
-                return self::newOrderFs($data);
+                return self::newOrderFs( $data );
             break;
             case "newOrderFsError":
-                return self::newOrderFsError($data);
+                return self::newOrderFsError( $data );
             break;
             case "orderStatusChange":
-                return self::orderStatusChange($data);
+                return self::orderStatusChange( $data );
             break;
             case "orderError":
-                return self::orderError($data);
+                return self::orderError( $data );
             break;
 
             case "invoice":
-                return self::invoice($data);
+                return self::invoice( $data );
             break;
             case "tracking":
-                return self::tracking($data);
+                return self::tracking( $data );
             break;
         }
     }
@@ -66,12 +66,12 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function updateStockPrice(array $data)
+    private static function updateStockPrice( array $data )
     {
-        if (!empty($data["logisticsInfo"]))
+        if ( !empty( $data[ "logisticsInfo" ] ) )
         {
             $status = "instock";
-            $qntty  = $data["logisticsInfo"][0]["stockBalance"];
+            $qntty  = $data[ "logisticsInfo" ][ 0 ][ "stockBalance" ];
         }
         else
         {
@@ -79,11 +79,11 @@ class DataTranslator
             $qntty  = 0;
         }
 
-        if (!empty($data["items"]))
+        if ( !empty( $data[ "items" ] ) )
         {
-            $item    = $data["items"][0];
-            $regular = Helper::insertDecimal($item["listPrice"]);
-            $sale    = Helper::insertDecimal($item["price"]);
+            $item    = $data[ "items" ][ 0 ];
+            $regular = Helper::insertDecimal( $item[ "listPrice" ] );
+            $sale    = Helper::insertDecimal( $item[ "price"     ] );
 
             $wcData  = [
                 "regular_price"  => $regular,
@@ -111,14 +111,14 @@ class DataTranslator
      * @param string $sku
      * @return array
      */
-    private static function queryStockPrice(string $sku)
+    private static function queryStockPrice( string $sku )
     {
         return [
-            "items" => [[
+            "items" => [ [
                 "id"       => $sku,
                 "quantity" => 1,
                 "seller"   => "FSH"
-            ]],
+            ] ],
             "postalCode"     => "",
             "country"        => "",
             "geoCoordinates" => []
@@ -131,56 +131,56 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function newProductFsToWc(array $data)
+    private static function newProductFsToWc( array $data )
     {
         $attributes = [];
         $categories = [];
         $images     = [];
 
-        // $slug       = Helper::hyphenize($data["ProductName"]);
-        $slug       = \Str::slug($data["ProductName"]);
-        $sku        = $data["ProductId"] == $data["SellerStockKeepingUnitId"] ? $data["ProductId"] : $data["SellerStockKeepingUnitId"];
+        // $slug       = Helper::hyphenize( $data[ "ProductName" ] );
+        $slug       = \Str::slug( $data[ "ProductName" ] );
+        $sku        = $data[ "ProductId" ] == $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];
 
-        if (!empty($data["CategoryFullPath"]))
+        if ( !empty( $data[ "CategoryFullPath" ] ) )
         {
-            foreach ($data["CategoryFullPath"] as $ctg)
+            foreach ( $data[ "CategoryFullPath" ] as $ctg )
             {
                 $categories[] = [ "id" => $ctg ];
             }
         }
 
-        foreach ($data["Images"] as $img)
+        foreach ( $data[ "Images" ] as $img )
         {
-            if (!Helper::validateImageUrl($img["imageUrl"])) continue;
+            if ( !Helper::validateImageUrl( $img[ "imageUrl" ] ) ) continue;
 
             $images[] = [
-                "src"  => $img["imageUrl"],
-                "name" => $img["imageName"],
-                "alt"  => $img["imageName"]
+                "src"  => $img[ "imageUrl"  ],
+                "name" => $img[ "imageName" ],
+                "alt"  => $img[ "imageName" ]
             ];
         }
 
         // VERIFICAR OUTROS PRODUTOS
-        foreach ($data["SkuSpecifications"] as $key => $attr)
+        foreach ( $data[ "SkuSpecifications" ] as $key => $attr )
         {
             $attributes[] = [
-                "name"      => $attr["fieldName"],
+                "name"      => $attr[ "fieldName" ],
                 "position"  => $key,
                 "visible"   => true,
                 "variation" => true,
                 "options"   => [
-                    $attr["fieldValue"]
+                    $attr[ "fieldValue" ]
                 ],
             ];
         }
-        foreach ($data["ProductSpecifications"] as $key => $attr)
+        foreach ( $data[ "ProductSpecifications" ] as $key => $attr )
         {
-            if ($attr["fieldName"] == "ProductLineId") continue;
+            if ( $attr[ "fieldName" ] == "ProductLineId" ) continue;
 
-            $fieldValue   = ($attr["fieldValue"] === "true") ? "SIM" : $attr["fieldValue"];
+            $fieldValue   = ( $attr[ "fieldValue" ] === "true" ) ? "SIM" : $attr[ "fieldValue" ];
 
             $attributes[] = [
-                "name"      => $attr["fieldName"],
+                "name"      => $attr[ "fieldName" ],
                 "position"  => $key,
                 "visible"   => true,
                 "variation" => true,
@@ -188,51 +188,51 @@ class DataTranslator
             ];
         }
 
-        $description   = $data["ProductDescription"];
+        $description   = $data[ "ProductDescription" ];
 
-        $shortDescript = explode("\r\n", $description)[0];
-        $shortDescript = (strlen($shortDescript) <= 50) ? $data["ProductName"] : $shortDescript;
-        $shortDescript = Str::limit($shortDescript, 140, " (...)");
+        $shortDescript = explode( "\r\n", $description )[ 0 ];
+        $shortDescript = ( strlen( $shortDescript ) <= 50 ) ? $data[ "ProductName" ] : $shortDescript;
+        $shortDescript = Str::limit( $shortDescript, 140, " ( ... )" );
 
         $attr_name     = "";
         $attr_val      = "";
 
-        foreach ($attributes as $att)
+        foreach ( $attributes as $att )
         {
-            $name = Str::lower($att["name"]);
+            $name = Str::lower( $att[ "name" ] );
 
-            if ($name == "voltagem")
+            if ( $name == "voltagem" )
             {
-                $attr_name = Str::ucfirst($name);
-                $val       = reset($att["options"]);
-                $attr_val  = ($val == "110" || $val == "220") ? $val . "V" : $val;
+                $attr_name = Str::ucfirst( $name );
+                $val       = reset( $att[ "options" ] );
+                $attr_val  = ( $val == "110" || $val == "220" ) ? $val . "V" : $val;
             }
         }
 
         if ( $attr_name && $attr_val && $attr_val != "NA" ) $shortDescript .= "\r\n\r\n$attr_name : $attr_val";
 
         $wcData         = [
-            "name"              => $data["ProductName"],
+            "name"              => $data[ "ProductName" ],
             "slug"              => $slug,
 
             "description"       => $description,
             "short_description" => $shortDescript,
             "sku"               => "FS-$sku",
 
-            "regular_price"     => Helper::insertDecimal($data["Pricing"]["ListPrice"]),
-            "sale_price"        => Helper::insertDecimal($data["Pricing"]["SalePrice"]),
+            "regular_price"     => Helper::insertDecimal( $data[ "Pricing" ][ "ListPrice" ] ),
+            "sale_price"        => Helper::insertDecimal( $data[ "Pricing" ][ "SalePrice" ] ),
 
             "manage_stock"      => true,
-            "stock_quantity"    => $data["AvailableQuantity"],
-            "stock_status"      => $data["AvailableQuantity"] > 0 ? "instock" : "outofstock",
+            "stock_quantity"    => $data[ "AvailableQuantity" ],
+            "stock_status"      => $data[ "AvailableQuantity" ] > 0 ? "instock" : "outofstock",
             "backorders"        => "no",
             "sold_individually" => false,
 
-            "weight"            => Helper::convertWeight($data["WeightKg"]),
+            "weight"            => Helper::convertWeight( $data[ "WeightKg" ] ),
             "dimensions"        => [
-                "length" => (string) $data["Length"],
-                "width"  => (string) $data["Width"],
-                "height" => (string) $data["Height"]
+                "length" => ( string ) $data[ "Length" ],
+                "width"  => ( string ) $data[ "Width"  ],
+                "height" => ( string ) $data[ "Height" ]
             ],
 
             "shipping_class"    => "fast-shop",
@@ -249,8 +249,8 @@ class DataTranslator
             "attributes"        => $attributes,
         ];
 
-        $wcData = json_encode($wcData, JSON_UNESCAPED_SLASHES);
-        $wcData = json_decode($wcData, true);
+        $wcData = json_encode( $wcData, JSON_UNESCAPED_SLASHES );
+        $wcData = json_decode( $wcData, true                   );
 
         return $wcData;
     }
@@ -261,22 +261,22 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function freightCalcFs(array $data)
+    private static function freightCalcFs( array $data )
     {
         $items = [];
 
-        foreach ($data["items"] as $item)
+        foreach ( $data[ "items" ] as $item )
         {
             $items[] = [
-                "id"       => explode("FS-", $item["sku"])[1],
-                "quantity" => $item["quantity"],
+                "id"       => explode( "FS-", $item[ "sku" ] )[ 1 ],
+                "quantity" => $item[ "quantity" ],
                 "seller"   => "FSH",
             ];
         }
 
         return [
             "items"          => $items,
-            "postalCode"     => $data["postalCode"],
+            "postalCode"     => $data[ "postalCode" ],
             "country"        => "BRA",
             "geoCoordinates" => []
         ];
@@ -399,22 +399,22 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function freightCalcNewOrder(array $data)
+    private static function freightCalcNewOrder( array $data )
     {
         $items = [];
 
-        foreach ($data["line_items"] as $item)
+        foreach ( $data[ "line_items" ] as $item )
         {
             $items[] = [
-                "id"       => explode("FS-", $item["sku"])[1],
-                "quantity" => $item["quantity"],
+                "id"       => explode( "FS-", $item[ "sku" ] )[ 1 ],
+                "quantity" => $item[ "quantity" ],
                 "seller"   => "FSH",
             ];
         }
 
         return [
             "items"          => $items,
-            "postalCode"     => $data["shipping"]["postcode"],
+            "postalCode"     => $data[ "shipping" ][ "postcode" ],
             "country"        => "BRA",
             "geoCoordinates" => []
         ];
@@ -431,7 +431,7 @@ class DataTranslator
                 $newData[] = [
                     "items"          => [ $item ],
                     "postalCode"     => $data[ "postalCode" ],
-                    "country"        => $data[ "country" ],
+                    "country"        => $data[ "country"    ],
                     "geoCoordinates" => []
                 ];
             }
@@ -450,7 +450,7 @@ class DataTranslator
      * @param array $data
      * @return array
      */
-    private static function newOrderFs(array $data)
+    private static function newOrderFs( array $data )
     {
         $parent        = $data[ "parent" ];
         $data          = $data[ "order"  ];
@@ -537,12 +537,12 @@ class DataTranslator
      * @param array $data
      * @return string
      */
-    private static function newOrderFsError(array $data)
+    private static function newOrderFsError( array $data )
     {
-        $code    = $data["errorCode"];
+        $code    = $data[ "errorCode" ];
         $message = "ERROR FS\n";
 
-        switch ($code)
+        switch ( $code )
         {
             case "4001";
                 $message .= "SKU fora de estoque";
@@ -566,26 +566,26 @@ class DataTranslator
      * @param array $data
      * @return string
      */
-    private static function orderStatusChange(array $data)
+    private static function orderStatusChange( array $data )
     {
         $message = "";
 
-        foreach ($data as $key => $value)
+        foreach ( $data as $key => $value )
         {
-            if ($key == "date")
+            if ( $key == "date" )
             {
-                $value    = Helper::convertDeliveryDate($value);
+                $value    = Helper::convertDeliveryDate( $value );
                 $message .= "$value\n";
             }
-            else if ($key == "marketPlaceOrderId")
+            else if ( $key == "marketPlaceOrderId" )
             {
                 $message .= "Pedido: #$value\n";
             }
-            else if ($key == "orderId")
+            else if ( $key == "orderId" )
             {
                 $message .= "FS Pedido: #$value\n";
             }
-            else if ($key == "receipt")
+            else if ( $key == "receipt" )
             {
                 $message .= "Protocolo: $value\n";
             }
@@ -604,26 +604,26 @@ class DataTranslator
      * @package array $data
      * @return array
      */
-    private static function orderError(array $data)
+    private static function orderError( array $data )
     {
-        if (empty($data["parent"]))
+        if ( empty( $data[ "parent" ] ) )
         {
-            $orderId    = $data["order"]["id"];
+            $orderId    = $data[ "order"  ][ "id" ];
             $subOrderId = "";
         }
         else
         {
-            $orderId    = $data["parent"]["id"];
-            $subOrderId = $data["order"]["id"];
+            $orderId    = $data[ "parent" ][ "id" ];
+            $subOrderId = $data[ "order"  ][ "id" ];
         }
 
         return [
             "orderId"     => $orderId,
             "subOrderId"  => $subOrderId,
-            "customer_id" => $data["order"]["customer_id"],
-            "name"        => $data["order"]["billing"]["first_name"] . " " . $data["order"]["billing"]["last_name"],
-            "email"       => $data["order"]["billing"]["email"],
-            "phone"       => $data["order"]["billing"]["phone"],
+            "customer_id" => $data[ "order" ][ "customer_id" ],
+            "name"        => $data[ "order" ][ "billing"     ][ "first_name" ] . " " . $data[ "order" ][ "billing" ][ "last_name" ],
+            "email"       => $data[ "order" ][ "billing"     ][ "email"      ],
+            "phone"       => $data[ "order" ][ "billing"     ][ "phone"      ],
         ];
     }
 
@@ -631,11 +631,11 @@ class DataTranslator
      * Nota fiscal
      * Converte os dados da notificação da FS para a anotação do WC
      */
-    private static function invoice(array $data)
+    private static function invoice( array $data )
     {
-        $invoiceNumber = $data["invoiceNumber"];
-        $invoiceKey    = $data["invoiceKey"];
-        $invoiceUrl    = $data["invoiceUrl"];
+        $invoiceNumber = $data[ "invoiceNumber" ];
+        $invoiceKey    = $data[ "invoiceKey"    ];
+        $invoiceUrl    = $data[ "invoiceUrl"    ];
 
         return "NOTA FISCAL\n Nº: $invoiceNumber\n Chave: $invoiceKey\n URL: $invoiceUrl";
     }
@@ -644,11 +644,11 @@ class DataTranslator
      * Rastreamento
      * Converte os dados da notificação da FS para a anotação do WC
      */
-    private static function tracking(array $data)
+    private static function tracking( array $data )
     {
-        $courier        = $data["courier"];
-        $trackingNumber = $data["trackingNumber"];
-        $trackingUrl    = $data["trackingUrl"];
+        $courier        = $data[ "courier"        ];
+        $trackingNumber = $data[ "trackingNumber" ];
+        $trackingUrl    = $data[ "trackingUrl"    ];
 
         return "RASTREAMENTO\n Transportadora: $courier\n Código de rastreio: $trackingNumber\n URL: $trackingUrl";
     }
