@@ -24,9 +24,9 @@ class FastshopController extends Controller
 
     public function __construct()
     {
-        $this->env       = config("fastshop.env");
-        $this->fsUrl     = config("fastshop.$this->env.fs.url");
-        $this->fsHeaders = config("fastshop.$this->env.fs.headers");
+        $this->env       = config( "fastshop.env"                   );
+        $this->fsUrl     = config( "fastshop.$this->env.fs.url"     );
+        $this->fsHeaders = config( "fastshop.$this->env.fs.headers" );
     }
 
     // --------- METODOS ABAIXO SÂO CONSUMIDOS PELA FASTSHOP
@@ -41,37 +41,37 @@ class FastshopController extends Controller
      * @param string $sellerSkuId
      * @return Response
      */
-    public function changeNotification(Request $request, $sellerId, $sellerSkuId)
+    public function changeNotification( Request $request, $sellerId, $sellerSkuId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request ) ) !== TRUE ) return $verify;
 
         try
         {
             // Procura produto no Marketplace pelo SKU
-            $product = Product::all(["sku" => "FS-" . strtoupper($sellerSkuId)])->first();
+            $product = Product::all( [ "sku" => "FS-" . strtoupper( $sellerSkuId ) ] )->first();
 
-            if (!$product)
+            if ( !$product )
             {
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "404",
                     "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
-                ], 404);
+                ], 404 );
             }
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "Ok",
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("FS - changeNotification", $e, $sellerSkuId);
+            Log::exception( "FS - changeNotification", $e, $sellerSkuId );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "500",
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -85,23 +85,23 @@ class FastshopController extends Controller
      * @param string $sellerSkuId
      * @return Response
      */
-    public function skuSuggestion(Request $request, $sellerId, $sellerSkuId)
+    public function skuSuggestion( Request $request, $sellerId, $sellerSkuId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request ) ) !== TRUE ) return $verify;
 
         try
         {
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
 
             // Converte produto da FS para WC
-            $wcData    = DataTranslator::translate("newProduct", $fsData);
+            $wcData    = DataTranslator::translate( "newProduct", $fsData );
 
             // Atualiza produto no Marketplace
-            $searchSku = Product::all(["sku" => $wcData["sku"]]);
+            $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
 
             /**
              * TODO
@@ -109,17 +109,17 @@ class FastshopController extends Controller
              * Acompanhar issue #27295
              * https://github.com/woocommerce/woocommerce/issues/27295
              */
-            if (!$searchSku->first())
+            if ( !$searchSku->first() )
                 Product::create( $wcData );
             else
-                Product::update($searchSku->first()->id, $wcData);
+                Product::update( $searchSku->first()->id, $wcData );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "Ok",
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
             $error = true;
             $ex    = Helper::treatExceptionMsgFS( $e->getMessage() );
@@ -136,19 +136,19 @@ class FastshopController extends Controller
 
             if ( $error )
             {
-                Log::exception("FS - skuSuggestion", $e, $sellerSkuId);
+                Log::exception( "FS - skuSuggestion", $e, $sellerSkuId );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "500",
                     "message"   => $e->getMessage(),
-                ], 500);
+                ], 500 );
             }
             else
             {
-                return response()->json([
+                return response()->json( [
                     "errorCode" => null,
                     "message"   => "Ok",
-                ], 200);
+                ], 200 );
             }
         }
     }
@@ -161,47 +161,47 @@ class FastshopController extends Controller
      * @param string $sellerSkuId
      * @return Response
      */
-    public function updateSku(Request $request, $sellerId, $sellerSkuId)
+    public function updateSku( Request $request, $sellerId, $sellerSkuId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request ) ) !== TRUE ) return $verify;
 
         try
         {
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            $fsData["CategoryFullPath"] = (is_null($fsData["CategoryFullPath"])) ? [] : self::getCategoriesId($fsData["CategoryFullPath"]);
+            $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
 
             // Converte produto da FS para WC
-            $wcData    = DataTranslator::translate("newProduct", $fsData);
+            $wcData    = DataTranslator::translate( "newProduct", $fsData );
 
             // Atualiza produto no Marketplace
-            $searchSku = Product::all(["sku" => $wcData["sku"]]);
+            $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
 
-            if (!$searchSku->first())
+            if ( !$searchSku->first() )
             {
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "404",
                     "message"   => "something wrong on update product"
-                ], 404);
+                ], 404 );
             }
 
-            Product::update($searchSku->first()->id, $wcData);
+            Product::update( $searchSku->first()->id, $wcData );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "Ok",
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("FS - updateSku", $e);
+            Log::exception( "FS - updateSku", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "500",
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -215,46 +215,46 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return Response
      */
-    public function invoiceNotification(Request $request, $orderId)
+    public function invoiceNotification( Request $request, $orderId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request ) ) !== TRUE ) return $verify;
 
         try
         {
             $fsData    = $request->all();
 
-            if (!empty($fsData["trackingNumber"]))
+            if ( !empty( $fsData[ "trackingNumber" ] ) )
             {
-                $tracking = DataTranslator::translate("tracking", $fsData);
-                Note::create($orderId, [ "note" => $tracking ]);
+                $tracking = DataTranslator::translate( "tracking", $fsData );
+                Note::create( $orderId, [ "note" => $tracking ] );
             }
             else
             {
-                $invoice  = DataTranslator::translate("invoice",  $fsData);
-                Note::create($orderId, [ "note" => $invoice  ]);
+                $invoice  = DataTranslator::translate( "invoice",  $fsData );
+                Note::create( $orderId, [ "note" => $invoice ] );
             }
 
             // busca o orderId da FS no meta_data
-            $order     = Order::find($orderId);
-            $meta      = json_decode(json_encode($order["meta_data"]), true);
-            $meta_key  = array_search("_fastshop_order_id", array_column($meta, "key"));
-            $fsOrderId = $meta[$meta_key]["value"];
+            $order     = Order::find( $orderId );
+            $meta      = json_decode( json_encode( $order[ "meta_data" ] ), true );
+            $meta_key  = array_search( "_fastshop_order_id", array_column( $meta, "key" ) );
+            $fsOrderId = $meta[ $meta_key ][ "value" ];
 
-            return response()->json([
-                "date"    => date_format(now(), "Y-m-d\TH:i:s.uP"),
+            return response()->json( [
+                "date"    => date_format( now(), "Y-m-d\TH:i:s.uP" ),
                 "orderId" => $fsOrderId,
                 "receipt" => null
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("FS - invoiceNotification", $e);
+            Log::exception( "FS - invoiceNotification", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -266,43 +266,43 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return Response
      */
-    public function deliveredNotification(Request $request, $orderId)
+    public function deliveredNotification( Request $request, $orderId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request ) ) !== TRUE ) return $verify;
 
         try
         {
-            $deliveredDate = $request->all()["deliveredDate"];
-            $deliveredDate = Helper::convertDeliveryDate($deliveredDate);
+            $deliveredDate = $request->all()[ "deliveredDate" ];
+            $deliveredDate = Helper::convertDeliveryDate( $deliveredDate );
 
-            Order::update($orderId, [ "status" => "completed" ]);
+            Order::update( $orderId, [ "status" => "completed" ] );
 
-            Note::create($orderId, [
+            Note::create( $orderId, [
                 "note"          => "ENTREGA REALIZADA\n $deliveredDate",
                 "customer_note" => false,
-            ]);
+            ] );
 
             // busca o orderId da FS no meta_data
-            $order         = Order::find($orderId);
-            $meta          = json_decode(json_encode($order["meta_data"]), true);
-            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
-            $fsOrderId     = $meta[$meta_key]["value"];
+            $order         = Order::find( $orderId );
+            $meta          = json_decode( json_encode( $order[ "meta_data" ] ), true );
+            $meta_key      = array_search( "_fastshop_order_id", array_column( $meta, "key" ) );
+            $fsOrderId     = $meta[ $meta_key ][ "value" ];
 
-            return response()->json([
-                "date"    => date_format(now(), "Y-m-d\TH:i:s.uP"),
+            return response()->json( [
+                "date"    => date_format( now(), "Y-m-d\TH:i:s.uP" ),
                 "orderId" => $fsOrderId,
                 "receipt" => null
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("FS - deliveredNotification", $e);
+            Log::exception( "FS - deliveredNotification", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -316,40 +316,40 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return Response
      */
-    public function cancellationNotification(Request $request, $orderId)
+    public function cancellationNotification( Request $request, $orderId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request ) ) !== TRUE ) return $verify;
 
         try
         {
-            $data          = $this->getFsOrder($orderId);
-            $data["order"] = $data["order"][key($data["order"])];
+            $data            = $this->getFsOrder( $orderId );
+            $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
 
-            Notification::notify("cancelationOrderFS", $data);
-            Note::create($orderId, [ "note" => "PEDIDO CANCELADO PELA FASTSHOP\n" . date_format(now(), "d/m/Y à\s H:i:s") ]);
+            Notification::notify( "cancelationOrderFS", $data );
+            Note::create( $orderId, [ "note" => "PEDIDO CANCELADO PELA FASTSHOP\n" . date_format( now(), "d/m/Y à\s H:i:s" ) ] );
 
             // busca o orderId da FS no meta_data
-            $order         = Order::find($orderId);
-            $meta          = json_decode(json_encode($order["meta_data"]), true);
-            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
-            $fsOrderId     = $meta[$meta_key]["value"];
+            $order           = Order::find( $orderId );
+            $meta            = json_decode( json_encode( $order[ "meta_data" ] ), true );
+            $meta_key        = array_search( "_fastshop_order_id", array_column( $meta, "key" ) );
+            $fsOrderId       = $meta[ $meta_key ][ "value" ];
 
-            return response()->json([
-                "date"               => date_format(now(), "Y-m-d\TH:i:s.uP"),
+            return response()->json( [
+                "date"               => date_format( now(), "Y-m-d\TH:i:s.uP" ),
                 "marketPlaceOrderId" => $orderId,
                 "orderId"            => $fsOrderId,
                 "receipt"            => null
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("FS - cancellationNotification", $e);
+            Log::exception( "FS - cancellationNotification", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -365,42 +365,42 @@ class FastshopController extends Controller
      * @param string $sku
      * @return Response
      */
-    public function updateSkuWc(Request $request, $sku)
+    public function updateSkuWc( Request $request, $sku )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         try
         {
             // Procura produto no Marketplace pelo SKU
-            $product = Product::all(["sku" => strtoupper($sku)])->first();
+            $product = Product::all( [ "sku" => strtoupper( $sku ) ] )->first();
 
-            if (!$product)
+            if ( !$product )
             {
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "4001",
                     "message"   => "Unable to retrieve product data",
-                ], 404);
+                ], 404 );
             }
 
-            $sku     = explode("FS-", $sku)[1];
+            $sku     = explode( "FS-", $sku )[ 1 ];
 
             // Atualiza produto no Marketplace
-            $this->updateStockPrice($product, $sku);
+            $this->updateStockPrice( $product, $sku );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "Ok",
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("MP - updateSkuWc", $e);
+            Log::exception( "MP - updateSkuWc", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -414,7 +414,7 @@ class FastshopController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function freightCalculation(Request $request)
+    public function freightCalculation( Request $request )
     {
         // Verifição de chaves
         if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
@@ -434,7 +434,7 @@ class FastshopController extends Controller
             {
                 // Consulta valor do frete na FS
                 $url     = "$this->fsUrl/pvt/orderForms/simulation";
-                $resps[] = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+                $resps[] = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
             }
 
             foreach ( $resps as $key => $response )
@@ -446,7 +446,7 @@ class FastshopController extends Controller
                 {
                     Log::freightCalculation( $fsData[ $key ] );
 
-                    $item         = $wcData["items"][ $key ];
+                    $item         = $wcData[ "items" ][ $key ];
                     $sku          = $item[ "sku" ];
                     $data[ $sku ] = [
                         "errorCode" => "5001",
@@ -457,7 +457,7 @@ class FastshopController extends Controller
                     continue;
                 }
 
-                $item                  = $wcData["items"][ $key ];
+                $item                  = $wcData[ "items" ][ $key ];
                 $sku                   = $item[ "sku" ];
 
                 $fsData                = $response->json();
@@ -479,21 +479,21 @@ class FastshopController extends Controller
                 ];
             }
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "ok",
                 "data"      => $data,
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("MP - freightCalculation", $e);
+            Log::exception( "MP - freightCalculation", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // 5000 - erro generico
                 "message"   => $e->getMessage(),
                 "data"      => $wcData[ "items" ],
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -510,90 +510,90 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return Response
      */
-    public function orderCreation(Request $request, $orderId)
+    public function orderCreation( Request $request, $orderId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         try
         {
-            $data = $this->getFsOrder($orderId);
+            $data = $this->getFsOrder( $orderId );
 
             // quando vazio, não é pedido da FS
-            if (empty($data["order"])) return response()->json("", 200);
+            if ( empty( $data[ "order" ] ) ) return response()->json( "", 200 );
 
-            $data["order"] = $this->getOrderFreight($data["order"][key($data["order"])]);
+            $data[ "order" ] = $this->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
 
-            if ($data["order"]["fs_error"]["error"])
+            if ( $data[ "order" ][ "fs_error" ][ "error" ] )
             {
-                $error = $data["order"]["fs_error"];
+                $error = $data[ "order" ][ "fs_error" ];
 
-                Log::order("error", "New order error", [$error, $data]);
-                Notification::notify("newOrderError", $data);
+                Log::order( "error", "New order error", [ $error, $data ] );
+                Notification::notify( "newOrderError", $data );
 
-                Note::create($data["order"]["id"], [
-                    "note" => DataTranslator::translate("newOrderFsError", $error)
-                ]);
+                Note::create( $data[ "order" ][ "id" ], [
+                    "note" => DataTranslator::translate( "newOrderFsError", $error )
+                ] );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "5001", // 5001 - erro na consulta dos dados de frete na FS
                     "message"   => "something wrong",
                     "data"      => $error
-                ], 500);
+                ], 500 );
             }
 
             // converte pedido WC para FS
-            $body = DataTranslator::translate("newOrderFs", $data["order"]);
+            $body = DataTranslator::translate( "newOrderFs", $data );
             $url  = "$this->fsUrl/pvt/orders";
 
             // Consulta produto na FS
-            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+            $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
-            if (!$response->successful())
+            if ( !$response->successful() )
             {
                 $error = $response->json();
 
-                Log::order("error", "New order error", [$error, $body]);
-                Notification::notify("newOrderError", $data);
+                Log::order( "error", "New order error", [ $error, $body ] );
+                Notification::notify( "newOrderError", $data );
 
-                Note::create($data["order"]["id"], [
-                    "note"      => "ERROR FS\n" . $error["Message"] . "\nCode: " . $error["ErrorCode"]
-                ]);
+                Note::create( $data[ "order" ][ "id" ], [
+                    "note" => "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ]
+                ] );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
                     "message"   => "something wrong",
-                    "data"      => [$error, $body]
-                ], 500);
+                    "data"      => [ $error, $body ]
+                ], 500 );
             }
 
             $fsData = $response->json();
 
-            Note::create($data["order"]["id"], [
-                "note"      => "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData["orderId"]
-            ]);
+            Note::create( $data[ "order" ][ "id" ], [
+                "note"      => "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ]
+            ] );
 
-            Order::update($data["order"]["id"], [
-                "meta_data" => [[
+            Order::update( $data[ "order" ][ "id" ], [
+                "meta_data" => [ [
                     "key"   => "_fastshop_order_id",
-                    "value" => $fsData["orderId"]
-                ]]
-            ]);
+                    "value" => $fsData[ "orderId" ]
+                ] ]
+            ] );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "ok",
                 "data"      => $response->json(),
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("MP - orderCreation", $e);
+            Log::exception( "MP - orderCreation", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // 5000 - falha generica
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -604,75 +604,75 @@ class FastshopController extends Controller
      * @param Request $request
      * @return Response
      */
-    public function orderApproved(Request $request, $orderId)
+    public function orderApproved( Request $request, $orderId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         try
         {
-            $data          = $this->getFsOrder($orderId);
+            $data            = $this->getFsOrder( $orderId );
 
             // quando vazio, não é pedido da FS
-            if (empty($data["order"])) return response()->json("", 200);
+            if ( empty( $data[ "order" ] ) ) return response()->json( "", 200 );
 
-            $data["order"] = $data["order"][key($data["order"])];
+            $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
 
             // busca o orderId da FS no meta_data
-            $meta          = $data["order"]["meta_data"];
-            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $meta            = $data[ "order" ][ "meta_data" ];
+            $meta_key        = array_search( "_fastshop_order_id", array_column( $meta, "key" ) );
 
-            if ($meta_key === false)
+            if ( $meta_key === false )
             {
-                $log = [ $data["order"]["id"] => "meta_data '_fastshop_order_id' not found" ];
-                Log::order("info", "Approved order error", $log);
+                $log = [ $data[ "order" ][ "id" ] => "meta_data '_fastshop_order_id' not found" ];
+                Log::order( "info", "Approved order error", $log );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "4002",
                     "message"   => "Order does not have meta_data '_fastshop_order_id'"
-                ],400);
+                ],400 );
             }
 
-            $fsOrderId     = $meta[$meta_key]["value"];
+            $fsOrderId     = $meta[ $meta_key ][ "value" ];
 
             $url           = "$this->fsUrl/pvt/orders/$fsOrderId/fulfill";
-            $body          = [ "marketplaceOrderId" => $data["order"]["id"] ];
+            $body          = [ "marketplaceOrderId" => $data[ "order" ][ "id" ] ];
 
             // envia solicitação a FS
-            $response      = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+            $response      = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
-            if(!$response->successful())
+            if( !$response->successful() )
             {
-                Log::order("info", "Approved order error", $body);
-                Notification::notify("approvedOrderError", $data);
+                Log::order( "info", "Approved order error", $body );
+                Notification::notify( "approvedOrderError", $data );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "4001",
                     "message"   => "Something went wrong when reporting order approval"
-                ],400);
+                ],400 );
             }
 
             $note  = "PEDIDO APROVADO NA FAST SHOP:\n";
-            $note .= DataTranslator::translate("orderStatusChange", $response->json());
+            $note .= DataTranslator::translate( "orderStatusChange", $response->json() );
 
-            Note::create($data["order"]["id"], [
+            Note::create( $data[ "order" ][ "id" ], [
                 "note" => $note
-            ]);
+            ] );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "ok",
                 "data"      => $response->json(),
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("MP - orderCreation", $e);
+            Log::exception( "MP - orderCreation", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000", // erro generico
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -684,74 +684,74 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return Response
      */
-    public function orderCancelation(Request $request, $orderId)
+    public function orderCancelation( Request $request, $orderId )
     {
         // Verifição de chaves
-        if (($verify = $this->keysVerification($request, true)) !== TRUE) return $verify;
+        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         try
         {
-            $data          = $this->getFsOrder($orderId);
+            $data            = $this->getFsOrder( $orderId );
 
             // quando vazio, não é pedido da FS
-            if (empty($data["order"])) return response()->json("", 200);
+            if ( empty( $data[ "order" ] ) ) return response()->json( "", 200 );
 
-            $data["order"] = $data["order"][key($data["order"])];
+            $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
 
             // busca o orderId da FS no meta_data
-            $meta          = $data["order"]["meta_data"];
-            $meta_key      = array_search("_fastshop_order_id", array_column($meta, "key"));
+            $meta            = $data[ "order" ][ "meta_data" ];
+            $meta_key        = array_search( "_fastshop_order_id", array_column( $meta, "key" ) );
 
-            if ($meta_key === false)
+            if ( $meta_key === false )
             {
-                $log = [ $data["order"]["id"] => "meta_data '_fastshop_order_id' not found" ];
-                Log::order("info", "Cancelation order error", $log);
+                $log = [ $data[ "order" ][ "id" ] => "meta_data '_fastshop_order_id' not found" ];
+                Log::order( "info", "Cancelation order error", $log );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "4002",
                     "message"   => "Order does not have meta_data '_fastshop_order_id'"
-                ],400);
+                ],400 );
             }
 
-            $fsOrderId     = $meta[$meta_key]["value"];
+            $fsOrderId       = $meta[ $meta_key ][ "value" ];
 
-            $url           = "$this->fsUrl/pvt/orders/$fsOrderId/cancel";
-            $body          = [ "marketplaceOrderId" => $data["order"]["id"] ];
+            $url             = "$this->fsUrl/pvt/orders/$fsOrderId/cancel";
+            $body            = [ "marketplaceOrderId" => $data[ "order" ][ "id" ] ];
 
             // envia solicitação a FS
-            $response      = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+            $response        = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
-            if(!$response->successful())
+            if( !$response->successful() )
             {
-                Log::order("info", "Cancelation order error", $body);
-                Notification::notify("cancelationOrderError", $data);
+                Log::order( "info", "Cancelation order error", $body );
+                Notification::notify( "cancelationOrderError", $data );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "4001",
                     "message"   => "Something wrong when canceling the order"
-                ],400);
+                ],400 );
             }
 
             $note  = "PEDIDO CANCELADO NA FAST SHOP:\n";
-            $note .= DataTranslator::translate("orderStatusChange", $response->json());
-            Note::create($data["order"]["id"], [
+            $note .= DataTranslator::translate( "orderStatusChange", $response->json() );
+            Note::create( $data[ "order" ][ "id" ], [
                 "note" => $note
-            ]);
+            ] );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => null,
                 "message"   => "ok",
                 "data"      => $response->json(),
-            ], 200);
+            ], 200 );
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("MP - orderCancelation", $e);
+            Log::exception( "MP - orderCancelation", $e );
 
-            return response()->json([
+            return response()->json( [
                 "errorCode" => "5000",
                 "message"   => $e->getMessage(),
-            ], 500);
+            ], 500 );
         }
     }
 
@@ -764,25 +764,25 @@ class FastshopController extends Controller
      * @param string $data
      * @return array
      */
-    private static function getCategoriesId(string $data)
+    private static function getCategoriesId( string $data )
     {
-        $auxData    = explode("/", $data);
+        $auxData    = explode( "/", $data );
         $categories = [];
 
-        foreach ($auxData as $key => $ctg)
+        foreach ( $auxData as $key => $ctg )
         {
-            $slug           = Str::slug($ctg, "-");
+            $slug           = Str::slug( $ctg, "-" );
 
-            $searchCategory = Category::all(["slug" => $slug]);
+            $searchCategory = Category::all( [ "slug" => $slug ] );
 
-            if (!$searchCategory->first())
+            if ( !$searchCategory->first() )
             {
-                $new          = Category::create([
+                $new          = Category::create( [
                     "name"   => $ctg,
-                    "parent" => ($key == 0) ? 0 : $categories[$key - 1]
-                ]);
+                    "parent" => ( $key == 0 ) ? 0 : $categories[ $key - 1 ]
+                ] );
 
-                $categories[] = $new["id"];
+                $categories[] = $new[ "id" ];
             }
             else
             {
@@ -800,51 +800,44 @@ class FastshopController extends Controller
      * @param boolean $wc       Valida chaves do WooCommerce
      * @return true|Response
      */
-    private function keysVerification(Request $request, bool $wc = false)
+    private function keysVerification( Request $request, bool $wc = false )
     {
         $env = $this->env;
 
-        if (!$wc)
+        if ( !$wc )
         {
-            // if ( !is_null( $request->header( "x-triibo" ) ) )
-            // {
-            //     return TRUE;
-            // }
-            // else
-            // {
-                $appKey   = $request->header("x-vtex-api-appkey");
-                $appToken = $request->header("x-vtex-api-apptoken");
+            $appKey   = $request->header( "x-vtex-api-appkey"   );
+            $appToken = $request->header( "x-vtex-api-apptoken" );
 
-                // Verifição de chaves
-                if ($appKey != config("fastshop.$env.fs.key") || $appToken != config("fastshop.$env.fs.token"))
-                {
-                    Log::invalidCredentials($appKey, $appToken);
+            // Verifição de chaves
+            if ( $appKey != config( "fastshop.$env.fs.key" ) || $appToken != config( "fastshop.$env.fs.token" ) )
+            {
+                Log::invalidCredentials( $appKey, $appToken );
 
-                    return response()->json([
-                        "errorCode" => "400",
-                        "message"   => "invalid credentials"
-                    ], 400);
-                }
-                else
-                {
-                    return TRUE;
-                }
-            // }
+                return response()->json( [
+                    "errorCode" => "400",
+                    "message"   => "invalid credentials"
+                ], 400 );
+            }
+            else
+            {
+                return TRUE;
+            }
         }
         else
         {
-            $appKey   = $request->header("api-key");
-            $appToken = $request->header("api-token");
+            $appKey   = $request->header( "api-key"   );
+            $appToken = $request->header( "api-token" );
 
             // Verifição de chaves
-            if ($appKey != config("fastshop.$env.wc.key") || $appToken != config("fastshop.$env.wc.token"))
+            if ( $appKey != config( "fastshop.$env.wc.key" ) || $appToken != config( "fastshop.$env.wc.token" ) )
             {
-                Log::invalidCredentials($appKey, $appToken);
+                Log::invalidCredentials( $appKey, $appToken );
 
-                return response()->json([
+                return response()->json( [
                     "errorCode" => "400",
                     "message"   => "invalid credentials"
-                ], 400);
+                ], 400 );
             }
             else
             {
@@ -862,35 +855,35 @@ class FastshopController extends Controller
      * @param string $sellerSkuId
      * @return void
      */
-    private function updateStockPrice($product, $sellerSkuId)
+    private function updateStockPrice( $product, $sellerSkuId )
     {
         $url  = "$this->fsUrl/pvt/orderForms/simulation";
-        $body = DataTranslator::translate("queryStockPrice", [$sellerSkuId]);
+        $body = DataTranslator::translate( "queryStockPrice", [ $sellerSkuId ] );
 
         try
         {
             // Consulta produto na FS
-            $response = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->get($url);
+            $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->get( $url );
 
-            if ($response->successful())
+            if ( $response->successful() )
             {
                 $fsData = $response->json();
 
                 // Converte produto da FS para WC
-                $wcData = DataTranslator::translate("updateStockPrice", $fsData);
+                $wcData = DataTranslator::translate( "updateStockPrice", $fsData );
 
                 // Atualiza produto no Marketplace
-                $new    = Product::update($product->id, $wcData);
+                $new    = Product::update( $product->id, $wcData );
             }
             else
             {
                 // Registrar log de falha
-                Log::updateStockPrice($product, null, true);
+                Log::updateStockPrice( $product, null, true );
             }
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::exception("INT - updateStockPrice", $e, $sellerSkuId);
+            Log::exception( "INT - updateStockPrice", $e, $sellerSkuId );
         }
     }
 
@@ -942,7 +935,7 @@ class FastshopController extends Controller
      * @param array $data
      * @return array
      */
-    private function getOrderFreight(array $data)
+    private function getOrderFreight( array $data )
     {
         $fs_error  = [
             "error"     => false,
@@ -951,61 +944,61 @@ class FastshopController extends Controller
             "orderId"   => null,
         ];
 
-        $body      = DataTranslator::translate("freightCalcNewOrder", $data);
+        $body      = DataTranslator::translate( "freightCalcNewOrder", $data );
         $url       = "$this->fsUrl/pvt/orderForms/simulation";
-        $response  = Http::withHeaders($this->fsHeaders)->withBody(json_encode($body), "application/json")->post($url);
+        $response  = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
-        if (!$response->successful())
+        if ( !$response->successful() )
         {
             $fs_error = [
                 "error"     => true,
                 "message"   => "Something wrong when consulting the delivery price",
                 "errorCode" => "5001",
-                "orderId"   => $data["id"],
+                "orderId"   => $data[ "id" ],
             ];
         }
         else
         {
             $fsData = $response->json();
 
-            $itemWithoutStock = array_search(0, array_column($fsData["logisticsInfo"], "stockBalance"));
+            $itemWithoutStock = array_search( 0, array_column( $fsData[ "logisticsInfo" ], "stockBalance" ) );
 
-            if (empty($fsData["logisticsInfo"]) || $itemWithoutStock !== false)
+            if ( empty( $fsData[ "logisticsInfo" ] ) || $itemWithoutStock !== false )
             {
                 $fs_error = [
                     "error"     => true,
                     "message"   => "SKUs, currently out-of-stock",
                     "errorCode" => "4001",
-                    "orderId"   => $data["id"],
+                    "orderId"   => $data[ "id" ],
                 ];
             }
             else
             {
-                foreach ($fsData["logisticsInfo"] as $items)
+                foreach ( $fsData[ "logisticsInfo" ] as $items )
                 {
-                    if (empty($items["slas"]))
+                    if ( empty( $items[ "slas" ] ) )
                     {
                         $fs_error = [
                             "error"     => true,
                             "message"   => "Delivery unavailable for this zip code",
                             "errorCode" => "4002",
-                            "orderId"   => $data["id"],
+                            "orderId"   => $data[ "id" ],
                         ];
                     }
                 }
             }
         }
 
-        if ($fs_error["error"])
+        if ( $fs_error[ "error" ] )
         {
-            $data["fs_error"] = $fs_error;
-            $data["fs_info"]  = null;
+            $data[ "fs_error" ] = $fs_error;
+            $data[ "fs_info"  ] = null;
 
             return $data;
         }
 
-        $data["fs_error"] = $fs_error;
-        $data["fs_info"]  = $fsData;
+        $data[ "fs_error" ] = $fs_error;
+        $data[ "fs_info"  ] = $fsData;
 
         return $data;
     }
@@ -1016,17 +1009,17 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return array
      */
-    private function getFsOrder(string $orderId)
+    private function getFsOrder( string $orderId )
     {
-        $data = $this->getOrder($orderId);
+        $data = $this->getOrder( $orderId );
 
         // retira os pedidos que não são da FastShop
-        foreach ($data["order"] as $key => $order)
+        foreach ( $data[ "order" ] as $key => $order )
         {
             // id da FS no dev-marketplace
-            $id = config("fastshop.$this->env.wc.storeId");
+            $id = config( "fastshop.$this->env.wc.storeId" );
 
-            if ($order["store"]["id"] != $id) unset($data["order"][$key]);
+            if ( $order[ "store" ][ "id" ] != $id ) unset( $data[ "order" ][ $key ] );
         }
 
         return $data;
