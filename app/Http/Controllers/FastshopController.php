@@ -900,28 +900,39 @@ class FastshopController extends Controller
      * @param string $orderId
      * @return array
      */
-    private function getOrder(string $orderId)
+    private function getOrder( string $orderId )
     {
         $parent = null;
-        $data   = Order::all(["parent" => $orderId]);
+        $data   = Order::all( [ "parent" => $orderId ] );
 
-        if ($data->count() != 0)
+        if ( $data->count() != 0 )
         {
-            $parent = Order::find($orderId);
+            $parent = Order::find( $orderId );
         }
         else
         {
-            $data   = [ Order::find($orderId) ];
+            $data = [ Order::find( $orderId ) ];
 
-            if (($id = $data[0]["parent_id"]) != 0)
+            if ( ( $id = $data[ 0 ][ "parent_id" ] ) != 0 )
             {
-                $parent = Order::find($id);
+                $parent = Order::find( $id );
+
+                do
+                {
+                    $has_parent = $parent[ "parent_id" ] != 0;
+
+                    if ( $has_parent )
+                    {
+                        $parent = Order::find( $parent[ "parent_id" ] );
+                    }
+                }
+                while ( $has_parent );
             }
         }
 
         return [
-            "order"  => json_decode(json_encode($data), true),
-            "parent" => json_decode(json_encode($parent), true)
+            "order"  => json_decode( json_encode( $data   ), true ),
+            "parent" => json_decode( json_encode( $parent ), true )
         ];
     }
 
