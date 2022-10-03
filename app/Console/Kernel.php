@@ -21,6 +21,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
         \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
+        \App\Console\Commands\Marketplace\WithoutHubFastShop::class,
         \App\Console\Commands\Triibo\SyncIdsMP::class,
         \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         \App\Console\Commands\Triibo\UnsetVouchers::class,
