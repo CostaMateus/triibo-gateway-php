@@ -21,7 +21,7 @@ class UpdateStockFastShop extends Command
      *
      * @var string
      */
-    protected $description = "Update the SKUs of Fast Shop that as out-of-stock";
+    protected $description = "Update the SKUs of Fast Shop";
 
     /**
      * Create a new command instance.
@@ -58,9 +58,9 @@ class UpdateStockFastShop extends Command
                     "per_page"          => $per,
                     "page"              => $page,
                     "manage_stock"      => true,
-                    "shipping_class_id" => 3970,
+                    // "shipping_class_id" => 3970,
                     // "shipping_class"    => "fast-shop",
-                    "stock_status"      => "outofstock",
+                    "stock_status"      => "instock",
                 ] );
 
                 echo "Get {$aux->count()} products\n";
@@ -74,6 +74,9 @@ class UpdateStockFastShop extends Command
 
                 foreach ( $aux as $p )
                 {
+                    // não é FastShop
+                    if ( strpos( $p->sku, "FS-" ) === false ) continue;
+
                     $wcData = [
                         "postalCode" => "01218-011",
                         "items"      => [ [
@@ -130,31 +133,34 @@ class UpdateStockFastShop extends Command
                         $class = "fast-shop-" . $hub[ 2 ];
                     }
 
-                    // if ( $class == "fast-shop" )
-                    // {
-                    //     $index = array_search( "_fastshop_hub", array_column( $p->meta_data, "key" ) );
 
-                    //     if ( $index !== false )
-                    //     {
-                    //         if ( $p->meta_data[ $index ]->value == "fast-shop" )
-                    //         {
-                    //             echo "ID: {$p->id} | SKU: {$p->sku} | {$class} | skip 3\n";
-                    //             continue;
-                    //         }
-                    //     }
-                    // }
+                    if ( $class == "fast-shop" )
+                    {
+                        $index = array_search( "_fastshop_hub", array_column( $p->meta_data, "key" ) );
 
-                    // Product::update( $p->id, [
-                    //     "shipping_class" => $class,
-                    //     "meta_data"      => [ [
-                    //         "key"   => "_fastshop_hub",
-                    //         "value" => $value,
-                    //     ] ]
-                    // ] );
+                        if ( $index !== false )
+                            if ( $p->meta_data[ $index ]->value == "fast-shop" )
+                                continue;
+                    }
 
-                    // echo "ID: {$p->id} | SKU: {$p->sku} | {$class} | UPD\n";
 
-                    if ( $data[ "data" ][ "hub" ] != "" )
+                    if ( $data[ "data" ][ "hub" ] == "" )
+                    {
+                        Product::update( $p->id, [
+                            "shipping_class" => $class,
+                            "stock_status"   => "outofstock",
+                            "stock_quantity" => $data[ "data" ][ "stock" ],
+                            "meta_data"      => [ [
+                                "key"   => "_fastshop_hub",
+                                "value" => $value,
+                            ] ]
+                        ] );
+
+                        $y++;
+
+                        echo "ID: {$p->id} | SKU: {$p->sku} | {$class}\n";
+                    }
+                    else // ( $data[ "data" ][ "hub" ] != "" )
                     {
                         Product::update( $p->id, [
                             "shipping_class" => $class,
