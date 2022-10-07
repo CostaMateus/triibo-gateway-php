@@ -77,9 +77,9 @@ Route::group(["middleware" => "auth"], function() {
 
 Route::get( "/wc", function () {
 
-    $env       = config("fastshop.env");
-    $fsUrl     = config("fastshop.$env.fs.url");
-    $fsHeaders = config("fastshop.$env.fs.headers");
+    $env       = config( "fastshop.env" );
+    $fsUrl     = config( "fastshop.$env.fs.url" );
+    $fsHeaders = config( "fastshop.$env.fs.headers" );
 
     $ended     = false;
     $page      = 1;
@@ -93,9 +93,14 @@ Route::get( "/wc", function () {
         try
         {
             $aux = Product::all( [
-                "per_page" => $per,
-                "page"     => $page,
+                "per_page"          => $per,
+                "page"              => $page,
+                "manage_stock"      => true,
+                "shipping_class_id" => 3970,
+                "stock_status"      => "outofstock",
             ] );
+
+
 
             if ( $aux->count() < 100 ) $ended = true;
 
@@ -103,83 +108,94 @@ Route::get( "/wc", function () {
 
             foreach ( $aux as $p )
             {
-                if ( strpos( $p->sku, "FS-" ) !== false )
+                $y++;
+
+                $wcData = [
+                    "postalCode" => "01218-011",
+                    "items"      => [ [
+                        "sku"      => $p->sku,
+                        "quantity" => 1
+                    ] ]
+                ];
+
+                $body     = DataTranslator::translate( "freightCalcFs", $wcData );
+                $url      = "$fsUrl/pvt/orderForms/simulation";
+                $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
+
+                if ( !$response->successful() )
                 {
-                    $y++;
-
-                    $wcData = [
-                        "postalCode" => "01218-011",
-                        "items"      => [ [
-                            "sku"      => $p->sku,
-                            "quantity" => 1
-                        ] ]
+                    $data = [
+                        "errorCode" => "5001",
+                        "message"   => "Something wrong when consulting the delivery price",
+                        "data"      => $wcData[ "items" ][ 0 ]
                     ];
+                }
+                else
+                {
+                    $fsData                = $response->json();
+                    $aWcData               = DataTranslator::translate( "freightCalcWc", $fsData );
 
-                    $body   = DataTranslator::translate( "freightCalcFs", $wcData );
+                    $aWcData[ "sku"      ] = isset( $aWcData[ "sku"      ] ) ? $aWcData[ "sku"      ] : $wcData[ "items" ][ 0 ][ "sku" ];
+                    $aWcData[ "quantity" ] = isset( $aWcData[ "quantity" ] ) ? $aWcData[ "quantity" ] : 1;
 
-                    // Consulta valor do frete na FS
-                    $url      = "$fsUrl/pvt/orderForms/simulation";
-                    $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
+                    $code                  = $aWcData[ "code"    ];
+                    $message               = $aWcData[ "message" ];
 
-                    // falha na consulta
-                    // não altera nada no MKT
-                    // não exibe frete
-                    if ( !$response->successful() )
-                    {
-                        Log::freightCalculation( $body );
+                    unset( $aWcData[ "code" ], $aWcData[ "message" ] );
 
-                        $data = [
-                            "errorCode" => "5001",
-                            "message"   => "Something wrong when consulting the delivery price",
-                            "data"      => $wcData[ "items" ][ 0 ]
-                        ];
-                    }
-                    else
-                    {
-                        $fsData                = $response->json();
-                        $aWcData               = DataTranslator::translate( "freightCalcWc", $fsData );
+                    $data = [
+                        "errorCode" => $code,
+                        "message"   => $message,
+                        "data"      => $aWcData,
+                    ];
+                }
 
-                        $aWcData[ "sku"      ] = isset( $aWcData[ "sku"      ] ) ? $aWcData[ "sku"      ] : $wcData[ "items" ][ 0 ][ "sku" ];
-                        $aWcData[ "quantity" ] = isset( $aWcData[ "quantity" ] ) ? $aWcData[ "quantity" ] : 1;
+                if ( $data[ "errorCode" ] != null )
+                {
+                    $value = "-";
+                    $class = "fast-shop";
+                }
+                else
+                {
+                    $value = $data[ "data" ][ "hub" ];
 
-                        $code                  = $aWcData[ "code"    ];
-                        $message               = $aWcData[ "message" ];
+                    if ( array_search( $value, $hubs ) === false )
+                        $hubs[] = $value;
 
-                        unset( $aWcData[ "code" ], $aWcData[ "message" ] );
+                    $hub   = explode( "_", $data[ "data" ][ "hub" ] );
+                    $class = "fast-shop-" . $hub[ 2 ];
+                }
 
-                        $data = [
-                            "errorCode" => $code,
-                            "message"   => $message,
-                            "data"      => $aWcData,
-                        ];
-                    }
+                // if ( $class == "fast-shop" )
+                // {
+                //     $index = array_search( "_fastshop_hub", array_column( $p->meta_data, "key" ) );
+                //
+                //     if ( $index !== false )
+                //     {
+                //         if ( $p->meta_data[ $index ]->value == "fast-shop" )
+                //         {
+                //             echo "ID: {$p->id} | SKU: {$p->sku} | {$class} | skip 3\n";
+                //             continue;
+                //         }
+                //     }
+                // }
 
-                    if ( $data[ "errorCode" ] != null )
-                    {
-                        $value = "-";
-                        $class = "fast-shop";
-                    }
-                    else
-                    {
-                        $value  = $data[ "data" ][ "hub" ];
-
-                        if ( array_search( $value, $hubs ) === false )
-                            $hubs[] = $value;
-
-                        $hub   = explode( "_", $data[ "data" ][ "hub" ] );
-                        $class = "fast-shop-" . $hub[ 2 ];
-                    }
-
+                if ( $data[ "data" ][ "hub" ] != "" )
+                {
                     Product::update( $p->id, [
                         "shipping_class" => $class,
+                        "stock_status"   => "instock",
+                        "stock_quantity" => $data[ "data" ][ "stock"         ],
+                        "regular_price"  => $data[ "data" ][ "regular_price" ],
+                        "sale_price"     => $data[ "data" ][ "sale_price"    ],
                         "meta_data"      => [ [
                             "key"   => "_fastshop_hub",
                             "value" => $value,
                         ] ]
                     ] );
-
-                    if ( $y % 5 == 0 ) sleep( 1 );
                 }
+
+                // if ( $y % 5 == 0 ) sleep( 1 );
             }
         }
         catch (Exception $e)
@@ -188,8 +204,4 @@ Route::get( "/wc", function () {
         }
     }
     while ( !$ended );
-
-    Storage::put( "hubs-" . date( "y-m-d" ) . ".json", json_encode( $hubs ) );
-
-    dd( "final", $hubs );
 } );
