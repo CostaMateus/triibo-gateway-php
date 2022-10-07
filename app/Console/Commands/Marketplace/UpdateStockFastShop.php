@@ -55,9 +55,9 @@ class UpdateStockFastShop extends Command
             try
             {
                 $search = [
-                    "per_page"          => $per,
-                    "page"              => $page,
-                    "manage_stock"      => true,
+                    "per_page"     => $per,
+                    "page"         => $page,
+                    "manage_stock" => true,
                 ];
 
                 $stock  = $this->option( "stock" );
