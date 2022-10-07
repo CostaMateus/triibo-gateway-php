@@ -557,6 +557,8 @@ class DataTranslator
             break;
         }
 
+        foreach ( $data[ "sku" ] as $sku => $msg ) $message .= "\n{$sku} : {$msg}";
+
         return "$message \nCode: $code";
     }
 
