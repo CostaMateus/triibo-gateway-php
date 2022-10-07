@@ -14,7 +14,7 @@ class UpdateStockFastShop extends Command
      *
      * @var string
      */
-    protected $signature = "sku:update";
+    protected $signature = "sku:update {--stock=instock : Status of stock. Options: instock or outofstock}";
 
     /**
      * The console command description.
@@ -54,19 +54,25 @@ class UpdateStockFastShop extends Command
         {
             try
             {
-                $aux = Product::all( [
+                $search = [
                     "per_page"          => $per,
                     "page"              => $page,
                     "manage_stock"      => true,
-                    // "shipping_class_id" => 3970,
-                    // "shipping_class"    => "fast-shop",
-                    "stock_status"      => "instock",
-                ] );
+                ];
 
-                echo "Get {$aux->count()} products\n";
+                $stock  = $this->option( "stock" );
 
-                $y     = 0;
-                $count = $aux->count();
+                $search[ "stock_status" ] = $stock;
+
+                if ( $stock == "outofstock" )
+                    $search[ "shipping_class_id" ] = ( $env == "local" ) ? 4453 : 3970;
+
+                $aux    = Product::all( $search );
+
+                echo "Get {$aux->count()} products " . ( $stock == "outofstock" ? "- only FS\n" : "\n" );
+
+                $y      = 0;
+                $count  = $aux->count();
 
                 if ( $aux->count() < 100 ) $ended = true;
 
@@ -74,10 +80,14 @@ class UpdateStockFastShop extends Command
 
                 foreach ( $aux as $p )
                 {
-                    // não é FastShop
-                    if ( strpos( $p->sku, "FS-" ) === false ) continue;
+                    // not FS
+                    if ( $stock == "instock" && strpos( $p->sku, "FS-" ) === false )
+                    {
+                        $count--;
+                        continue;
+                    }
 
-                    $wcData = [
+                    $wcData   = [
                         "postalCode" => "01218-011",
                         "items"      => [ [
                             "sku"      => $p->sku,
@@ -110,7 +120,7 @@ class UpdateStockFastShop extends Command
 
                         unset( $aWcData[ "code" ], $aWcData[ "message" ] );
 
-                        $data = [
+                        $data                  = [
                             "errorCode" => $code,
                             "message"   => $message,
                             "data"      => $aWcData,
