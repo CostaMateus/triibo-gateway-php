@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Cofry\ProcessStoresPromos::class,
         \App\Console\Commands\Log\ClearLogFile::class,
         \App\Console\Commands\Marketplace\DuplicateSKUs::class,
+        \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
         \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
@@ -67,6 +68,8 @@ class Kernel extends ConsoleKernel
             // Marketplace
             // Delete duplicate SKUs
             $schedule->command("sku:delete")->dailyAt("03:03")->timezone("America/Sao_Paulo")->runInBackground();
+            // Remove FS products without SKU
+            $schedule->command("sku:remove")->dailyAt("05:30")->timezone("America/Sao_Paulo")->runInBackground();
             // Update FS products instock
             $schedule->command("sku:update --stock=instock")->dailyAt("06:00")->timezone("America/Sao_Paulo")->runInBackground();
 
