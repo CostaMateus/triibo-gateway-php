@@ -546,7 +546,7 @@ class FastshopController extends Controller
             $body = DataTranslator::translate( "newOrderFs", $data );
             $url  = "$this->fsUrl/pvt/orders";
 
-            // Consulta produto na FS
+            // Cria pedido na FS
             $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if ( !$response->successful() )

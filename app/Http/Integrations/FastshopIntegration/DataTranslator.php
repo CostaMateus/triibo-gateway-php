@@ -494,10 +494,14 @@ class DataTranslator
             ];
         }
 
-        $new = [
+        $total = $data[ "total" ] + $data[ "discount_total" ];
+        $total = number_format( (float) $total, 2, ".", "" );
+        $total = (int) str_replace( ".", "", $total );
+
+        $new   = [
             "marketplaceOrderId"          => $data[ "id" ], // id do pedido no mkt
             "marketplaceServicesEndpoint" => $url,          // api que recebe a "Order Invoice Notification"
-            "marketplacePaymentValue"     => (int) str_replace( ".", "", $data[ "total" ] ),
+            "marketplacePaymentValue"     => $total,
             "items"                       => $items,
             // wc_order billing
             "clientProfileData" => [
