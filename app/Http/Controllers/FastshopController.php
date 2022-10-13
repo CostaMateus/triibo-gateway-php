@@ -546,7 +546,7 @@ class FastshopController extends Controller
             $body = DataTranslator::translate( "newOrderFs", $data );
             $url  = "$this->fsUrl/pvt/orders";
 
-            // Consulta produto na FS
+            // Cria pedido na FS
             $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if ( !$response->successful() )
@@ -942,48 +942,57 @@ class FastshopController extends Controller
             "message"   => "",
             "errorCode" => 0,
             "orderId"   => null,
+            "sku"       => [],
         ];
 
         $body      = DataTranslator::translate( "freightCalcNewOrder", $data );
-        $url       = "$this->fsUrl/pvt/orderForms/simulation";
-        $response  = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
+        $bodies    = DataTranslator::translate( "breakingUpFreight", $body );
 
-        if ( !$response->successful() )
+        foreach ( $bodies as $body )
         {
-            $fs_error = [
-                "error"     => true,
-                "message"   => "Something wrong when consulting the delivery price",
-                "errorCode" => "5001",
-                "orderId"   => $data[ "id" ],
-            ];
-        }
-        else
-        {
-            $fsData = $response->json();
+            $url       = "{$this->fsUrl}/pvt/orderForms/simulation";
+            $response  = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
-            $itemWithoutStock = array_search( 0, array_column( $fsData[ "logisticsInfo" ], "stockBalance" ) );
-
-            if ( empty( $fsData[ "logisticsInfo" ] ) || $itemWithoutStock !== false )
+            if ( !$response->successful() )
             {
-                $fs_error = [
-                    "error"     => true,
-                    "message"   => "SKUs, currently out-of-stock",
-                    "errorCode" => "4001",
-                    "orderId"   => $data[ "id" ],
-                ];
+                $msg = "Something wrong when consulting the delivery price";
+                $sku = "FS-" . $body[ "items" ][ 0 ][ "id" ];
+                $fs_error[ "error"     ]   = true;
+                $fs_error[ "message"   ]   = $msg;
+                $fs_error[ "errorCode" ]   = "5001";
+                $fs_error[ "orderId"   ]   = $data[ "id" ];
+                $fs_error[ "sku"       ][] = [ $sku => $msg ];
             }
             else
             {
-                foreach ( $fsData[ "logisticsInfo" ] as $items )
+                $fsData           = $response->json();
+                $auxData[]        = $fsData;
+                $itemWithoutStock = array_search( 0, array_column( $fsData[ "logisticsInfo" ], "stockBalance" ) );
+
+                if ( empty( $fsData[ "logisticsInfo" ] ) || $itemWithoutStock !== false )
                 {
-                    if ( empty( $items[ "slas" ] ) )
+                    $msg = "SKU currently out-of-stock";
+                    $sku = "FS-" . $body[ "items" ][ 0 ][ "id" ];
+                    $fs_error[ "error"     ]   = true;
+                    $fs_error[ "message"   ]   = $msg;
+                    $fs_error[ "errorCode" ]   = "4001";
+                    $fs_error[ "orderId"   ]   = $data[ "id" ];
+                    $fs_error[ "sku"       ][] = [ $sku => $msg ];
+                }
+                else
+                {
+                    foreach ( $fsData[ "logisticsInfo" ] as $items )
                     {
-                        $fs_error = [
-                            "error"     => true,
-                            "message"   => "Delivery unavailable for this zip code",
-                            "errorCode" => "4002",
-                            "orderId"   => $data[ "id" ],
-                        ];
+                        if ( empty( $items[ "slas" ] ) )
+                        {
+                            $msg = "Delivery unavailable for this zip code";
+                            $sku = "FS-" . $body[ "items" ][ 0 ][ "id" ];
+                            $fs_error[ "error"     ]   = true;
+                            $fs_error[ "message"   ]   = $msg;
+                            $fs_error[ "errorCode" ]   = "4002";
+                            $fs_error[ "orderId"   ]   = $data[ "id" ];
+                            $fs_error[ "sku"       ][] = [ $sku => $msg ];
+                        }
                     }
                 }
             }
@@ -995,6 +1004,25 @@ class FastshopController extends Controller
             $data[ "fs_info"  ] = null;
 
             return $data;
+        }
+
+        if ( count( $auxData ) > 1 )
+        {
+            $fsData = $auxData[ 0 ];
+
+            foreach ( $auxData as $index => $response )
+            {
+                if ( $index > 0 )
+                {
+                    $fsData[ "items"         ][] = $response[ "items"         ][ 0 ];
+                    $fsData[ "logisticsInfo" ][] = $response[ "logisticsInfo" ][ 0 ];
+                    $fsData[ "logisticsInfo" ][ $index ][ "itemIndex" ] = $index;
+                }
+            }
+        }
+        else
+        {
+            $fsData = $auxData[ 0 ];
         }
 
         $data[ "fs_error" ] = $fs_error;
