@@ -48,15 +48,18 @@ class FastshopController extends Controller
 
         try
         {
-            // Procura produto no Marketplace pelo SKU
-            $product = Product::all( [ "sku" => "FS-" . strtoupper( $sellerSkuId ) ] )->first();
-
-            if ( !$product )
+            if ( $sellerSkuId )
             {
-                return response()->json( [
-                    "errorCode" => "404",
-                    "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
-                ], 404 );
+                // Procura produto no Marketplace pelo SKU
+                $product = Product::all( [ "sku" => "FS-" . strtoupper( $sellerSkuId ) ] )->first();
+
+                if ( !$product )
+                {
+                    return response()->json( [
+                        "errorCode" => "404",
+                        "message"   => "Seller StockKeepingUnit {$sellerSkuId} not found for this seller id {$sellerId}",
+                    ], 404 );
+                }
             }
 
             return response()->json( [
@@ -95,24 +98,34 @@ class FastshopController extends Controller
             // Recupera dados do produto
             $fsData    = $request->all();
 
-            $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
+            $sku       = $fsData[ "ProductId" ] == $fsData[ "SellerStockKeepingUnitId" ] ? $fsData[ "ProductId" ] : $fsData[ "SellerStockKeepingUnitId" ];
 
-            // Converte produto da FS para WC
-            $wcData    = DataTranslator::translate( "newProduct", $fsData );
+            if ( $sellerSkuId && $sellerSkuId == $sku )
+            {
+                $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
 
-            // Atualiza produto no Marketplace
-            $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+                // Converte produto da FS para WC
+                $wcData    = DataTranslator::translate( "newProduct", $fsData );
 
-            /**
-             * TODO
-             * Verificar problema com duplicação de SKU no WooCommerce
-             * Acompanhar issue #27295
-             * https://github.com/woocommerce/woocommerce/issues/27295
-             */
-            if ( !$searchSku->first() )
-                Product::create( $wcData );
-            else
-                Product::update( $searchSku->first()->id, $wcData );
+                // Atualiza produto no Marketplace
+                $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+
+                /**
+                 * TODO
+                 * Verificar problema com duplicação de SKU no WooCommerce
+                 * Acompanhar issue #27295
+                 * https://github.com/woocommerce/woocommerce/issues/27295
+                 *
+                 * ?
+                 * Solução temporária
+                 * Schedule sku:delete
+                 * Excluí SKUs duplicados, diariamente ás 03:03.
+                 */
+                if ( !$searchSku->first() )
+                    Product::create( $wcData );
+                else
+                    Product::update( $searchSku->first()->id, $wcData );
+            }
 
             return response()->json( [
                 "errorCode" => null,
