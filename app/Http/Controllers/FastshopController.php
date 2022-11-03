@@ -108,6 +108,11 @@ class FastshopController extends Controller
              * Verificar problema com duplicação de SKU no WooCommerce
              * Acompanhar issue #27295
              * https://github.com/woocommerce/woocommerce/issues/27295
+             *
+             * ?
+             * Solução temporária
+             * Schedule sku:delete
+             * Excluí SKUs duplicados, diariamente ás 03:03.
              */
             if ( !$searchSku->first() )
                 Product::create( $wcData );
