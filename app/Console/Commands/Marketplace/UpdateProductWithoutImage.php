@@ -73,6 +73,17 @@ class UpdateProductWithoutImage extends Command
                             "status" => "private",
                         ];
                     }
+
+                    if ( count( $update ) == 100 )
+                    {
+                        Product::batch( [
+                            "update" => $update
+                        ] );
+
+                        echo "Batch updated\n" . json_encode( $update );
+
+                        $update = [];
+                    }
                 }
             }
             catch (Exception $e)
@@ -93,6 +104,6 @@ class UpdateProductWithoutImage extends Command
             Log::error( $e );
         }
 
-        echo json_encode( $update );
+        echo "Last batch updated\n" . json_encode( $update );
     }
 }
