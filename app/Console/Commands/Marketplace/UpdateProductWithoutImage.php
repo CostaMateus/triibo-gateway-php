@@ -40,12 +40,9 @@ class UpdateProductWithoutImage extends Command
      */
     public function handle()
     {
-        $ended = false;
-        $page  = 1;
-        $per   = 100;
-
-        $aux   = [];
-
+        $ended  = false;
+        $page   = 1;
+        $per    = 100;
         $update = [];
 
         do
@@ -64,8 +61,6 @@ class UpdateProductWithoutImage extends Command
 
                 foreach ( $products as $product )
                 {
-                    if ( strpos( $product->sku, "FS-" ) === false ) continue;
-
                     if ( empty( $product->images ) && count( $product->images ) == 0 )
                     {
                         $update[] = [
@@ -79,8 +74,6 @@ class UpdateProductWithoutImage extends Command
                         Product::batch( [
                             "update" => $update
                         ] );
-
-                        echo "Batch updated\n" . json_encode( $update );
 
                         $update = [];
                     }
@@ -104,6 +97,6 @@ class UpdateProductWithoutImage extends Command
             Log::error( $e );
         }
 
-        echo "Last batch updated\n" . json_encode( $update );
+        echo "ENDED";
     }
 }
