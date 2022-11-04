@@ -494,7 +494,8 @@ class DataTranslator
             ];
         }
 
-        $total = $data[ "total" ] + $data[ "discount_total" ];
+        $total = ( $parent ) ? $data[ "total" ] : $data[ "total" ] + $data[ "coupon_lines" ][ 0 ][ "discount" ];
+        $total = $total + $data[ "discount_total" ];
         $total = number_format( (float) $total, 2, ".", "" );
         $total = (int) str_replace( ".", "", $total );
 
