@@ -122,9 +122,16 @@ class FastshopController extends Controller
                  * Excluí SKUs duplicados, diariamente ás 03:03.
                  */
                 if ( !$searchSku->first() )
-                    Product::create( $wcData );
+                    $product = Product::create( $wcData );
                 else
-                    Product::update( $searchSku->first()->id, $wcData );
+                    $product = Product::update( $searchSku->first()->id, $wcData );
+
+                if ( empty( $product->images ) && count( $product->images ) == 0 )
+                {
+                    Product::update( $product->id, [
+                        "status" => "private",
+                    ] );
+                }
             }
 
             return response()->json( [
