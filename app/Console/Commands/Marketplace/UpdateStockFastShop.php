@@ -49,6 +49,7 @@ class UpdateStockFastShop extends Command
         $per       = 100;
 
         $hubs      = [];
+        $update    = [];
 
         do
         {
@@ -156,7 +157,8 @@ class UpdateStockFastShop extends Command
 
                     if ( $data[ "data" ][ "hub" ] == "" )
                     {
-                        Product::update( $p->id, [
+                        $update[] = [
+                            "id"             => $p->id,
                             "shipping_class" => $class,
                             "stock_status"   => "outofstock",
                             "stock_quantity" => $data[ "data" ][ "stock" ],
@@ -164,7 +166,7 @@ class UpdateStockFastShop extends Command
                                 "key"   => "_fastshop_hub",
                                 "value" => $value,
                             ] ]
-                        ] );
+                        ];
 
                         $y++;
 
@@ -172,7 +174,8 @@ class UpdateStockFastShop extends Command
                     }
                     else // ( $data[ "data" ][ "hub" ] != "" )
                     {
-                        Product::update( $p->id, [
+                        $update[] = [
+                            "id"             => $p->id,
                             "shipping_class" => $class,
                             "stock_status"   => "instock",
                             "stock_quantity" => $data[ "data" ][ "stock"         ],
@@ -182,11 +185,20 @@ class UpdateStockFastShop extends Command
                                 "key"   => "_fastshop_hub",
                                 "value" => $value,
                             ] ]
-                        ] );
+                        ];
 
                         $y++;
 
                         echo "ID: {$p->id} | SKU: {$p->sku} | {$class}\n";
+                    }
+
+                    if ( count( $update ) == 100 )
+                    {
+                        Product::batch( [
+                            "update" => $update
+                        ] );
+
+                        $update = [];
                     }
                 }
 
@@ -198,5 +210,16 @@ class UpdateStockFastShop extends Command
             }
         }
         while ( !$ended );
+
+        try
+        {
+            Product::batch( [
+                "update" => $update
+            ] );
+        }
+        catch ( \Exception $e )
+        {
+            echo $e->getMessage();
+        }
     }
 }
