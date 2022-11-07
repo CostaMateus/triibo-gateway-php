@@ -126,7 +126,10 @@ class FastshopController extends Controller
                 else
                     $product = Product::update( $searchSku->first()->id, $wcData );
 
-                if ( empty( $product->images ) && count( $product->images ) == 0 )
+                if (
+                    ( empty( $product->images ) && count( $product->images ) == 0 )
+                    ||
+                    ( empty( $product->sku ) ) )
                 {
                     Product::update( $product->id, [
                         "status" => "private",
