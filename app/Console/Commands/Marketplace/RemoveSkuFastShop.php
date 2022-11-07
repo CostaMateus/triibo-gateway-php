@@ -2,7 +2,9 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Exception;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
 class RemoveSkuFastShop extends Command
@@ -38,14 +40,14 @@ class RemoveSkuFastShop extends Command
      */
     public function handle()
     {
-        $env   = config( "fastshop.env" );
-        $ended = false;
-        $page  = 1;
-        $per   = 100;
-
-        $fsIds = [
-            ( $env == "local" ) ? 4454 : 4309, // 05 A
+        $env    = config( "fastshop.env" );
+        $ended  = false;
+        $page   = 1;
+        $per    = 100;
+        $delete = [];
+        $fsIds  = [
             ( $env == "local" ) ? 4453 : 3970, // padrao
+            ( $env == "local" ) ? 4454 : 4309, // 05 A
             ( $env == "local" ) ? 4451 : 4310, // 14 B
             ( $env == "local" ) ? 4345 : 4311, // 33 C
         ];
@@ -74,15 +76,38 @@ class RemoveSkuFastShop extends Command
                     // not shipping-class of FS
                     if ( !in_array( $p->shipping_class_id, $fsIds ) ) continue;
 
-                    Product::delete( $p->id, [ "force" => true ] );
+                    $delete[] = [
+                        "id"    => $p->id,
+                        "force" => true
+                    ];
+
+                    if ( count( $delete ) == 100 )
+                    {
+                        Product::batch( [ "delete" => $delete ] );
+
+                        $delete = [];
+                    }
                 }
             }
-            catch ( \Exception $e )
+            catch ( Exception $e )
             {
                 echo $e->getMessage() . "\n";
                 $ended = false;
             }
         }
         while ( !$ended );
+
+        try
+        {
+            Product::batch( [
+                "delete" => $delete
+            ] );
+        }
+        catch ( Exception $e )
+        {
+            Log::error( $e );
+        }
+
+        echo "ENDED";
     }
 }
