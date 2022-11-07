@@ -21,7 +21,7 @@ class UpdateProductWithoutImage extends Command
      *
      * @var string
      */
-    protected $description = "Change the status, of FS products, to private when without images";
+    protected $description = "Change the status of products to private when without images";
 
     /**
      * Create a new command instance.
