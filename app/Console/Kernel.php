@@ -47,10 +47,10 @@ class Kernel extends ConsoleKernel
             // Cofry Triibo Integration
             // Diariamente às 02 e às 14h
             $schedule->command("process:storepromo")->twiceDaily(2, 14)->timezone("America/Sao_Paulo")->runInBackground();
-            // Diariamente às 02h55
-            $schedule->command("delete:images")->dailyAt("01:55")->timezone("America/Sao_Paulo")->runInBackground();
-            // Diariamente às 03h00
-            $schedule->command("process:images")->dailyAt("02:00")->timezone("America/Sao_Paulo")->runInBackground();
+            // Diariamente às 02h05
+            $schedule->command("delete:images")->dailyAt("02:05")->timezone("America/Sao_Paulo")->runInBackground();
+            // Diariamente às 02h10
+            $schedule->command("process:images")->dailyAt("02:10")->timezone("America/Sao_Paulo")->runInBackground();
 
 
             // Mautic Pipedrive Integration
@@ -67,11 +67,11 @@ class Kernel extends ConsoleKernel
 
             // Marketplace
             // Delete duplicate SKUs
-            $schedule->command("sku:delete")->dailyAt("03:03")->timezone("America/Sao_Paulo")->runInBackground();
-            // Remove FS products without SKU
-            $schedule->command("sku:remove")->dailyAt("05:30")->timezone("America/Sao_Paulo")->runInBackground();
+            $schedule->command("sku:delete")                ->dailyAt("03:03")->timezone("America/Sao_Paulo")->runInBackground();
             // Update FS products instock
             $schedule->command("sku:update --stock=instock")->dailyAt("06:00")->timezone("America/Sao_Paulo")->runInBackground();
+            // Remove FS products without SKU
+            $schedule->command("sku:remove")                ->dailyAt("06:59")->timezone("America/Sao_Paulo")->runInBackground();
 
 
             // Clear Logs
