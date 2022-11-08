@@ -1,21 +1,17 @@
 <?php
 
-namespace App\Http\Integrations;
+namespace App\Http\Integrations\AffiliatesIntegration;
 
 use DateTime;
-use Exception;
 use DateInterval;
 use Gregwar\Image\Image;
-use Verot\Upload\Upload;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\CofryController;
+use App\Http\Controllers\Affiliates\CofryController;
 
 class CofryIntegration
 {
-
     const URL_PROMO    = "https://www.cofry.com.br/offer/import";
     const URL_STORE    = "https://www.cofry.com.br/store/import";
     const URL_STATUS   = "https://www.cofry.com.br/store-check/import";

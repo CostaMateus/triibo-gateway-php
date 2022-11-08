@@ -1,15 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Affiliates;
 
 use File;
 use Throwable;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use App\Notifications\ScheduleCofry;
-use App\Http\Integrations\CofryIntegration;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
+use App\Http\Integrations\AffiliatesIntegration\CofryIntegration;
 
 class CofryController extends Controller
 {
