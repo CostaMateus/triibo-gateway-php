@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Http;
 use Codexshaper\WooCommerce\Facades\Product;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
-class UpdateStockFastShop extends Command
+class UpdateStockFastShopAll extends Command
 {
     /**
      * The name and signature of the console command.
