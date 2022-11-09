@@ -647,7 +647,7 @@ class FastshopController extends Controller
 
             if ( $meta_key === false )
             {
-                $log = [ $data[ "order" ][ "id" ] => "meta_data '_fastshop_order_id' not found" ];
+                $log = [ $data[ "order" ][ "id" ] . " : meta_data '_fastshop_order_id' not found" ];
                 Log::order( "info", "Approved order error", $log );
 
                 return response()->json( [
@@ -727,7 +727,7 @@ class FastshopController extends Controller
 
             if ( $meta_key === false )
             {
-                $log = [ $data[ "order" ][ "id" ] => "meta_data '_fastshop_order_id' not found" ];
+                $log = [ $data[ "order" ][ "id" ] . " : meta_data '_fastshop_order_id' not found" ];
                 Log::order( "info", "Cancelation order error", $log );
 
                 return response()->json( [

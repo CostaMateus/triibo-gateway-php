@@ -4,7 +4,7 @@ namespace App\Console\Commands\Cofry;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\CofryController;
+use App\Http\Controllers\Affiliates\CofryController;
 
 class ProcessImages extends Command
 {

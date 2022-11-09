@@ -494,7 +494,11 @@ class DataTranslator
             ];
         }
 
-        $total = ( $parent ) ? $data[ "total" ] : $data[ "total" ] + $data[ "coupon_lines" ][ 0 ][ "discount" ];
+        $total = $data[ "total" ];
+
+        if ( !$parent && isset( $data[ "coupon_lines" ][ 0 ] ) )
+            $total += $data[ "coupon_lines" ][ 0 ][ "discount" ];
+
         $total = $total + $data[ "discount_total" ];
         $total = number_format( (float) $total, 2, ".", "" );
         $total = (int) str_replace( ".", "", $total );
@@ -562,7 +566,9 @@ class DataTranslator
             break;
         }
 
-        foreach ( $data[ "sku" ] as $sku => $msg ) $message .= "\n{$sku} : {$msg}";
+        foreach ( $data[ "sku" ] as $error )
+            foreach ( $error as $sku => $msg )
+                $message .= "\n{$sku} : {$msg}";
 
         return "$message \nCode: $code";
     }
