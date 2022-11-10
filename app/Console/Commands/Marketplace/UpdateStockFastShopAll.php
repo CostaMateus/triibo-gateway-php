@@ -49,15 +49,17 @@ class UpdateStockFastShopAll extends Command
         $per       = 100;
 
         $update    = [];
+        $delete    = [];
 
         do
         {
             try
             {
                 $search  = [
-                    "per_page"     => $per,
-                    "page"         => $page,
-                    "manage_stock" => true,
+                    "per_page"          => $per,
+                    "page"              => $page,
+                    "manage_stock"      => true,
+                    "shipping_class_id" => 3970
                 ];
 
                 $products = Product::all( $search );
@@ -70,6 +72,27 @@ class UpdateStockFastShopAll extends Command
                 {
                     // not FS
                     if ( strpos( $p->sku, "FS-" ) === false ) continue;
+
+                    // not shipping_class_id
+                    if ( $p->shipping_class_id != 3970      ) continue;
+                    if ( $p->shipping_class != "fast-shop"  ) continue;
+
+                    if ( empty( $p->sku ) )
+                    {
+                        $delete[] = [ "id" => $p->id, "force" => true ];
+
+                        if ( count( $delete ) == 100 )
+                        {
+                            Product::batch( [
+                                "delete" => $delete
+                            ] );
+
+                            echo "100 products has deleted\n";
+
+                            $delete = [];
+                            continue;
+                        }
+                    }
 
                     $wcData   = [
                         "postalCode" => "01218-011",
@@ -135,8 +158,8 @@ class UpdateStockFastShopAll extends Command
                         $update[]   = [
                             "id"             => $p->id,
                             "shipping_class" => $class,
-                            "stock_status"   => ( $stock_qntt > 0 ) ? "instock" : "outofstock",
-                            "stock_quantity" => $stock_qntt,
+                            "stock_status"   => "outofstock",
+                            "stock_quantity" => 0,
                             "meta_data"      => [ [
                                 "key"   => "_fastshop_hub",
                                 "value" => $value,
@@ -185,15 +208,22 @@ class UpdateStockFastShopAll extends Command
 
         try
         {
-            Product::batch( [
-                "update" => $update
-            ] );
-
+            Product::batch( [ "update" => $update ] );
             echo count( $update ) . " products has updated\n";
         }
         catch ( \Exception $e )
         {
             echo $e->getMessage();
+        }
+
+        try
+        {
+            Product::batch( [ "delete" => $delete ] );
+            echo count( $update ) . " products has deleted\n";
+        }
+        catch ( \Exception $e )
+        {
+            echo $e->getMessage() . "\n";
         }
 
         echo "ENDED\n";
