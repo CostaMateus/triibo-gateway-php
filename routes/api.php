@@ -106,35 +106,35 @@ Route::name("api.marketplace.")->middleware("log.route")->prefix("marketplace")-
     Route::name("wc.")->prefix("wc")->group(function () {
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
-        // API chamada a partir do ../plugins/triibo-fastshop-shipping/
+        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
         Route::post(
             "/freightcalculation",
             [FastshopController::class, "freightCalculation"]
         )->name("freightcalculation");
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
-        // API chamada a partir do ../plugins/triibo-fastshop-shipping/
+        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop
         Route::post(
             "/updatesku/{sku}",
             [FastshopController::class, "updateSkuWc"]
         )->name("updatesku");
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation/{orderId}
-        // API chamada a partir do ../plugins/triibo-fastshop-orders
+        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
         Route::post(
             "/ordercreation/{orderId}",
             [FastshopController::class, "orderCreation"]
         )->name("ordercreation");
 
         // Route-api: php.triibo.com.br/api/marketplace/wc/orderapproved/{orderId}
-        // API chamada a partir do ../plugins/triibo-fastshop-orders
+        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
         Route::post(
             "/orderapproved/{orderId}",
             [FastshopController::class, "orderApproved"]
         )->name("orderapproved");
 
         //Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{orderId}
-        // API chamada a partir do ../plugins/triibo-fastshop-orders
+        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
         Route::post(
             "/ordercancelation/{orderId}",
             [FastshopController::class, "orderCancelation"]
