@@ -14,7 +14,7 @@ class RemoveSkuFastShop extends Command
      *
      * @var string
      */
-    protected $signature = "sku:remove";
+    protected $signature = "sku:delete_fs";
 
     /**
      * The console command description.
