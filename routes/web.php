@@ -75,43 +75,14 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get( "/wc", function () {
+Route::get( "/wc/{id}", function ( $id ) {
 
-    $ended = false;
-    $page  = 1;
-    $per   = 100;
+    // $order = Order::find( $id );
 
-    $aux   = [];
+    // dd( $order );
 
-    do
-    {
-        try
-        {
-            $products = Product::all( [
-                "per_page" => $per,
-                "page"     => $page,
-                "status"   => "publish",
-            ] );
+    $product = Product::find( $id );
 
-            if ( $products->count() < 100 ) $ended = true;
+    dd( $product );
 
-            $page++;
-
-            foreach ( $products as $product )
-            {
-                if ( empty( $product->images ) && count( $product->images ) == 0 )
-                {
-                    $aux[] = $product->sku;
-                    Product::update( $product->id, [ "status" => "private" ] );
-                }
-            }
-        }
-        catch (Exception $e)
-        {
-            $ended = false;
-        }
-    }
-    while ( !$ended );
-
-    dd( $aux );
 } );
