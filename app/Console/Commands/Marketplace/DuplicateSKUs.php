@@ -13,7 +13,7 @@ class DuplicateSKUs extends Command
      *
      * @var string
      */
-    protected $signature = 'sku:delete';
+    protected $signature = 'sku:delete_duplicate';
 
     /**
      * The console command description.
