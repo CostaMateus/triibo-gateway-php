@@ -382,7 +382,7 @@ class FastshopController extends Controller
     /**
      * Atualiza preço e estoque
      *
-     * API chamada a partir do ../plugins/triibo-fastshop-shipping/
+     * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop
      *
      * @param Request $request
      * @param string $sku
@@ -432,7 +432,7 @@ class FastshopController extends Controller
      * Consulta a Fastshop para obter informações comerciais sobre SKUs, tais como, preço, estoque, frete e prazos de entrega.
      * O "postalCode" deve ser preenchido no request e será obrigatório para o retorno das informações de logística.
      *
-     * API chamada a partir do ../plugins/triibo-fastshop-shipping/
+     * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
      *
      * @param Request $request
      * @return Response
@@ -525,9 +525,7 @@ class FastshopController extends Controller
      * Notifica a Fastshop para validar e processar o pedido.
      * Deve-se enviará informações como os itens contidos no carrinho, dados do perfil do cliente, dados de envio e os dados de pagamento.
      *
-     * API chamada a partir do ../themes/martfury-child/functions.php
-     *
-     * orderId para testes: 39731, 59798, 59858
+     * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
      *
      * @param Request $request
      * @param string $orderId
@@ -624,6 +622,8 @@ class FastshopController extends Controller
      * Pedido Aprovado e Pago
      * Após o pagamento ser concluído e aprovado, notifica a Fastshop avisando que este pode iniciar o processo de faturamento e entrega do pedido.
      *
+     * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
+     *
      * @param Request $request
      * @return Response
      */
@@ -702,6 +702,8 @@ class FastshopController extends Controller
     /**
      * Pedido Cancelado pelo Marketplace
      * Notifica a Fastshop de que o pedido foi cancelado.
+     *
+     * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
      *
      * @param Request $requests
      * @param string $orderId
@@ -893,7 +895,7 @@ class FastshopController extends Controller
                 $fsData = $response->json();
 
                 // Converte produto da FS para WC
-                $wcData = DataTranslator::translate( "updateStockPrice", $fsData );
+                $wcData = DataTranslator::translate( "updateStockPrice", [ $product, $fsData ] );
 
                 // Atualiza produto no Marketplace
                 $new    = Product::update( $product->id, $wcData );

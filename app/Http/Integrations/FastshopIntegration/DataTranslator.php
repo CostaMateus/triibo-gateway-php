@@ -68,15 +68,34 @@ class DataTranslator
      */
     private static function updateStockPrice( array $data )
     {
+        $product = reset( $data );
+        $data    = end( $data );
+
+        $value   = "-";
+        $class   = "fast-shop";
+        $qntty   = 0;
+        $status  = "outofstock";
+
         if ( !empty( $data[ "logisticsInfo" ] ) )
         {
-            $status = "instock";
-            $qntty  = $data[ "logisticsInfo" ][ 0 ][ "stockBalance" ];
+            $aux = reset( $data[ "logisticsInfo" ] );
+
+            if ( !empty( $aux[ "slas" ] ) )
+            {
+                $slas   = reset( $aux[ "slas" ] );
+                $value  = $slas[ "id" ];
+                $hub    = explode( "_", $value );
+                $class  = "fast-shop-" . end( $hub );
+
+                $qntty  = $aux[ "stockBalance" ];
+                $status = ( $qntty > 0 ) ? "instock" : "outofstock";
+            }
         }
         else
         {
-            $status = "outofstock";
-            $qntty  = 0;
+            $index = array_search( "_fastshop_hub", array_column( $product->meta_data, "key" ) );
+            $value = ( $index !== false ) ? $product->meta_data[ $index ]->value : "-";
+            $class = $product->shipping_class;
         }
 
         if ( !empty( $data[ "items" ] ) )
@@ -102,6 +121,12 @@ class DataTranslator
             ];
         }
 
+        $wcData[ "shipping_class" ] = $class;
+        $wcData[ "meta_data"      ] = [ [
+            "key"   => "_fastshop_hub",
+            "value" => $value,
+        ] ];
+
         return $wcData;
     }
 
@@ -119,8 +144,8 @@ class DataTranslator
                 "quantity" => 1,
                 "seller"   => "FSH"
             ] ],
-            "postalCode"     => "",
-            "country"        => "",
+            "postalCode"     => "04024020",
+            "country"        => "BRA",
             "geoCoordinates" => []
         ];
     }
