@@ -7,6 +7,7 @@ use App\Helpers\Helper;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Order;
@@ -191,26 +192,34 @@ class FastshopController extends Controller
 
         try
         {
-            // Recupera dados do produto
-            $fsData    = $request->all();
+            $data  = [
+                "action"     => "update",
+                "data"       => json_encode( $request->all() ),
+                "created_at" => now(),
+                "updated_at" => now(),
+            ];
 
-            $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
+            $saved = DB::table( "fastshop_products" )->insert( $data );
 
-            // Converte produto da FS para WC
-            $wcData    = DataTranslator::translate( "newProduct", $fsData );
+            if ( !$saved ) throw new Exception( "Unable to save the product data" );
 
-            // Atualiza produto no Marketplace
-            $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+            // $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
 
-            if ( !$searchSku->first() )
-            {
-                return response()->json( [
-                    "errorCode" => "404",
-                    "message"   => "something wrong on update product"
-                ], 404 );
-            }
+            // // Converte produto da FS para WC
+            // $wcData    = DataTranslator::translate( "newProduct", $fsData );
 
-            Product::update( $searchSku->first()->id, $wcData );
+            // // Atualiza produto no Marketplace
+            // $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+
+            // if ( !$searchSku->first() )
+            // {
+            //     return response()->json( [
+            //         "errorCode" => "404",
+            //         "message"   => "something wrong on update product"
+            //     ], 404 );
+            // }
+
+            // Product::update( $searchSku->first()->id, $wcData );
 
             return response()->json( [
                 "errorCode" => null,
