@@ -68,12 +68,12 @@ class Kernel extends ConsoleKernel
 
 
             // Marketplace
-            // Process FS products
-            $schedule->command( "sku:process_fs_products --action=update" )
-                     ->everyTenMinutes()
-                     ->between( "02:00", "07:00" )
-                     ->timezone( "America/Sao_Paulo" )
-                     ->runInBackground();
+            // // Process FS products
+            // $schedule->command( "sku:process_fs_products --action=update" )
+            //          ->everyTenMinutes()
+            //          ->between( "02:00", "07:00" )
+            //          ->timezone( "America/Sao_Paulo" )
+            //          ->runInBackground();
             // Get Categories
             $schedule->command( "mkt:get_categories"   )->dailyAt( "11:59" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Delete duplicate SKUs
