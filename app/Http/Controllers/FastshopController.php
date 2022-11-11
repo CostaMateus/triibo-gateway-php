@@ -192,34 +192,34 @@ class FastshopController extends Controller
 
         try
         {
-            $data  = [
-                "action"     => "update",
-                "data"       => json_encode( $request->all() ),
-                "created_at" => now(),
-                "updated_at" => now(),
-            ];
+            // $data  = [
+            //     "action"     => "update",
+            //     "data"       => json_encode( $request->all() ),
+            //     "created_at" => now(),
+            //     "updated_at" => now(),
+            // ];
+            // $saved = DB::table( "fastshop_products" )->insert( $data );
+            // if ( !$saved ) throw new Exception( "Unable to save the product data" );
 
-            $saved = DB::table( "fastshop_products" )->insert( $data );
+            $fsData = $request->all();
 
-            if ( !$saved ) throw new Exception( "Unable to save the product data" );
+            $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
 
-            // $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
+            // Converte produto da FS para WC
+            $wcData    = DataTranslator::translate( "newProduct", $fsData );
 
-            // // Converte produto da FS para WC
-            // $wcData    = DataTranslator::translate( "newProduct", $fsData );
+            // Atualiza produto no Marketplace
+            $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
 
-            // // Atualiza produto no Marketplace
-            // $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+            if ( !$searchSku->first() )
+            {
+                return response()->json( [
+                    "errorCode" => "404",
+                    "message"   => "something wrong on update product"
+                ], 404 );
+            }
 
-            // if ( !$searchSku->first() )
-            // {
-            //     return response()->json( [
-            //         "errorCode" => "404",
-            //         "message"   => "something wrong on update product"
-            //     ], 404 );
-            // }
-
-            // Product::update( $searchSku->first()->id, $wcData );
+            Product::update( $searchSku->first()->id, $wcData );
 
             return response()->json( [
                 "errorCode" => null,
@@ -800,31 +800,39 @@ class FastshopController extends Controller
      */
     private static function getCategoriesId( string $data )
     {
-        $auxData    = explode( "/", $data );
-        $categories = [];
+        $data = explode( "/", $data );
+        $cats = [];
 
-        foreach ( $auxData as $key => $ctg )
+        foreach ( $data as $key => $catName )
         {
-            $slug           = Str::slug( $ctg, "-" );
+            $slug = Str::slug( $catName, "-" );
+            $cat  = DB::table( "marketplace_product_categories" )
+                       ->where( "cat_slug", $slug )
+                       ->first();
 
-            $searchCategory = Category::all( [ "slug" => $slug ] );
-
-            if ( !$searchCategory->first() )
+            if ( $cat )
             {
-                $new          = Category::create( [
-                    "name"   => $ctg,
-                    "parent" => ( $key == 0 ) ? 0 : $categories[ $key - 1 ]
-                ] );
-
-                $categories[] = $new[ "id" ];
+                $cats[] = $cat->cat_id;
             }
             else
             {
-                $categories[] = $searchCategory->first()->id;
+                $new    = Category::create( [
+                    "name"   => $catName,
+                    "parent" => ( $key == 0 ) ? 0 : $cats[ $key - 1 ]
+                ] );
+
+                $cats[] = $new[ "id" ];
+
+                $insert = [
+                    "cat_id"   => $new[ "id"   ],
+                    "cat_slug" => $new[ "slug" ]
+                ];
+
+                DB::table( "marketplace_product_categories" )->insert( $insert );
             }
         }
 
-        return $categories;
+        return $cats;
     }
 
     /**
