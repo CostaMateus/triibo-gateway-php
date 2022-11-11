@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Marketplace;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Category;
 
 class GetMktProductCategories extends Command
@@ -38,7 +39,7 @@ class GetMktProductCategories extends Command
      */
     public function handle()
     {
-        $date  = now();
+        DB::table( "marketplace_product_categories" )->truncate();
 
         $ended = false;
         $page  = 1;
@@ -70,6 +71,6 @@ class GetMktProductCategories extends Command
             ];
         }
 
-        \DB::table( "marketplace_product_categories" )->insert( $data );
+        DB::table( "marketplace_product_categories" )->insert( $data );
     }
 }
