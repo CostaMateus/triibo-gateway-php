@@ -18,9 +18,11 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Cofry\ProcessStoresPromos::class,
         \App\Console\Commands\Log\ClearLogFile::class,
         \App\Console\Commands\Marketplace\DuplicateSKUs::class,
+        \App\Console\Commands\Marketplace\GetMktProductCategories::class,
         \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
+        \App\Console\Commands\Marketplace\UpdateProductWithoutImage::class,
         \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
         \App\Console\Commands\Marketplace\WithoutHubFastShop::class,
         \App\Console\Commands\Triibo\SyncIdsMP::class,
@@ -66,6 +68,14 @@ class Kernel extends ConsoleKernel
 
 
             // Marketplace
+            // Process FS products
+            $schedule->command( "sku:process_fs_products --action=update" )
+                     ->everyTenMinutes()
+                     ->between( "02:00", "07:00" )
+                     ->timezone( "America/Sao_Paulo" )
+                     ->runInBackground();
+            // Get Categories
+            $schedule->command( "mkt:get_categories"   )->dailyAt( "11:59" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Delete duplicate SKUs
             $schedule->command( "sku:delete_duplicate" )->dailyAt( "01:03" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Change status of products without images
