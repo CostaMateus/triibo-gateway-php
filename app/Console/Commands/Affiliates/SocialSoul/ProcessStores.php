@@ -14,7 +14,7 @@ class ProcessStores extends Command
      * @var string
      */
     protected $signature = "socialsoul:process
-                            {option= : Options: stores, coupons or offers }";
+                            {--option= : Options: stores, coupons or offers }";
 
     /**
      * The console command description.
