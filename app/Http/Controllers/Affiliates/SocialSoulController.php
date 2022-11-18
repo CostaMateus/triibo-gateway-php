@@ -9,34 +9,31 @@ use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 // Lomadee
 class SocialSoulController extends Controller
 {
-    //
+    protected $integration;
+
+    public function __construct()
+    {
+        $this->integration = new SocialSoulIntegration();
+    }
 
     public function coupons()
     {
-        $integration = new SocialSoulIntegration();
-        $coupons     = $integration->getCoupons();
+        $coupons = $this->integration->getCoupons();
 
         dd( $coupons );
     }
 
     public function stores()
     {
-        $integration = new SocialSoulIntegration();
-        $stores      = $integration->getStores();
+        $stores = $this->integration->getStores();
 
-        foreach ( $stores[ "data" ] as $id => &$store )
-        {
-            if ( $store[ "hasOffer" ] > 0 )
-            {
-                echo $store[ "id" ] . "\n";
+        dd( $stores );
+    }
 
-                $data = $integration->getOffers( $store[ "id" ] );
+    public function offers()
+    {
+        $offers = $this->integration->getOffers();
 
-                if ( $data[ "success" ] )
-                    $store[ "dataOffer" ] = $data[ "data" ];
-            }
-        }
-
-        return $stores[ "data" ];
+        dd( $offers );
     }
 }
