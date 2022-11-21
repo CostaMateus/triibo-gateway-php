@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\User;
+use App\Notifications\ScheduleFailure;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 
@@ -409,6 +411,21 @@ class Helper
         }
 
         return $response;
+    }
+
+    public static function sendMailNotification( $blade, $method, $catch, $e )
+    {
+        $mail = [
+            "subject"    => "Dev - Integração Cofry",
+            "title"      => "Erro no schedule: ",
+            "method"     => $method,
+            "catch"      => $catch,
+            "stacktrace" => $e,
+        ];
+
+        $user = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
+
+        $user->notify( new ScheduleFailure( $blade, $mail ) );
     }
 
 }
