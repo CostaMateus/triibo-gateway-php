@@ -14,7 +14,7 @@ class ProcessStores extends Command
      * @var string
      */
     protected $signature = "socialsoul:process
-                            {--option= : Options: stores, coupons or offers }";
+                            {--option= : Options: stores, promotions or all }";
 
     /**
      * The console command description.
@@ -40,8 +40,8 @@ class ProcessStores extends Command
      */
     public function handle()
     {
-        $opts       = [ "stores", "coupons", "offers" ];
-        $option     = $this->option( "option" );
+        $opts   = [ "stores", "promotions", "all" ];
+        $option = $this->option( "option" );
 
         if ( !in_array( $option, $opts ) )
         {
@@ -49,15 +49,39 @@ class ProcessStores extends Command
             return;
         }
 
-        $option     = ucfirst( $option );
+        if ( $option != "all" )
+        {
+            $option     = ucfirst( $option );
 
-        echo "Command : Start processing of {$option}\n";
-        Log::channel( "socialsoul" )->info( $option, [ "Start processing of {$option}" ]);
+            echo "Command : Start processing of {$option}\n";
+            Log::channel( "socialsoul" )->info( $option, [ "Start processing of {$option}" ]);
 
-        $socialsoul = new SocialSoulController();
-        $socialsoul->{$option}();
+            $socialsoul = new SocialSoulController();
+            $socialsoul->{$option}();
 
-        echo "Command : End {$option} processing\n";
-        Log::channel( "socialsoul" )->info( $option, [ "End {$option} processing" ] );
+            echo "Command : End {$option} processing\n";
+            Log::channel( "socialsoul" )->info( $option, [ "End {$option} processing" ] );
+        }
+        else
+        {
+            echo "Command : Start processing of Stores\n";
+            Log::channel( "socialsoul" )->info( "Stores", [ "Start processing of Stores" ]);
+
+            $socialsoul = new SocialSoulController();
+            $socialsoul->stores();
+
+            echo "Command : End Stores processing\n";
+            Log::channel( "socialsoul" )->info( "Stores", [ "End Stores processing" ] );
+
+
+            echo "Command : Start processing of Promotions\n";
+            Log::channel( "socialsoul" )->info( "Promotions", [ "Start processing of Promotions" ]);
+
+            $socialsoul = new SocialSoulController();
+            $socialsoul->promotions();
+
+            echo "Command : End Promotions processing\n";
+            Log::channel( "socialsoul" )->info( "Promotions", [ "End Promotions processing" ] );
+        }
     }
 }
