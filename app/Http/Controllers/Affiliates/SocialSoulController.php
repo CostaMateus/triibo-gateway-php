@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Affiliates;
 
 use Throwable;
+use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
@@ -43,10 +44,7 @@ class SocialSoulController extends Controller
                 "message" => $e
             ] );
 
-            // self::sendMailNotification( [
-            //     "method" => "insertStoresFirebase()",
-            //     "catch"  => "FirebaseException"
-            // ], $e );
+            Helper::sendMailNotification( "socialsoul", "insertStoresFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
@@ -58,19 +56,48 @@ class SocialSoulController extends Controller
                 "message" => $e
             ] );
 
-            // self::sendMailNotification( [
-            //     "method" => "insertStoresFirebase()",
-            //     "catch"  => "Throwable"
-            // ], $e );
+            Helper::sendMailNotification( "socialsoul", "insertStoresFirebase()", "Throwable", $e );
         }
     }
 
 
     public function coupons()
     {
-        $coupons = $this->integration->getCoupons();
+        try
+        {
+            $this->insertCouponsFirebase();
+            echo "Coupons : Promotions sent successfully\n";
+            Log::channel( "socialsoul" )->info( "Coupons", [
+                "code"    => 0,
+                "info"    => "Promotions sent successfully",
+                "error"   => NULL,
+                "message" => NULL
+            ] );
+        }
+        catch ( FirebaseException $e )
+        {
+            echo "Coupons : Promotion, Firebase process error - aborted\n";
+            Log::channel( "socialsoul" )->critical( "Coupons", [
+                "code"    => "C-401",
+                "info"    => "Promotion, Firebase process error - aborted",
+                "error"   => "An error has occurred while working with the SDK",
+                "message" => $e
+            ] );
 
-        dd( $coupons );
+            Helper::sendMailNotification( "socialsoul", "insertCouponsFirebase()", "FirebaseException", $e );
+        }
+        catch ( Throwable $e )
+        {
+            echo "Coupons : Unexpected error - aborted\n";
+            Log::channel( "socialsoul" )->critical( "Coupons", [
+                "code"    => "C-501",
+                "info"    => "Unexpected error - aborted",
+                "error"   => "A not-Firebase specific error has occurred",
+                "message" => $e
+            ] );
+
+            Helper::sendMailNotification( "socialsoul", "insertCouponsFirebase()", "Throwable", $e );
+        }
     }
 
     public function offers()
@@ -137,6 +164,64 @@ class SocialSoulController extends Controller
             }
 
             $firebaseStores->update( [ $id => $s ] );
+        }
+    }
+
+    /**
+     * Process coupons and send to Firebase
+     *
+     * @return void
+     */
+    private function insertCouponsFirebase()
+    {
+        $db             = Firebase::database();
+        $firebasePromos = $db->getReference( "/Store" );
+
+        echo "Coupons : Searching for promotions\n";
+        Log::channel( "socialsoul" )->info( "Coupons", [ "Searching for promotions" ] );
+
+        $promos    = $this->integration->getCoupons();
+        $allPromos = $firebasePromos->getValue();
+
+        foreach ( $allPromos as $id => $p )
+        {
+            if ( strpos( $id, "-socialsoul" ) !== false )
+            {
+                if ( !isset( $promos[ $id ] ) )
+                {
+                    echo "Coupons : Disab. Promo. ID = $id\n";
+                    $p[ "isPublished" ] = false;
+                    $p[ "active"      ] = false;
+
+                    $firebasePromos->update( [ $id => $p ] );
+                }
+            }
+        }
+
+        echo "Coupons : Sending promos to Firebase\n";
+        Log::channel( "socialsoul" )->info( "Coupons", [ "Sending promos to Firebase" ] );
+
+        foreach ( $promos as $id => $p )
+        {
+            echo "Coupons : Promo ID = $id\n";
+
+            if ( isset( $allPromos[ $id ] ) )
+            {
+                $desc = $allPromos[ $id ][ "description" ];
+                $desc = explode( "\n\n#", $desc );
+
+                if ( count( $desc ) > 1 )
+                {
+                    array_shift( $desc );
+
+                    $aux = "";
+                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+
+                    $p[ "description" ] .= $aux;
+                }
+            }
+
+            $firebasePromos->update( [ $id => $p ] );
         }
     }
 }
