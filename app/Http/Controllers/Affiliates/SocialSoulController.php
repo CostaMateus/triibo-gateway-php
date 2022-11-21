@@ -60,14 +60,13 @@ class SocialSoulController extends Controller
         }
     }
 
-
-    public function coupons()
+    public function promotions()
     {
         try
         {
-            $this->insertCouponsOffersFirebase( "Coupons" );
-            echo "Coupons : Promotions sent successfully\n";
-            Log::channel( "socialsoul" )->info( "Coupons", [
+            $this->insertCouponsOffersFirebase();
+            echo "Promotions : Promotions sent successfully\n";
+            Log::channel( "socialsoul" )->info( "Promotions", [
                 "code"    => 0,
                 "info"    => "Promotions sent successfully",
                 "error"   => NULL,
@@ -76,66 +75,27 @@ class SocialSoulController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            echo "Coupons : Promotion, Firebase process error - aborted\n";
-            Log::channel( "socialsoul" )->critical( "Coupons", [
+            echo "Promotions : Promotion, Firebase process error - aborted\n";
+            Log::channel( "socialsoul" )->critical( "Promotions", [
                 "code"    => "C-401",
                 "info"    => "Promotion, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
                 "message" => $e
             ] );
 
-            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase( Coupons )", "FirebaseException", $e );
+            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
-            echo "Coupons : Unexpected error - aborted\n";
-            Log::channel( "socialsoul" )->critical( "Coupons", [
+            echo "Promotions : Unexpected error - aborted\n";
+            Log::channel( "socialsoul" )->critical( "Promotions", [
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
                 "message" => $e
             ] );
 
-            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase( Coupons )", "Throwable", $e );
-        }
-    }
-
-    public function offers()
-    {
-        try
-        {
-            $this->insertCouponsOffersFirebase( "Offers" );
-            echo "Offers : Promotions sent successfully\n";
-            Log::channel( "socialsoul" )->info( "Offers", [
-                "code"    => 0,
-                "info"    => "Promotions sent successfully",
-                "error"   => NULL,
-                "message" => NULL
-            ] );
-        }
-        catch ( FirebaseException $e )
-        {
-            echo "Offers : Promotion, Firebase process error - aborted\n";
-            Log::channel( "socialsoul" )->critical( "Offers", [
-                "code"    => "C-401",
-                "info"    => "Promotion, Firebase process error - aborted",
-                "error"   => "An error has occurred while working with the SDK",
-                "message" => $e
-            ] );
-
-            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase( Offers )", "FirebaseException", $e );
-        }
-        catch ( Throwable $e )
-        {
-            echo "Offers : Unexpected error - aborted\n";
-            Log::channel( "socialsoul" )->critical( "Offers", [
-                "code"    => "C-501",
-                "info"    => "Unexpected error - aborted",
-                "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e
-            ] );
-
-            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase( Offers )", "Throwable", $e );
+            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase()", "Throwable", $e );
         }
     }
 
@@ -200,15 +160,17 @@ class SocialSoulController extends Controller
      *
      * @return void
      */
-    private function insertCouponsOffersFirebase( string $promo )
+    private function insertCouponsOffersFirebase()
     {
         $db             = Firebase::database();
         $firebasePromos = $db->getReference( "/Store" );
 
-        echo "{$promo} : Searching for promotions\n";
-        Log::channel( "socialsoul" )->info( "{$promo}", [ "Searching for promotions" ] );
+        echo "Promotions : Searching for promotions\n";
+        Log::channel( "socialsoul" )->info( "Promotions", [ "Searching for promotions" ] );
 
-        $promos    = $this->integration->{ "get{$promo}" }();
+        $coupons   = $this->integration->getCoupons();
+        $offers    = $this->integration->getOffers();
+        $promos    = array_merge( $coupons, $offers );
         $allPromos = $firebasePromos->getValue();
 
         foreach ( $allPromos as $id => $p )
@@ -217,7 +179,7 @@ class SocialSoulController extends Controller
             {
                 if ( !isset( $promos[ $id ] ) )
                 {
-                    echo "{$promo} : Disab. Promo. ID = $id\n";
+                    echo "Promotions : Disab. Promo. ID = $id\n";
                     $p[ "isPublished" ] = false;
                     $p[ "active"      ] = false;
 
@@ -226,12 +188,12 @@ class SocialSoulController extends Controller
             }
         }
 
-        echo "{$promo} : Sending promos to Firebase\n";
-        Log::channel( "socialsoul" )->info( "{$promo}", [ "Sending promos to Firebase" ] );
+        echo "Promotions : Sending promos to Firebase\n";
+        Log::channel( "socialsoul" )->info( "Promotions", [ "Sending promos to Firebase" ] );
 
         foreach ( $promos as $id => $p )
         {
-            echo "{$promo} : Promo ID = $id\n";
+            echo "Promotions : Insert/Update Promo ID = $id\n";
 
             if ( isset( $allPromos[ $id ] ) )
             {
