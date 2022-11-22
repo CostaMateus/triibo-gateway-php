@@ -7,6 +7,7 @@ use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\File;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
@@ -15,10 +16,14 @@ use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 class SocialSoulController extends Controller
 {
     protected $integration;
+    protected $stores_path;
+    protected $promos_path;
 
     public function __construct()
     {
         $this->integration = new SocialSoulIntegration();
+        $this->stores_path = public_path( "images/affiliates/socialsoul/establishments/" );
+        $this->promos_path = public_path( "images/affiliates/socialsoul/promotions/"     );
     }
 
     public function stores()
@@ -99,6 +104,40 @@ class SocialSoulController extends Controller
         }
     }
 
+    public function images()
+    {
+        $filesStores = File::allFiles( $this->stores_path );
+        $filesPromos = File::allFiles( $this->promos_path );
+
+        if ( empty( $filesStores ) || empty( $filesPromos ) )
+        {
+            echo "Images : No images to upload\n";
+            Log::channel( "socialsoul" )->info( "Images", [ "No images to upload" ] );
+            return;
+        }
+
+        echo "Images : Capturing names - establishments\n";
+        Log::channel( "socialsoul" )->info( "Images", [ "Capturing names - establishments" ] );
+        $fileNameStores = $this->getFileNames( $filesStores );
+
+        echo "Images : Capturing names - promotions";
+        Log::channel( "socialsoul" )->info( "Images", [ "Capturing names - promotions"     ] );
+        $fileNamePromos = $this->getFileNames( $filesPromos );
+
+        $this->insertImagesFirebase( [
+            "stores"     => [
+                "files" => $fileNameStores,
+                "lc"    => $this->stores_path,
+                "fb"    => "estabelecimento/",
+            ],
+            "promotions" => [
+                "files" => $fileNamePromos,
+                "lc"    => $this->promotions_path,
+                "fb"    => "promocao/"
+            ]
+        ] );
+    }
+
     /**
      * Process stores and send to Firebase
      *
@@ -111,6 +150,8 @@ class SocialSoulController extends Controller
 
         echo "Stores : Searching establishments\n";
         Log::channel( "socialsoul" )->info( "Stores", [ "Searching establishments" ] );
+
+        File::deleteDirectory( $this->stores_path, true );
 
         $stores         = $this->integration->getStores();
         $allStores      = $firebaseStores->getValue();
@@ -153,6 +194,8 @@ class SocialSoulController extends Controller
 
             $firebaseStores->update( [ $id => $s ] );
         }
+
+        File::deleteDirectory( $this->stores_path, true );
     }
 
     /**
@@ -167,6 +210,8 @@ class SocialSoulController extends Controller
 
         echo "Promotions : Searching for promotions\n";
         Log::channel( "socialsoul" )->info( "Promotions", [ "Searching for promotions" ] );
+
+        File::deleteDirectory( $this->promos_path, true );
 
         $coupons   = $this->integration->getCoupons();
         $offers    = $this->integration->getOffers();
@@ -213,6 +258,88 @@ class SocialSoulController extends Controller
 
             $firebasePromos->update( [ $id => $p ] );
         }
+
+        File::deleteDirectory( $this->promos_path, true );
     }
 
+    /**
+     * Get the file names from list of files
+     *
+     * @param array $files
+     * @return array $fileNames
+     */
+    private function getFileNames( array $files )
+    {
+        $fileNames = [];
+
+        foreach( $files as $file )
+            array_push( $fileNames, pathinfo( $file )[ "basename" ] );
+
+        return $fileNames;
+    }
+
+    /**
+     * Send images to Firebase Storage
+     *
+     * @param array $data
+     * @return void
+     */
+    private function insertImagesFirebase( array $data )
+    {
+        $st     = Firebase::storage();
+        $bucket = $st->getBucket();
+
+        foreach ( $data as $key => $images )
+        {
+            echo "Images : Start sending images to Firebase - {$key}\n";
+            Log::channel( "socialsoul" )->info("Images", [ "Start sending images to Firebase - {$key}" ]);
+
+            $lc_path = $images[ "lc" ];
+            $fb_path = $images[ "fb" ];
+
+            foreach ( $images[ "files" ] as $img )
+            {
+                $uploader = $bucket->getResumableUploader(
+                    fopen( "{$lc_path}/{$img}", "r" ),
+                    [ "name" => $fb_path . $img ]
+                );
+
+                try
+                {
+                    echo "Images : Image ID = {$img}\n";
+                    $uploader->upload();
+                }
+                catch ( FirebaseException $e )
+                {
+                    // $resumeUri = $uploader->getResumeUri();
+                    // $object    = $uploader->resume( $resumeUri );
+
+                    echo "Images : Image, Firebase process error - aborted\n";
+                    Log::channel( "socialsoul" )->critical( "Images", [
+                        "code"    => "C-403",
+                        "info"    => $img,
+                        "error"   => "An error has occurred while working with the SDK",
+                        "message" => $e
+                    ] );
+
+                    Helper::sendMailNotification( "socialsoul", "insertImagesFirebase()", "FirebaseException", $e );
+                }
+                catch (Throwable $e)
+                {
+                    echo "Images : Unexpected error - aborted\n";
+                    Log::channel( "socialsoul" )->critical( "Images", [
+                        "code"    => "C-503",
+                        "info"    => $img,
+                        "error"   => "A not-Firebase specific error has occurred",
+                        "message" => $e
+                    ] );
+
+                    Helper::sendMailNotification( "socialsoul", "insertImagesFirebase()", "Throwable", $e );
+                }
+            }
+
+            echo "Images : End uploading images to Firebase - {$key}\n";
+            Log::channel( "socialsoul" )->info( "Images", [ "End uploading images to Firebase - {$key}" ] );
+        }
+    }
 }
