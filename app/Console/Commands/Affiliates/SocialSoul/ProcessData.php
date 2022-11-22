@@ -82,7 +82,14 @@ class ProcessData extends Command
 
     private function images()
     {
+        echo "Command : Start processing of Images\n";
+        Log::channel( "socialsoul" )->info( "Images", [ "Start processing of Images" ]);
 
+        $socialsoul = new SocialSoulController();
+        $socialsoul->images();
+
+        echo "Command : End Images processing\n";
+        Log::channel( "socialsoul" )->info( "Images", [ "End Images processing" ] );
     }
 
     private function all()

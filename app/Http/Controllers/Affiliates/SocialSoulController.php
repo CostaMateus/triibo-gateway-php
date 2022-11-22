@@ -294,10 +294,11 @@ class SocialSoulController extends Controller
             echo "Images : Start sending images to Firebase - {$key}\n";
             Log::channel( "socialsoul" )->info("Images", [ "Start sending images to Firebase - {$key}" ]);
 
-            $lc_path = $images[ "lc" ];
-            $fb_path = $images[ "fb" ];
+            $files   = $images[ "files" ];
+            $lc_path = $images[ "lc"    ];
+            $fb_path = $images[ "fb"    ];
 
-            foreach ( $images[ "files" ] as $img )
+            foreach ( $files as $img )
             {
                 $uploader = $bucket->getResumableUploader(
                     fopen( "{$lc_path}/{$img}", "r" ),
