@@ -13,10 +13,14 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        \App\Console\Commands\Affiliates\SocialSoul\ProcessData::class,
+
         \App\Console\Commands\Cofry\DeleteImages::class,
         \App\Console\Commands\Cofry\ProcessImages::class,
         \App\Console\Commands\Cofry\ProcessStoresPromos::class,
+
         \App\Console\Commands\Log\ClearLogFile::class,
+
         \App\Console\Commands\Marketplace\DuplicateSKUs::class,
         \App\Console\Commands\Marketplace\GetMktProductCategories::class,
         \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
@@ -25,6 +29,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\UpdateProductWithoutImage::class,
         \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
         \App\Console\Commands\Marketplace\WithoutHubFastShop::class,
+
         \App\Console\Commands\Triibo\SyncIdsMP::class,
         \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         \App\Console\Commands\Triibo\UnsetVouchers::class,
