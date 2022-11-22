@@ -77,7 +77,7 @@ class ProcessFastShopProducts extends Command
 
             foreach ( $products as $data )
             {
-                echo "Processing product ID: " . $data->id . "\n";
+                echo "Processing local product ID: " . $data->id . "\n";
 
                 $product                       = json_decode( $data->data, true );
                 $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
@@ -92,9 +92,9 @@ class ProcessFastShopProducts extends Command
                     $array[]        = $wcData;
                 }
 
-                if ( count( $array ) == 100 )
+                if ( count( $array ) == 50 )
                 {
-                    echo "Sending to WC 100 products...\n";
+                    echo "Sending to WC 50 products...\n";
 
                     try
                     {
