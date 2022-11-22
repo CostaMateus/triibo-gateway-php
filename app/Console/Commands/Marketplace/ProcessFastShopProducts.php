@@ -55,8 +55,6 @@ class ProcessFastShopProducts extends Command
         $array  = [];
         $i      = 0;
 
-        DB::beginTransaction();
-
         do
         {
             echo "Command : Get products of local table\n";
@@ -92,9 +90,9 @@ class ProcessFastShopProducts extends Command
                     $array[]        = $wcData;
                 }
 
-                if ( count( $array ) == 50 )
+                if ( count( $array ) == 100 )
                 {
-                    echo "Sending to WC 50 products...\n";
+                    echo "Sending to WC 100 products...\n";
 
                     try
                     {
@@ -103,15 +101,9 @@ class ProcessFastShopProducts extends Command
                         $i++;
 
                         Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} processing round" ] );
-
-                        DB::commit();
-                        DB::beginTransaction();
                     }
                     catch ( Exception $e )
                     {
-                        DB::rollBack();
-                        DB::beginTransaction();
-
                         echo "Fail : {$e->getMessage()}\n";
                         Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
                     }
@@ -130,17 +122,13 @@ class ProcessFastShopProducts extends Command
 
                 Product::batch( [ $action => $array ] );
 
-                $i = count( $array );
+                $i++;
                 Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} last processing round" ] );
-
-                DB::commit();
             }
             catch ( \Exception $e )
             {
                 echo "Fail : {$e->getMessage()}\n";
                 Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
-
-                DB::rollBack();
             }
         }
 
