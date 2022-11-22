@@ -51,16 +51,16 @@ class ProcessStores extends Command
 
         if ( $option != "all" )
         {
-            $option     = ucfirst( $option );
+            $optionLog  = ucfirst( $option );
 
-            echo "Command : Start processing of {$option}\n";
-            Log::channel( "socialsoul" )->info( $option, [ "Start processing of {$option}" ]);
+            echo "Command : Start processing of {$optionLog}\n";
+            Log::channel( "socialsoul" )->info( $optionLog, [ "Start processing of {$optionLog}" ]);
 
             $socialsoul = new SocialSoulController();
             $socialsoul->{$option}();
 
-            echo "Command : End {$option} processing\n";
-            Log::channel( "socialsoul" )->info( $option, [ "End {$option} processing" ] );
+            echo "Command : End {$optionLog} processing\n";
+            Log::channel( "socialsoul" )->info( $optionLog, [ "End {$optionLog} processing" ] );
         }
         else
         {
