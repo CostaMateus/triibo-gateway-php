@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Illuminate\Support\Str;
+use Exception;
+use App\Helpers\Helper;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -46,6 +47,7 @@ class ProcessFastShopProducts extends Command
     {
         if ( !in_array( $this->option( "action" ), [ "create", "update", "delete" ] ) ) return;
 
+        echo "Command : Starting process_fs_products\n";
         Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Starting process_fs_products" ] );
 
         $action = $this->option( "action" );
@@ -55,6 +57,8 @@ class ProcessFastShopProducts extends Command
 
         do
         {
+            echo "Command : Get products of local table\n";
+
             $products = DB::table( "fastshop_products" )
                           ->where( "action", $action   )
                           ->limit( 100 )
@@ -62,6 +66,7 @@ class ProcessFastShopProducts extends Command
 
             if ( $products->count() == 0  )
             {
+                echo "Command : No products to process\n";
                 Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "No products to process" ] );
                 break;
             }
@@ -70,6 +75,8 @@ class ProcessFastShopProducts extends Command
 
             foreach ( $products as $data )
             {
+                echo "Processing product ID: " . $data->id . "\n";
+
                 $product                       = json_decode( $data->data, true );
                 $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
                 $wcData                        = DataTranslator::translate( "newProduct", $product );
@@ -85,28 +92,47 @@ class ProcessFastShopProducts extends Command
 
                 if ( count( $array ) == 100 )
                 {
-                    Product::batch( [ $action => $array ] );
-                    $array = [];
-                    $i++;
+                    echo "Sending to WC 100 products...\n";
 
-                    Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} processing round" ] );
+                    try
+                    {
+                        Product::batch( [ $action => $array ] );
+                        $array = [];
+                        $i++;
+
+                        Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} processing round" ] );
+                    }
+                    catch ( Exception $e )
+                    {
+                        echo "Fail : {$e->getMessage()}\n";
+                        Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
+                    }
                 }
             }
         }
         while ( !$ended );
 
-        try
+        if ( !empty( $array ) )
         {
-            Product::batch( [ $action => $array ] );
+            try
+            {
+                $count = count( $array );
 
-            $i = count( $array );
-            Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} last processing round" ] );
-        }
-        catch ( \Exception $e )
-        {
-            echo $e->getMessage() . "\n";
+                echo "Sending to WC last {$count} products...\n";
+
+                Product::batch( [ $action => $array ] );
+
+                $i = count( $array );
+                Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} last processing round" ] );
+            }
+            catch ( \Exception $e )
+            {
+                echo "Fail : {$e->getMessage()}\n";
+                Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
+            }
         }
 
+        echo "Command : Finalizing process_fs_products\n";
         Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Finalizing process_fs_products" ] );
     }
 
@@ -117,32 +143,52 @@ class ProcessFastShopProducts extends Command
 
         foreach ( $data as $key => $catName )
         {
-            $slug = Str::slug( $catName, "-" );
-
-            $cat  = DB::table( "marketplace_product_categories" )
-                       ->where( "cat_slug", $slug )
-                       ->first();
-
-            if ( $cat )
+            try
             {
-                $cats[] = $cat->cat_id;
-                continue;
+                $slug = Helper::slugify( $catName, "-" );
+
+                $cat  = DB::table( "marketplace_product_categories" )
+                           ->where( "cat_slug", $slug )
+                           ->first();
+
+                if ( $cat )
+                {
+                    $cats[] = $cat->cat_id;
+                    continue;
+                }
+                else
+                {
+                    $new = Category::all( [ "slug" => $slug ] );
+
+                    if ( $new->first() )
+                    {
+                        $new = $new->first();
+                        $new = [
+                            "id"   => $new->id,
+                            "slug" => $new->slug
+                        ];
+                    }
+                    else
+                    {
+                        $new = Category::create( [
+                            "name"   => $catName,
+                            "parent" => ( $key == 0 ) ? 0 : $cats[ $key - 1 ]
+                        ] );
+                    }
+
+                    $cats[] = $new[ "id" ];
+
+                    $insert = [
+                        "cat_id"   => $new[ "id"   ],
+                        "cat_slug" => $new[ "slug" ]
+                    ];
+
+                    DB::table( "marketplace_product_categories" )->insert( $insert );
+                }
             }
-            else
+            catch( Exception $e )
             {
-                $new    = Category::create( [
-                    "name"   => $catName,
-                    "parent" => ( $key == 0 ) ? 0 : $cats[ $key - 1 ]
-                ] );
-
-                $cats[] = $new[ "id" ];
-
-                $insert = [
-                    "cat_id"   => $new[ "id"   ],
-                    "cat_slug" => $new[ "slug" ]
-                ];
-
-                DB::table( "marketplace_product_categories" )->insert( $insert );
+                Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Fail get category ID: {$catName}" ] );
             }
         }
 
