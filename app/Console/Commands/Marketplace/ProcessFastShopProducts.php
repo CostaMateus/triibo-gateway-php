@@ -82,12 +82,18 @@ class ProcessFastShopProducts extends Command
                 $wcData                        = DataTranslator::translate( "newProduct", $product );
                 $searchSku                     = Product::all( [ "sku" => $wcData[ "sku" ] ] );
 
-                if ( $p = $searchSku->first() )
+                if ( $product = $searchSku->first() )
                 {
+                    echo "Match found, queued to update - {$wcData[ "sku" ]}\n";
+
                     DB::table( "fastshop_products" )->where( "id", $data->id )->delete();
 
-                    $wcData[ "id" ] = $p->id;
+                    $wcData[ "id" ] = $product->id;
                     $array[]        = $wcData;
+                }
+                else
+                {
+                    echo "Match not find, skipping - {$wcData[ "sku" ]}\n";
                 }
 
                 if ( count( $array ) == 100 )
@@ -106,6 +112,8 @@ class ProcessFastShopProducts extends Command
                     {
                         echo "Fail : {$e->getMessage()}\n";
                         Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
+
+                        if ( $e->getMessage() == "JSON ERROR: Syntax error" ) $array = [];
                     }
                 }
             }
