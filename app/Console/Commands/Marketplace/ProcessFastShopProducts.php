@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Illuminate\Support\Str;
+use Exception;
+use App\Helpers\Helper;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -117,32 +118,52 @@ class ProcessFastShopProducts extends Command
 
         foreach ( $data as $key => $catName )
         {
-            $slug = Str::slug( $catName, "-" );
-
-            $cat  = DB::table( "marketplace_product_categories" )
-                       ->where( "cat_slug", $slug )
-                       ->first();
-
-            if ( $cat )
+            try
             {
-                $cats[] = $cat->cat_id;
-                continue;
+                $slug = Helper::slugify( $catName, "-" );
+
+                $cat  = DB::table( "marketplace_product_categories" )
+                           ->where( "cat_slug", $slug )
+                           ->first();
+
+                if ( $cat )
+                {
+                    $cats[] = $cat->cat_id;
+                    continue;
+                }
+                else
+                {
+                    $new = Category::all( [ "slug" => $slug ] );
+
+                    if ( $new->first() )
+                    {
+                        $new = $new->first();
+                        $new = [
+                            "id"   => $new->id,
+                            "slug" => $new->slug
+                        ];
+                    }
+                    else
+                    {
+                        $new = Category::create( [
+                            "name"   => $catName,
+                            "parent" => ( $key == 0 ) ? 0 : $cats[ $key - 1 ]
+                        ] );
+                    }
+
+                    $cats[] = $new[ "id" ];
+
+                    $insert = [
+                        "cat_id"   => $new[ "id"   ],
+                        "cat_slug" => $new[ "slug" ]
+                    ];
+
+                    DB::table( "marketplace_product_categories" )->insert( $insert );
+                }
             }
-            else
+            catch( Exception $e )
             {
-                $new    = Category::create( [
-                    "name"   => $catName,
-                    "parent" => ( $key == 0 ) ? 0 : $cats[ $key - 1 ]
-                ] );
-
-                $cats[] = $new[ "id" ];
-
-                $insert = [
-                    "cat_id"   => $new[ "id"   ],
-                    "cat_slug" => $new[ "slug" ]
-                ];
-
-                DB::table( "marketplace_product_categories" )->insert( $insert );
+                Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Fail get category ID: {$catName}" ] );
             }
         }
 
