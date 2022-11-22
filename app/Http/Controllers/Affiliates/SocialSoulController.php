@@ -46,7 +46,7 @@ class SocialSoulController extends Controller
                 "code"    => "C-401",
                 "info"    => "Establishment, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
-                "message" => $e
+                "message" => $e->getMessage()
             ] );
 
             Helper::sendMailNotification( "socialsoul", "insertStoresFirebase()", "FirebaseException", $e );
@@ -58,7 +58,7 @@ class SocialSoulController extends Controller
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e
+                "message" => $e->getMessage(),
             ] );
 
             Helper::sendMailNotification( "socialsoul", "insertStoresFirebase()", "Throwable", $e );
@@ -85,7 +85,7 @@ class SocialSoulController extends Controller
                 "code"    => "C-401",
                 "info"    => "Promotion, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
-                "message" => $e
+                "message" => $e->getMessage(),
             ] );
 
             Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase()", "FirebaseException", $e );
@@ -97,7 +97,7 @@ class SocialSoulController extends Controller
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e
+                "message" => $e->getMessage(),
             ] );
 
             Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase()", "Throwable", $e );
@@ -316,7 +316,7 @@ class SocialSoulController extends Controller
                         "code"    => "C-403",
                         "info"    => $img,
                         "error"   => "An error has occurred while working with the SDK",
-                        "message" => $e
+                        "message" => $e->getMessage(),
                     ] );
 
                     Helper::sendMailNotification( "socialsoul", "insertImagesFirebase()", "FirebaseException", $e );
@@ -328,7 +328,7 @@ class SocialSoulController extends Controller
                         "code"    => "C-503",
                         "info"    => $img,
                         "error"   => "A not-Firebase specific error has occurred",
-                        "message" => $e
+                        "message" => $e->getMessage(),
                     ] );
 
                     Helper::sendMailNotification( "socialsoul", "insertImagesFirebase()", "Throwable", $e );
