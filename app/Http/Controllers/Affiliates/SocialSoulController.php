@@ -132,7 +132,7 @@ class SocialSoulController extends Controller
             ],
             "promotions" => [
                 "files" => $fileNamePromos,
-                "lc"    => $this->promotions_path,
+                "lc"    => $this->promos_path,
                 "fb"    => "promocao/"
             ]
         ] );
@@ -194,8 +194,6 @@ class SocialSoulController extends Controller
 
             $firebaseStores->update( [ $id => $s ] );
         }
-
-        File::deleteDirectory( $this->stores_path, true );
     }
 
     /**
@@ -258,8 +256,6 @@ class SocialSoulController extends Controller
 
             $firebasePromos->update( [ $id => $p ] );
         }
-
-        File::deleteDirectory( $this->promos_path, true );
     }
 
     /**
@@ -342,5 +338,8 @@ class SocialSoulController extends Controller
             echo "Images : End uploading images to Firebase - {$key}\n";
             Log::channel( "socialsoul" )->info( "Images", [ "End uploading images to Firebase - {$key}" ] );
         }
+
+        File::deleteDirectory( $this->stores_path, true );
+        File::deleteDirectory( $this->promos_path, true );
     }
 }
