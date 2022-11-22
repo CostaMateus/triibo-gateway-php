@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Affiliates\SocialSoulController;
 
-class ProcessStores extends Command
+class ProcessData extends Command
 {
     /**
      * The name and signature of the console command.
