@@ -2,6 +2,8 @@
 
 namespace App\Helpers;
 
+use App\Models\User;
+use App\Notifications\ScheduleFailure;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 
@@ -356,6 +358,74 @@ class Helper
     {
         preg_match("/\[.*?\]/", $message, $matches);
         return ( empty( $matches ) ) ? null : $matches[ 0 ];
+    }
+
+    public static function convertDateSS( string $date )
+    {
+        // 18/11/2022 23:59:00
+        $date      = explode( " ",  $date      );
+        $date[ 0 ] = explode( "/",  $date[ 0 ] );
+        $date[ 0 ] = array_reverse( $date[ 0 ] );
+        $date[ 0 ] = implode( "-",  $date[ 0 ] );
+        $date      = implode( " ",  $date );
+
+        return $date;
+    }
+
+    public static function usort( string $key, array &$data )
+    {
+        usort( $data, function( $a, $b ) use ( $key ) {
+            return $a[ $key ] <=> $b[ $key ];
+        } );
+    }
+
+    public static function getSchedulesOperation( bool $operation = true )
+    {
+        $response = [];
+
+        if ( $operation )
+        {
+            // funcionamento
+            foreach ( range( 1, 7 ) as $key )
+            {
+                $response[] = [
+                    "ativo"         => true,
+                    "horarioFim"    => "23:59",
+                    "horarioInicio" => "00:00"
+                ];
+            }
+        }
+        else
+        {
+            // horarios
+            foreach ( range( 1, 7 ) as $key )
+            {
+                $response[] = [
+                    "tipo"   => "aberto",
+                    "turnos" => [ [
+                        "fim"    => "23:59",
+                        "inicio" => "00:00"
+                    ] ]
+                ];
+            }
+        }
+
+        return $response;
+    }
+
+    public static function sendMailNotification( $blade, $method, $catch, $e )
+    {
+        $mail = [
+            "subject"    => "Dev - Integração Cofry",
+            "title"      => "Erro no schedule: ",
+            "method"     => $method,
+            "catch"      => $catch,
+            "stacktrace" => $e,
+        ];
+
+        $user = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
+
+        $user->notify( new ScheduleFailure( $blade, $mail ) );
     }
 
 }

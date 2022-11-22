@@ -115,6 +115,11 @@ return [
             'path'   => storage_path('logs/cofry.log'),
             'level'  => 'debug'
         ],
+        'socialsoul' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/socialsoul.log'),
+            'level'  => 'debug'
+        ],
 
         'triibo' => [
             'driver' => 'single',

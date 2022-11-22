@@ -52,7 +52,7 @@ class Kernel extends ConsoleKernel
             // Diariamente às 02h05
             $schedule->command( "delete:images"      )->dailyAt( "02:05" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Diariamente às 02h10
-            $schedule->command( "process:images"     )->dailyAt( "02:10" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "process:images"     )->dailyAt( "02:15" )->timezone( "America/Sao_Paulo" )->runInBackground();
 
 
             // Mautic Pipedrive Integration
