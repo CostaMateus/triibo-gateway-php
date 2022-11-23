@@ -65,7 +65,8 @@ class ProcessFastShopProducts extends Command
                           ->limit( 100 )
                           ->get();
 
-            if ( $products->count() == 0  )
+            // no products to process
+            if ( $products->count() == 0 )
             {
                 echo "Command : No products to process\n";
                 Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "No products to process" ] );
@@ -78,12 +79,11 @@ class ProcessFastShopProducts extends Command
             {
                 echo "Processing local product_ID: " . $data->id . " | ";
 
-                $product                       = json_decode( $data->data, true );
+                $product   = json_decode( $data->data, true );
                 $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
-                $wcData                        = DataTranslator::translate( "newProduct", $product );
-                $searchSku                     = DB::table( "marketplace_product_skus" )
-                                                   ->where( "product_sku", $wcData[ "sku" ] )
-                                                   ->first();
+
+                $wcData    = DataTranslator::translate( "newProduct", $product );
+                $searchSku = DB::table( "marketplace_product_skus" )->where( "product_sku", $wcData[ "sku" ] )->first();
 
                 if ( $searchSku )
                 {
@@ -147,9 +147,9 @@ class ProcessFastShopProducts extends Command
                 echo "Fail : {$e->getMessage()}\n";
                 Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
             }
-        }
 
-        DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
+            DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
+        }
 
         echo "Command : Finalizing process_fs_products\n";
         Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Finalizing process_fs_products" ] );
