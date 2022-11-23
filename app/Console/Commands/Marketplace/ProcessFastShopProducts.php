@@ -110,10 +110,15 @@ class ProcessFastShopProducts extends Command
                     }
                     catch ( Exception $e )
                     {
-                        echo "Fail : {$e->getMessage()}\n";
-                        Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
-
-                        if ( $e->getMessage() == "JSON ERROR: Syntax error" ) $array = [];
+                        if ( $e->getMessage() == "JSON ERROR: Syntax error" )
+                        {
+                            $array = [];
+                        }
+                        else
+                        {
+                            echo "Fail : {$e->getMessage()}\n";
+                            Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
+                        }
                     }
                 }
             }

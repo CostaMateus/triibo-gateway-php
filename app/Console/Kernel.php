@@ -13,10 +13,14 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
+        \App\Console\Commands\Affiliates\SocialSoul\ProcessData::class,
+
         \App\Console\Commands\Cofry\DeleteImages::class,
         \App\Console\Commands\Cofry\ProcessImages::class,
         \App\Console\Commands\Cofry\ProcessStoresPromos::class,
+
         \App\Console\Commands\Log\ClearLogFile::class,
+
         \App\Console\Commands\Marketplace\DuplicateSKUs::class,
         \App\Console\Commands\Marketplace\GetMktProductCategories::class,
         \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
@@ -25,6 +29,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\UpdateProductWithoutImage::class,
         \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
         \App\Console\Commands\Marketplace\WithoutHubFastShop::class,
+
         \App\Console\Commands\Triibo\SyncIdsMP::class,
         \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         \App\Console\Commands\Triibo\UnsetVouchers::class,
@@ -70,8 +75,7 @@ class Kernel extends ConsoleKernel
             // Marketplace
             // // Process FS products
             $schedule->command( "sku:process_fs_products --action=update" )
-                     ->everyTenMinutes()
-                     ->between( "02:00", "07:00" )
+                     ->dailyAt( "05:30" )
                      ->timezone( "America/Sao_Paulo" )
                      ->runInBackground();
             // Get Categories
@@ -87,7 +91,7 @@ class Kernel extends ConsoleKernel
 
 
             // Clear Logs
-            $schedule->command( "log:clear" )->weeklyOn( 3, "16:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
         }
     }
 
