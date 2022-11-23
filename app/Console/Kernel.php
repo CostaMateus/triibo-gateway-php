@@ -75,8 +75,7 @@ class Kernel extends ConsoleKernel
             // Marketplace
             // // Process FS products
             $schedule->command( "sku:process_fs_products --action=update" )
-                     ->everyTenMinutes()
-                     ->between( "02:00", "07:00" )
+                     ->dailyAt( "04:00" )
                      ->timezone( "America/Sao_Paulo" )
                      ->runInBackground();
             // Get Categories
