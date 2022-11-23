@@ -75,20 +75,22 @@ class ProcessFastShopProducts extends Command
 
             foreach ( $products as $data )
             {
-                echo "Processing local product ID: " . $data->id . "\n";
+                echo "Processing local product_ID: " . $data->id . " | ";
 
                 $product                       = json_decode( $data->data, true );
                 $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
                 $wcData                        = DataTranslator::translate( "newProduct", $product );
-                $searchSku                     = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+                $searchSku                     = DB::table( "marketplace_product_skus" )
+                                                   ->where( "product_sku", $wcData[ "sku" ] )
+                                                   ->first();
 
-                if ( $product = $searchSku->first() )
+                if ( $searchSku )
                 {
                     echo "Match found, queued to update - {$wcData[ "sku" ]}\n";
 
                     DB::table( "fastshop_products" )->where( "id", $data->id )->delete();
 
-                    $wcData[ "id" ] = $product->id;
+                    $wcData[ "id" ] = $searchSku->id;
                     $array[]        = $wcData;
                 }
                 else
