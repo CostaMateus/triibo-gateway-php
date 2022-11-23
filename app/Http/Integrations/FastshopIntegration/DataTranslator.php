@@ -542,6 +542,14 @@ class DataTranslator
                 "document"     => ( $parent ) ? $parent[ "billing" ][ "cpf" ] : $data[ "billing" ][ "cpf" ],
                 "documentType" => "cpf",
                 "isCorporate"  => false,
+
+                // "isCorporate"       => true,
+                // "corporateName"     => "TD - Power Informatica LTDA",
+                // "tradeName"         => "TD - Power Informatica LTDA",
+                // "corporateDocument" => "07776469000169",
+                // "corporatePhone"    => "(11) 99200-5881",
+                // "email"             => "ppinho@me.com",
+                // "phone"             => "(11) 99200-5881",
             ],
             "shippingData"      => [
                 // wc_order shipping
