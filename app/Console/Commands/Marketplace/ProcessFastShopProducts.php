@@ -61,6 +61,7 @@ class ProcessFastShopProducts extends Command
 
             $products = DB::table( "fastshop_products" )
                           ->where( "action", $action   )
+                          ->where( "status", null      )
                           ->limit( 100 )
                           ->get();
 
@@ -96,6 +97,7 @@ class ProcessFastShopProducts extends Command
                 else
                 {
                     echo "Match not find, skipping - {$wcData[ "sku" ]}\n";
+                    DB::table( "fastshop_products" )->where( "id", $data->id )->update( [ "status" => "processed" ] );
                 }
 
                 if ( count( $array ) == 100 )
@@ -146,6 +148,8 @@ class ProcessFastShopProducts extends Command
                 Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
             }
         }
+
+        DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
 
         echo "Command : Finalizing process_fs_products\n";
         Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Finalizing process_fs_products" ] );

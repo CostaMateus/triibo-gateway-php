@@ -23,6 +23,7 @@ class Kernel extends ConsoleKernel
 
         \App\Console\Commands\Marketplace\DuplicateSKUs::class,
         \App\Console\Commands\Marketplace\GetMktProductCategories::class,
+        \App\Console\Commands\Marketplace\GetMktProductSkus::class,
         \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
@@ -78,6 +79,8 @@ class Kernel extends ConsoleKernel
                      ->dailyAt( "05:30" )
                      ->timezone( "America/Sao_Paulo" )
                      ->runInBackground();
+            // Get SKUs
+            $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "07:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Get Categories
             $schedule->command( "mkt:get_categories"   )->dailyAt( "11:59" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Delete duplicate SKUs
