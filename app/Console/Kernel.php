@@ -75,7 +75,7 @@ class Kernel extends ConsoleKernel
             // Marketplace
             // // Process FS products
             $schedule->command( "sku:process_fs_products --action=update" )
-                     ->dailyAt( "04:00" )
+                     ->dailyAt( "05:30" )
                      ->timezone( "America/Sao_Paulo" )
                      ->runInBackground();
             // Get Categories
@@ -91,7 +91,7 @@ class Kernel extends ConsoleKernel
 
 
             // Clear Logs
-            $schedule->command( "log:clear" )->weeklyOn( 3, "16:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
         }
     }
 
