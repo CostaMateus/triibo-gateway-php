@@ -96,7 +96,7 @@ class SocialSoulIntegration
 
             Helper::usort( "id", $offers[ "data" ] );
 
-            $offers     = $this->translateOffers( $offers[ "data" ]);
+            $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
             $promotions = array_merge( $promotions, $offers );
         }
 
@@ -404,7 +404,7 @@ class SocialSoulIntegration
      * @param array $data
      * @return array
      */
-    private function translateOffers( array $data )
+    private function translateOffers( array $data, string $cashback )
     {
         $promotions = [];
         $date       = new DateTime(date( "Y-m-d H:i:s.u" ) );
@@ -448,7 +448,11 @@ class SocialSoulIntegration
                 $description     .= "Em {$installmentQntt}x de R\${$installmentValue}.\n\n";
             }
 
-            $description      .= "Ganhe X pontos a cada Y reais.";
+            $base              = 10; // base de calculo, ex 10 reais gastos
+            $rate              = 10; // taxa de conversão, 10 pontos a cada 1 real
+            $points            = $base * $rate * ( $cashback / 100 );
+
+            $description      .= "Ganhe {$points} pontos a cada {$base} reais.";
             $description      .= "\n\nCategoria: " . $offer[ "category" ][ "name" ];
 
             $imageUrl          = $offer[ "thumbnail" ];
