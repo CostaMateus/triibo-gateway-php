@@ -23,6 +23,10 @@ class SocialSoulIntegration
     protected $url_store;
     protected $source_id;
 
+    protected $stores = [];
+    protected $base   = 100; // base de calculo, ex 100 reais gastos
+    protected $rate   = 10;  // taxa de conversão, 10 pontos a cada 1 real
+
     public function __construct()
     {
         $this->env          = config( "socialsoul.env"                    );
@@ -34,6 +38,8 @@ class SocialSoulIntegration
         $this->url_category = "{$url}/v3/{$tkn}/category";
         $this->url_offer    = "{$url}/v3/{$tkn}/offer";
         $this->url_store    = "{$url}/v3/{$tkn}/store";
+
+        $this->stores       = $this->getStores();
     }
 
     /**
@@ -43,20 +49,23 @@ class SocialSoulIntegration
      */
     public function getStores( bool $flag = false )
     {
-        $path    = public_path( "images/affiliates/socialsoul/establishments" );
-        $default = public_path( "images/standard.png" );
+        if ( empty( $this->stores ) )
+        {
+            $path    = public_path( "images/affiliates/socialsoul/establishments" );
+            $default = public_path( "images/standard.png" );
 
-        File::copy( $default, $path . "/standard.png" );
+            File::copy( $default, $path . "/standard.png" );
 
-        $stores  = $this->searchStores();
+            $stores  = $this->searchStores();
 
-        if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
+            if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
 
-        Helper::usort( "id", $stores[ "data" ] );
+            Helper::usort( "id", $stores[ "data" ] );
 
-        $establishments = $this->translateStores( $stores[ "data" ], $flag );
+            return $stores[ "data" ];
+        }
 
-        return $establishments;
+        return $this->translateStores( $this->stores, $flag );
     }
 
     /**
@@ -72,7 +81,8 @@ class SocialSoulIntegration
 
         Helper::usort( "id", $coupons[ "data" ] );
 
-        $promotions = $this->translateCoupons( $coupons[ "data" ] );
+        $stores     = $this->translateStores( $this->stores );
+        $promotions = $this->translateCoupons( $coupons[ "data" ], $stores );
 
         return $promotions;
     }
@@ -260,7 +270,7 @@ class SocialSoulIntegration
      * @param array $data
      * @return array
      */
-    private function translateStores( array $data, bool $flag )
+    private function translateStores( array $data, bool $flag = false )
     {
         $stores  = [];
         $date    = new DateTime( date( "Y-m-d H:i:s.u" ) );
@@ -333,7 +343,7 @@ class SocialSoulIntegration
      * @param array $data
      * @return array
      */
-    private function translateCoupons( array $data )
+    private function translateCoupons( array $data, array $stores )
     {
         $promotions = [];
         $date       = new DateTime(date( "Y-m-d H:i:s.u" ) );
@@ -341,17 +351,24 @@ class SocialSoulIntegration
 
         foreach ( $data as $key => $coupon )
         {
+            $idStore           = self::ID . $coupon[ "store" ][ "id" ];
+
+            if ( !isset( $stores[ $idStore ] ) ) continue;
+
             $date              = Helper::convertDateSS( $coupon[ "vigency" ] );
             $date              = new DateTime( date( $date ) );
             $dateDis           = ( int ) $date->format( "U" ) * 1000;
 
-            $idStore           = self::ID . $coupon[ "store" ][ "id" ];
+            $cashback          = $stores[ $idStore ][ "cashbackDefault" ];
+            $cashback          = str_replace( ",", ".", $cashback );
+            $points            = $this->base * $this->rate * ( $cashback / 100 );
+
             $id                = $idStore . $coupon[ "id" ];
 
             $establishmentName = $coupon[ "store" ][ "name" ];
 
             $description       = $coupon[ "description" ];
-            $description      .= "\n\nGanhe X pontos a cada Y reais.";
+            $description      .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base}.";
             $description      .= "\n\nCategoria: " . $coupon[ "category" ][ "name" ];
 
             $detailsDescrip    = $coupon[ "description" ];
@@ -448,12 +465,10 @@ class SocialSoulIntegration
                 $description     .= "Em {$installmentQntt}x de R\${$installmentValue}.\n\n";
             }
 
-            $base              = 10; // base de calculo, ex 10 reais gastos
-            $rate              = 10; // taxa de conversão, 10 pontos a cada 1 real
             $cashback          = str_replace( ",", ".", $cashback );
-            $points            = $base * $rate * ( $cashback / 100 );
+            $points            = $this->base * $this->rate * ( $cashback / 100 );
 
-            $description      .= "Ganhe {$points} pontos a cada {$base} reais.";
+            $description      .= "Ganhe {$points} pontos Triibo a cada R\${$this->base}.";
             $description      .= "\n\nCategoria: " . $offer[ "category" ][ "name" ];
 
             $imageUrl          = $offer[ "thumbnail" ];
