@@ -285,7 +285,7 @@ class SocialSoulIntegration
             $id                   = self::ID . $store[ "id" ];
 
             $cashback             = ( float ) $store[ "maxCommission" ] / 2;
-            $cashback             = number_format( $cashback, 2, ",", "" );
+            $cashback             = number_format( $cashback, 1, ",", "" );
 
             $auxName              = Helper::hyphenize( strtolower( $store[ "name" ] ) );
             $imageName            = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
