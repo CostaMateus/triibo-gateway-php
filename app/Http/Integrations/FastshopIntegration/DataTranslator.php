@@ -546,7 +546,7 @@ class DataTranslator
                 // "isCorporate"       => true,
                 // "corporateName"     => "TD - Power Informatica LTDA",
                 // "tradeName"         => "TD - Power Informatica LTDA",
-                // "corporateDocument" => "07776469000169",
+                // "corporateDocument" => "07776469000166",
                 // "corporatePhone"    => "(11) 99200-5881",
                 // "email"             => "ppinho@me.com",
                 // "phone"             => "(11) 99200-5881",
@@ -565,6 +565,8 @@ class DataTranslator
                     "state"        => $data[ "shipping" ][ "state"     ],
                     "postalCode"   => $data[ "shipping" ][ "postcode"  ],
                     "country"      => "BRA",
+
+                    // "receiverName" => "Paulo Pinho",
                 ],
                 "logisticsInfo" => $logisticsInfo,
             ],
