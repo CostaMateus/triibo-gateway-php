@@ -450,6 +450,7 @@ class SocialSoulIntegration
 
             $base              = 10; // base de calculo, ex 10 reais gastos
             $rate              = 10; // taxa de conversão, 10 pontos a cada 1 real
+            $cashback          = str_replace( ",", ".", $cashback );
             $points            = $base * $rate * ( $cashback / 100 );
 
             $description      .= "Ganhe {$points} pontos a cada {$base} reais.";
