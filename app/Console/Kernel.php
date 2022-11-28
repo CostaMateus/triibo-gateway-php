@@ -80,9 +80,9 @@ class Kernel extends ConsoleKernel
                      ->timezone( "America/Sao_Paulo" )
                      ->runInBackground();
             // Get SKUs
-            $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "07:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "00:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Get Categories
-            $schedule->command( "mkt:get_categories"   )->weeklyOn( [ 0, 2, 4, 6 ], "06:55" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "mkt:get_categories"   )->weeklyOn( [ 0, 2, 4, 6 ], "23:55" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Delete duplicate SKUs
             $schedule->command( "sku:delete_duplicate" )->dailyAt( "01:03" )->timezone( "America/Sao_Paulo" )->runInBackground();
             // Change status of products without images
