@@ -438,15 +438,21 @@ class Helper
 
     public static function sendMailNotification( $blade, $method, $catch, $e )
     {
-        $mail = [
-            "subject"    => "Dev - Integração Cofry",
+        $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
+        $subjects = [
+            "cofry"      => "{$env} - Integração Cofry",
+            "socialsoul" => "{$env} - Integração SocialSoul",
+        ];
+
+        $mail     = [
+            "subject"    => $subjects[ $blade ],
             "title"      => "Erro no schedule: ",
             "method"     => $method,
             "catch"      => $catch,
             "stacktrace" => $e,
         ];
 
-        $user = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
+        $user     = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
 
         $user->notify( new ScheduleFailure( $blade, $mail ) );
     }
