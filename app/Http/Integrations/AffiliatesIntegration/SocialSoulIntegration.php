@@ -301,6 +301,8 @@ class SocialSoulIntegration
             $imageName            = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
             $imageName            = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
 
+            // $url                  = $store[ "link" ];
+
             $stores[ $id ]        = [
                 "partnerEstablishmentId" => $store[ "id" ],
                 "cashbackDefault"        => $cashback,
@@ -375,6 +377,9 @@ class SocialSoulIntegration
             $detailsDescrip   .= "\n\nUtilize o código de desconto " . $coupon[ "code" ] . " no fechamento da compra.";
             $detailsDescrip   .= "\n\nVálido até " . explode( " ", $coupon[ "vigency" ] )[ 0 ];
 
+            $url               = $coupon[ "link" ];
+            $url               = strpos( $url, "?" ) !== false ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
+
             $promotions[ $id ] = [
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
@@ -404,7 +409,7 @@ class SocialSoulIntegration
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
-                "url"                => "{urlSocialSoul}",
+                "url"                => $url,
 
                 "tags"               => [ "Cashback", "Cupom", $coupon[ "category" ][ "name" ] ],
 
@@ -475,6 +480,9 @@ class SocialSoulIntegration
             $imageName         = "socialsoul_{$offer[ "store" ][ "id" ]}{$offer[ "id" ]}.png";
             $imageName         = self::saveImage( "promotions", $imageName, $imageUrl ) ? $imageName : "standard.png";
 
+            $url               = $offer[ "link" ];
+            $url               = strpos( $url, "?" ) !== false ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
+
             $promotions[ $id ] = [
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
@@ -502,7 +510,7 @@ class SocialSoulIntegration
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
-                "url"                => "{urlSocialSoul}",
+                "url"                => $url,
 
                 "tags"               => [ "Cashback", "Promoção", $offer[ "category" ][ "name" ] ],
 
