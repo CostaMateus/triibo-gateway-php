@@ -14,7 +14,7 @@ class ProcessData extends Command
      * @var string
      */
     protected $signature = "socialsoul:process
-                            {--option= : Options: images, promotions, stores or all }";
+                            {--option= : Options: images, promotions, stores, all (IPS) or reports }";
 
     /**
      * The console command description.
@@ -40,7 +40,14 @@ class ProcessData extends Command
      */
     public function handle()
     {
-        $opts   = [ "images", "promotions", "stores", "all" ];
+        $opts   = [
+            "images",
+            "promotions",
+            "stores",
+            "all",
+            "reports"
+        ];
+
         $option = $this->option( "option" );
 
         if ( !in_array( $option, $opts ) )
@@ -49,20 +56,13 @@ class ProcessData extends Command
             return;
         }
 
-        switch ( $option )
+        if ( in_array( $option, [ "promotions", "stores" ] ) )
         {
-            case "promotions":
-            case "stores":
-                $this->storesAndPromotions( $option );
-            break;
-
-            case "images":
-                $this->images();
-            break;
-
-            case "all":
-                $this->all();
-            break;
+            $this->storesAndPromotions( $option );
+        }
+        else
+        {
+            $this->{$option}();
         }
     }
 
@@ -123,5 +123,18 @@ class ProcessData extends Command
 
         echo "Command : End Images processing\n";
         Log::channel( "socialsoul" )->info( "Images", [ "End Images processing" ] );
+    }
+
+    private function reports()
+    {
+        // REPORTS
+        echo "Command : Start processing of Reports\n";
+        Log::channel( "socialsoul" )->info( "Reports", [ "Start processing of Reports" ]);
+
+        $socialsoul = new SocialSoulController();
+        $socialsoul->reports();
+
+        echo "Command : End Reports processing\n";
+        Log::channel( "socialsoul" )->info( "Reports", [ "End Reports processing" ] );
     }
 }
