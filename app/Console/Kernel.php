@@ -46,10 +46,10 @@ class Kernel extends ConsoleKernel
     {
         if ( config( "app.env" ) == "production" )
         {
-            // // Domingo às 00h30
-            // $schedule->exec("composer self-update")->weeklyOn(0, "0:30")->runInBackground();
-            // // Domingo às 01h00
-            // $schedule->exec("composer update")->weeklyOn(0, "0:45")->runInBackground();
+            // Trimestral, 1º às 00h30
+            $schedule->exec("composer self-update")->quarterlyOn( 1, "00:30" )->runInBackground();
+            // Mensal, 1º às 01h00
+            $schedule->exec("composer update")->monthlyOn( 1, "00:45" )->runInBackground();
 
 
             // Cofry Triibo Integration
