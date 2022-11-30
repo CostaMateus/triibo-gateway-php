@@ -8,11 +8,19 @@ return [
         "url"       => "http://sandbox-api.lomadee.com",
         "token"     => "1667591011850def5f2f6",
         "source_id" => "37326586",
+        "login"     => [
+            "user" => "paulo.pinho@triibo.com.br",
+            "pass" => "Triibo@2022!05",
+        ],
     ],
 
     "production" => [
         "url"       => "http://api.lomadee.com",
         "token"     => "1667591011850def5f2f6",
         "source_id" => "37326586",
+        "login"     => [
+            "user" => "paulo.pinho@triibo.com.br",
+            "pass" => "Triibo@2022!05",
+        ],
     ],
 ];
