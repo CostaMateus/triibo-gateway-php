@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule( Schedule $schedule )
     {
         if ( config( "app.env" ) == "production" )
         {
@@ -53,12 +53,18 @@ class Kernel extends ConsoleKernel
 
 
             // Cofry Triibo Integration
-            // Diariamente às 02 e às 14h
+            // Lojas e promoções - Diariamente às 02 e às 14h
             $schedule->command( "process:storepromo" )->twiceDaily( 2, 14 )->runInBackground();
-            // Diariamente às 02h05
+            // Imagens - Diariamente às 02h05
             $schedule->command( "delete:images"      )->dailyAt( "02:05" )->runInBackground();
-            // Diariamente às 02h10
+            // Imagens - Diariamente às 02h10
             $schedule->command( "process:images"     )->dailyAt( "02:15" )->runInBackground();
+
+            // SocialSoul Triibo Integration
+            // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
+            $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
+            // Relatórios - Diariamente às 4h
+            $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
 
 
             // Mautic Pipedrive Integration
@@ -75,10 +81,7 @@ class Kernel extends ConsoleKernel
 
             // Marketplace
             // Process FS products
-            $schedule->command( "sku:process_fs_products --action=update" )
-                     ->hourly()
-
-                     ->runInBackground();
+            $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
             $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "00:00" )->runInBackground();
             // Get Categories
@@ -105,9 +108,9 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__."/Commands");
+        $this->load( __DIR__ . "/Commands" );
 
-        require base_path("routes/console.php");
+        require base_path( "routes/console.php" );
     }
 
     /**
