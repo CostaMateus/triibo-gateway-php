@@ -21,6 +21,7 @@ class SocialSoulIntegration
     protected $url_coupon;
     protected $url_offer;
     protected $url_store;
+    protected $url_report;
     protected $source_id;
 
     protected $stores = [];
@@ -38,6 +39,7 @@ class SocialSoulIntegration
         $this->url_category = "{$url}/v3/{$tkn}/category";
         $this->url_offer    = "{$url}/v3/{$tkn}/offer";
         $this->url_store    = "{$url}/v3/{$tkn}/store";
+        $this->url_report   = "{$url}/api/lomadee";
 
         $this->stores       = $this->getStores();
     }
@@ -112,6 +114,54 @@ class SocialSoulIntegration
 
         return $promotions;
     }
+
+    public function getReports()
+    {
+        $user         = config( "socialsoul.{$this->env}.login.user" );
+        $pass         = config( "socialsoul.{$this->env}.login.pass" );
+
+        $partial_url  = "/createToken?user={$user}&password={$pass}";
+        // $response    = Http::get( $this->url_report . $partial_url );
+
+        // API de relatórios só tem em prod
+        $url          = "http://api.lomadee.com/api/lomadee";
+        $response     = Http::get( $url . $partial_url );
+
+        if( !$response->successful() )
+        {
+            return [
+                "success" => false,
+                "code"    => 4001,
+                "data"    => $response->json()
+            ];
+        }
+
+        $data         = $response->json();
+        $token        = $data[ "token" ];
+        $date         = date( "dmY" );
+
+        $partial_url  = "/reportTransaction?publisherId={publisherId}&token={$token}";
+        $partial_url .= "&eventStatus=0";      // 0 - Pendente, 1 - Confirmado, 2 - Cancelado, 99 - Bônus
+        $partial_url .= "&startDate={$date}"; // ddMMaaaa
+        $partial_url .= "&endDate={$date}";   // ddMMaaaa
+
+        $response     = Http::get( $url . $partial_url );
+
+        if( !$response->successful() )
+        {
+            return [
+                "success" => false,
+                "code"    => 4002,
+                "data"    => $response->json()
+            ];
+        }
+
+        $data         = $response->json();
+        $reports      = $this->translateReports( $data );
+
+        return $reports;
+    }
+
 
     /**
      * Get stores SocialSoul
@@ -521,6 +571,13 @@ class SocialSoulIntegration
         return $promotions;
     }
 
+    private function translateReports( array $data )
+    {
+        // Tratar dados
+
+        return $data;
+    }
+
     /**
      *
      *
@@ -555,5 +612,7 @@ class SocialSoulIntegration
 
         return false;
     }
+
+
 
 }
