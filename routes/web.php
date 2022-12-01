@@ -23,6 +23,7 @@ use Codexshaper\WooCommerce\Facades\Category;
 use Codexshaper\WooCommerce\Facades\Attribute;
 use Codexshaper\WooCommerce\Facades\PaymentGateway;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
+use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 
 /*
 |--------------------------------------------------------------------------
@@ -78,11 +79,12 @@ Route::group(["middleware" => "auth"], function() {
 Route::get( "/wc/{id}", function ( $id ) {
 
     // $order = Order::find( $id );
-
     // dd( $order );
+    // $product = Product::find( $id );
+    // dd( $product );
 
-    $product = Product::find( $id );
+    $ss      = new SocialSoulIntegration();
+    $reports = $ss->getReports();
 
-    dd( $product );
-
+    dd ( $reports );
 } );
