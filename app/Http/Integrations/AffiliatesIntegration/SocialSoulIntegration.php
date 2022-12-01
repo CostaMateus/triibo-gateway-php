@@ -7,10 +7,8 @@ use Exception;
 use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use App\Http\Controllers\Affiliates\CofryController;
 
 class SocialSoulIntegration
 {
