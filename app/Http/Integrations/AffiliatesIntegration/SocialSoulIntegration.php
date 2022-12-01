@@ -117,17 +117,18 @@ class SocialSoulIntegration
 
     public function getReports()
     {
-        // Caso pare de funcionar, verificar com PPinho, se a senha foi alterada!!!
+        /**
+         * Caso pare de funcionar, verificar com PPinho, se a senha foi alterada!!!
+         *
+         * API de relatórios apenas tem em prod
+         */
+
         $user         = config( "socialsoul.{$this->env}.login.user"   );
         $pass         = config( "socialsoul.{$this->env}.login.pass"   );
         $publisher_id = config( "socialsoul.{$this->env}.publisher_id" );
 
         $partial_url  = "/createToken?user={$user}&password={$pass}";
-        // $response    = Http::get( $this->url_report . $partial_url );
-
-        // API de relatórios só tem em prod
-        $url          = "http://api.lomadee.com/api/lomadee";
-        $response     = Http::get( $url . $partial_url );
+        $response     = Http::get( $this->url_report . $partial_url );
 
         if( !$response->successful() )
         {
@@ -152,7 +153,7 @@ class SocialSoulIntegration
             $partial_url .= "&startDate={$date}";     // ddMMaaaa
             $partial_url .= "&endDate={$date}";       // ddMMaaaa
 
-            $response     = Http::get( $url . $partial_url );
+            $response     = Http::get( $this->url_report . $partial_url );
 
             if( !$response->successful() )
             {
@@ -581,7 +582,9 @@ class SocialSoulIntegration
 
     private function translateReports( array $data )
     {
-        // Tratar dados
+        /**
+         * TODO - Tratar dados
+         */
 
         return $data;
     }
@@ -620,7 +623,4 @@ class SocialSoulIntegration
 
         return false;
     }
-
-
-
 }
