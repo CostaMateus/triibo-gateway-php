@@ -117,8 +117,10 @@ class SocialSoulIntegration
 
     public function getReports()
     {
-        $user         = config( "socialsoul.{$this->env}.login.user" );
-        $pass         = config( "socialsoul.{$this->env}.login.pass" );
+        // Caso pare de funcionar, verificar com PPinho, se a senha foi alterada!!!
+        $user         = config( "socialsoul.{$this->env}.login.user"   );
+        $pass         = config( "socialsoul.{$this->env}.login.pass"   );
+        $publisher_id = config( "socialsoul.{$this->env}.publisher_id" );
 
         $partial_url  = "/createToken?user={$user}&password={$pass}";
         // $response    = Http::get( $this->url_report . $partial_url );
@@ -136,28 +138,34 @@ class SocialSoulIntegration
             ];
         }
 
+        $date         = date( "dmY" );
+        $reports      = [];
+        $eventsStatus = [ 0, 1, 2, 99 ];
+
         $data         = $response->json();
         $token        = $data[ "token" ];
-        $date         = date( "dmY" );
 
-        $partial_url  = "/reportTransaction?publisherId={publisherId}&token={$token}";
-        $partial_url .= "&eventStatus=0";      // 0 - Pendente, 1 - Confirmado, 2 - Cancelado, 99 - Bônus
-        $partial_url .= "&startDate={$date}"; // ddMMaaaa
-        $partial_url .= "&endDate={$date}";   // ddMMaaaa
-
-        $response     = Http::get( $url . $partial_url );
-
-        if( !$response->successful() )
+        foreach ( $eventsStatus as $status )
         {
-            return [
-                "success" => false,
-                "code"    => 4002,
-                "data"    => $response->json()
-            ];
-        }
+            $partial_url  = "/reportTransaction?publisherId={$publisher_id}&token={$token}";
+            $partial_url .= "&eventStatus={$status}"; // 0 - Pendente, 1 - Confirmado, 2 - Cancelado, 99 - Bônus
+            $partial_url .= "&startDate={$date}";     // ddMMaaaa
+            $partial_url .= "&endDate={$date}";       // ddMMaaaa
 
-        $data         = $response->json();
-        $reports      = $this->translateReports( $data );
+            $response     = Http::get( $url . $partial_url );
+
+            if( !$response->successful() )
+            {
+                return [
+                    "success" => false,
+                    "code"    => 4002,
+                    "data"    => $response->json()
+                ];
+            }
+
+            $data         = $response->json();
+            $reports      = array_merge( $reports, $this->translateReports( $data ) );
+        }
 
         return $reports;
     }
