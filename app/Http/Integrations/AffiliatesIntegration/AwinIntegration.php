@@ -99,7 +99,6 @@ class AwinIntegration
     private function searchStores()
     {
         $url      = "{$this->url_programmes}?countryCode=" . self::RG;
-
         $response = Http::withToken( $this->tkn )->get( $url );
 
         if ( !$response->successful() )
@@ -196,7 +195,7 @@ class AwinIntegration
                 "lat"                    => -15.52047783763576,
                 "long"                   => -48.015408891158984,
 
-                "nome"                   => $store[ "name"        ],
+                "nome"                   => explode( " BR", $store[ "name" ] )[ 0 ],
                 "descricao"              => $store[ "description" ],
 
                 "fotoThumb"              => $imageName,
