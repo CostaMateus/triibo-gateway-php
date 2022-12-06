@@ -21,8 +21,10 @@ use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use Codexshaper\WooCommerce\Facades\Attribute;
+use App\Http\Controllers\Affiliates\AwinController;
 use Codexshaper\WooCommerce\Facades\PaymentGateway;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
+use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
 use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 
 /*
@@ -83,8 +85,11 @@ Route::get( "/wc/{id}", function ( $id ) {
     // $product = Product::find( $id );
     // dd( $product );
 
-    $ss      = new SocialSoulIntegration();
-    $reports = $ss->getReports();
+    $ss     = new AwinIntegration();
+    $stores = $ss->getStores();
 
-    dd ( $reports );
+    dd ( $stores );
 } );
+
+Route::get(  "/a/stores", [ AwinController::class, "stores" ] )->name( "teste.store" );
+Route::get(  "/a/images", [ AwinController::class, "images" ] )->name( "teste.store" );
