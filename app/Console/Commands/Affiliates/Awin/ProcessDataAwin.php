@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Affiliates\SocialSoul;
+namespace App\Console\Commands\Affiliates\Awin;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
