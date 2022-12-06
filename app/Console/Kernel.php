@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\Affiliates\SocialSoul\ProcessData::class,
+        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+        \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,
 
         \App\Console\Commands\Cofry\DeleteImages::class,
         \App\Console\Commands\Cofry\ProcessImages::class,
