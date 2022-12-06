@@ -138,6 +138,12 @@ return [
             'path'   => storage_path('logs/fastshop-img.log'),
             'level'  => 'debug'
         ],
+
+        'awin' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/awin.log'),
+            'level'  => 'debug'
+        ],
     ],
 
 ];
