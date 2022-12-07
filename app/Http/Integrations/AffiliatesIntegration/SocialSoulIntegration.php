@@ -120,6 +120,8 @@ class SocialSoulIntegration
          *
          * API de relatórios apenas tem em prod
          */
+        $url              = config( "socialsoul.production.url" );
+        $this->url_report = "{$url}/api/lomadee";
 
         $user         = config( "socialsoul.{$this->env}.login.user"   );
         $pass         = config( "socialsoul.{$this->env}.login.pass"   );
@@ -158,11 +160,18 @@ class SocialSoulIntegration
                 return [
                     "success" => false,
                     "code"    => 4002,
-                    "data"    => $response->json()
+                    "data"    => []
                 ];
             }
 
-            $data         = $response->json();
+            $xml          = simplexml_load_string( $response->body(), "SimpleXMLElement", LIBXML_NOCDATA );
+            $json         = json_encode( $xml );
+
+            /**
+             * TODO analizar retorno de vários itens no $json
+             */
+            $data         = json_decode( $json, true );
+
             $reports      = array_merge( $reports, $this->translateReports( $data ) );
         }
 
