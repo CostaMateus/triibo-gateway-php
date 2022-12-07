@@ -4,7 +4,7 @@ namespace App\Console\Commands\Affiliates\Awin;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use App\Http\Controllers\Affiliates\SocialSoulController;
+use App\Http\Controllers\Affiliates\AwinController;
 
 class ProcessDataAwin extends Command
 {
@@ -13,7 +13,8 @@ class ProcessDataAwin extends Command
      *
      * @var string
      */
-    protected $signature = "awin:process";
+    protected $signature = "awin:process
+                            {--option= : Options: images, promotions, stores, all (IPS) or reports }";
 
     /**
      * The console command description.
@@ -39,6 +40,17 @@ class ProcessDataAwin extends Command
      */
     public function handle()
     {
-        echo "Test";
+        $option = $this->option( "option" );
+
+        $optionLog  = ucfirst( $option );
+
+        echo "Command : Start processing of {$optionLog}\n";
+        Log::channel( "awin" )->info( $optionLog, [ "Start processing of {$optionLog}" ]);
+
+        $awin = new AwinController();
+        $awin->{$option}();
+
+        echo "Command : End {$optionLog} processing\n";
+        Log::channel( "awin" )->info( $optionLog, [ "End {$optionLog} processing" ] );
     }
 }
