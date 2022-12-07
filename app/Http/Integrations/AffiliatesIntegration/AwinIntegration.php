@@ -98,7 +98,7 @@ class AwinIntegration
      */
     private function searchStores()
     {
-        $url      = "{$this->url_programmes}?countryCode=" . self::RG;
+        $url      = "{$this->url_programmes}?relationship=joined&countryCode=" . self::RG;
         $response = Http::withToken( $this->tkn )->get( $url );
 
         if ( !$response->successful() )
