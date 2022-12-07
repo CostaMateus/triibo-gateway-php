@@ -70,7 +70,8 @@ class AwinController extends Controller
         $filesStores = File::allFiles( $this->stores_path );
         // $filesPromos = File::allFiles( $this->promos_path );
 
-        if ( empty( $filesStores ) || empty( $filesPromos ) )
+        // if ( empty( $filesStores ) || empty( $filesPromos ) )
+        if ( empty( $filesStores ) )
         {
             echo "Images : No images to upload\n";
             Log::channel( "awin" )->info( "Images", [ "No images to upload" ] );
