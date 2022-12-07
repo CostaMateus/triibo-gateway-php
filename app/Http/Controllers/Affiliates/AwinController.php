@@ -40,7 +40,6 @@ class AwinController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            dd( $e );
             echo "Stores : Establishment, Firebase process error - aborted\n";
             Log::channel( "awin" )->critical( "Stores", [
                 "code"    => "C-401",
@@ -117,9 +116,6 @@ class AwinController extends Controller
 
         $stores         = $this->integration->getStores();
         $allStores      = $firebaseStores->getValue();
-
-        foreach( $stores as $id => $s ) echo $id . "\n";
-        dd( "ok" );
 
         foreach ( $allStores as $id => $s )
         {
