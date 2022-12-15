@@ -372,6 +372,28 @@ class Helper
         return $date;
     }
 
+    /**
+     * Converte data de 01/01/2021 para 2021-01-01
+     * Ou converte data de 2021-01-01 para 01/01/2021
+     *
+     * @param string $date
+     * @param boolean $r
+     *
+     * @return string $date
+     */
+    public static function convertDate( string $date, bool $reverse = false )
+    {
+        $e = ( !$reverse ) ? "/" : "-";
+        $i = ( !$reverse ) ? "-" : "/";
+
+        $date = explode( $e, $date );
+
+        $date = array_reverse( $date );
+        $date = implode( $i, $date );
+
+        return $date;
+    }
+
     public static function usort( string $key, array &$data )
     {
         usort( $data, function( $a, $b ) use ( $key ) {
