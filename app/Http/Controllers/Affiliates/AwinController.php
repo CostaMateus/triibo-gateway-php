@@ -22,7 +22,7 @@ class AwinController extends Controller
     {
         $this->integration = new AwinIntegration();
         $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
-        // $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
+        $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
 
     public function stores()
@@ -64,27 +64,73 @@ class AwinController extends Controller
         }
     }
 
+    public function promotions()
+    {
+        try
+        {
+            $this->insertOffersFirebase();
+            echo "Promotions : Promotions sent successfully\n";
+            Log::channel( "awin" )->info( "Promotions", [
+                "code"    => 0,
+                "info"    => "Promotions sent successfully",
+                "error"   => NULL,
+                "message" => NULL
+            ] );
+        }
+        catch ( FirebaseException $e )
+        {
+            echo "Promotions : Promotion, Firebase process error - aborted\n";
+            Log::channel( "awin" )->critical( "Promotions", [
+                "code"    => "C-401",
+                "info"    => "Promotion, Firebase process error - aborted",
+                "error"   => "An error has occurred while working with the SDK",
+                "message" => $e->getMessage()
+            ] );
+
+            Helper::sendMailNotification( "awin", "insertOffersFirebase()", "FirebaseException", $e );
+        }
+        catch ( Throwable $e )
+        {
+            echo "Promotions : Unexpected error - aborted\n";
+            Log::channel( "awin" )->critical( "Promotions", [
+                "code"    => "C-501",
+                "info"    => "Unexpected error - aborted",
+                "error"   => "A not-Firebase specific error has occurred",
+                "message" => $e->getMessage(),
+            ] );
+
+            Helper::sendMailNotification( "awin", "insertOffersFirebase()", "Throwable", $e );
+        }
+    }
 
     public function images()
     {
-        $filesStores = File::allFiles( $this->stores_path );
-        // $filesPromos = File::allFiles( $this->promos_path );
+        $filesStores    = File::allFiles( $this->stores_path );
+        $filesPromos    = File::allFiles( $this->promos_path );
 
-        // if ( empty( $filesStores ) || empty( $filesPromos ) )
-        if ( empty( $filesStores ) )
+        $fileNameStores = [];
+        $fileNamePromos = [];
+
+        if ( empty( $filesStores ) && empty( $filesPromos ) )
         {
             echo "Images : No images to upload\n";
             Log::channel( "awin" )->info( "Images", [ "No images to upload" ] );
             return;
         }
 
-        echo "Images : Capturing names - establishments\n";
-        Log::channel( "awin" )->info( "Images", [ "Capturing names - establishments" ] );
-        $fileNameStores = $this->getFileNames( $filesStores );
+        if ( $filesStores )
+        {
+            echo "Images : Capturing names - establishments\n";
+            Log::channel( "awin" )->info( "Images", [ "Capturing names - establishments" ] );
+            $fileNameStores = $this->getFileNames( $filesStores );
+        }
 
-        // echo "Images : Capturing names - promotions";
-        // Log::channel( "awin" )->info( "Images", [ "Capturing names - promotions"     ] );
-        // $fileNamePromos = $this->getFileNames( $filesPromos );
+        if ( $filesPromos )
+        {
+            echo "Images : Capturing names - promotions";
+            Log::channel( "awin" )->info( "Images", [ "Capturing names - promotions"     ] );
+            $fileNamePromos = $this->getFileNames( $filesPromos );
+        }
 
         $this->insertImagesFirebase( [
             "stores"     => [
@@ -92,12 +138,15 @@ class AwinController extends Controller
                 "lc"    => $this->stores_path,
                 "fb"    => "estabelecimento/",
             ],
-            // "promotions" => [
-            //     "files" => $fileNamePromos,
-            //     "lc"    => $this->promos_path,
-            //     "fb"    => "promocao/"
-            // ]
+            "promotions" => [
+                "files" => $fileNamePromos,
+                "lc"    => $this->promos_path,
+                "fb"    => "promocao/"
+            ]
         ] );
+
+        if ( $filesStores ) File::deleteDirectory( $this->stores_path, true );
+        if ( $filesPromos ) File::deleteDirectory( $this->promos_path, true );
     }
 
     /**
@@ -158,6 +207,61 @@ class AwinController extends Controller
         }
     }
 
+    private function insertOffersFirebase()
+    {
+        $db             = Firebase::database();
+        $firebasePromos = $db->getReference( "/Store" );
+
+        echo "Promotions : Searching promotions\n";
+        Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
+
+        File::deleteDirectory( $this->promos_path, true );
+
+        $promos         = $this->integration->getOffers();
+        $allPromos      = $firebasePromos->getValue();
+
+        foreach ( $allPromos as $id => $s )
+        {
+            if (strpos( $id, "-awin" ) !== false )
+            {
+                if ( !isset( $promos[ $id ] ) )
+                {
+                    echo "Promotions : Disab. Promo. ID = $id\n";
+                    $p[ "isPublished" ] = false;
+                    $p[ "active"      ] = false;
+
+                    $firebasePromos->update( [ $id => $p ] );
+                }
+            }
+        }
+
+        echo "Promotions : Sending promos to Firebase\n";
+        Log::channel( "awin" )->info( "Promotions", [ "Sending promos to Firebase" ] );
+
+        foreach ( $promos as $id => $s )
+        {
+            echo "Promotions : Insert/Update Promo ID = $id\n";
+
+            if ( isset( $allStores[ $id ] ) )
+            {
+                $desc = $allStores[ $id ][ "descricao" ];
+                $desc = explode( "\n\n#", $desc );
+
+                if ( count( $desc ) > 1 )
+                {
+                    array_shift( $desc );
+
+                    $aux = "";
+                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+
+                    $s[ "descricao" ] .= $aux;
+                }
+            }
+
+            $firebasePromos->update( [ $id => $s ] );
+        }
+    }
+
     /**
      * Get the file names from list of files
      *
@@ -187,10 +291,13 @@ class AwinController extends Controller
 
         foreach ( $data as $key => $images )
         {
+            $files   = $images[ "files" ];
+
+            if ( empty( $files ) ) continue;
+
             echo "Images : Start sending images to Firebase - {$key}\n";
             Log::channel( "awin" )->info("Images", [ "Start sending images to Firebase - {$key}" ]);
 
-            $files   = $images[ "files" ];
             $lc_path = $images[ "lc"    ];
             $fb_path = $images[ "fb"    ];
 
@@ -240,6 +347,6 @@ class AwinController extends Controller
         }
 
         File::deleteDirectory( $this->stores_path, true );
-        // File::deleteDirectory( $this->promos_path, true );
+        File::deleteDirectory( $this->promos_path, true );
     }
 }
