@@ -33,6 +33,10 @@ class AwinIntegration
 
     protected $url_transactions;
 
+    protected $stores = [];
+    protected $base   = 100; // base de calculo, ex 100 reais gastos
+    protected $rate   = 10;  // taxa de conversão, 10 pontos a cada 1 real
+
     public function __construct()
     {
         $env       = config( "awin.env"                 );
@@ -45,7 +49,7 @@ class AwinIntegration
         $this->url_programmedetails       = "{$url}/publishers/{$p_id}/programmedetails";       // advertiserId
 
         // Promotions
-        $this->url_offers                 = "{$url}/publisher/{$p_id}/promotions";             //
+        $this->url_offers                 = "{$url}/publisher/{$p_id}/promotions";              //
 
         $this->url_commissiongroups       = "{$url}/publishers/{$p_id}/commissiongroups";       // advertiserId
         $this->url_commissionsharingrules = "{$url}/publishers/{$p_id}/commissionsharingrules"; //
@@ -53,6 +57,11 @@ class AwinIntegration
         $this->url_reports_creative       = "{$url}/publishers/{$p_id}/reports/creative";       // startDate - endDate - timezone - region
         $this->url_reports_campaign       = "{$url}/publishers/{$p_id}/reports/campaign";       // startDate - endDate - timezone - region
         $this->url_transactions           = "{$url}/publishers/{$p_id}/transactions";           // startDate - endDate - timezone
+
+        // Url Tracking
+        $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
+
+        $this->stores                     = $this->getStores();
     }
 
     /**
@@ -62,33 +71,60 @@ class AwinIntegration
      */
     public function getStores()
     {
-        $path    = public_path( "images/affiliates/awin/establishments" );
-        $default = public_path( "images/standard.png" );
-
-        File::copy( $default, $path . "/standard.png" );
-
-        $stores  = $this->searchStores();
-
-        if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
-
-        Helper::usort( "id", $stores[ "data" ] );
-
-        /**
-         * TODO remover em PRD
-         */
-        $i = 1;
-        foreach ( $stores[ "data" ] as &$store )
+        if ( empty( $this->stores ) )
         {
+            $path    = public_path( "images/affiliates/awin/establishments" );
+            $default = public_path( "images/standard.png" );
+
+            File::copy( $default, $path . "/standard.png" );
+
+            $stores  = $this->searchStores();
+
+            if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
+
+            Helper::usort( "id", $stores[ "data" ] );
+
             /**
              * TODO remover em PRD
              */
-            if ( $i > 10 ) continue;
-            $i++;
+            $i = 1;
+            foreach ( $stores[ "data" ] as &$store )
+            {
+                /**
+                 * TODO remover em PRD
+                 */
+                if ( $i > 10 ) continue;
+                $i++;
 
-            $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
+                $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
+            }
+
+            return $stores[ "data" ];
         }
 
-        return $this->translateStores( $stores[ "data" ] );
+        return $this->translateStores( $this->stores );
+    }
+
+    /**
+     * Awin offer == Triibo Store (FB) / Promotion
+     */
+    public function getOffers()
+    {
+        $promotions = [];
+        $stores     = $this->getStores();
+
+        foreach ( $stores as $key => $store )
+        {
+            $id     = $store[ "partnerEstablishmentId" ];
+            $offers = $this->searchOffers( $id );
+
+            if ( empty( $offers[ "data" ] ) ) continue;
+
+            $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
+            $promotions = array_merge( $promotions, $offers );
+        }
+
+        return $promotions;
     }
 
     /**
@@ -133,6 +169,68 @@ class AwinIntegration
         $data     = $response->json();
 
         return $data[ "commissionRange" ];
+    }
+
+    /**
+     * SocialSoul offer == Triibo Store (FB) / Default promotion
+     *
+     * @param [type] $id
+     * @return array
+     */
+    private function searchOffers( string $id )
+    {
+        $data  = [];
+
+        $page  = 1;
+        $ended = false;
+
+        $body  = [
+            "filters" => [
+                "advertiserIds" => [ $id ],
+                "exclusiveOnly" => false,
+                "membership"    => "joined",
+                "regionCodes"   => [ self::RG ],
+                "status"        => "active",
+                "type"          => "all"
+            ]
+        ];
+
+        do
+        {
+            $body[ "pagination" ] = [ "page" => $page ];
+
+            $response = Http::withToken( $this->tkn )
+                            ->withBody( json_encode( $body ), "application/json" )
+                            ->post( $this->url_offers );
+
+            if( !$response->successful() )
+            {
+                return [
+                    "success" => false,
+                    "code"    => 4001,
+                    "data"    => $data
+                ];
+            }
+
+            $page++;
+
+            $resp       = $response->json();
+
+            if ( !empty( $resp[ "data" ] ) )
+                $data = array_merge( $data, $resp[ "data" ] );
+
+            $pagination = $resp[ "pagination" ];
+
+            if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
+                $ended = true;
+        }
+        while ( !$ended );
+
+        return [
+            "success" => true,
+            "code"    => 0,
+            "data"    => $data,
+        ];
     }
 
     /**
@@ -214,6 +312,109 @@ class AwinIntegration
     }
 
     /**
+     * Translates Awin offer into Triibo promotions
+     *
+     * @param array $data
+     * @return array
+     */
+    private function translateOffers( array $data, string $cashback )
+    {
+        $promotions = [];
+
+        foreach ( $data as $offer )
+        {
+            $idStore           = self::ID . $offer[ "advertiser" ][ "id" ];
+            $id                = $idStore . $offer[ "promotionId" ];
+
+            $establishmentName = $offer[ "advertiser" ][ "name" ];
+            $establishmentName = explode( " BR", $establishmentName )[ 0 ];
+
+            $date              = $offer[ "startDate" ] . " 00:00:00";
+            $date              = new DateTime( date( $date ) );
+            $dateEn            = ( int ) $date->format( "U" ) * 1000;
+
+            $date              = $offer[ "endDate"   ] . "23:59:00";
+            $date              = new DateTime( date( $date ) );
+            $dateDis           = ( int ) $date->format( "U" ) * 1000;
+
+            $cashback          = str_replace( ",", ".", $cashback );
+            $points            = $this->base * $this->rate * ( $cashback / 100 );
+
+            $description       = $offer[ "description" ];
+            $description      .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base}.";
+
+            $detailsDescrip    = $offer[ "description" ];
+
+            if ( $offer[ "type" ] == "voucher" )
+                $detailsDescrip .= "\n\nUtilize o código de desconto " . $offer[ "voucher" ][ "code" ] . " no fechamento da compra.";
+
+            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $offer[ "endDate" ], true );
+
+            $imageName         = "standard.png";
+
+            $urlTracking       = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
+            $url               = ( $offer[ "url" ] == $urlTracking ) ? $offer[ "urlTracking" ] : $urlTracking;
+
+            $promotions[ $id ] = [
+                "establishmentId"    => $idStore,
+                "establishmentName"  => $establishmentName,
+
+                "title"              => $offer[ "description" ],
+                "detailsTitle"       => $offer[ "description" ],
+
+                "description"        => $description,
+                "detailsDescription" => $description,
+
+                "enableDate"         => $dateEn,
+                "disableDate"        => $dateDis,
+                "dueDate"            => $dateDis,
+
+                "isPublished"        => true,
+                "active"             => true,
+
+                "lat"                => -15.52047783763576,
+                "long"               => -48.015408891158984,
+
+                "level"              => 99,
+
+                "photo"              => $imageName,
+                "thumbnail"          => $imageName,
+
+                "region"             => "nacional",
+                "type"               => "businessPartner",
+                "url"                => $url,
+
+                "tags"               => [ "Cashback", "Promoção" ],
+
+                "keyWordsSet"        => [],
+            ];
+
+            if ( $offer[ "type" ] == "voucher" )
+            {
+                $promotions[ $id ][ "checkoutCode" ] = $offer[ "voucher" ][ "code" ];
+                $promotions[ $id ][ "tags"         ] = [ "Cashback", "Cupom" ];
+            }
+        }
+
+        return $promotions;
+
+        // {
+        //     "url": "https://www.awin1.com/cread.php
+        //         ?awinmid=17762
+        //         &awinaffid=1109413
+        //         &campaign=Teste
+        //         &clickref=uuid-teste-big-num
+        //         &clickref2=
+        //         &clickref3=
+        //         &clickref4=
+        //         &clickref5=
+        //         &clickref6=
+        //         &ued=https%3A%2F%2Fwww.madeiramadeira.com.br%2F%3Forigem%3Dzanox%26utm_source%3Dzanox%26utm_medium%3Dcpa%26utm_term%3D%21%21%21affid%21%21%21%26utm_campaign%3D%21%21%21clickref%21%21%21
+        //         &pl=la",
+        // }
+    }
+
+    /**
      *
      *
      * @param String $logo
@@ -246,5 +447,27 @@ class AwinIntegration
         }
 
         return false;
+    }
+
+    private function urlTracking( int $storeId, string $url )
+    {
+        $body     = [
+            "shorten"        => false,
+            "advertiserId"   => $storeId,
+            "destinationUrl" => $url,
+            "parameters"     => [
+                "clickref" => "{triiboId}",
+            ],
+        ];
+
+        $response = Http::withToken( $this->tkn )
+                        ->withBody( json_encode( $body ), "application/json" )
+                        ->post( $this->url_linkbuilder );
+
+        if( !$response->successful() ) return $url;
+
+        $response = $response->json();
+
+        return $response[ "url" ];
     }
 }
