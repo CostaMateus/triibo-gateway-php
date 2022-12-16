@@ -295,6 +295,9 @@ class AwinIntegration
 
                 "nome"                   => explode( " BR", $store[ "name" ] )[ 0 ],
                 "descricao"              => $store[ "description" ],
+                "email"                  => "contato@triibo.com.br",
+                "contatotriibo"          => [ "+5511944965799" ],
+                "contatos"               => [ "+5511944965799" ],
 
                 "fotoThumb"              => $imageName,
                 "listaFotos"             => [ $imageName ],
@@ -302,7 +305,7 @@ class AwinIntegration
                 "funcionamento"          => [ ...Helper::getSchedulesOperation()        ],
                 "horarios"               => [ ...Helper::getSchedulesOperation( false ) ],
 
-                "tags"                   => [],
+                "tags"                   => [ "awin" ],
 
                 "keyWordsSet"            => []
             ];
