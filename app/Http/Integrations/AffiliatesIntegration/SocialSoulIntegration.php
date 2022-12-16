@@ -386,7 +386,10 @@ class SocialSoulIntegration
                 "long"                   => -48.015408891158984,
 
                 "nome"                   => $store[ "name" ],
-                "descricao"              => "", // ???
+                "descricao"              => $store[ "name" ] . " em parceria com a Triibo oferece ofertas, cupons e cashback em pontos. Aproveite!",
+                "email"                  => "contato@triibo.com.br",
+                "contatotriibo"          => [ "+5511944965799" ],
+                "contatos"               => [ "+5511944965799" ],
 
                 "fotoThumb"              => $imageName,
                 "listaFotos"             => [ $imageName ],
@@ -394,7 +397,7 @@ class SocialSoulIntegration
                 "funcionamento"          => [ ...Helper::getSchedulesOperation()        ],
                 "horarios"               => [ ...Helper::getSchedulesOperation( false ) ],
 
-                "tags"                   => [],
+                "tags"                   => [ "socialsoul" ],
 
                 "keyWordsSet"            => []
             ];
