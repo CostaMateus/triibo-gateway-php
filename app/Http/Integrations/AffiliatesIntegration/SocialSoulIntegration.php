@@ -633,4 +633,29 @@ class SocialSoulIntegration
 
         return false;
     }
+
+    public function schGetStores()
+    {
+        $stores  = [];
+        $coupons = $this->searchCoupons();
+
+        if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
+
+        Helper::usort( "id", $coupons[ "data" ] );
+
+        foreach ( $coupons[ "data" ] as $coupon )
+        {
+            $store = $coupon[ "store" ];
+
+            if ( !array_key_exists( $store[ "id" ], $stores ) )
+            {
+                $key                      = array_search( $store[ "id" ], array_column( $this->stores, "id" ) );
+                $commission               = $this->stores[ $key ][ "maxCommission" ];
+                $store[ "commission" ]    = $commission;
+                $stores[ $store[ "id" ] ] = $store;
+            }
+        }
+
+        return $stores;
+    }
 }
