@@ -158,7 +158,7 @@ class AwinIntegration
      *
      * @return array
      */
-    private function searchStoresDetails( int $id )
+    public function searchStoresDetails( int $id )
     {
         $url      = "{$this->url_programmedetails}?advertiserId={$id}";
 
@@ -472,5 +472,10 @@ class AwinIntegration
         $response = $response->json();
 
         return $response[ "url" ];
+    }
+
+    public function schGetStores()
+    {
+        return $this->stores;
     }
 }
