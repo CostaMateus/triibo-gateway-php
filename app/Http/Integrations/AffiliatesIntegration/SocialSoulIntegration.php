@@ -7,6 +7,7 @@ use Exception;
 use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
@@ -40,6 +41,7 @@ class SocialSoulIntegration
         $this->url_report   = "{$url}/api/lomadee";
 
         $this->stores       = $this->getStores();
+        $this->storesLocal  = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
     }
 
     /**
@@ -357,19 +359,21 @@ class SocialSoulIntegration
             if ( $i > 10 ) continue;
             $i++;
 
+            $url           = Helper::parseUrl( $store[ "displayUrl" ] );
+            $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
 
-            $id                   = self::ID . $store[ "id" ];
+            $id            = self::ID . $store[ "id" ];
 
-            $cashback             = ( float ) $store[ "maxCommission" ] / 2;
-            $cashback             = number_format( $cashback, 1, ",", "" );
+            $cashback      = ( float ) $store[ "maxCommission" ] / 2;
+            $cashback      = number_format( $cashback, 1, ",", "" );
 
-            $auxName              = Helper::hyphenize( strtolower( $store[ "name" ] ) );
-            $imageName            = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
-            $imageName            = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
+            $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
+            $imageName     = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
+            $imageName     = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
 
-            // $url                  = $store[ "link" ];
+            // $url           = $store[ "link" ];
 
-            $stores[ $id ]        = [
+            $stores[ $id ] = [
                 "partnerEstablishmentId" => $store[ "id" ],
                 "cashbackDefault"        => $cashback,
 
