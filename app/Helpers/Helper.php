@@ -480,4 +480,15 @@ class Helper
         $user->notify( new ScheduleFailure( $blade, $mail ) );
     }
 
+    public static function parseUrl( string $url )
+    {
+        $parse  = parse_url( $url, PHP_URL_HOST );
+        preg_match( "/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", $parse, $domain );
+
+        $domain = reset( $domain );
+        $domain = str_replace( "www.", "", $domain );
+
+        return $domain;
+    }
+
 }
