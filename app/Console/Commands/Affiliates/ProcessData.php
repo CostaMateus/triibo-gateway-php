@@ -2,11 +2,10 @@
 
 namespace App\Console\Commands\Affiliates;
 
+use App\Helpers\Helper;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Affiliates\AwinController;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
 use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 
@@ -18,14 +17,14 @@ class ProcessData extends Command
      * @var string
      */
     protected $signature = "affiliate:process
-                            { --option= : Options: stores }";
+                            { --option=stores : Options: stores }";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Command description";
+    protected $description = "Save stores from affiliate programs locally without duplication";
 
     /**
      * Create a new command instance.
@@ -61,6 +60,29 @@ class ProcessData extends Command
 
     private function stores()
     {
+        /**
+         * Awin
+         */
+        $awinStores = $this->awin();
+
+        /**
+         * SocialSoul
+         */
+        $ssStores   = $this->socialsoul();
+
+        /**
+         * Outros programas de afiliados a serem adicionados
+         */
+        //
+
+        $merge      = $this->mergeStores( $awinStores, $ssStores );
+        $data       = $this->prepareForInsert( $merge );
+
+        DB::table( "affiliates_stores" )->insert( $data );
+    }
+
+    private function awin()
+    {
         echo "Command : Start processing of Awin Stores\n";
         Log::channel( "affiliate" )->info( "Stores", [ "Start processing of Awin Stores" ]);
 
@@ -80,7 +102,7 @@ class ProcessData extends Command
                 $cashback = ( float ) number_format( $cashback, 1, ".", "" );
             }
 
-            $url          = $this->getDomain( $store[ "displayUrl" ] );
+            $url          = Helper::parseUrl( $store[ "displayUrl" ] );
             $awinStores[] = [
                 "id"         => $store[ "id" ],
                 "name"       => "awin",
@@ -92,8 +114,11 @@ class ProcessData extends Command
         echo "Command : End Awin Stores processing\n";
         Log::channel( "affiliate" )->info( "Stores", [ "End Awin Stores processing" ] );
 
-        // =============================================================================
+        return $awinStores;
+    }
 
+    private function socialsoul()
+    {
         echo "Command : Start processing of SocialSoul Stores\n";
         Log::channel( "affiliate" )->info( "Stores", [ "Start processing of SocialSoul Stores" ]);
 
@@ -108,7 +133,7 @@ class ProcessData extends Command
             $cashback   = ( float ) $store[ "commission" ] / 2;
             $cashback   = ( float ) number_format( $cashback, 1, ".", "" );
 
-            $url        = $this->getDomain( $store[ "link" ] );
+            $url        = Helper::parseUrl( $store[ "link" ] );
             $ssStores[] = [
                 "id"         => $store[ "id" ],
                 "name"       => "socialsoul",
@@ -120,27 +145,7 @@ class ProcessData extends Command
         echo "Command : End SocialSoul Stores processing\n";
         Log::channel( "affiliate" )->info( "Stores", [ "End SocialSoul Stores processing" ] );
 
-        // =============================================================================
-        //
-        // Outros programas de afiliados a serem adicionados
-        //
-        // =============================================================================
-
-        $merge = $this->mergeStores( $awinStores, $ssStores );
-        $data  = $this->prepareForInsert( $merge );
-
-        DB::table( "affiliates_stores" )->insert( $data );
-    }
-
-    private function getDomain( string $url )
-    {
-        $parse  = parse_url( $url, PHP_URL_HOST );
-        preg_match( "/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", $parse, $domain );
-
-        $domain = reset( $domain );
-        $domain = str_replace( "www.", "", $domain );
-
-        return $domain;
+        return $ssStores;
     }
 
     private function mergeStores( array ...$args )
