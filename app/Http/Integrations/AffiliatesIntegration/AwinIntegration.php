@@ -7,6 +7,7 @@ use Exception;
 use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 
@@ -62,6 +63,7 @@ class AwinIntegration
         $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
 
         $this->stores                     = $this->getStores();
+        $this->storesLocal                = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
     }
 
     /**
@@ -260,6 +262,12 @@ class AwinIntegration
             if ( $i > 10 ) continue;
             $i++;
 
+            $url           = Helper::parseUrl( $store[ "displayUrl" ] );
+            $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
+
+            if ( $key !== false )
+                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "awin" )
+                    continue;
 
             $id            = self::ID . $store[ "id" ];
 
