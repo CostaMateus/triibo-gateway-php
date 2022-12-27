@@ -243,11 +243,12 @@ class AwinIntegration
      */
     private function translateStores( array $data )
     {
-        $stores  = [];
-        $date    = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $dateEn  = ( int ) $date->format( "U" ) * 1000;
-        $date    = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis = ( int ) $date->format( "U" ) * 1000;
+        $newStores = [];
+        $stores    = [];
+        $date      = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn    = ( int ) $date->format( "U" ) * 1000;
+        $date      = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis   = ( int ) $date->format( "U" ) * 1000;
 
         /**
          * TODO remover em PRD
@@ -262,16 +263,10 @@ class AwinIntegration
             if ( $i > 10 ) continue;
             $i++;
 
+            $id            = self::ID . $store[ "id" ];
+            $cashback      = "";
             $url           = Helper::parseUrl( $store[ "displayUrl" ] );
             $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
-
-            if ( $key !== false )
-                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "awin" )
-                    continue;
-
-            $id            = self::ID . $store[ "id" ];
-
-            $cashback      = "";
 
             if ( $cashback = reset( $store[ "commissionRange" ] ) )
             {
@@ -279,11 +274,26 @@ class AwinIntegration
                 $cashback = number_format( $cashback, 1, ",", "" );
             }
 
+            if ( $key !== false )
+            {
+                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "awin" )
+                    continue;
+            }
+            else
+            {
+                $newStores[] = [
+                    "affiliate_id"   => $store[ "id" ],
+                    "affiliate_name" => "awin",
+                    "domain"         => $url,
+                    "commission"     => $cashback,
+                    "created_at"     => now(),
+                    "updated_at"     => now()
+                ];
+            }
+
             $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
             $imageName     = "awin_{$store[ "id" ]}_{$auxName}.png";
             $imageName     = self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) ? $imageName : "standard.png";
-
-            // $url           = $store[ "clickThroughUrl" ];
 
             $stores[ $id ] = [
                 "partnerEstablishmentId" => $store[ "id" ],
@@ -318,6 +328,8 @@ class AwinIntegration
                 "keyWordsSet"            => []
             ];
         }
+
+        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insert( $newStores );
 
         return $stores;
     }
