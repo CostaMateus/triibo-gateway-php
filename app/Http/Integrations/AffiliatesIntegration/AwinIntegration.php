@@ -375,8 +375,7 @@ class AwinIntegration
 
             $imageName         = "standard.png";
 
-            $urlTracking       = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
-            $url               = ( $offer[ "url" ] == $urlTracking ) ? $offer[ "urlTracking" ] : $urlTracking;
+            $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
 
             $promotions[ $id ] = [
                 "establishmentId"    => $idStore,
@@ -420,21 +419,6 @@ class AwinIntegration
         }
 
         return $promotions;
-
-        // {
-        //     "url": "https://www.awin1.com/cread.php
-        //         ?awinmid=17762
-        //         &awinaffid=1109413
-        //         &campaign=Teste
-        //         &clickref=uuid-teste-big-num
-        //         &clickref2=
-        //         &clickref3=
-        //         &clickref4=
-        //         &clickref5=
-        //         &clickref6=
-        //         &ued=https%3A%2F%2Fwww.madeiramadeira.com.br%2F%3Forigem%3Dzanox%26utm_source%3Dzanox%26utm_medium%3Dcpa%26utm_term%3D%21%21%21affid%21%21%21%26utm_campaign%3D%21%21%21clickref%21%21%21
-        //         &pl=la",
-        // }
     }
 
     /**
@@ -479,7 +463,7 @@ class AwinIntegration
             "advertiserId"   => $storeId,
             "destinationUrl" => $url,
             "parameters"     => [
-                "clickref" => "{triiboId}",
+                "clickref" => "{user-triibo-id}",
             ],
         ];
 
@@ -491,7 +475,16 @@ class AwinIntegration
 
         $response = $response->json();
 
-        return $response[ "url" ];
+        $url      = $response[ "url" ];
+        $url      = str_replace( "&campaign=",  "", $url );
+        $url      = str_replace( "&clickref2=", "", $url );
+        $url      = str_replace( "&clickref3=", "", $url );
+        $url      = str_replace( "&clickref4=", "", $url );
+        $url      = str_replace( "&clickref5=", "", $url );
+        $url      = str_replace( "&clickref6=", "", $url );
+        $url      = str_replace( "%7Buser-triibo-id%7D", "{user-triibo-id}", $url );
+
+        return $url;
     }
 
     public function schGetStores()
