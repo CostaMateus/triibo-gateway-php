@@ -78,6 +78,7 @@ class ProcessData extends Command
         $merge      = $this->mergeStores( $awinStores, $ssStores );
         $data       = $this->prepareForInsert( $merge );
 
+        DB::table( "affiliates_stores" )->truncate();
         DB::table( "affiliates_stores" )->insert( $data );
     }
 
