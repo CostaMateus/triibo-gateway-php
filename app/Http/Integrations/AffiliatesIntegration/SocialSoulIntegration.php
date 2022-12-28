@@ -359,13 +359,29 @@ class SocialSoulIntegration
             if ( $i > 10 ) continue;
             $i++;
 
-            $url           = Helper::parseUrl( $store[ "displayUrl" ] );
-            $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
-
             $id            = self::ID . $store[ "id" ];
-
             $cashback      = ( float ) $store[ "maxCommission" ] / 2;
             $cashback      = number_format( $cashback, 1, ",", "" );
+
+            $url           = Helper::parseUrl( $store[ "link" ] );
+            $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
+
+            if ( $key !== false )
+            {
+                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "socialsoul" )
+                    continue;
+            }
+            else
+            {
+                $newStores[] = [
+                    "affiliate_id"   => $store[ "id" ],
+                    "affiliate_name" => "socialsoul",
+                    "domain"         => $url,
+                    "commission"     => $cashback,
+                    "created_at"     => now(),
+                    "updated_at"     => now()
+                ];
+            }
 
             $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
             $imageName     = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
@@ -408,6 +424,8 @@ class SocialSoulIntegration
 
             if ( $flag ) $stores[ $id ][ "hasOffer" ] = $store[ "hasOffer" ];
         }
+
+        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insert( $newStores );
 
         return $stores;
     }
