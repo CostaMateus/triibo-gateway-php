@@ -442,7 +442,7 @@ class AwinIntegration
                 file_put_contents( $fullPath, $response->body() );
 
                 $handle = Image::open( $fullPath );
-                $handle->scaleResize( 200, 150, "#FFF" );
+                $handle->resize( 200, 150, "#FFF" );
                 $handle->save( $fullPath );
 
                 return true;
