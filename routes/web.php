@@ -78,18 +78,51 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get( "/wc/{id}", function ( $id ) {
+Route::get( "/wc", function () {
 
-    // $order = Order::find( $id );
-    // dd( $order );
-    // $product = Product::find( $id );
-    // dd( $product );
+    $ended = false;
+    $page  = 1;
+    $per   = 100;
 
-    $ss     = new AwinIntegration();
-    $stores = $ss->getStores();
+    $aux   = [];
 
-    dd ( $stores );
+    do
+    {
+        try
+        {
+            $products = Product::all( [
+                "per_page" => $per,
+                "page"     => $page,
+            ] );
+
+            if ( $products->count() < 100 ) $ended = true;
+            if ( $page > 3                ) $ended = true;
+
+            $page++;
+
+            foreach ( $products as $p )
+            {
+                if ( strpos( $p->sku, "FS-" ) === false ) continue;
+                if ( $p->stock_quantity > 0             ) continue;
+
+                $aux[] = [
+                    "id"             => $p->id,
+                    "sku"            => str_replace( "FS-", "", $p->sku ),
+                    "regular_price"  => $p->regular_price,
+                    "sale_price"     => $p->sale_price,
+                    "stock_status"   => $p->stock_status,
+                    "stock_quantity" => $p->stock_quantity
+                ];
+            }
+        }
+        catch (Exception $e)
+        {
+            $ended = false;
+        }
+    }
+    while ( !$ended );
+
+    Storage::put( "FS-SKU-" . date( "Ymd-his" ) . ".json", json_encode( $aux, JSON_UNESCAPED_SLASHES ) );
+
+    dd( count( $aux ) );
 } );
-
-Route::get(  "/a/stores", [ AwinController::class, "stores" ] )->name( "teste.store" );
-Route::get(  "/a/images", [ AwinController::class, "images" ] )->name( "teste.store" );
