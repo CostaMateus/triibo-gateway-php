@@ -372,6 +372,28 @@ class Helper
         return $date;
     }
 
+    /**
+     * Converte data de 01/01/2021 para 2021-01-01
+     * Ou converte data de 2021-01-01 para 01/01/2021
+     *
+     * @param string $date
+     * @param boolean $r
+     *
+     * @return string $date
+     */
+    public static function convertDate( string $date, bool $reverse = false )
+    {
+        $e = ( !$reverse ) ? "/" : "-";
+        $i = ( !$reverse ) ? "-" : "/";
+
+        $date = explode( $e, $date );
+
+        $date = array_reverse( $date );
+        $date = implode( $i, $date );
+
+        return $date;
+    }
+
     public static function usort( string $key, array &$data )
     {
         usort( $data, function( $a, $b ) use ( $key ) {
@@ -438,17 +460,35 @@ class Helper
 
     public static function sendMailNotification( $blade, $method, $catch, $e )
     {
-        $mail = [
-            "subject"    => "Dev - Integração Cofry",
+        $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
+        $subjects = [
+            "awin"       => "{$env} - Integração Awin",
+            "cofry"      => "{$env} - Integração Cofry",
+            "socialsoul" => "{$env} - Integração SocialSoul",
+        ];
+
+        $mail     = [
+            "subject"    => $subjects[ $blade ],
             "title"      => "Erro no schedule: ",
             "method"     => $method,
             "catch"      => $catch,
             "stacktrace" => $e,
         ];
 
-        $user = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
+        $user     = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
 
         $user->notify( new ScheduleFailure( $blade, $mail ) );
+    }
+
+    public static function parseUrl( string $url )
+    {
+        $parse  = parse_url( $url, PHP_URL_HOST );
+        preg_match( "/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", $parse, $domain );
+
+        $domain = reset( $domain );
+        $domain = str_replace( "www.", "", $domain );
+
+        return $domain;
     }
 
 }

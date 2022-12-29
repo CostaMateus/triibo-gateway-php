@@ -21,8 +21,11 @@ use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use Codexshaper\WooCommerce\Facades\Attribute;
+use App\Http\Controllers\Affiliates\AwinController;
 use Codexshaper\WooCommerce\Facades\PaymentGateway;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
+use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
+use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,14 +78,51 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get( "/wc/{id}", function ( $id ) {
+Route::get( "/wc", function () {
 
-    // $order = Order::find( $id );
+    $ended = false;
+    $page  = 1;
+    $per   = 100;
 
-    // dd( $order );
+    $aux   = [];
 
-    $product = Product::find( $id );
+    do
+    {
+        try
+        {
+            $products = Product::all( [
+                "per_page" => $per,
+                "page"     => $page,
+            ] );
 
-    dd( $product );
+            if ( $products->count() < 100 ) $ended = true;
+            if ( $page > 3                ) $ended = true;
 
+            $page++;
+
+            foreach ( $products as $p )
+            {
+                if ( strpos( $p->sku, "FS-" ) === false ) continue;
+                if ( $p->stock_quantity > 0             ) continue;
+
+                $aux[] = [
+                    "id"             => $p->id,
+                    "sku"            => str_replace( "FS-", "", $p->sku ),
+                    "regular_price"  => $p->regular_price,
+                    "sale_price"     => $p->sale_price,
+                    "stock_status"   => $p->stock_status,
+                    "stock_quantity" => $p->stock_quantity
+                ];
+            }
+        }
+        catch (Exception $e)
+        {
+            $ended = false;
+        }
+    }
+    while ( !$ended );
+
+    Storage::put( "FS-SKU-" . date( "Ymd-his" ) . ".json", json_encode( $aux, JSON_UNESCAPED_SLASHES ) );
+
+    dd( count( $aux ) );
 } );

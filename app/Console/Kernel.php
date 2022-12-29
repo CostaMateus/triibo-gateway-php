@@ -13,7 +13,8 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\Affiliates\SocialSoul\ProcessData::class,
+        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+        \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,
 
         \App\Console\Commands\Cofry\DeleteImages::class,
         \App\Console\Commands\Cofry\ProcessImages::class,
@@ -42,59 +43,62 @@ class Kernel extends ConsoleKernel
      * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule( Schedule $schedule )
     {
         if ( config( "app.env" ) == "production" )
         {
-            // // Domingo às 00h30
-            // $schedule->exec("composer self-update")->weeklyOn(0, "0:30")->timezone( "America/Sao_Paulo" )->runInBackground();
-            // // Domingo às 01h00
-            // $schedule->exec("composer update")->weeklyOn(0, "0:45")->timezone( "America/Sao_Paulo" )->runInBackground();
+            // Trimestral, 1º às 00h30
+            $schedule->exec("composer self-update")->quarterlyOn( 1, "00:30" )->runInBackground();
+            // Mensal, 1º às 01h00
+            $schedule->exec("composer update")->monthlyOn( 1, "00:45" )->runInBackground();
 
 
             // Cofry Triibo Integration
-            // Diariamente às 02 e às 14h
-            $schedule->command( "process:storepromo" )->twiceDaily( 2, 14 )->timezone( "America/Sao_Paulo" )->runInBackground();
-            // Diariamente às 02h05
-            $schedule->command( "delete:images"      )->dailyAt( "02:05" )->timezone( "America/Sao_Paulo" )->runInBackground();
-            // Diariamente às 02h10
-            $schedule->command( "process:images"     )->dailyAt( "02:15" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            // Lojas e promoções - Diariamente às 02 e às 14h
+            $schedule->command( "process:storepromo" )->twiceDaily( 2, 14 )->runInBackground();
+            // Imagens - Diariamente às 02h05
+            $schedule->command( "delete:images"      )->dailyAt( "02:05" )->runInBackground();
+            // Imagens - Diariamente às 02h10
+            $schedule->command( "process:images"     )->dailyAt( "02:15" )->runInBackground();
+
+            // SocialSoul Triibo Integration
+            // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
+            $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
+            // Relatórios - Diariamente às 4h
+            $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
 
 
             // Mautic Pipedrive Integration
             // Diariamente às 05h00
-            $schedule->command( "update:stages" )->weeklyOn( 1, "5:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "update:stages" )->weeklyOn( 1, "5:00" )->runInBackground();
 
 
             // // Triibo
             // // Diariamente às 03h
-            // $schedule->command("unset:updateDate")->dailyAt("03:00")->timezone( "America/Sao_Paulo" )->runInBackground();
+            // $schedule->command("unset:updateDate")->dailyAt("03:00")->runInBackground();
             // // Diariamente às 03h02
-            // $schedule->command("unset:vouchers")->dailyAt("03:02")->timezone( "America/Sao_Paulo" )->runInBackground();
+            // $schedule->command("unset:vouchers")->dailyAt("03:02")->runInBackground();
 
 
             // Marketplace
-            // // Process FS products
-            $schedule->command( "sku:process_fs_products --action=update" )
-                     ->hourly()
-                     ->timezone( "America/Sao_Paulo" )
-                     ->runInBackground();
+            // Process FS products
+            $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
-            $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "07:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "00:00" )->runInBackground();
             // Get Categories
-            $schedule->command( "mkt:get_categories"   )->dailyAt( "11:59" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "mkt:get_categories"   )->weeklyOn( [ 0, 2, 4, 6 ], "23:55" )->runInBackground();
             // Delete duplicate SKUs
-            $schedule->command( "sku:delete_duplicate" )->dailyAt( "01:03" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "sku:delete_duplicate" )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
-            $schedule->command( "sku:private"          )->dailyAt( "02:05" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "sku:private"          )->dailyAt( "02:05" )->runInBackground();
             // Update FS products instock, sc 05/14/33
-            $schedule->command( "sku:update"           )->dailyAt( "06:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "sku:update"           )->dailyAt( "06:00" )->runInBackground();
             // // Remove FS products without SKU
-            // $schedule->command( "sku:delete_fs"        )->twiceDaily( 5, 8 )->timezone( "America/Sao_Paulo" )->runInBackground();
+            // $schedule->command( "sku:delete_fs"        )->twiceDaily( 5, 8 )->runInBackground();
 
 
             // Clear Logs
-            $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->timezone( "America/Sao_Paulo" )->runInBackground();
+            $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
         }
     }
 
@@ -105,8 +109,18 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__."/Commands");
+        $this->load( __DIR__ . "/Commands" );
 
-        require base_path("routes/console.php");
+        require base_path( "routes/console.php" );
+    }
+
+    /**
+     * Get the timezone that should be used by default for scheduled events.
+     *
+     * @return \DateTimeZone|string|null
+     */
+    protected function scheduleTimezone()
+    {
+        return "America/Sao_Paulo";
     }
 }

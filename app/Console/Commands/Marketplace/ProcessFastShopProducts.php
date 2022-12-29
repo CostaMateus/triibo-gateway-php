@@ -48,7 +48,7 @@ class ProcessFastShopProducts extends Command
         if ( !in_array( $this->option( "action" ), [ "create", "update", "delete" ] ) ) return;
 
         echo "Command : Starting process_fs_products\n";
-        Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Starting process_fs_products" ] );
+        Log::channel( "fastshop" )->info( "Product processing", [ "Starting process_fs_products" ] );
 
         $action = $this->option( "action" );
         $ended  = false;
@@ -69,7 +69,7 @@ class ProcessFastShopProducts extends Command
             if ( $products->count() == 0 )
             {
                 echo "Command : No products to process\n";
-                Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "No products to process" ] );
+                Log::channel( "fastshop" )->info( "Product processing", [ "No products to process" ] );
                 break;
             }
 
@@ -110,7 +110,7 @@ class ProcessFastShopProducts extends Command
                         $array = [];
                         $i++;
 
-                        Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} processing round" ] );
+                        Log::channel( "fastshop" )->info( "Product processing", [ "#{$i} processing round" ] );
                     }
                     catch ( Exception $e )
                     {
@@ -121,7 +121,7 @@ class ProcessFastShopProducts extends Command
                         else
                         {
                             echo "Fail : {$e->getMessage()}\n";
-                            Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
+                            Log::channel( "fastshop" )->error( "Product processing", [ $e->getMessage() ] );
                         }
                     }
                 }
@@ -140,19 +140,19 @@ class ProcessFastShopProducts extends Command
                 Product::batch( [ $action => $array ] );
 
                 $i++;
-                Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "#{$i} last processing round" ] );
+                Log::channel( "fastshop" )->info( "Product processing", [ "#{$i} last processing round" ] );
             }
             catch ( \Exception $e )
             {
                 echo "Fail : {$e->getMessage()}\n";
-                Log::channel( "fastshop" )->error( "sku:process_fs_products", [ $e->getMessage() ] );
+                Log::channel( "fastshop" )->error( "Product processing", [ $e->getMessage() ] );
             }
 
             DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
         }
 
         echo "Command : Finalizing process_fs_products\n";
-        Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Finalizing process_fs_products" ] );
+        Log::channel( "fastshop" )->info( "Product processing", [ "Finalizing process_fs_products" ] );
     }
 
     protected function getCategoriesId( $data )
@@ -207,7 +207,7 @@ class ProcessFastShopProducts extends Command
             }
             catch( Exception $e )
             {
-                Log::channel( "fastshop" )->info( "sku:process_fs_products", [ "Fail get category ID: {$catName}" ] );
+                Log::channel( "fastshop" )->info( "Product processing", [ "Fail get category ID: {$catName}" ] );
             }
         }
 

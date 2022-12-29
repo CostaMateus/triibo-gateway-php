@@ -139,6 +139,50 @@ class SocialSoulController extends Controller
     }
 
     /**
+     * Recebe o callback de vendas da SocialSoul
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function postback( Request $request )
+    {
+        $params          = [
+            "orderId",
+            "advertiserId",
+            "userId",
+            "saleValue",
+            "commissionValue"
+        ];
+
+        $query           = $request->query();
+        $validated       = true;
+
+        foreach ( $params as $param )
+            if ( !array_key_exists( $param, $query ) )
+                $validated = false;
+
+        if ( !$validated ) return response()->json( [ "message" => "Missing query strings" ], 400 );
+
+        // Tratar dados
+        $orderId         = $query[ "orderId"         ];
+        $advertiserId    = $query[ "advertiserId"    ];
+        $userId          = $query[ "userId"          ];
+        $saleValue       = $query[ "saleValue"       ];
+        $commissionValue = $query[ "commissionValue" ];
+
+        // enviar para Firebase
+
+        return response()->json( [ "message" => "ok" ], 200 );
+    }
+
+    public function reports()
+    {
+        $reports = $this->integration->getReports();
+
+        // enviar para o Firebase
+    }
+
+    /**
      * Process stores and send to Firebase
      *
      * @return void

@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatGuruController;
 use App\Http\Controllers\FastshopController;
 use App\Http\Controllers\PipedriveWebhookController;
+use App\Http\Controllers\Affiliates\SocialSoulController;
 
 /*
 |--------------------------------------------------------------------------
@@ -139,6 +140,16 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
             "/ordercancelation/{orderId}",
             [ FastshopController::class, "orderCancelation" ]
         )->name( "ordercancelation" );
+    } );
+
+} );
+
+Route::name( "api.affiliates." )->middleware( "log.route" )->prefix( "affiliates" )->group( function () {
+
+    Route::name( "ss." )->prefix( "socialsoul" )->group( function () {
+        Route::get( "/postback",
+            [ SocialSoulController::class, "postback" ]
+        )->name( "postback" );
     } );
 
 } );

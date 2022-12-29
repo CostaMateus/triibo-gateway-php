@@ -11,6 +11,7 @@ use App\Notifications\ScheduleCofry;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\CofryIntegration;
+use Symfony\Component\Console\Helper\Helper;
 
 class CofryController extends Controller
 {
@@ -73,10 +74,7 @@ class CofryController extends Controller
                 "message" => $e
             ]);
 
-            self::sendMailNotification([
-                "method" => "insertStoresFirebase()",
-                "catch"  => "FirebaseException"
-            ], $e);
+            Helper::sendMailNotification( "cofry", "insertStoresFirebase()", "FirebaseException", $e );
         }
         catch (Throwable $e)
         {
@@ -88,10 +86,7 @@ class CofryController extends Controller
                 "message" => $e
             ]);
 
-            self::sendMailNotification([
-                "method" => "insertStoresFirebase()",
-                "catch"  => "Throwable"
-            ], $e);
+            Helper::sendMailNotification( "cofry", "insertStoresFirebase()", "Throwable", $e );
         }
 
 
@@ -117,10 +112,7 @@ class CofryController extends Controller
                 "message" => $e
             ]);
 
-            self::sendMailNotification([
-                "method" => "insertPromosFirebase()",
-                "catch"  => "FirebaseException"
-            ], $e);
+            Helper::sendMailNotification( "cofry", "insertPromosFirebase()", "FirebaseException", $e );
         }
         catch (Throwable $e)
         {
@@ -132,10 +124,7 @@ class CofryController extends Controller
                 "message" => $e
             ]);
 
-            self::sendMailNotification([
-                "method" => "insertPromosFirebase()",
-                "catch"  => "Throwable"
-            ], $e);
+            Helper::sendMailNotification( "cofry", "insertPromosFirebase()", "Throwable", $e );
         }
     }
 
@@ -368,10 +357,7 @@ class CofryController extends Controller
                     "message" => $e
                 ]);
 
-                self::sendMailNotification([
-                    "method" => "execUploadImages()",
-                    "catch"  => "FirebaseException"
-                ], $e);
+                Helper::sendMailNotification( "cofry", "execUploadImages()", "FirebaseException", $e );
             }
             catch (Throwable $e)
             {
@@ -382,10 +368,7 @@ class CofryController extends Controller
                     "message" => $e
                 ]);
 
-                self::sendMailNotification([
-                    "method" => "execUploadImages()",
-                    "catch"  => "Throwable"
-                ], $e);
+                Helper::sendMailNotification( "cofry", "execUploadImages()", "Throwable", $e );
             }
         }
 

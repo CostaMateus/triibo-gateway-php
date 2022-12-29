@@ -104,39 +104,52 @@ return [
             'permission' => 0664,
         ],
 
-        'marketplace' => [
-            'driver' => 'single',
-            'path'   => storage_path('logs/marketplace.log'),
-            'level'  => 'debug'
+        // programa de afiliados
+        "affiliate"  => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/affiliate.log"    ),
+            "level"  => "debug"
+        ],
+        "awin"       => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/awin.log"         ),
+            "level"  => "debug"
+        ],
+        "cofry"      => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/cofry.log"        ),
+            "level"  => "debug"
+        ],
+        "socialsoul" => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/socialsoul.log"   ),
+            "level"  => "debug"
         ],
 
-        'cofry' => [
-            'driver' => 'single',
-            'path'   => storage_path('logs/cofry.log'),
-            'level'  => 'debug'
-        ],
-        'socialsoul' => [
-            'driver' => 'single',
-            'path'   => storage_path('logs/socialsoul.log'),
-            'level'  => 'debug'
+        // marketplace
+        "marketplace"  => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/marketplace.log"  ),
+            "level"  => "debug"
         ],
 
-        'triibo' => [
-            'driver' => 'single',
-            'path'   => storage_path('logs/triibo.log'),
-            'level'  => 'debug'
+        // triibo
+        "triibo"       => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/triibo.log"       ),
+            "level"  => "debug"
         ],
 
-        'fastshop' => [
-            'driver' => 'single',
-            'path'   => storage_path('logs/fastshop.log'),
-            'level'  => 'debug'
+        // fastshop
+        "fastshop"     => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/fastshop.log"     ),
+            "level"  => "debug"
         ],
-
-        'fastshop-img' => [
-            'driver' => 'single',
-            'path'   => storage_path('logs/fastshop-img.log'),
-            'level'  => 'debug'
+        "fastshop-img" => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/fastshop-img.log" ),
+            "level"  => "debug"
         ],
     ],
 
