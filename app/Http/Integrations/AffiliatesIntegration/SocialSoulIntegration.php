@@ -23,9 +23,10 @@ class SocialSoulIntegration
     protected $url_report;
     protected $source_id;
 
-    protected $stores = [];
-    protected $base   = 100; // base de calculo, ex 100 reais gastos
-    protected $rate   = 10;  // taxa de conversão, 10 pontos a cada 1 real
+    protected $stores      = [];
+    protected $storesLocal = [];
+    protected $base        = 100; // base de calculo, ex 100 reais gastos
+    protected $rate        = 10;  // taxa de conversão, 10 pontos a cada 1 real
 
     public function __construct()
     {
