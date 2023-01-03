@@ -387,7 +387,8 @@ class AwinIntegration
 
             $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $offer[ "endDate" ], true );
 
-            $imageName         = "awin_common_promotion.png";
+            $imageName         = "awin_standard.png";
+            $imageNameVoucher  = "awin_common_promotion.png";
 
             $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
 
@@ -429,6 +430,9 @@ class AwinIntegration
             {
                 $promotions[ $id ][ "checkoutCode" ] = $offer[ "voucher" ][ "code" ];
                 $promotions[ $id ][ "tags"         ] = [ "Cashback", "Cupom" ];
+
+                $promotions[ $id ][ "photo"        ] = $imageNameVoucher;
+                $promotions[ $id ][ "thumbnail"    ] = $imageNameVoucher;
             }
         }
 

@@ -108,6 +108,7 @@ class AwinController extends Controller
         $standard       = public_path( "images/standard.png" );
         $common         = public_path( "images/cupom.png"    );
         File::copy( $standard, $this->stores_path . "/awin_standard.png"         );
+        File::copy( $standard, $this->promos_path . "/awin_standard.png"         );
         File::copy( $common,   $this->promos_path . "/awin_common_promotion.png" );
 
         $filesStores    = File::allFiles( $this->stores_path );
