@@ -93,9 +93,9 @@ class DataTranslator
         }
         else
         {
-            $index = array_search( "_fastshop_hub", array_column( $product->meta_data, "key" ) );
-            $value = ( $index !== false ) ? $product->meta_data[ $index ]->value : "-";
-            $class = $product->shipping_class;
+            $index = ( !$product ) ? "" : ( array_search( "_fastshop_hub", array_column( $product->meta_data, "key" ) ) );
+            $value = ( !$product ) ? "" : ( ( $index !== false ) ? $product->meta_data[ $index ]->value : "-"           );
+            $class = ( !$product ) ? "" : ( $product->shipping_class                                                    );
         }
 
         if ( !empty( $data[ "items" ] ) )
