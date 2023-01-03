@@ -355,6 +355,8 @@ class AwinIntegration
 
         foreach ( $data as $offer )
         {
+            dump( $offer );
+
             $idStore           = self::ID . $offer[ "advertiser" ][ "id" ];
             $id                = $idStore . $offer[ "promotionId" ];
 
