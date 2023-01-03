@@ -216,9 +216,9 @@ class AwinIntegration
 
             if ( !$response->successful() )
             {
-                $data = json_decode( $response->body(), true );
+                $err = json_decode( $response->body(), true );
 
-                if ( isset( $data[ "error" ] ) && $data[ "error" ] == "request.limit.exceeded" )
+                if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
                 {
                     sleep( 10 );
                 }
