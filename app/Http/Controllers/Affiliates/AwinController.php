@@ -105,6 +105,12 @@ class AwinController extends Controller
 
     public function images()
     {
+        $standard       = public_path( "images/standard.png" );
+        $common         = public_path( "images/cupom.png"    );
+        File::copy( $standard, $this->stores_path . "/awin_standard.png"         );
+        File::copy( $standard, $this->promos_path . "/awin_standard.png"         );
+        File::copy( $common,   $this->promos_path . "/awin_common_promotion.png" );
+
         $filesStores    = File::allFiles( $this->stores_path );
         $filesPromos    = File::allFiles( $this->promos_path );
 
@@ -147,6 +153,13 @@ class AwinController extends Controller
 
         if ( $filesStores ) File::deleteDirectory( $this->stores_path, true );
         if ( $filesPromos ) File::deleteDirectory( $this->promos_path, true );
+    }
+
+    public function reports()
+    {
+        $reports = $this->integration->getReports();
+
+        // enviar para o Firebase
     }
 
     /**

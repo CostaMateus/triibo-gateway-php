@@ -138,6 +138,11 @@ class AwinIntegration
         return $promotions;
     }
 
+    public function getReports()
+    {
+
+    }
+
     /**
      * Get stores Awin
      *
@@ -302,7 +307,7 @@ class AwinIntegration
 
             $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
             $imageName     = "awin_{$store[ "id" ]}_{$auxName}.png";
-            $imageName     = self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) ? $imageName : "standard.png";
+            $imageName     = self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) ? $imageName : "awin_standard.png";
 
             $stores[ $id ] = [
                 "partnerEstablishmentId" => $store[ "id" ],
@@ -382,7 +387,8 @@ class AwinIntegration
 
             $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $offer[ "endDate" ], true );
 
-            $imageName         = "standard.png";
+            $imageName         = "awin_standard.png";
+            $imageNameVoucher  = "awin_common_promotion.png";
 
             $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
 
@@ -424,6 +430,9 @@ class AwinIntegration
             {
                 $promotions[ $id ][ "checkoutCode" ] = $offer[ "voucher" ][ "code" ];
                 $promotions[ $id ][ "tags"         ] = [ "Cashback", "Cupom" ];
+
+                $promotions[ $id ][ "photo"        ] = $imageNameVoucher;
+                $promotions[ $id ][ "thumbnail"    ] = $imageNameVoucher;
             }
         }
 
