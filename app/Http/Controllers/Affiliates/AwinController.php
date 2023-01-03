@@ -16,7 +16,7 @@ class AwinController extends Controller
 {
     protected $integration;
     protected $stores_path;
-    // protected $promos_path;
+    protected $promos_path;
 
     public function __construct()
     {

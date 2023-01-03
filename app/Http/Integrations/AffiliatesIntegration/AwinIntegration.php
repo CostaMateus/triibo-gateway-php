@@ -33,10 +33,13 @@ class AwinIntegration
     protected $url_reports_campaign;
 
     protected $url_transactions;
+    protected $url_linkbuilder;
 
-    protected $stores = [];
-    protected $base   = 100; // base de calculo, ex 100 reais gastos
-    protected $rate   = 10;  // taxa de conversão, 10 pontos a cada 1 real
+    protected $stores      = [];
+    protected $storesLocal = [];
+
+    protected $base        = 100; // base de calculo, ex 100 reais gastos
+    protected $rate        = 10;  // taxa de conversão, 10 pontos a cada 1 real
 
     public function __construct()
     {
@@ -87,17 +90,23 @@ class AwinIntegration
             Helper::usort( "id", $stores[ "data" ] );
 
             /**
-             * TODO remover em PRD
+             * TODO remover em PRD - inicio
              */
-            $i = 1;
+            $aux = [];
+            $ids = [ "17762", "17697", "24534", "17665", "17854", "17648", "17665", "17729", ];
+            foreach ( $ids as $id )
+            {
+                $key = array_search( $id, array_column( $stores[ "data" ], "id" ) );
+                if ( $key !== false )
+                    $aux[] = $stores[ "data" ][ $key ];
+            }
+            $stores[ "data" ] = $aux;
+            /**
+             * TODO remover em PRD - final
+             */
+
             foreach ( $stores[ "data" ] as &$store )
             {
-                /**
-                 * TODO remover em PRD
-                 */
-                if ( $i > 10 ) continue;
-                $i++;
-
                 $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
             }
 
@@ -117,8 +126,8 @@ class AwinIntegration
 
         foreach ( $stores as $key => $store )
         {
-            $id     = $store[ "partnerEstablishmentId" ];
-            $offers = $this->searchOffers( $id );
+            $id         = $store[ "partnerEstablishmentId" ];
+            $offers     = $this->searchOffers( $id );
 
             if ( empty( $offers[ "data" ] ) ) continue;
 
@@ -205,26 +214,37 @@ class AwinIntegration
                             ->withBody( json_encode( $body ), "application/json" )
                             ->post( $this->url_offers );
 
-            if( !$response->successful() )
+            if ( !$response->successful() )
             {
-                return [
-                    "success" => false,
-                    "code"    => 4001,
-                    "data"    => $data
-                ];
+                $data = json_decode( $response->body(), true );
+
+                if ( isset( $data[ "error" ] ) && $data[ "error" ] == "request.limit.exceeded" )
+                {
+                    sleep( 10 );
+                }
+                else
+                {
+                    return [
+                        "success" => false,
+                        "code"    => 4001,
+                        "data"    => $data
+                    ];
+                }
             }
+            else
+            {
+                $page++;
 
-            $page++;
+                $resp       = $response->json();
 
-            $resp       = $response->json();
+                if ( !empty( $resp[ "data" ] ) )
+                    $data = array_merge( $data, $resp[ "data" ] );
 
-            if ( !empty( $resp[ "data" ] ) )
-                $data = array_merge( $data, $resp[ "data" ] );
+                $pagination = $resp[ "pagination" ];
 
-            $pagination = $resp[ "pagination" ];
-
-            if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
-                $ended = true;
+                if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
+                    $ended = true;
+            }
         }
         while ( !$ended );
 
@@ -250,19 +270,8 @@ class AwinIntegration
         $date      = $date->add( new DateInterval( "P7Y" ) );
         $dateDis   = ( int ) $date->format( "U" ) * 1000;
 
-        /**
-         * TODO remover em PRD
-         */
-        $i = 1;
-
         foreach ( $data as $store )
         {
-            /**
-             * TODO remover em PRD
-             */
-            if ( $i > 10 ) continue;
-            $i++;
-
             $id            = self::ID . $store[ "id" ];
             $cashback      = "";
             $url           = Helper::parseUrl( $store[ "displayUrl" ] );
