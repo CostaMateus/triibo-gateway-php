@@ -28,10 +28,6 @@ class AwinIntegration
     protected $url_commissiongroups;
     protected $url_commissionsharingrules;
 
-    protected $url_reports_advertiser;
-    protected $url_reports_creative;
-    protected $url_reports_campaign;
-
     protected $url_transactions;
     protected $url_linkbuilder;
 
@@ -57,9 +53,6 @@ class AwinIntegration
 
         $this->url_commissiongroups       = "{$url}/publishers/{$p_id}/commissiongroups";       // advertiserId
         $this->url_commissionsharingrules = "{$url}/publishers/{$p_id}/commissionsharingrules"; //
-        $this->url_reports_advertiser     = "{$url}/publishers/{$p_id}/reports/advertiser";     // startDate - endDate - timezone - region
-        $this->url_reports_creative       = "{$url}/publishers/{$p_id}/reports/creative";       // startDate - endDate - timezone - region
-        $this->url_reports_campaign       = "{$url}/publishers/{$p_id}/reports/campaign";       // startDate - endDate - timezone - region
         $this->url_transactions           = "{$url}/publishers/{$p_id}/transactions";           // startDate - endDate - timezone
 
         // Url Tracking
@@ -140,7 +133,9 @@ class AwinIntegration
 
     public function getReports()
     {
+        $reports = $this->searchReports();
 
+        return $reports;
     }
 
     /**
@@ -258,6 +253,25 @@ class AwinIntegration
             "code"    => 0,
             "data"    => $data,
         ];
+    }
+
+    private function searchReports()
+    {
+        $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
+        $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
+        $start    = date( "Y-m-d", $sunday   ) . "T00:00:00";
+        $end      = date( "Y-m-d", $saturday ) . "T23:59:59";
+
+        // $start    = "2022-12-01T00:00:00";
+        // $end      = "2022-12-07T23:59:59";
+
+        $url      = "{$this->url_transactions}/?startDate={$start}&endDate={$end}&timezone=" . self::TZ;
+        $response = Http::withToken( $this->tkn )->get( $url );
+        $data     = json_decode( $response->body(), true );
+
+        // tratar dados
+
+        return $data;
     }
 
     /**
