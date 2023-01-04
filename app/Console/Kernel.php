@@ -25,6 +25,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\DuplicateSKUs::class,
         \App\Console\Commands\Marketplace\GetMktProductCategories::class,
         \App\Console\Commands\Marketplace\GetMktProductSkus::class,
+        \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
         \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
@@ -84,9 +85,9 @@ class Kernel extends ConsoleKernel
             // Process FS products
             $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
-            $schedule->command( "mkt:get_skus"         )->weeklyOn( [ 0, 2, 4, 6 ], "00:00" )->runInBackground();
+            $schedule->command( "mkt:get_skus"         )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
-            $schedule->command( "mkt:get_categories"   )->weeklyOn( [ 0, 2, 4, 6 ], "23:55" )->runInBackground();
+            $schedule->command( "mkt:get_categories"   )->dailyAt( "23:59" )->runInBackground();
             // Delete duplicate SKUs
             $schedule->command( "sku:delete_duplicate" )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
