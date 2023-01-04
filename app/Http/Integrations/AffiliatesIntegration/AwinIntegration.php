@@ -342,7 +342,10 @@ class AwinIntegration
                 "nome"                   => explode( " BR", $store[ "name" ] )[ 0 ],
                 "descricao"              => $store[ "description" ],
                 "email"                  => "contato@triibo.com.br",
-                "contatotriibo"          => [ "+5511944965799" ],
+                "contatoTriibo"          => [ [
+                    "type"  => "telefone",
+                    "value" => "+5511944965799"
+                ] ],
                 "contatos"               => [ "+5511944965799" ],
 
                 "fotoThumb"              => $imageName,
