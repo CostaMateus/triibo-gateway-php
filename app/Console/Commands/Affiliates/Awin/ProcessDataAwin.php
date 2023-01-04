@@ -131,10 +131,8 @@ class ProcessDataAwin extends Command
         echo "Command : Start processing of Reports\n";
         Log::channel( "awin" )->info( "Reports", [ "Start processing of Reports" ]);
 
-        // $awin = new AwinController();
-        // $awin->reports();
-
-        echo "Reports unavailable";
+        $awin = new AwinController();
+        $awin->reports();
 
         echo "Command : End Reports processing\n";
         Log::channel( "awin" )->info( "Reports", [ "End Reports processing" ] );
