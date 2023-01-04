@@ -51,6 +51,14 @@ class ProcessFastShopProducts extends Command
         Log::channel( "fastshop" )->info( "Product processing", [ "Starting process_fs_products" ] );
 
         $action = $this->option( "action" );
+
+        if ( $action == "update" ) $this->processUpdate( $action );
+
+        DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
+    }
+
+    private function processUpdate( $action )
+    {
         $ended  = false;
         $array  = [];
         $i      = 0;
