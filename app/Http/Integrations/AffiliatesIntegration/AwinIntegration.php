@@ -71,11 +71,6 @@ class AwinIntegration
     {
         if ( empty( $this->stores ) )
         {
-            $path    = public_path( "images/affiliates/awin/establishments" );
-            $default = public_path( "images/standard.png" );
-
-            File::copy( $default, $path . "/standard.png" );
-
             $stores  = $this->searchStores();
 
             if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
@@ -404,8 +399,8 @@ class AwinIntegration
 
             $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $offer[ "endDate" ], true );
 
-            $imageName         = "awin_standard.png";
-            $imageNameVoucher  = "awin_common_promotion.png";
+            $imageNamePromo    = "awin_common_promotion.webp";
+            $imageNameVoucher  = "awin_common_coupon.webp";
 
             $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
 
@@ -431,8 +426,8 @@ class AwinIntegration
 
                 "level"              => 99,
 
-                "photo"              => $imageName,
-                "thumbnail"          => $imageName,
+                "photo"              => $imageNamePromo,
+                "thumbnail"          => $imageNamePromo,
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
@@ -447,7 +442,6 @@ class AwinIntegration
             {
                 $promotions[ $id ][ "checkoutCode" ] = $offer[ "voucher" ][ "code" ];
                 $promotions[ $id ][ "tags"         ] = [ "Cashback", "Cupom" ];
-
                 $promotions[ $id ][ "photo"        ] = $imageNameVoucher;
                 $promotions[ $id ][ "thumbnail"    ] = $imageNameVoucher;
             }

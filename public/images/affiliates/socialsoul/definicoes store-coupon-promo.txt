@@ -1,0 +1,53 @@
+[
+    {
+        "id" : "-socialsoul + store_id + id",
+        "title"              : "description",
+        "detailsTitle"       : "description",
+
+        "description"        : "
+            description
+            Ganhe 1 ponto a cada X reais
+            category",
+        "detailsDescription" : "
+            description
+            Utilize codigo
+            validade",
+
+        "photo/thumbnail"    : "category",
+
+        "tags"               : "cashback + cupom + category",
+
+        "checkoutCode"       : "code",
+    },
+
+
+    {
+        "id" : "-socialsoul + store_id + id",
+        "title"              : "name",
+        "detailsTitle"       : "name",
+
+        "description"        : "
+            De X reais por Y reais.
+            quantity vezes de value.
+            category.
+            Ganhe 1 ponto a cada X reais",
+
+        "detailsDescription" : "
+            De X reais por Y reais.
+            quantity vezes de value.
+            category.
+            Ganhe 1 ponto a cada X reais",
+
+        "photo/thumbnail"    : "thumbnail",
+
+        "tags"               : "cashback + category + promoção",
+    },
+
+
+    {
+        "id" : "-socialsoul + id",
+
+        "cashbackDefault" : "maxCommission / 2"
+    }
+
+]

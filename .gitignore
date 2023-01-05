@@ -17,6 +17,11 @@ npm-debug.log
 yarn-error.log
 
 /public/cache
-/public/images/affiliates
+
+/public/images/affiliates/awin/establishments/*
+/public/images/affiliates/awin/promotions/*
+/public/images/affiliates/socialsoul/establishments/*
+/public/images/affiliates/socialsoul/promotions/*
+
 /public/images/estabelecimentos
 /public/images/promos

@@ -105,11 +105,13 @@ class AwinController extends Controller
 
     public function images()
     {
-        $standard       = public_path( "images/standard.png" );
-        $common         = public_path( "images/cupom.png"    );
-        File::copy( $standard, $this->stores_path . "/awin_standard.png"         );
-        File::copy( $standard, $this->promos_path . "/awin_standard.png"         );
-        File::copy( $common,   $this->promos_path . "/awin_common_promotion.png" );
+        $store          = public_path( "images/affiliates/awin/standard.png"   );
+        $coupon         = public_path( "images/affiliates/awin/coupon.webp"    );
+        $promotion      = public_path( "images/affiliates/awin/promotion.webp" );
+
+        File::copy( $store,     $this->stores_path . "/awin_standard.png"          );
+        File::copy( $coupon,    $this->promos_path . "/awin_common_coupon.webp"    );
+        File::copy( $promotion, $this->promos_path . "/awin_common_promotion.webp" );
 
         $filesStores    = File::allFiles( $this->stores_path );
         $filesPromos    = File::allFiles( $this->promos_path );
