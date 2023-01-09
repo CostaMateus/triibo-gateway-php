@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Artisan;
 use Exception;
 use App\Helpers\Helper;
 use Illuminate\Console\Command;
@@ -52,9 +53,7 @@ class ProcessFastShopProducts extends Command
 
         $action = $this->option( "action" );
 
-        if ( $action == "update" ) $this->processUpdate( $action );
-
-        DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
+        $this->processUpdate( $action );
     }
 
     private function processUpdate( $action )
@@ -91,22 +90,38 @@ class ProcessFastShopProducts extends Command
                 $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
 
                 $wcData    = DataTranslator::translate( "newProduct", $product );
-                $searchSku = DB::table( "marketplace_product_skus" )->where( "product_sku", $wcData[ "sku" ] )->first();
 
-                if ( $searchSku )
+                // create
+                if ( $action == "create" )
                 {
-                    echo "Match found, queued to update - {$wcData[ "sku" ]}\n";
-
-                    DB::table( "fastshop_products" )->where( "id", $data->id )->delete();
-
-                    $wcData[ "id" ] = $searchSku->id;
-                    $array[]        = $wcData;
-                }
-                else
-                {
-                    echo "Match not find, skipping - {$wcData[ "sku" ]}\n";
                     DB::table( "fastshop_products" )->where( "id", $data->id )->update( [ "status" => "processed" ] );
+                    echo "Queued to create - {$wcData[ "sku" ]}\n";
+                    $array[] = $wcData;
                 }
+
+                // update
+                if ( $action == "update" )
+                {
+                    $searchSku = DB::table( "marketplace_product_skus" )->where( "product_sku", $wcData[ "sku" ] )->first();
+                    DB::table( "fastshop_products" )->where( "id", $data->id )->update( [ "status" => "processed" ] );
+
+                    if ( $searchSku )
+                    {
+                        echo "Match found, queued to update - {$wcData[ "sku" ]}\n";
+
+                        // DB::table( "fastshop_products" )->where( "id", $data->id )->delete();
+
+                        $wcData[ "id" ] = $searchSku->id;
+                        $array[]        = $wcData;
+                    }
+                    else
+                    {
+                        echo "Match not find, skipping - {$wcData[ "sku" ]}\n";
+                    }
+                }
+
+                // delete
+                // if ( $action == "delete" ) {}
 
                 if ( count( $array ) == 100 )
                 {
@@ -119,18 +134,12 @@ class ProcessFastShopProducts extends Command
                         $i++;
 
                         Log::channel( "fastshop" )->info( "Product processing", [ "#{$i} processing round" ] );
+
+                        $this->deleteSuccessfullyProcessed( $action );
                     }
                     catch ( Exception $e )
                     {
-                        if ( $e->getMessage() == "JSON ERROR: Syntax error" )
-                        {
-                            $array = [];
-                        }
-                        else
-                        {
-                            echo "Fail : {$e->getMessage()}\n";
-                            Log::channel( "fastshop" )->error( "Product processing", [ $e->getMessage() ] );
-                        }
+                        $this->treatException( $action, $array, $e );
                     }
                 }
             }
@@ -147,20 +156,32 @@ class ProcessFastShopProducts extends Command
 
                 Product::batch( [ $action => $array ] );
 
+                $this->deleteSuccessfullyProcessed( $action );
+
                 $i++;
                 Log::channel( "fastshop" )->info( "Product processing", [ "#{$i} last processing round" ] );
             }
             catch ( \Exception $e )
             {
-                echo "Fail : {$e->getMessage()}\n";
-                Log::channel( "fastshop" )->error( "Product processing", [ $e->getMessage() ] );
+                $this->treatException( $action, $array, $e );
             }
-
-            DB::table( "fastshop_products" )->where( "status", "processed" )->update( [ "status" => null ] );
         }
+
+        $this->reverseStatus( $action );
 
         echo "Command : Finalizing process_fs_products\n";
         Log::channel( "fastshop" )->info( "Product processing", [ "Finalizing process_fs_products" ] );
+
+        if ( $action == "update" )
+        {
+            $products = DB::table( "fastshop_products" )
+                          ->where( "action", "create"  )
+                          ->where( "status", null      )
+                          ->limit( 100 )
+                          ->get();
+
+            if ( $products ) Artisan::call( "sku:process_fs_products", [ "--action" => "create" ] );
+        }
     }
 
     protected function getCategoriesId( $data )
@@ -220,5 +241,42 @@ class ProcessFastShopProducts extends Command
         }
 
         return $cats;
+    }
+
+    protected function deleteSuccessfullyProcessed( $action )
+    {
+        DB::table( "fastshop_products" )
+            ->where( "action", $action )
+            ->where( "status", "processed" )
+            ->delete();
+    }
+
+    protected function treatException( $action, &$array, $e )
+    {
+        if ( $e->getMessage() == "JSON ERROR: Syntax error" )
+        {
+            $array = [];
+            $this->deleteSuccessfullyProcessed( $action );
+        }
+        else
+        {
+            $this->reverseStatus( $action );
+
+            echo "Fail : {$e->getMessage()}\n";
+            Log::channel( "fastshop" )->error( "Product processing", [ $e->getMessage() ] );
+        }
+    }
+
+    protected function reverseStatus( $action )
+    {
+        $actionUpd = $action == "create" ? "update" : "create";
+
+        DB::table( "fastshop_products"   )
+          ->where( "status", "processed" )
+          ->where( "action", $action     )
+          ->update( [
+                "action" => $actionUpd,
+                "status" => null
+            ] );
     }
 }
