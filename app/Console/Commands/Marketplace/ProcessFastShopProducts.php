@@ -48,10 +48,10 @@ class ProcessFastShopProducts extends Command
     {
         if ( !in_array( $this->option( "action" ), [ "create", "update", "delete" ] ) ) return;
 
-        echo "Command : Starting process_fs_products\n";
-        Log::channel( "fastshop" )->info( "Product processing", [ "Starting process_fs_products" ] );
-
         $action = $this->option( "action" );
+
+        echo "Command : Starting process_fs_products - {$action}\n";
+        Log::channel( "fastshop" )->info( "Product processing", [ "Starting process_fs_products - {$action}" ] );
 
         $this->processUpdate( $action );
     }
@@ -169,8 +169,8 @@ class ProcessFastShopProducts extends Command
 
         $this->reverseStatus( $action );
 
-        echo "Command : Finalizing process_fs_products\n";
-        Log::channel( "fastshop" )->info( "Product processing", [ "Finalizing process_fs_products" ] );
+        echo "Command : Finalizing process_fs_products - {$action}\n";
+        Log::channel( "fastshop" )->info( "Product processing", [ "Finalizing process_fs_products - {$action}" ] );
 
         if ( $action == "update" )
         {
