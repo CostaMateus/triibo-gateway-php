@@ -121,72 +121,85 @@ class CofryController extends Controller
      */
     public function insertStoresFirebase()
     {
-        $firebaseStores = Firebase::database()->getReference( "/Estabelecimento-v2" );
-
         echo "Stores : Searching establishments\n";
         Log::channel( "cofry" )->info( "Stores", [ "Searching establishments" ] );
 
-        $stores         = CofryIntegration::getEstabelecimentos();
-        $allStores      = $firebaseStores->getValue();
+        $cofryStores = CofryIntegration::getEstabelecimentos();
 
-        foreach ( $allStores as $id => $s )
+        $db          = Firebase::database();
+        $fbRef       = $db->getReference( "/Estabelecimento-v2" );
+        $fbStores    = $fbRef->getValue();
+        $fbAuxStores = [];
+
+        foreach ( $fbStores as $push => $store )
         {
-            if ( strpos( $id, "-cofry" ) !== false )
+            if ( strpos( $push, "-awin"       ) !== false     ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
+            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+
+            if ( strpos( $push, "-cofry" ) !== false )
             {
-                // Disabling all old stores
-                echo "Stores : Disab. Estab. ID = $id\n";
-                $s[ "isPublished" ] = false;
-                $firebaseStores->update( [ $id => $s ] );
+                if ( $store[ "isPublished" ] )
+                {
+                    // Disabling all old stores
+                    echo "Stores : Disab. Estab. ID = $push\n";
+                    $store[ "isPublished" ] = false;
+                    $store[ "origin"      ] = "cofry";
+                    $fbRef->update( [ $push => $store ] );
+                }
+
+                continue;
             }
 
-            if ( isset( $s[ "origin" ] ) && $s[ "origin" ] == "cofry" )
+            if ( isset( $store[ "origin" ] ) && $store[ "origin" ] == "cofry" )
             {
                 // Disabling all stores with push
-                echo "Stores : Disab. Estab. ID = $id\n";
-                $s[ "isPublished" ] = false;
-                $firebaseStores->update( [ $id => $s ] );
+                echo "Stores : Disab. Estab. ID = $push\n";
+                $store[ "isPublished" ] = false;
+                $fbRef->update( [ $push => $store ] );
+
+                $fbAuxStores[ $push ] = $store;
             }
         }
 
         echo "Stores : Sending establishments to Firebase\n";
         Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
 
-        foreach ( $stores as $id => $s )
+        foreach ( $cofryStores as $id => $store )
         {
-            $found   = false;
+            $founded = false;
             $cofryId = substr( $id, 6 );
 
-            foreach ( $allStores as $fbKey => $fbStore )
+            foreach ( $fbAuxStores as $push => $fbStore )
             {
-                if ( strpos( $fbKey, "-cofry" ) !== false             ) continue;
-                if ( !isset( $fbStore[ "origin"                 ] )   ) continue;
-                if ( !isset( $fbStore[ "partnerEstablishmentId" ] )   ) continue;
-                if ( "cofry"  != $fbStore[ "origin"                 ] ) continue;
                 if ( $cofryId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
-                $found = true;
+                $founded = true;
 
-                $desc  = $fbStore[ "descricao" ];
-                $desc  = explode( "\n\n#", $desc );
+                $descrip = $fbStore[ "descricao" ];
+                $descrip = explode( "\n\n#", $descrip );
 
-                if ( count( $desc ) > 1 )
+                if ( count( $descrip ) > 1 )
                 {
                     $aux = "";
-                    array_shift( $desc );
+                    array_shift( $descrip );
 
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+                    foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
 
-                    $s[ "descricao" ] .= $aux;
+                    $store[ "descricao" ] .= $aux;
                 }
 
-                $firebaseStores->update( [ $fbKey => $s ] );
-                echo "Stores : Updated Estab. ID = $fbKey\n";
+                $fbRef->update( [ $push => $store ] );
+
+                echo "Stores : Updated Estab. ID = $push\n";
+                break;
             }
 
-            if ( !$found )
+            if ( !$founded )
             {
-                $push = $firebaseStores->push()->getKey();
-                $firebaseStores->update( [ $push => $s ] );
+                $push = $fbRef->push()->getKey();
+                $fbRef->update( [ $push => $store ] );
+
                 echo "Stores : Created Estab. ID = $push\n";
             }
         }
