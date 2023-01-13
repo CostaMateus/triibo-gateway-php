@@ -56,7 +56,7 @@ class Kernel extends ConsoleKernel
 
             // Cofry Triibo Integration
             // Lojas e promoções - Diariamente às 02 e às 14h
-            $schedule->command( "process:storepromo" )->twiceDaily( 2, 14 )->runInBackground();
+            $schedule->command( "process:storepromo --option=all" )->twiceDaily( 2, 14 )->runInBackground();
             // Imagens - Diariamente às 02h05
             $schedule->command( "delete:images"      )->dailyAt( "02:05" )->runInBackground();
             // Imagens - Diariamente às 02h10
