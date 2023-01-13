@@ -250,6 +250,8 @@ class CofryIntegration
             $promo["ItemTitle"] = str_replace("Use ******",         "Use " . $promo["ItemCode"], $promo["ItemTitle"]);
 
             $res[$id]           = [
+                "partnerPromotionId" => $id,
+
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
 
@@ -340,6 +342,8 @@ class CofryIntegration
             $description   = $rules["general"] . ($rules["additional"] != "" ? "\n\n" . $rules["additional"] : "") . ($rules["specific"] != "" ? "\n\n" . $rules["specific"] : "");
 
             $res[$idPromo] = [
+                "partnerPromotionId" => $idPromo,
+
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
 
