@@ -129,49 +129,39 @@ class CofryController extends Controller
         $stores         = CofryIntegration::getEstabelecimentos();
         $allStores      = $firebaseStores->getValue();
 
-        // foreach ( $allStores as $id => $s )
-        // {
-        //     /**
-        //      * TODO excluir essa condicional dps de rodar a 1ª vez em PROD
-        //      */
-        //     if ( strpos( $id, "-cofry" ) !== false )
-        //     {
-        //         // Disabling all stores
-        //         echo "Stores : Disab. Estab. ID = $id\n";
-        //         $s[ "isPublished" ] = false;
-        //         $s[ "origin"      ] = "cofry";
-        //         $firebaseStores->update( [ $id => $s ] );
-        //     }
+        foreach ( $allStores as $id => $s )
+        {
+            if ( strpos( $id, "-cofry" ) !== false )
+            {
+                // Disabling all old stores
+                echo "Stores : Disab. Estab. ID = $id\n";
+                $s[ "isPublished" ] = false;
+                $firebaseStores->update( [ $id => $s ] );
+            }
 
-        //     /**
-        //      * TODO deixar apenas essa
-        //      */
-        //     if ( isset( $s[ "origin" ] ) && $s[ "origin" ] == "cofry" )
-        //     {
-        //         // Disabling all stores
-        //         echo "Stores : Disab. Estab. ID = $id\n";
-        //         $s[ "isPublished" ] = false;
-        //         $firebaseStores->update( [ $id => $s ] );
-        //     }
-        // }
+            if ( isset( $s[ "origin" ] ) && $s[ "origin" ] == "cofry" )
+            {
+                // Disabling all stores with push
+                echo "Stores : Disab. Estab. ID = $id\n";
+                $s[ "isPublished" ] = false;
+                $firebaseStores->update( [ $id => $s ] );
+            }
+        }
 
         echo "Stores : Sending establishments to Firebase\n";
         Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
 
-        $i = 0;
-
         foreach ( $stores as $id => $s )
         {
-            $i++;
-            echo "Stores : Estab. ID = $id\n";
-
             $found   = false;
             $cofryId = substr( $id, 6 );
 
             foreach ( $allStores as $fbKey => $fbStore )
             {
                 if ( strpos( $fbKey, "-cofry" ) !== false             ) continue;
+                if ( !isset( $fbStore[ "origin"                 ] )   ) continue;
                 if ( !isset( $fbStore[ "partnerEstablishmentId" ] )   ) continue;
+                if ( "cofry"  != $fbStore[ "origin"                 ] ) continue;
                 if ( $cofryId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
                 $found = true;
@@ -181,9 +171,8 @@ class CofryController extends Controller
 
                 if ( count( $desc ) > 1 )
                 {
-                    array_shift( $desc );
-
                     $aux = "";
+                    array_shift( $desc );
 
                     foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
 
@@ -191,15 +180,15 @@ class CofryController extends Controller
                 }
 
                 $firebaseStores->update( [ $fbKey => $s ] );
+                echo "Stores : Updated Estab. ID = $fbKey\n";
             }
 
             if ( !$found )
             {
                 $push = $firebaseStores->push()->getKey();
                 $firebaseStores->update( [ $push => $s ] );
+                echo "Stores : Created Estab. ID = $push\n";
             }
-
-            if ( $i >= 5 ) break;
         }
     }
 
