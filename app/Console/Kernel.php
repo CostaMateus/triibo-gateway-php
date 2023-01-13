@@ -62,11 +62,11 @@ class Kernel extends ConsoleKernel
             // Imagens - Diariamente às 02h10
             $schedule->command( "process:images"     )->dailyAt( "02:15" )->runInBackground();
 
-            // SocialSoul Triibo Integration
-            // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
-            $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
-            // Relatórios - Diariamente às 4h
-            $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
+            // // SocialSoul Triibo Integration
+            // // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
+            // $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
+            // // Relatórios - Diariamente às 4h
+            // $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
 
 
             // Mautic Pipedrive Integration
