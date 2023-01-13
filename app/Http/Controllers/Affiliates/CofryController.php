@@ -121,8 +121,7 @@ class CofryController extends Controller
      */
     public function insertStoresFirebase()
     {
-        $db             = Firebase::database();
-        $firebaseStores = $db->getReference( "/Estabelecimento-v2" );
+        $firebaseStores = Firebase::database()->getReference( "/Estabelecimento-v2" );
 
         echo "Stores : Searching establishments\n";
         Log::channel( "cofry" )->info( "Stores", [ "Searching establishments" ] );
@@ -130,45 +129,62 @@ class CofryController extends Controller
         $stores         = CofryIntegration::getEstabelecimentos();
         $allStores      = $firebaseStores->getValue();
 
-        foreach ( $allStores as $id => $s )
-        {
-            if ( strpos( $id, "-cofry" ) !== false )
-            {
-                // Disabling all stores
-                echo "Stores : Disab. Estab. ID = $id\n";
-                $s[ "isPublished" ] = false;
-                $s[ "origin"      ] = "cofry";
-                $firebaseStores->update( [ $id => $s ] );
-            }
-        }
-
-        echo "Finish Stores\n";
-
-        // echo "Stores : Sending establishments to Firebase\n";
-        // Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
-
-        // foreach ( $stores as $id => $s )
+        // foreach ( $allStores as $id => $s )
         // {
-        //     echo "Stores : Estab. ID = $id\n";
-
-        //     if ( isset( $allStores[ $id ] ) )
+        //     /**
+        //      * TODO excluir essa condicional dps de rodar a 1ª vez em PROD
+        //      */
+        //     if ( strpos( $id, "-cofry" ) !== false )
         //     {
-        //         $desc = $allStores[ $id ][ "descricao" ];
-        //         $desc = explode( "\n\n#", $desc );
-
-        //         if ( count( $desc ) > 1 )
-        //         {
-        //             array_shift( $desc );
-
-        //             $aux = "";
-        //             foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
-
-        //             $s[ "descricao" ] .= $aux;
-        //         }
+        //         // Disabling all stores
+        //         echo "Stores : Disab. Estab. ID = $id\n";
+        //         $s[ "isPublished" ] = false;
+        //         $s[ "origin"      ] = "cofry";
+        //         $firebaseStores->update( [ $id => $s ] );
         //     }
 
-        //     $firebaseStores->update( [ $id => $s ] );
+        //     /**
+        //      * TODO deixar apenas essa
+        //      */
+        //     if ( isset( $s[ "origin" ] ) && $s[ "origin" ] == "cofry" )
+        //     {
+        //         // Disabling all stores
+        //         echo "Stores : Disab. Estab. ID = $id\n";
+        //         $s[ "isPublished" ] = false;
+        //         $firebaseStores->update( [ $id => $s ] );
+        //     }
         // }
+
+        echo "Stores : Sending establishments to Firebase\n";
+        Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
+
+        foreach ( $stores as $id => $s )
+        {
+            echo "Stores : Estab. ID = $id\n";
+
+            // if ( isset( $allStores[ $id ] ) )
+            // {
+            //     $desc = $allStores[ $id ][ "descricao" ];
+            //     $desc = explode( "\n\n#", $desc );
+
+            //     if ( count( $desc ) > 1 )
+            //     {
+            //         array_shift( $desc );
+
+            //         $aux = "";
+            //         foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+
+            //         $s[ "descricao" ] .= $aux;
+            //     }
+            // }
+
+            $cofryId = substr( $id, 6 );
+            $index   = array_search( $cofryId, array_column( $allStores, "partnerEstablishmentId" ) );
+
+            echo "{$index}\n";
+
+            // $firebaseStores->update( [ $id => $s ] );
+        }
     }
 
     /**
@@ -189,7 +205,7 @@ class CofryController extends Controller
 
         foreach ( $allPromos as $id => $p )
         {
-            if (strpos( $id, "-cofry" ) !== false )
+            if ( strpos( $id, "-cofry" ) !== false )
             {
                 if ( !isset( $promos[ $id ] ) )
                 {
