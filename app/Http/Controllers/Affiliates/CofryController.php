@@ -140,6 +140,10 @@ class CofryController extends Controller
                     $s[ "isPublished" ] = false;
                     $firebaseStores->update( [ $id => $s ] );
                 }
+                else
+                {
+                    echo "Stores : NOT Disab. Estab. ID = $id <===============\n";
+                }
             }
         }
 
