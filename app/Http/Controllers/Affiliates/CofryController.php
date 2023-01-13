@@ -36,8 +36,8 @@ class CofryController extends Controller
         try
         {
             $this->insertStoresFirebase();
-            echo "SP : Establishments sent successfully\n";
-            Log::channel( "cofry" )->info( "Stores|Promos", [
+            echo "Stores : Establishments sent successfully\n";
+            Log::channel( "cofry" )->info( "Stores", [
                 "code"    => 0,
                 "info"    => "Establishments sent successfully",
                 "error"   => NULL,
@@ -46,8 +46,8 @@ class CofryController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            echo "SP : Establishment, Firebase process error - aborted\n";
-            Log::channel( "cofry" )->critical( "Stores|Promos", [
+            echo "Stores : Establishment, Firebase process error - aborted\n";
+            Log::channel( "cofry" )->critical( "Stores", [
                 "code"    => "C-401",
                 "info"    => "Establishment, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
@@ -58,8 +58,8 @@ class CofryController extends Controller
         }
         catch ( Throwable $e )
         {
-            echo "SP : Unexpected error - aborted\n";
-            Log::channel( "cofry" )->critical( "Stores|Promos", [
+            echo "Stores : Unexpected error - aborted\n";
+            Log::channel( "cofry" )->critical( "Stores", [
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
@@ -80,7 +80,7 @@ class CofryController extends Controller
         try
         {
             $this->insertPromosFirebase();
-            echo "SP : Promotions sent successfully\n";
+            echo "Promotions : Promotions sent successfully\n";
             Log::channel( "cofry" )->info( "Promotions", [
                 "code"    => 0,
                 "info"    => "Promotions sent successfully",
@@ -90,7 +90,7 @@ class CofryController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            echo "SP : Promotions, Firebase process error - aborted\n";
+            echo "Promotions : Promotions, Firebase process error - aborted\n";
             Log::channel( "cofry" )->critical( "Promotions", [
                 "code"    => "C-402",
                 "info"    => "Promotions, Firebase process error - aborted",
@@ -102,7 +102,7 @@ class CofryController extends Controller
         }
         catch ( Throwable $e )
         {
-            echo "SP : Unexpected error - aborted\n";
+            echo "Promotions : Unexpected error - aborted\n";
             Log::channel( "cofry" )->critical( "Promotions", [
                 "code"    => "C-502",
                 "info"    => "Unexpected error - aborted",
@@ -143,7 +143,7 @@ class CofryController extends Controller
             }
         }
 
-        echo "Finish Stores";
+        echo "Finish Stores\n";
 
         // echo "Stores : Sending establishments to Firebase\n";
         // Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
@@ -202,7 +202,7 @@ class CofryController extends Controller
             }
         }
 
-        echo "Finish Promotions";
+        echo "Finish Promotions\n";
 
         // echo "Promotions : Sending promos to Firebase\n";
         // Log::channel( "cofry" )->info( "Promotions", [ "Sending promos to Firebase" ] );
