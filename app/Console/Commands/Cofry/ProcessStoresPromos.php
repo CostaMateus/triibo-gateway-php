@@ -13,14 +13,15 @@ class ProcessStoresPromos extends Command
      *
      * @var string
      */
-    protected $signature = "process:storepromo";
+    protected $signature = "process:storepromo
+                            {--option= : Options: promotions, stores or all }";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Processes Cofry stores and promotions";
+    protected $description = "Processes Cofry stores or promotions";
 
     /**
      * Create a new command instance.
@@ -39,13 +40,40 @@ class ProcessStoresPromos extends Command
      */
     public function handle()
     {
-        // echo "SP : Start processing of stores|promos\n";
-        Log::channel("cofry")->info("Stores|Promos", [ "Start processing of stores|promos" ]);
+        $opts   = [
+            "promotions",
+            "stores",
+            "all",
+        ];
+
+        $option = $this->option( "option" );
+
+        if ( !in_array( $option, $opts ) )
+        {
+            echo "Invalid option, terminating process!\n";
+            return;
+        }
+
+        if ( $option != "all" )
+        {
+            $logTitle = ucfirst( $option );
+            $logStart = "{$logTitle} : Start processing of {$option}\n";
+            $logEnd   = "{$logTitle} : End {$option} processing\n";
+        }
+        else
+        {
+            $logTitle = "Stores|Promotions";
+            $logStart = "S|P : Start processing of stores|promotions\n";
+            $logEnd   = "S|P : End stores|promotions processing\n";
+        }
+
+        echo $logStart;
+        Log::channel( "cofry" )->info( $logTitle, [ $logStart ] );
 
         $cofry = new CofryController();
-        $cofry->index();
+        $cofry->$option();
 
-        // echo "SP : End stores|promos processing\n";
-        Log::channel("cofry")->info("Stores|Promos", [ "End stores|promos processing" ]);
+        echo $logEnd;
+        Log::channel( "cofry" )->info( $logTitle, [ $logEnd ] );
     }
 }

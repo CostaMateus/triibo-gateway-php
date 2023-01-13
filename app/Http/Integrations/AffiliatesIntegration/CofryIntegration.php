@@ -280,7 +280,9 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keyWordsSet"        => []
+                "keyWordsSet"        => [],
+
+                "origin"             => "cofry",
             ];
         }
 
@@ -366,7 +368,9 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keyWordsSet"        => []
+                "keyWordsSet"        => [],
+
+                "origin"             => "cofry",
             ];
         }
 
@@ -436,7 +440,9 @@ class CofryIntegration
 
                 "tags"                   => [...$store["Segment"]],
 
-                "keyWordsSet"            => []
+                "keyWordsSet"            => [],
+
+                "origin"                 => "cofry",
             ];
         }
 
