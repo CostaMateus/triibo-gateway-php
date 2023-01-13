@@ -134,16 +134,11 @@ class CofryController extends Controller
         {
             if ( strpos( $id, "-cofry" ) !== false )
             {
-                if ( !isset( $stores[ $id ] ) )
-                {
-                    echo "Stores : Disab. Estab. ID = $id\n";
-                    $s[ "isPublished" ] = false;
-                    $firebaseStores->update( [ $id => $s ] );
-                }
-                else
-                {
-                    echo "Stores : NOT Disab. Estab. ID = $id <===============\n";
-                }
+                // Disabling all stores
+                echo "Stores : Disab. Estab. ID = $id\n";
+                $s[ "isPublished" ] = false;
+                $s[ "origin"      ] = "cofry";
+                $firebaseStores->update( [ $id => $s ] );
             }
         }
 
