@@ -22,28 +22,28 @@ class CofryIntegration
     /**
      *
      *
-     * @return Array $promos
+     * @return array $promos
      */
     public static function getPromocoes()
     {
         $stores    = self::getStoresCofry();
         $promos    = self::getPromosCofry();
 
-        if ($stores) self::usort($stores);
-        if ($promos) self::usort($promos);
+        if ( $stores ) self::usort( $stores );
+        if ( $promos ) self::usort( $promos );
 
-        $promos1   = self::translatorPromotionDefault($stores);
-        $promos2   = self::translatorPromotion($promos);
+        $promos1   = self::translatorPromotionDefault( $stores );
+        $promos2   = self::translatorPromotion( $promos );
 
-        $promos    = array_merge_recursive($promos1, $promos2);
-        $promos    = array_unique($promos, SORT_REGULAR);
+        $promos    = array_merge_recursive( $promos1, $promos2 );
+        $promos    = array_unique( $promos, SORT_REGULAR );
 
-        $keys      = array_column($promos, "establishmentName");
-		array_multisort($keys, SORT_ASC, $promos);
+        $keys      = array_column( $promos, "establishmentName" );
+		array_multisort( $keys, SORT_ASC, $promos );
 
-        $cupom     = public_path("images") . "/cupom.png";
-        $pathPromo = public_path("images/promos");
-        File::copy($cupom, $pathPromo . "/common_promotion.png");
+        $cupom     = public_path( "images" ) . "/cupom.png";
+        $pathPromo = public_path( "images/promos" );
+        File::copy( $cupom, $pathPromo . "/common_promotion.png" );
 
         return $promos;
     }
@@ -51,42 +51,35 @@ class CofryIntegration
     /**
      *
      *
-     * @return Array $stores
+     * @return array $stores
      */
     public static function getEstabelecimentos()
     {
         $stores = self::getStoresActive();
 
-        $stores = self::translatorStore($stores);
+        $stores = self::translatorStore( $stores );
 
         return $stores;
     }
 
-
-
-
-
     /**
      * Get promotions Cofry.
      *
-     * @return Array $res | null
+     * @return array $res | null
      */
     private static function getPromosCofry()
     {
         $client = Http::asForm();
 
-        $res    = $client->post(self::URL_PROMO, self::TOKEN)->json();
+        $res    = $client->post( self::URL_PROMO, self::TOKEN )->json();
 
-        Log::channel("cofry")->info("CofryAPI", [
-            "code"    => $res["errorCode"],
+        Log::channel( "cofry" )->info( "CofryAPI", [
+            "code"    => $res[ "errorCode" ],
             "method"  => "getPromosCofry",
-            "message" => $res["errorMessage"]
-        ]);
+            "message" => $res[ "errorMessage" ]
+        ] );
 
-        if ($res["errorCode"] == 0)
-        {
-            return $res["store"];
-        }
+        if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
 
         return null;
     }
@@ -94,24 +87,21 @@ class CofryIntegration
     /**
      * Get stores Cofry.
      *
-     * @return Array $res | null
+     * @return array $res | null
      */
     private static function getStoresCofry()
     {
         $client = Http::asForm();
 
-        $res    = $client->post(self::URL_STORE, self::TOKEN)->json();
+        $res    = $client->post( self::URL_STORE, self::TOKEN )->json();
 
-        Log::channel("cofry")->info("CofryAPI", [
-            "code"    => $res["errorCode"],
+        Log::channel( "cofry" )->info( "CofryAPI", [
+            "code"    => $res[ "errorCode" ],
             "method"  => "getStoresCofry",
-            "message" => $res["errorMessage"]
-        ]);
+            "message" => $res[ "errorMessage" ]
+        ] );
 
-        if ($res["errorCode"] == 0)
-        {
-            return $res["store"];
-        }
+        if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
 
         return null;
     }
@@ -119,24 +109,21 @@ class CofryIntegration
     /**
      * Get status stores.
      *
-     * @return Array $res | null
+     * @return array $res | null
      */
     private static function getStatusStores()
     {
         $client = Http::asForm();
 
-        $res    = $client->post(self::URL_STATUS, self::TOKEN)->json();
+        $res    = $client->post( self::URL_STATUS, self::TOKEN )->json();
 
-        Log::channel("cofry")->info("CofryAPI", [
-            "code"    => $res["errorCode"],
+        Log::channel( "cofry" )->info( "CofryAPI", [
+            "code"    => $res[ "errorCode" ],
             "method"  => "getStatusStores",
-            "message" => $res["errorMessage"]
-        ]);
+            "message" => $res[ "errorMessage" ]
+        ] );
 
-        if ($res["errorCode"] == 0)
-        {
-            return $res["store"];
-        }
+        if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
 
         return null;
     }
@@ -144,15 +131,15 @@ class CofryIntegration
     /**
      *
      *
-     * @return Array $stores
+     * @return array $stores
      */
     private static function getStoresActive()
     {
         $stores = self::getStoresCofry();
         $status = self::getStatusStores();
 
-        if ($stores) self::usort($stores);
-        if ($status) self::usort($status);
+        if ( $stores ) self::usort( $stores );
+        if ( $status ) self::usort( $status );
 
         /** Lojas tag Destaques */
             // - 123  Booking
@@ -165,29 +152,29 @@ class CofryIntegration
             // - 503  Cobasi
         /************************/
 
-        $highlights = [123, 137, 349, 351, 357, 445, 503];
+        $highlights = [ 123, 137, 349, 351, 357, 445, 503 ];
 
-        foreach ($stores as $id => &$store)
+        foreach ( $stores as $id => &$store )
         {
-            $index           = array_search($store["uuid"], array_column($status, 'uuid'));
-            $store["Active"] = $status[$index]["Active"];
+            $index             = array_search( $store[ "uuid" ], array_column( $status, 'uuid' ) );
+            $store[ "Active" ] = $status[ $index ][ "Active" ];
 
-            if ($store["Segment"])
+            if ( $store[ "Segment" ] )
             {
-                $tags = preg_split("/\b,\b/u", $store["Segment"]);
-                array_unshift($tags, "Cofry");
+                $tags = preg_split( "/\b,\b/u", $store[ "Segment" ] );
+                array_unshift( $tags, "Cofry" );
             }
             else
             {
                 $tags = [ "Cofry" ];
             }
 
-            if ( in_array($store["uuid"], $highlights) ) array_push($tags, "Destaques");
+            if ( in_array( $store[ "uuid" ], $highlights ) ) array_push( $tags, "Destaques" );
 
-            $store["Segment"] = $tags;
+            $store[ "Segment" ] = $tags;
 
             // Estabelecimentos com esse segmento são ignorados
-            if ( in_array("Seguros e Finanças", $tags) ) unset($stores[$id]);
+            if ( in_array( "Seguros e Finanças", $tags ) ) unset( $stores[ $id ] );
         }
 
         return $stores;
@@ -196,60 +183,60 @@ class CofryIntegration
     /**
      *
      *
-     * @param Array $data
-     * @return Array $res
+     * @param array $data
+     * @return array $res
      */
-    private static function translatorPromotion(Array $data)
+    private static function translatorPromotion( array $data )
     {
-        $date    = new DateTime(date("Y-m-d H:i:s.u"));
-        $dateEn  = (int) $date->format("U") * 1000;
-        $date    = $date->add(new DateInterval("P7Y"));
-        $dateDis = (int) $date->format("U") * 1000;
-
+        $date    = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn  = ( int ) $date->format( "U" ) * 1000;
+        $date    = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis = ( int ) $date->format( "U" ) * 1000;
         $i       = 1;
-        foreach ($data as $key => $promo)
+
+        foreach ( $data as $key => $promo )
         {
-            ($key > 0 && $promo["uuid"] == $data[$key - 1]["uuid"]) ? $i++ : $i = 1;
+            ( $key > 0 && $promo[ "uuid" ] == $data[ $key - 1 ][ "uuid" ] ) ? $i++ : $i = 1;
 
-            $cashback          = number_format((float) $promo["CashbackClient"], $promo["CashbackFormat"], ",", "");
+            $cashback             = number_format( ( float ) $promo[ "CashbackClient" ], $promo[ "CashbackFormat" ], ",", "" );
 
-            $idStore           = "-cofry" . $promo["uuid"];
-            $id                = $idStore . str_replace(".", "", $promo["ProductAPIID"]);
+            $idStore              = "-cofry" . $promo[ "uuid" ];
+            $id                   = $idStore . str_replace( ".", "", $promo[ "ProductAPIID" ] );
 
-            $establishmentName = trim($promo["Advertiser"]);
+            $establishmentName    = trim( $promo[ "Advertiser" ] );
 
-            $denylist          = CofryController::getDenylist("Mapfre");
+            $denylist             = CofryController::getDenylist( "Mapfre" );
 
-            $promo["ItemCode"] = str_replace(" ",      "", $promo["ItemCode"]);
-            $promo["ItemCode"] = str_replace("Cupom:", "", $promo["ItemCode"]);
-            $promo["ItemCode"] = str_replace("\t",     "", $promo["ItemCode"]);
+            $promo[ "ItemCode" ]  = str_replace( " ",      "", $promo[ "ItemCode" ] );
+            $promo[ "ItemCode" ]  = str_replace( "Cupom:", "", $promo[ "ItemCode" ] );
+            $promo[ "ItemCode" ]  = str_replace( "\t",     "", $promo[ "ItemCode" ] );
 
-            if ($promo["ItemTitle"] === "******") $promo["ItemTitle"] = "Cupom: ******";
+            if ( $promo[ "ItemTitle" ] === "******" ) $promo[ "ItemTitle" ] = "Cupom: ******";
 
-            $promo["ItemTitle"] = str_replace("( Código: ******)",  " (Código: ******)",         $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("Código ******",      "(Código: ******)",          $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("(código: ******)",   "(Código: ******)",          $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("(cÓdigo: ******)",   "(Código: ******)",          $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("(código: ******  )", "(Código: ******)",          $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("Cupom******",        "Cupom: ******",             $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("Cupom ******",       "Cupom: ******",             $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("Cupom:******",       "Cupom: ******",             $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("Cupom = ******",     "Cupom: ******",             $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("(cupom: ******)",    "Cupom: ******",             $promo["ItemTitle"]);
+            $promo[ "ItemTitle" ] = str_replace( "( Código: ******)",  " (Código: ******)",           $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "Código ******",      "(Código: ******)",            $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "(código: ******)",   "(Código: ******)",            $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "(cÓdigo: ******)",   "(Código: ******)",            $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "(código: ******  )", "(Código: ******)",            $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "Cupom******",        "Cupom: ******",               $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "Cupom ******",       "Cupom: ******",               $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "Cupom:******",       "Cupom: ******",               $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "Cupom = ******",     "Cupom: ******",               $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "(cupom: ******)",    "Cupom: ******",               $promo[ "ItemTitle" ] );
 
-            $promo["ItemTitle"] = str_replace(" ****** ",           " ",                         $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace(" ****** ",           " ",                         $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("****** de ",         "",                          $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("****** & ",          "",                          $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace(" ******!",           "",                          $promo["ItemTitle"]);
+            $promo[ "ItemTitle" ] = str_replace( " ****** ",           " ",                           $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( " ****** ",           " ",                           $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "****** de ",         "",                            $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "****** & ",          "",                            $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( " ******!",           "",                            $promo[ "ItemTitle" ] );
 
-            $promo["ItemTitle"] = str_replace("   ",                " ",                         $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("  ",                 " ",                         $promo["ItemTitle"]);
+            $promo[ "ItemTitle" ] = str_replace( "   ",                " ",                           $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "  ",                 " ",                           $promo[ "ItemTitle" ] );
 
-            $promo["ItemTitle"] = str_replace(": ******",           ": "   . $promo["ItemCode"], $promo["ItemTitle"]);
-            $promo["ItemTitle"] = str_replace("Use ******",         "Use " . $promo["ItemCode"], $promo["ItemTitle"]);
+            $promo[ "ItemTitle" ] = str_replace( ": ******",           ": "   . $promo[ "ItemCode" ], $promo[ "ItemTitle" ] );
+            $promo[ "ItemTitle" ] = str_replace( "Use ******",         "Use " . $promo[ "ItemCode" ], $promo[ "ItemTitle" ] );
 
-            $res[$id]           = [
+            $res[ $id ]           = [
                 "partnerPromotionId" => $id,
 
                 "establishmentId"    => $idStore,
@@ -258,16 +245,16 @@ class CofryIntegration
                 "title"              => "Ganhe " . $cashback . "% de volta!",
                 "detailsTitle"       => "Ganhe " . $cashback . "% de volta!",
 
-                "description"        => $promo["ItemTitle"],
-                "detailsDescription" => $promo["ItemTitle"] . "\n\nUtilize o código de desconto " . $promo["ItemCode"] . " no fechamento da compra.",
+                "description"        => $promo[ "ItemTitle" ],
+                "detailsDescription" => $promo[ "ItemTitle" ] . "\n\nUtilize o código de desconto " . $promo[ "ItemCode" ] . " no fechamento da compra.",
 
-                "checkoutCode"       => $promo["ItemCode"],
+                "checkoutCode"       => $promo[ "ItemCode" ],
 
                 "enableDate"         => $dateEn,
                 "disableDate"        => $dateDis,
                 "dueDate"            => $dateDis,
 
-                "isPublished"        => (in_array($establishmentName, $denylist)) ? false : true,
+                "isPublished"        => ( in_array( $establishmentName, $denylist ) ) ? false : true,
                 "active"             => true,
 
                 "lat"                => -15.52047783763576,
@@ -294,54 +281,54 @@ class CofryIntegration
     /**
      * Default promotion, one per store
      *
-     * @param Array $data
-     * @return Array $res
+     * @param array $data
+     * @return array $res
      */
-    private static function translatorPromotionDefault(Array $data)
+    private static function translatorPromotionDefault( array $data )
     {
-        $date    = new DateTime(date("Y-m-d H:i:s.u"));
-        $dateEn  = (int) $date->format("U") * 1000;
-        $date    = $date->add(new DateInterval("P7Y"));
-        $dateDis = (int) $date->format("U") * 1000;
+        $date    = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn  = ( int ) $date->format( "U" ) * 1000;
+        $date    = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis = ( int ) $date->format( "U" ) * 1000;
 
-        foreach ($data as $store)
+        foreach ( $data as $store )
         {
-            $idStore             = "-cofry" . $store["uuid"];
+            $idStore             = "-cofry" . $store[ "uuid" ];
 
-            $establishmentName   = trim($store["Advertiser"]);
+            $establishmentName   = trim( $store[ "Advertiser" ] );
 
-            $denylist            = CofryController::getDenylist("Mapfre");
+            $denylist            = CofryController::getDenylist( "Mapfre" );
 
-            $cashback            = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
+            $cashback            = number_format( ( float ) $store[ "CashbackClient" ], $store[ "CashbackFormat" ], ",", "" );
 
-            $auxAdv              = preg_replace("/[^\w\s]/", "", iconv("UTF-8", "ASCII//TRANSLIT//IGNORE", $store["Advertiser"]));
-            $auxAdv              = str_replace("\t", "", $auxAdv);
-            $idPromo             = $idStore . strtolower(str_replace(" ", "", $auxAdv));
+            $auxAdv              = preg_replace( "/[^\w\s]/", "", iconv( "UTF-8", "ASCII//TRANSLIT//IGNORE", $store[ "Advertiser" ] ) );
+            $auxAdv              = str_replace( "\t", "", $auxAdv );
+            $idPromo             = $idStore . strtolower( str_replace( " ", "", $auxAdv ) );
 
-            $store["Logo"]       = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
-            $store["Logo"]       = self::PREFIX_PROMO . ((basename($store["Logo"]) != "") ? basename($store["Logo"]) : "standard.png");
+            $store[ "Logo"     ] = str_replace( "https://imgcofrynew.s3.amazonaws.com/", "", $store[ "Logo" ] );
+            $store[ "Logo"     ] = self::PREFIX_PROMO . ( ( basename( $store[ "Logo" ] ) != "" ) ? basename( $store[ "Logo" ] ) : "standard.png" );
 
-            $store["About"]      = trim($store["About"]);
-            $store["About"]      = str_replace("  ", " ", $store["About"]);
+            $store[ "About"    ] = trim( $store[ "About" ] );
+            $store[ "About"    ] = str_replace( "  ", " ", $store[ "About" ] );
 
-            $rules               = str_replace("\t", "", $store["GeneralRules"]);
-            $rules               = json_decode($rules, true);
-            $rules["general"]    = str_replace("\t",         "",   $rules["general"]);
-            $rules["general"]    = str_replace("<ol><li>",   "",   $rules["general"]);
-            $rules["general"]    = str_replace("</li></ol>", "",   $rules["general"]);
-            $rules["general"]    = str_replace("</li><li>",  "\n", $rules["general"]);
-            $rules["specific"]   = "";
+            $rules               = str_replace( "\t", "", $store[ "GeneralRules" ] );
+            $rules               = json_decode( $rules, true );
+            $rules[ "general"  ] = str_replace( "\t",         "",   $rules[ "general" ] );
+            $rules[ "general"  ] = str_replace( "<ol><li>",   "",   $rules[ "general" ] );
+            $rules[ "general"  ] = str_replace( "</li></ol>", "",   $rules[ "general" ] );
+            $rules[ "general"  ] = str_replace( "</li><li>",  "\n", $rules[ "general" ] );
+            $rules[ "specific" ] = "";
 
-            if ($store["SpecificRules"])
+            if ( $store[ "SpecificRules" ] )
             {
-                $rules["specific"] = json_decode($store["SpecificRules"], true);
-                $rules["specific"] = str_replace("<b>",  "", $rules["specific"]["rules"][0]["description"]);
-                $rules["specific"] = str_replace("</b>", "", $rules["specific"]);
+                $rules[ "specific" ] = json_decode( $store[ "SpecificRules" ], true );
+                $rules[ "specific" ] = str_replace( "<b>",  "", $rules[ "specific" ][ "rules" ][ 0 ][ "description" ] );
+                $rules[ "specific" ] = str_replace( "</b>", "", $rules[ "specific" ] );
             }
 
-            $description   = $rules["general"] . ($rules["additional"] != "" ? "\n\n" . $rules["additional"] : "") . ($rules["specific"] != "" ? "\n\n" . $rules["specific"] : "");
+            $description     = $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" ) . ( $rules[ "specific" ] != "" ? "\n\n" . $rules[ "specific" ] : "" );
 
-            $res[$idPromo] = [
+            $res[ $idPromo ] = [
                 "partnerPromotionId" => $idPromo,
 
                 "establishmentId"    => $idStore,
@@ -350,14 +337,14 @@ class CofryIntegration
                 "title"              => "Ganhe " . $cashback . "% de volta!",
                 "detailsTitle"       => "Ganhe " . $cashback . "% de volta!",
 
-                "description"        => $store["About"],
+                "description"        => $store[ "About" ],
                 "detailsDescription" => $description,
 
                 "enableDate"         => $dateEn,
                 "disableDate"        => $dateDis,
                 "dueDate"            => $dateDis,
 
-                "isPublished"        => (in_array($establishmentName, $denylist)) ? false : true,
+                "isPublished"        => ( in_array( $establishmentName, $denylist ) ) ? false : true,
                 "active"             => true,
 
                 "lat"                => -15.52047783763576,
@@ -365,14 +352,14 @@ class CofryIntegration
 
                 "level"              => 99,
 
-                "photo"              => $store["Logo"],
-                "thumbnail"          => $store["Logo"],
+                "photo"              => $store[ "Logo" ],
+                "thumbnail"          => $store[ "Logo" ],
 
                 "region"             => "nacional",
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keyWordsSet"        => [],
+                "keyWordsSet"        => [ ],
 
                 "origin"             => "cofry",
             ];
@@ -384,41 +371,41 @@ class CofryIntegration
     /**
      *
      *
-     * @param Array $data
-     * @return Array $res
+     * @param array $data
+     * @return array $res
      */
-    private static function translatorStore(Array $data)
+    private static function translatorStore( array $data )
     {
-        $date    = new DateTime(date("Y-m-d H:i:s.u"));
-        $dateEn  = (int) $date->format("U") * 1000;
-        $date    = $date->add(new DateInterval("P7Y"));
-        $dateDis = (int) $date->format("U") * 1000;
+        $date    = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn  = ( int ) $date->format( "U" ) * 1000;
+        $date    = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis = ( int ) $date->format( "U" ) * 1000;
 
-        foreach ($data as $store)
+        foreach ( $data as $store )
         {
-            $id               = "-cofry" . $store["uuid"];
+            $id                 = "-cofry" . $store[ "uuid" ];
 
-            $storeName        = trim($store["Advertiser"]);
+            $storeName          = trim( $store[ "Advertiser" ] );
 
-            $denylist         = CofryController::getDenylist("Mapfre");
+            $denylist           = CofryController::getDenylist( "Mapfre" );
 
-            $cashback         = number_format((float) $store["CashbackClient"], $store["CashbackFormat"], ",", "");
+            $cashback           = number_format( ( float ) $store[ "CashbackClient" ], $store[ "CashbackFormat" ], ",", "" );
 
-            $store["Logo"]    = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $store["Logo"]);
-            $store["Logo"]    = self::PREFIX_STORE . ((basename($store["Logo"]) != "") ? basename($store["Logo"]) : "standard.png");
+            $store[ "Logo"    ] = str_replace( "https://imgcofrynew.s3.amazonaws.com/", "", $store[ "Logo" ] );
+            $store[ "Logo"    ] = self::PREFIX_STORE . ( ( basename( $store[ "Logo" ] ) != "" ) ? basename( $store[ "Logo" ] ) : "standard.png" );
 
-            $store["About"]   = trim($store["About"]);
-            $store["About"]   = str_replace("  ", " ", $store["About"]);
+            $store[ "About"   ] = trim( $store[ "About" ] );
+            $store[ "About"   ] = str_replace( "  ", " ", $store[ "About" ] );
 
-            $rules            = str_replace("\t", "", $store["GeneralRules"]);
-            $rules            = json_decode($rules, true);
-            $rules["general"] = str_replace("<ol><li>",   "",   $rules["general"]);
-            $rules["general"] = str_replace("</li></ol>", "",   $rules["general"]);
-            $rules["general"] = str_replace("</li><li>",  "\n", $rules["general"]);
-            $descricao        = $store["About"] . "\n\n" . $rules["general"] . ($rules["additional"] != "" ? "\n\n" . $rules["additional"] : "");
+            $rules              = str_replace( "\t", "", $store[ "GeneralRules" ] );
+            $rules              = json_decode( $rules, true );
+            $rules[ "general" ] = str_replace( "<ol><li>",   "",   $rules[ "general" ] );
+            $rules[ "general" ] = str_replace( "</li></ol>", "",   $rules[ "general" ] );
+            $rules[ "general" ] = str_replace( "</li><li>",  "\n", $rules[ "general" ] );
+            $descricao          = $store[ "About" ] . "\n\n" . $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" );
 
-            $res[$id]         = [
-                "partnerEstablishmentId" => $store["uuid"],
+            $res[ $id ]         = [
+                "partnerEstablishmentId" => $store[ "uuid" ],
                 "cashbackDefault"        => $cashback,
 
                 "enableDate"             => $dateEn,
@@ -427,7 +414,7 @@ class CofryIntegration
                 "dataInclusao"           => $dateEn,
 
                 "idGestor"               => "+5511949289507@sms,triibo,com,br",
-                "isPublished"            => (in_array($storeName, $denylist)) ? false : ($store["Active"] ? true : false),
+                "isPublished"            => ( in_array( $storeName, $denylist ) ) ? false : ( $store[ "Active" ] ? true : false ),
 
                 "endereco"               => "Brasil",
                 "lat"                    => -15.52047783763576,
@@ -436,15 +423,15 @@ class CofryIntegration
                 "nome"                   => $storeName,
                 "descricao"              => $descricao,
 
-                "fotoThumb"              => $store["Logo"],
-                "listaFotos"             => [$store["Logo"],],
+                "fotoThumb"              => $store[ "Logo" ],
+                "listaFotos"             => [ $store[ "Logo" ], ],
 
-                "funcionamento"          => [...self::getSchedulesOperation()],
-                "horarios"               => [...self::getSchedulesOperation(false)],
+                "funcionamento"          => [ ...self::getSchedulesOperation() ],
+                "horarios"               => [ ...self::getSchedulesOperation( false ) ],
 
-                "tags"                   => [...$store["Segment"]],
+                "tags"                   => [ ...$store[ "Segment" ] ],
 
-                "keyWordsSet"            => [],
+                "keyWordsSet"            => [ ],
 
                 "origin"                 => "cofry",
             ];
@@ -453,14 +440,14 @@ class CofryIntegration
         return $res;
     }
 
-    private static function getSchedulesOperation($operation = true)
+    private static function getSchedulesOperation( $operation = true )
     {
         $res = [];
 
-        if ($operation)
+        if ( $operation )
         {
             // funcionamento
-            foreach (range(1,7) as $key) {
+            foreach ( range( 1,7 ) as $key ) {
                 $res[] = [
                     "ativo"         => true,
                     "horarioFim"    => "23:59",
@@ -471,8 +458,8 @@ class CofryIntegration
         else
         {
             // horarios
-            foreach (range(1,7) as $key) {
-                $res[] = [
+            foreach ( range( 1,7 ) as $key ) {
+                $res[ ] = [
                     "tipo"   => "aberto",
                     "turnos" => [
                         [
@@ -488,14 +475,14 @@ class CofryIntegration
     }
 
     /**
-     * @param Array $arr
+     * @param array $arr
      * @return void
      */
-    private static function usort(Array &$arr)
+    private static function usort( array &$arr )
     {
-        usort($arr, function($a, $b) {
-            return $a["uuid"] <=> $b["uuid"];
-        });
+        usort( $arr, function( $a, $b ) {
+            return $a[ "uuid" ] <=> $b[ "uuid" ];
+        } );
     }
 
     /**
@@ -507,51 +494,51 @@ class CofryIntegration
     {
         $stores = self::getStoresActive();
 
-        foreach ($stores as $store)
-            if ($store["Logo"]) self::saveImage($store["Logo"]);
+        foreach ( $stores as $store )
+            if ( $store[ "Logo" ] ) self::saveImage( $store[ "Logo" ] );
 
-        $pathStore = public_path("images/estabelecimentos");
-        $pathPromo = public_path("images/promos");
+        $pathStore = public_path( "images/estabelecimentos" );
+        $pathPromo = public_path( "images/promos" );
 
-        $default   = public_path("images/standard.png");
-        File::copy($default, $pathStore . "/cofry0_standard.png");
-        File::copy($default, $pathPromo . "/promo0_standard.png");
+        $default   = public_path( "images/standard.png" );
+        File::copy( $default, $pathStore . "/cofry0_standard.png" );
+        File::copy( $default, $pathPromo . "/promo0_standard.png" );
 
-        $common    = public_path("images/cupom.png");
-        File::copy($common, $pathPromo . "/common_promotion.png");
+        $common    = public_path( "images/cupom.png" );
+        File::copy( $common, $pathPromo . "/common_promotion.png" );
     }
 
     /**
      *
      *
-     * @param String $logo
-     * @param String $path
-     * @param String $prefix
+     * @param string $logo
+     * @param string $path
+     * @param string $prefix
      * @return void
      */
-    private static function saveImage(String $logo)
+    private static function saveImage( string $logo )
     {
-        $pathStore = public_path("images/estabelecimentos");
-        $pathPromo = public_path("images/promos");
+        $pathStore = public_path( "images/estabelecimentos" );
+        $pathPromo = public_path( "images/promos" );
 
-        $imgName   = str_replace("https://imgcofrynew.s3.amazonaws.com/", "", $logo);
-        $imgName   = basename($imgName);
+        $imgName   = str_replace( "https://imgcofrynew.s3.amazonaws.com/", "", $logo );
+        $imgName   = basename( $imgName );
 
-        if ($imgName)
+        if ( $imgName )
         {
             $fullPathStore = $pathStore . "/" . self::PREFIX_STORE . $imgName;
             $fullPathPromo = $pathPromo . "/" . self::PREFIX_PROMO . $imgName;
 
-            $response      = Http::get($logo);
+            $response      = Http::get( $logo );
 
-            if ($response->successful())
+            if ( $response->successful() )
             {
-                file_put_contents($fullPathStore, $response->body());
+                file_put_contents( $fullPathStore, $response->body() );
 
-                $handle = Image::open($fullPathStore);
-                $handle->scaleResize(200, 150, "#FFF");
-                $handle->save($fullPathStore);
-                $handle->save($fullPathPromo);
+                $handle = Image::open( $fullPathStore );
+                $handle->scaleResize( 200, 150, "#FFF" );
+                $handle->save( $fullPathStore );
+                $handle->save( $fullPathPromo );
             }
         }
     }
