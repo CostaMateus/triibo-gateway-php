@@ -158,35 +158,47 @@ class CofryController extends Controller
         echo "Stores : Sending establishments to Firebase\n";
         Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
 
+        $i = 0;
+
         foreach ( $stores as $id => $s )
         {
+            $i++;
             echo "Stores : Estab. ID = $id\n";
 
-            // if ( isset( $allStores[ $id ] ) )
-            // {
-            //     $desc = $allStores[ $id ][ "descricao" ];
-            //     $desc = explode( "\n\n#", $desc );
-
-            //     if ( count( $desc ) > 1 )
-            //     {
-            //         array_shift( $desc );
-
-            //         $aux = "";
-            //         foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
-
-            //         $s[ "descricao" ] .= $aux;
-            //     }
-            // }
-
+            $found   = false;
             $cofryId = substr( $id, 6 );
-            // $index   = array_search( $cofryId, array_column( $allStores, "partnerEstablishmentId" ) );
-            $index   = array_keys( array_combine( array_keys( $allStores ), array_column( $allStores, "partnerEstablishmentId" ) ), $cofryId )[ 0 ];
 
-            echo "{$index}\n";
+            foreach ( $allStores as $fbKey => $fbStore )
+            {
+                if ( strpos( $fbKey, "-cofry" ) !== false ) continue;
+                if ( $cofryId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
-            dd( $allStores[ $index ], $s );
+                $found = true;
 
-            // $firebaseStores->update( [ $id => $s ] );
+                $desc  = $fbStore[ "descricao" ];
+                $desc  = explode( "\n\n#", $desc );
+
+                if ( count( $desc ) > 1 )
+                {
+                    array_shift( $desc );
+
+                    $aux = "";
+
+                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+
+                    $s[ "descricao" ] .= $aux;
+                }
+
+                $firebaseStores->update( [ $fbKey => $s ] );
+            }
+
+            if ( !$found )
+            {
+                $push = $firebaseStores->push()->getKey();
+                $firebaseStores->update( [ $push => $s ] );
+            }
+
+            if ( $i >= 5 ) break;
         }
     }
 
