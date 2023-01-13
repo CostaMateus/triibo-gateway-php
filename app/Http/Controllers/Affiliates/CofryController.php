@@ -170,7 +170,8 @@ class CofryController extends Controller
 
             foreach ( $allStores as $fbKey => $fbStore )
             {
-                if ( strpos( $fbKey, "-cofry" ) !== false ) continue;
+                if ( strpos( $fbKey, "-cofry" ) !== false             ) continue;
+                if ( !isset( $fbStore[ "partnerEstablishmentId" ] )   ) continue;
                 if ( $cofryId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
                 $found = true;
