@@ -234,7 +234,7 @@ class CofryController extends Controller
                 if ( $promo[ "isPublished" ] || $promo[ "active" ] )
                 {
                     // Disabling all old promotions
-                    echo "Stores : Disab. Estab. ID = $push\n";
+                    echo "Promotions : Disab. Promo. ID = $push\n";
                     $promo[ "isPublished" ] = false;
                     $promo[ "active"      ] = false;
                     $promo[ "origin"      ] = "cofry";
@@ -247,7 +247,7 @@ class CofryController extends Controller
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "cofry" )
             {
                 // Disabling all promotions with push
-                echo "Stores : Disab. Estab. ID = $push\n";
+                echo "Promotions : Disab. Promo. ID = $push\n";
                 $promo[ "isPublished" ] = false;
                 $promo[ "active"      ] = false;
                 $fbRef->update( [ $push => $promo ] );
