@@ -183,6 +183,8 @@ class CofryController extends Controller
 
             echo "{$index}\n";
 
+            dd( $allStores[ $index ], $s );
+
             // $firebaseStores->update( [ $id => $s ] );
         }
     }
