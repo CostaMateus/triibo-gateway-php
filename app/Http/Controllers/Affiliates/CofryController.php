@@ -179,7 +179,8 @@ class CofryController extends Controller
             // }
 
             $cofryId = substr( $id, 6 );
-            $index   = array_search( $cofryId, array_column( $allStores, "partnerEstablishmentId" ) );
+            // $index   = array_search( $cofryId, array_column( $allStores, "partnerEstablishmentId" ) );
+            $index   = array_keys( array_combine( array_keys( $allStores ), array_column( $allStores, "partnerEstablishmentId" ) ), $cofryId )[ 0 ];
 
             echo "{$index}\n";
 
