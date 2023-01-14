@@ -25,6 +25,11 @@ class AwinController extends Controller
         $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
 
+    /**
+     * Process stores
+     *
+     * @return void
+     */
     public function stores()
     {
         try
@@ -64,6 +69,11 @@ class AwinController extends Controller
         }
     }
 
+    /**
+     * Process promotions
+     *
+     * @return void
+     */
     public function promotions()
     {
         try
@@ -103,6 +113,11 @@ class AwinController extends Controller
         }
     }
 
+    /**
+     * Process images
+     *
+     * @return void
+     */
     public function images()
     {
         $store          = public_path( "images/affiliates/awin/standard.png"   );
@@ -157,6 +172,11 @@ class AwinController extends Controller
         if ( $filesPromos ) File::deleteDirectory( $this->promos_path, true );
     }
 
+    /**
+     * Process reports
+     *
+     * @return void
+     */
     public function reports()
     {
         $reports = $this->integration->getReports();
@@ -165,7 +185,7 @@ class AwinController extends Controller
     }
 
     /**
-     * Process stores and send to Firebase
+     * Update and create store on Firebase
      *
      * @return void
      */
@@ -256,6 +276,11 @@ class AwinController extends Controller
         }
     }
 
+    /**
+     * Update and create promotions on Firebase
+     *
+     * @return void
+     */
     private function insertOffersFirebase()
     {
         $db             = Firebase::database();
@@ -321,8 +346,7 @@ class AwinController extends Controller
     {
         $fileNames = [];
 
-        foreach( $files as $file )
-            array_push( $fileNames, pathinfo( $file )[ "basename" ] );
+        foreach( $files as $file ) array_push( $fileNames, pathinfo( $file )[ "basename" ] );
 
         return $fileNames;
     }
