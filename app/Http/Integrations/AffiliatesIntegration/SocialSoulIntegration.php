@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Http;
 
 class SocialSoulIntegration
 {
-    const ID           = "-socialsoul";
+    const ID = "-socialsoul";
 
     protected $env;
     protected $url_category;
@@ -92,6 +92,8 @@ class SocialSoulIntegration
 
     /**
      * SocialSoul offer == Triibo Store (FB) / Promotion
+     *
+     * @return array
      */
     public function getOffers()
     {
@@ -116,6 +118,10 @@ class SocialSoulIntegration
         return $promotions;
     }
 
+    /**
+     *
+     * @return array
+     */
     public function getReports()
     {
         /**
@@ -180,7 +186,6 @@ class SocialSoulIntegration
 
         return $reports;
     }
-
 
     /**
      * Get stores SocialSoul
@@ -285,7 +290,7 @@ class SocialSoulIntegration
     /**
      * SocialSoul offer == Triibo Store (FB) / Default promotion
      *
-     * @param [type] $id
+     * @param string $id
      * @return array
      */
     private function searchOffers( string $id )
@@ -623,6 +628,11 @@ class SocialSoulIntegration
         return $promotions;
     }
 
+    /**
+     *
+     * @param array $data
+     * @return array
+     */
     private function translateReports( array $data )
     {
         /**
@@ -634,10 +644,9 @@ class SocialSoulIntegration
 
     /**
      *
-     *
-     * @param String $logo
-     * @param String $path
-     * @param String $prefix
+     * @param string $logo
+     * @param string $path
+     * @param string $prefix
      * @return void
      */
     private static function saveImage( string $path, string $imageName, string $url )
@@ -667,6 +676,10 @@ class SocialSoulIntegration
         return false;
     }
 
+    /**
+     *
+     * @return array
+     */
     public function schGetStores()
     {
         $stores  = [];

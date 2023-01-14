@@ -114,7 +114,7 @@ class CofryController extends Controller
     }
 
     /**
-     * Process stores and send to Firebase
+     * Update and create store on Firebase
      *
      * @return void
      */
@@ -204,7 +204,7 @@ class CofryController extends Controller
     }
 
     /**
-     * Process promotions and send to Firebase
+     * Update and create promotions on Firebase
      *
      * @return void
      */
@@ -309,7 +309,6 @@ class CofryController extends Controller
             }
         }
     }
-
 
     /**
      * Process images of stores and promotions

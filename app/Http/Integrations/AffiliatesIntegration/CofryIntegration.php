@@ -21,7 +21,6 @@ class CofryIntegration
 
     /**
      *
-     *
      * @return array $promos
      */
     public static function getPromocoes()
@@ -49,7 +48,6 @@ class CofryIntegration
     }
 
     /**
-     *
      *
      * @return array $stores
      */
@@ -129,7 +127,7 @@ class CofryIntegration
     }
 
     /**
-     *
+     * Get Cofry actives stores
      *
      * @return array $stores
      */
@@ -181,7 +179,7 @@ class CofryIntegration
     }
 
     /**
-     *
+     * Translates Cofry promotions into Triibo promotions
      *
      * @param array $data
      * @return array $res
@@ -279,7 +277,7 @@ class CofryIntegration
     }
 
     /**
-     * Default promotion, one per store
+     * Translates Cofry promotions default into Triibo promotions
      *
      * @param array $data
      * @return array $res
@@ -369,7 +367,7 @@ class CofryIntegration
     }
 
     /**
-     *
+     * Translates Cofry store into Triibo Establishments
      *
      * @param array $data
      * @return array $res
@@ -440,6 +438,11 @@ class CofryIntegration
         return $res;
     }
 
+    /**
+     *
+     * @param boolean $operation
+     * @return array
+     */
     private static function getSchedulesOperation( $operation = true )
     {
         $res = [];
@@ -475,6 +478,7 @@ class CofryIntegration
     }
 
     /**
+     *
      * @param array $arr
      * @return void
      */
@@ -486,7 +490,6 @@ class CofryIntegration
     }
 
     /**
-     *
      *
      * @return void
      */
@@ -510,10 +513,7 @@ class CofryIntegration
 
     /**
      *
-     *
      * @param string $logo
-     * @param string $path
-     * @param string $prefix
      * @return void
      */
     private static function saveImage( string $logo )

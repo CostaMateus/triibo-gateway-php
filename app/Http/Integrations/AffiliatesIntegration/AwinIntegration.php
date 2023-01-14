@@ -126,6 +126,10 @@ class AwinIntegration
         return $promotions;
     }
 
+    /**
+     *
+     * @return array
+     */
     public function getReports()
     {
         $reports = $this->searchReports();
@@ -178,7 +182,7 @@ class AwinIntegration
     }
 
     /**
-     * SocialSoul offer == Triibo Store (FB) / Default promotion
+     * Awin offer == Triibo Store (FB) / Default promotion
      *
      * @param [type] $id
      * @return array
@@ -250,6 +254,10 @@ class AwinIntegration
         ];
     }
 
+    /**
+     *
+     * @return array
+     */
     private function searchReports()
     {
         $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
@@ -458,10 +466,9 @@ class AwinIntegration
 
     /**
      *
-     *
-     * @param String $logo
-     * @param String $path
-     * @param String $prefix
+     * @param string $logo
+     * @param string $path
+     * @param string $prefix
      * @return void
      */
     private static function saveImage( string $path, string $imageName, string $url )
@@ -491,6 +498,12 @@ class AwinIntegration
         return false;
     }
 
+    /**
+     *
+     * @param integer $storeId
+     * @param string $url
+     * @return string
+     */
     private function urlTracking( int $storeId, string $url )
     {
         $body     = [
@@ -522,6 +535,10 @@ class AwinIntegration
         return $url;
     }
 
+    /**
+     *
+     * @return array
+     */
     public function schGetStores()
     {
         return $this->stores;

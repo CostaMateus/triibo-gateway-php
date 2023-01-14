@@ -27,6 +27,11 @@ class SocialSoulController extends Controller
         $this->promos_path = public_path( "images/affiliates/socialsoul/promotions/"     );
     }
 
+    /**
+     * Process stores
+     *
+     * @return void
+     */
     public function stores()
     {
         try
@@ -66,6 +71,11 @@ class SocialSoulController extends Controller
         }
     }
 
+    /**
+     * Process promotions
+     *
+     * @return void
+     */
     public function promotions()
     {
         try
@@ -105,6 +115,11 @@ class SocialSoulController extends Controller
         }
     }
 
+    /**
+     * Process images
+     *
+     * @return void
+     */
     public function images()
     {
         $filesStores = File::allFiles( $this->stores_path );
@@ -176,6 +191,11 @@ class SocialSoulController extends Controller
         return response()->json( [ "message" => "ok" ], 200 );
     }
 
+    /**
+     * Process reports
+     *
+     * @return void
+     */
     public function reports()
     {
         $reports = $this->integration->getReports();
@@ -184,7 +204,7 @@ class SocialSoulController extends Controller
     }
 
     /**
-     * Process stores and send to Firebase
+     * Update and create store on Firebase
      *
      * @return void
      */
@@ -276,7 +296,7 @@ class SocialSoulController extends Controller
     }
 
     /**
-     * Process coupons/offers and send to Firebase
+     * Update and create promotions on Firebase
      *
      * @return void
      */
