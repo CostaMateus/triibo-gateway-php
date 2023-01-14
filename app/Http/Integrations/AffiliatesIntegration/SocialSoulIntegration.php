@@ -420,7 +420,9 @@ class SocialSoulIntegration
 
                 "tags"                   => [ "socialsoul" ],
 
-                "keyWordsSet"            => []
+                "keyWordsSet"            => [],
+
+                "origin"                 => "socialsoul",
             ];
 
             if ( $flag ) $stores[ $id ][ "hasOffer" ] = $store[ "hasOffer" ];
@@ -473,6 +475,8 @@ class SocialSoulIntegration
             $url               = strpos( $url, "?" ) !== false ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
 
             $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
 
@@ -506,6 +510,8 @@ class SocialSoulIntegration
                 "tags"               => [ "Cashback", "Cupom", $coupon[ "category" ][ "name" ] ],
 
                 "keyWordsSet"        => [],
+
+                "origin"             => "socialsoul",
             ];
         }
 
@@ -576,6 +582,8 @@ class SocialSoulIntegration
             $url               = strpos( $url, "?" ) !== false ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
 
             $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
 
@@ -607,6 +615,8 @@ class SocialSoulIntegration
                 "tags"               => [ "Cashback", "Promoção", $offer[ "category" ][ "name" ] ],
 
                 "keyWordsSet"        => [],
+
+                "origin"             => "socialsoul",
             ];
         }
 
