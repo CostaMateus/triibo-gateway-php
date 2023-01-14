@@ -125,8 +125,7 @@ class CofryController extends Controller
 
         $cofryStores = CofryIntegration::getEstabelecimentos();
 
-        $db          = Firebase::database();
-        $fbRef       = $db->getReference( "/Estabelecimento-v2" );
+        $fbRef       = Firebase::database()->getReference( "/Estabelecimento-v2" );
         $fbStores    = $fbRef->getValue();
         $fbAuxStores = [];
 
