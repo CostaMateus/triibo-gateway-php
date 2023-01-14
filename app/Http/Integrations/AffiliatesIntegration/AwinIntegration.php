@@ -351,7 +351,9 @@ class AwinIntegration
 
                 "tags"                   => [ "awin" ],
 
-                "keyWordsSet"            => []
+                "keyWordsSet"            => [],
+
+                "origin"                 => "awin",
             ];
         }
 
@@ -405,6 +407,8 @@ class AwinIntegration
             $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
 
             $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
 
@@ -436,6 +440,8 @@ class AwinIntegration
                 "tags"               => [ "Cashback", "Promoção" ],
 
                 "keyWordsSet"        => [],
+
+                "origin"             => "awin",
             ];
 
             if ( $offer[ "type" ] == "voucher" )
