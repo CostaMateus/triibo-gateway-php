@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Cofry;
+namespace App\Console\Commands\Affiliates\Cofry;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;

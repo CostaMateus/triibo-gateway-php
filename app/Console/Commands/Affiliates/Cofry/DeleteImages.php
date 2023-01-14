@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Console\Commands\Cofry;
+namespace App\Console\Commands\Affiliates\Cofry;
 
 use File;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class ProcessDeleteImages extends Command
+class DeleteImages extends Command
 {
     /**
      * The name and signature of the console command.
