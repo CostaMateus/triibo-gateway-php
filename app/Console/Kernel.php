@@ -14,7 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
-        \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
+        \App\Console\Commands\Affiliates\Cofry\ProcessDeleteImages::class,
         \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
         \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
         \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,

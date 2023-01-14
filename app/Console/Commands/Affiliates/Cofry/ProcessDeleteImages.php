@@ -6,7 +6,7 @@ use File;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
-class DeleteImages extends Command
+class ProcessDeleteImages extends Command
 {
     /**
      * The name and signature of the console command.
