@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Affiliates;
 
 use Throwable;
 use App\Helpers\Helper;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
+use Kreait\Firebase\Contract\Database;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -283,56 +283,105 @@ class AwinController extends Controller
      */
     private function insertOffersFirebase()
     {
-        $db             = Firebase::database();
-        $firebasePromos = $db->getReference( "/Store" );
-
         echo "Promotions : Searching promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
 
         File::deleteDirectory( $this->promos_path, true );
 
-        $promos         = $this->integration->getOffers();
-        $allPromos      = $firebasePromos->getValue();
+        $awinPromos  = $this->integration->getOffers();
 
-        foreach ( $allPromos as $id => $s )
+        $db          = Firebase::database();
+        $stores      = $this->filterStoresAwin( $db );
+
+        $fbRef       = $db->getReference( "/Store" );
+        $fbPromos    = $fbRef->getValue();
+        $fbAuxPromos = [];
+
+        foreach ( $fbPromos as $push => $promo )
         {
-            if (strpos( $id, "-awin" ) !== false )
-            {
-                if ( !isset( $promos[ $id ] ) )
-                {
-                    echo "Promotions : Disab. Promo. ID = $id\n";
-                    $p[ "isPublished" ] = false;
-                    $p[ "active"      ] = false;
+            if ( strpos( $push, "-cofry"      ) !== false ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
+            if ( !isset( $promo[ "establishmentId" ] )    ) continue;
 
-                    $firebasePromos->update( [ $id => $p ] );
+            if ( strpos( $push, "-awin" ) !== false )
+            {
+                if ( $promo[ "isPublished" ] || $promo[ "active" ] )
+                {
+                    // Disabling all old promotions
+                    echo "Promotions : Disab. Promo. ID = $push\n";
+                    $promo[ "isPublished" ] = false;
+                    $promo[ "active"      ] = false;
+                    $promo[ "origin"      ] = "awin";
+                    $fbRef->update( [ $push => $promo ] );
                 }
+
+                continue;
+            }
+
+            if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
+            {
+                // Disabling all promotions with push
+                echo "Promotions : Disab. Promo. ID = $push\n";
+                $promo[ "isPublished" ] = false;
+                $promo[ "active"      ] = false;
+                $fbRef->update( [ $push => $promo ] );
+
+                $fbAuxPromos[ $push ] = $promo;
             }
         }
 
-        echo "Promotions : Sending promos to Firebase\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Sending promos to Firebase" ] );
+        echo "Promotions : Sending promotions to Firebase\n";
+        Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
 
-        foreach ( $promos as $id => $s )
+        foreach ( $awinPromos as $id => $promo )
         {
-            echo "Promotions : Insert/Update Promo ID = $id\n";
-
-            if ( isset( $allStores[ $id ] ) )
+            foreach ( $stores as $push => $store )
             {
-                $desc = $allStores[ $id ][ "descricao" ];
-                $desc = explode( "\n\n#", $desc );
+                $awinId = substr( $promo[ "establishmentId" ], 6 );
 
-                if ( count( $desc ) > 1 )
+                if ( $awinId != $store[ "partnerEstablishmentId" ] ) continue;
+
+                $promo[ "establishmentId" ] = $push;
+                break;
+            }
+
+            $founded = false;
+
+            if ( !empty( $fbAuxPromos ) )
+            {
+                foreach ( $fbAuxPromos as $push => $fbPromo )
                 {
-                    array_shift( $desc );
+                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
-                    $aux = "";
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+                    $founded = true;
 
-                    $s[ "descricao" ] .= $aux;
+                    $descrip = $fbPromo[ "description" ];
+                    $descrip = explode( "\n\n#", $descrip );
+
+                    if ( count( $descrip ) > 1 )
+                    {
+                        $aux = "";
+                        array_shift( $descrip );
+
+                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+
+                        $promo[ "description" ] .= $aux;
+                    }
+
+                    $fbRef->update( [ $push => $promo ] );
+
+                    echo "Promotions : Updated Promo. ID = $push\n";
+                    break;
                 }
             }
 
-            $firebasePromos->update( [ $id => $s ] );
+            if ( !$founded )
+            {
+                $push = $fbRef->push()->getKey();
+                $fbRef->update( [ $push => $promo ] );
+
+                echo "Promotions : Created Promo. ID = $push\n";
+            }
         }
     }
 
@@ -422,4 +471,31 @@ class AwinController extends Controller
         File::deleteDirectory( $this->stores_path, true );
         File::deleteDirectory( $this->promos_path, true );
     }
+
+    /**
+     *
+     * @param Database $db
+     * @return array
+     */
+    private function filterStoresAwin( Database $db )
+    {
+        $ref    = $db->getReference( "/Estabelecimento-v2" );
+        $stores = $ref->getValue();
+        $aux    = [];
+
+        foreach ( $stores as $push => $store )
+        {
+            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+            if ( !isset( $store[ "origin"                 ] ) ) continue;
+            if ( strpos( $push, "-awin"       ) !== false     ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
+            if ( "awin" != $store[ "origin" ]                 ) continue;
+
+            $aux[ $push ] = $store;
+        }
+
+        return $aux;
+    }
+
 }
