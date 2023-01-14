@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
+use Kreait\Firebase\Contract\Database;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
@@ -281,58 +282,107 @@ class SocialSoulController extends Controller
      */
     private function insertCouponsOffersFirebase()
     {
-        $db             = Firebase::database();
-        $firebasePromos = $db->getReference( "/Store" );
-
         echo "Promotions : Searching for promotions\n";
         Log::channel( "socialsoul" )->info( "Promotions", [ "Searching for promotions" ] );
 
         File::deleteDirectory( $this->promos_path, true );
 
-        $coupons   = $this->integration->getCoupons();
-        $offers    = $this->integration->getOffers();
-        $promos    = array_merge( $coupons, $offers );
-        $allPromos = $firebasePromos->getValue();
+        $coupons     = $this->integration->getCoupons();
+        $offers      = $this->integration->getOffers();
+        $ssPromos    = array_merge( $coupons, $offers );
 
-        foreach ( $allPromos as $id => $p )
+        $db          = Firebase::database();
+        $stores      = $this->filterStoresSocialSoul( $db );
+
+        $fbRef       = $db->getReference( "/Store" );
+        $fbPromos    = $fbRef->getValue();
+        $fbAuxPromos = [];
+
+        foreach ( $fbPromos as $push => $promo )
         {
-            if ( strpos( $id, "-socialsoul" ) !== false )
-            {
-                if ( !isset( $promos[ $id ] ) )
-                {
-                    echo "Promotions : Disab. Promo. ID = $id\n";
-                    $p[ "isPublished" ] = false;
-                    $p[ "active"      ] = false;
+            if ( strpos( $push, "-awin"  ) !== false   ) continue;
+            if ( strpos( $push, "-cofry" ) !== false   ) continue;
+            if ( !isset( $promo[ "establishmentId" ] ) ) continue;
 
-                    $firebasePromos->update( [ $id => $p ] );
+            if ( strpos( $push, "-socialsoul" ) !== false )
+            {
+                if ( $promo[ "isPublished" ] || $promo[ "active" ] )
+                {
+                    // Disabling all old promotions
+                    echo "Promotions : Disab. Promo. ID = $push\n";
+                    $promo[ "isPublished" ] = false;
+                    $promo[ "active"      ] = false;
+                    $promo[ "origin"      ] = "socialsoul";
+                    $fbRef->update( [ $push => $promo ] );
                 }
+
+                continue;
+            }
+
+            if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "socialsoul" )
+            {
+                // Disabling all promotions with push
+                echo "Promotions : Disab. Promo. ID = $push\n";
+                $promo[ "isPublished" ] = false;
+                $promo[ "active"      ] = false;
+                $fbRef->update( [ $push => $promo ] );
+
+                $fbAuxPromos[ $push ] = $promo;
             }
         }
 
         echo "Promotions : Sending promos to Firebase\n";
         Log::channel( "socialsoul" )->info( "Promotions", [ "Sending promos to Firebase" ] );
 
-        foreach ( $promos as $id => $p )
+        foreach ( $ssPromos as $id => $promo )
         {
-            echo "Promotions : Insert/Update Promo ID = $id\n";
-
-            if ( isset( $allPromos[ $id ] ) )
+            foreach ( $stores as $push => $store )
             {
-                $desc = $allPromos[ $id ][ "description" ];
-                $desc = explode( "\n\n#", $desc );
+                $ssId = substr( $promo[ "establishmentId" ], 6 );
 
-                if ( count( $desc ) > 1 )
+                if ( $ssId != $store[ "partnerEstablishmentId" ] ) continue;
+
+                $promo[ "establishmentId" ] = $push;
+                break;
+            }
+
+            $founded = false;
+
+            if ( !empty( $fbAuxPromos ) )
+            {
+                foreach ( $fbAuxPromos as $push => $fbPromo )
                 {
-                    array_shift( $desc );
+                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
-                    $aux = "";
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+                    $founded = true;
 
-                    $p[ "description" ] .= $aux;
+                    $descrip = $fbPromo[ "description" ];
+                    $descrip = explode( "\n\n#", $descrip );
+
+                    if ( count( $descrip ) > 1 )
+                    {
+                        $aux = "";
+                        array_shift( $descrip );
+
+                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+
+                        $promo[ "description" ] .= $aux;
+                    }
+
+                    $fbRef->update( [ $push => $promo ] );
+
+                    echo "Promotions : Updated Promo. ID = $push\n";
+                    break;
                 }
             }
 
-            $firebasePromos->update( [ $id => $p ] );
+            if ( !$founded )
+            {
+                $push = $fbRef->push()->getKey();
+                $fbRef->update( [ $push => $promo ] );
+
+                echo "Promotions : Created Promo. ID = $push\n";
+            }
         }
     }
 
@@ -420,4 +470,31 @@ class SocialSoulController extends Controller
         File::deleteDirectory( $this->stores_path, true );
         File::deleteDirectory( $this->promos_path, true );
     }
+
+    /**
+     *
+     * @param Database $db
+     * @return array
+     */
+    private function filterStoresSocialSoul( Database $db )
+    {
+        $ref    = $db->getReference( "/Estabelecimento-v2" );
+        $stores = $ref->getValue();
+        $aux    = [];
+
+        foreach ( $stores as $push => $store )
+        {
+            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+            if ( !isset( $store[ "origin"                 ] ) ) continue;
+            if ( strpos( $push, "-awin"       ) !== false     ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
+            if ( "socialsoul" != $store[ "origin" ]           ) continue;
+
+            $aux[ $push ] = $store;
+        }
+
+        return $aux;
+    }
+
 }
