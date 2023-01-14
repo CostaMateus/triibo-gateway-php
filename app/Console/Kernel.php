@@ -14,11 +14,11 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+        \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
+        \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
+        \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
         \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,
 
-        \App\Console\Commands\Cofry\DeleteImages::class,
-        \App\Console\Commands\Cofry\ProcessImages::class,
-        \App\Console\Commands\Cofry\ProcessStoresPromos::class,
 
         \App\Console\Commands\Log\ClearLogFile::class,
 
@@ -56,11 +56,11 @@ class Kernel extends ConsoleKernel
 
             // Cofry Triibo Integration
             // Lojas e promoções - Diariamente às 02 e às 14h
-            $schedule->command( "process:storepromo --option=all" )->twiceDaily( 2, 14 )->runInBackground();
+            $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
             // Imagens - Diariamente às 02h05
-            $schedule->command( "delete:images"      )->dailyAt( "02:05" )->runInBackground();
+            $schedule->command( "cofry:delete_images"           )->dailyAt( "02:05" )->runInBackground();
             // Imagens - Diariamente às 02h10
-            $schedule->command( "process:images"     )->dailyAt( "02:15" )->runInBackground();
+            $schedule->command( "cofry:process_images"          )->dailyAt( "02:15" )->runInBackground();
 
             // // SocialSoul Triibo Integration
             // // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30

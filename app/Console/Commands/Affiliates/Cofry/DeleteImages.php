@@ -13,7 +13,7 @@ class DeleteImages extends Command
      *
      * @var string
      */
-    protected $signature = "delete:images";
+    protected $signature = "cofry:delete_images";
 
     /**
      * The console command description.

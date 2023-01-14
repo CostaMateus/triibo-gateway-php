@@ -13,7 +13,7 @@ class ProcessStoresPromos extends Command
      *
      * @var string
      */
-    protected $signature = "process:storepromo
+    protected $signature = "cofry:process_sp
                             {--option= : Options: promotions, stores or all }";
 
     /**

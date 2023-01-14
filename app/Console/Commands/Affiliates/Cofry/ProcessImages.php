@@ -13,7 +13,7 @@ class ProcessImages extends Command
      *
      * @var string
      */
-    protected $signature = "process:images";
+    protected $signature = "cofry:process_images";
 
     /**
      * The console command description.
