@@ -77,22 +77,6 @@ class AwinIntegration
 
             Helper::usort( "id", $stores[ "data" ] );
 
-            /**
-             * TODO remover em PRD - inicio
-             */
-            $aux = [];
-            $ids = [ "17762", "17697", "24534", "17665", "17854", "17648", "17665", "17729", ];
-            foreach ( $ids as $id )
-            {
-                $key = array_search( $id, array_column( $stores[ "data" ], "id" ) );
-                if ( $key !== false )
-                    $aux[] = $stores[ "data" ][ $key ];
-            }
-            $stores[ "data" ] = $aux;
-            /**
-             * TODO remover em PRD - final
-             */
-
             foreach ( $stores[ "data" ] as &$store )
             {
                 $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
