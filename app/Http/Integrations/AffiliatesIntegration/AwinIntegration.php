@@ -128,13 +128,12 @@ class AwinIntegration
 
     /**
      *
+     * @param boolean $isUpdate
      * @return array
      */
-    public function getReports()
+    public function getReports( bool $isUpdate = false )
     {
-        $reports = $this->searchReports();
-
-        return $reports;
+        return $this->searchReports( $isUpdate );
     }
 
     /**
@@ -256,25 +255,43 @@ class AwinIntegration
 
     /**
      *
+     * @param boolean $isUpdate
      * @return array
      */
-    private function searchReports()
+    private function searchReports( bool $isUpdate )
     {
-        $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
-        $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
-        $start    = date( "Y-m-d", $sunday   ) . "T00:00:00";
-        $end      = date( "Y-m-d", $saturday ) . "T23:59:59";
+        // $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
+        // $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
+        // $start    = date( "Y-m-d", $sunday   ) . "T00:00:00";
+        // $end      = date( "Y-m-d", $saturday ) . "T23:59:59";
 
-        // $start    = "2022-12-01T00:00:00";
-        // $end      = "2022-12-07T23:59:59";
+        // if ( $isUpdate )
+        // {
+        //     $date     = "2023-01-01";
+        //     $start    = "{$date}T00:00:00";
+        //     $date     = "2023-01-11";
+        //     $end      = "{$date}T23:59:59";
+        // }
+        // else
+        // {
+        //     $date     = "2022-12-01";
+        //     $start    = "{$date}T00:00:00";
+        //     $date     = "2022-12-31";
+        //     $end      = "{$date}T23:59:59";
+        // }
 
-        $url      = "{$this->url_transactions}/?startDate={$start}&endDate={$end}&timezone=" . self::TZ;
-        $response = Http::withToken( $this->tkn )->get( $url );
-        $data     = json_decode( $response->body(), true );
+        $date     = date( "Y-m-d", strtotime( "yesterday" ) );
+        $start    = "{$date}T00:00:00";
+        $end      = "{$date}T23:59:59";
 
-        // tratar dados
+        $query    = "?startDate={$start}";
+        $query   .= "&endDate={$end}";
+        $query   .= "&timezone=" . self::TZ;
+        $query   .= ( $isUpdate ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
-        return $data;
+        $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+
+        return json_decode( $response->body(), true );
     }
 
     /**
