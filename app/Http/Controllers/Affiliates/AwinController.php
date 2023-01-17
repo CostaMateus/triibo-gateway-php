@@ -179,9 +179,41 @@ class AwinController extends Controller
      */
     public function reports()
     {
-        $reports = $this->integration->getReports();
+        try
+        {
+            $this->insertReportsFirebase();
+            echo "Reports : Reports sent successfully\n";
+            Log::channel( "awin" )->info( "Reports", [
+                "code"    => 0,
+                "info"    => "Reports sent successfully",
+                "error"   => NULL,
+                "message" => NULL
+            ] );
+        }
+        catch ( FirebaseException $e )
+        {
+            echo "Reports : Reports, Firebase process error - aborted\n";
+            Log::channel( "awin" )->critical( "Reports", [
+                "code"    => "C-401",
+                "info"    => "Reports, Firebase process error - aborted",
+                "error"   => "An error has occurred while working with the SDK",
+                "message" => $e->getMessage()
+            ] );
 
-        // enviar para o Firebase
+            Helper::sendMailNotification( "awin", "insertReportsFirebase()", "FirebaseException", $e );
+        }
+        catch ( Throwable $e )
+        {
+            echo "Reports : Unexpected error - aborted\n";
+            Log::channel( "awin" )->critical( "Reports", [
+                "code"    => "C-501",
+                "info"    => "Unexpected error - aborted",
+                "error"   => "A not-Firebase specific error has occurred",
+                "message" => $e->getMessage(),
+            ] );
+
+            Helper::sendMailNotification( "awin", "insertReportsFirebase()", "Throwable", $e );
+        }
     }
 
     /**
@@ -386,21 +418,6 @@ class AwinController extends Controller
     }
 
     /**
-     * Get the file names from list of files
-     *
-     * @param array $files
-     * @return array $fileNames
-     */
-    private function getFileNames( array $files )
-    {
-        $fileNames = [];
-
-        foreach( $files as $file ) array_push( $fileNames, pathinfo( $file )[ "basename" ] );
-
-        return $fileNames;
-    }
-
-    /**
      * Send images to Firebase Storage
      *
      * @param array $data
@@ -470,6 +487,81 @@ class AwinController extends Controller
 
         File::deleteDirectory( $this->stores_path, true );
         File::deleteDirectory( $this->promos_path, true );
+    }
+
+    /**
+     * Send and update reports to Firebase
+     *
+     * @return void
+     */
+    private function insertReportsFirebase()
+    {
+        echo "Reports : Searching for new transactions\n";
+        Log::channel( "awin" )->info( "Reports", [ "Searching for new transactions" ] );
+
+        $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
+
+        // new transactions
+        $reports = $this->integration->getReports();
+
+        echo "Reports : Sending new transactions to Firebase\n";
+        Log::channel( "awin" )->info( "Reports", [ "Sending new transactions to Firebase" ] );
+
+        foreach ( $reports as &$report )
+        {
+            $report[ "validationDate"   ] = null;
+            $report[ "commissionStatus" ] = "pending";
+
+            foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
+
+            $push = $fbRef->push()->getKey();
+            $fbRef->update( [ $push => $report ] );
+
+            echo "Reports : New transaction ID = $push\n";
+        }
+
+        echo "Reports : Searching for updated transactions\n";
+        Log::channel( "awin" )->info( "Reports", [ "Searching for updated transactions" ] );
+
+        // update transaction
+        $updReports = $this->integration->getReports( true );
+        $fbReports  = $fbRef->getValue();
+
+        echo "Reports : Sending updated transactions to Firebase\n";
+        Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
+
+        foreach ( $fbReports as $push => $fbReport )
+        {
+            foreach ( $updReports as $uReport )
+            {
+                $id         = $fbReport[ "id"           ] == $uReport[ "id"           ];
+                $advertiser = $fbReport[ "advertiserId" ] == $uReport[ "advertiserId" ];
+
+                if ( !$id || !$advertiser ) continue;
+
+                $fbReport = $uReport;
+                break;
+            }
+
+            $fbRef->update( [ $push => $fbReport ] );
+
+            echo "Reports : Updated transaction ID = $push\n";
+        }
+    }
+
+    /**
+     * Get the file names from list of files
+     *
+     * @param array $files
+     * @return array $fileNames
+     */
+    private function getFileNames( array $files )
+    {
+        $fileNames = [];
+
+        foreach( $files as $file ) array_push( $fileNames, pathinfo( $file )[ "basename" ] );
+
+        return $fileNames;
     }
 
     /**
