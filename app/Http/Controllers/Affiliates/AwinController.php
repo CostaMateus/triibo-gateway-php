@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Affiliates;
 
 use Throwable;
 use App\Helpers\Helper;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
+use Kreait\Firebase\Contract\Database;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -25,6 +25,11 @@ class AwinController extends Controller
         $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
 
+    /**
+     * Process stores
+     *
+     * @return void
+     */
     public function stores()
     {
         try
@@ -64,6 +69,11 @@ class AwinController extends Controller
         }
     }
 
+    /**
+     * Process promotions
+     *
+     * @return void
+     */
     public function promotions()
     {
         try
@@ -103,6 +113,11 @@ class AwinController extends Controller
         }
     }
 
+    /**
+     * Process images
+     *
+     * @return void
+     */
     public function images()
     {
         $store          = public_path( "images/affiliates/awin/standard.png"   );
@@ -157,140 +172,249 @@ class AwinController extends Controller
         if ( $filesPromos ) File::deleteDirectory( $this->promos_path, true );
     }
 
+    /**
+     * Process reports
+     *
+     * @return void
+     */
     public function reports()
     {
-        $reports = $this->integration->getReports();
+        try
+        {
+            $this->insertReportsFirebase();
+            echo "Reports : Reports sent successfully\n";
+            Log::channel( "awin" )->info( "Reports", [
+                "code"    => 0,
+                "info"    => "Reports sent successfully",
+                "error"   => NULL,
+                "message" => NULL
+            ] );
+        }
+        catch ( FirebaseException $e )
+        {
+            echo "Reports : Reports, Firebase process error - aborted\n";
+            Log::channel( "awin" )->critical( "Reports", [
+                "code"    => "C-401",
+                "info"    => "Reports, Firebase process error - aborted",
+                "error"   => "An error has occurred while working with the SDK",
+                "message" => $e->getMessage()
+            ] );
 
-        // enviar para o Firebase
+            Helper::sendMailNotification( "awin", "insertReportsFirebase()", "FirebaseException", $e );
+        }
+        catch ( Throwable $e )
+        {
+            echo "Reports : Unexpected error - aborted\n";
+            Log::channel( "awin" )->critical( "Reports", [
+                "code"    => "C-501",
+                "info"    => "Unexpected error - aborted",
+                "error"   => "A not-Firebase specific error has occurred",
+                "message" => $e->getMessage(),
+            ] );
+
+            Helper::sendMailNotification( "awin", "insertReportsFirebase()", "Throwable", $e );
+        }
     }
 
     /**
-     * Process stores and send to Firebase
+     * Update and create store on Firebase
      *
      * @return void
      */
     private function insertStoresFirebase()
     {
-        $db             = Firebase::database();
-        $firebaseStores = $db->getReference( "/Estabelecimento-v2" );
-
         echo "Stores : Searching establishments\n";
         Log::channel( "awin" )->info( "Stores", [ "Searching establishments" ] );
 
         File::deleteDirectory( $this->stores_path, true );
 
-        $stores         = $this->integration->getStores();
-        $allStores      = $firebaseStores->getValue();
+        $awinStores  = $this->integration->getStores();
 
-        foreach ( $allStores as $id => $s )
+        $fbRef       = Firebase::database()->getReference( "/Estabelecimento-v2" );
+        $fbStores    = $fbRef->getValue();
+        $fbAuxStores = [];
+
+        foreach ( $fbStores as $push => $store )
         {
-            if (strpos( $id, "-awin" ) !== false )
+            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
+            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+
+            if ( strpos( $push, "-awin" ) !== false )
             {
-                if ( !isset( $stores[ $id ] ) )
+                if ( $store[ "isPublished" ] )
                 {
-                    echo "Stores : Disab. Estab. ID = $id\n";
-                    $s[ "isPublished" ] = false;
-                    $firebaseStores->update( [ $id => $s ] );
+                    // Disabling all old stores
+                    echo "Stores : Disab. Estab. ID = $push\n";
+                    $store[ "isPublished" ] = false;
+                    $store[ "origin"      ] = "awin";
+                    $fbRef->update( [ $push => $store ] );
                 }
+
+                continue;
+            }
+
+            if ( isset( $store[ "origin" ] ) && $store[ "origin" ] == "awin" )
+            {
+                // Disabling all stores with push
+                echo "Stores : Disab. Estab. ID = $push\n";
+                $store[ "isPublished" ] = false;
+                $fbRef->update( [ $push => $store ] );
+
+                $fbAuxStores[ $push ] = $store;
             }
         }
 
         echo "Stores : Sending establishments to Firebase\n";
         Log::channel( "awin" )->info( "Stores", [ "Sending establishments to Firebase" ] );
 
-        foreach ( $stores as $id => $s )
+        foreach ( $awinStores as $id => $store )
         {
-            echo "Stores : Estab. ID = $id\n";
+            $founded = false;
+            $awinId  = substr( $id, 5 );
 
-            if ( isset( $allStores[ $id ] ) )
+            foreach ( $fbAuxStores as $push => $fbStore )
             {
-                $desc = $allStores[ $id ][ "descricao" ];
-                $desc = explode( "\n\n#", $desc );
+                if ( $awinId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
-                if ( count( $desc ) > 1 )
+                $founded = true;
+
+                $descrip = $fbStore[ "descricao" ];
+                $descrip = explode( "\n\n#", $descrip );
+
+                if ( count( $descrip ) > 1 )
                 {
-                    array_shift( $desc );
-
                     $aux = "";
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+                    array_shift( $descrip );
 
-                    $s[ "descricao" ] .= $aux;
+                    foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+
+                    $store[ "descricao" ] .= $aux;
                 }
+
+                $fbRef->update( [ $push => $store ] );
+
+                echo "Stores : Updated Estab. ID = $push\n";
+                break;
             }
 
-            $firebaseStores->update( [ $id => $s ] );
+            if ( !$founded )
+            {
+                $push = $fbRef->push()->getKey();
+                $fbRef->update( [ $push => $store ] );
+
+                echo "Stores : Created Estab. ID = $push\n";
+            }
         }
     }
 
+    /**
+     * Update and create promotions on Firebase
+     *
+     * @return void
+     */
     private function insertOffersFirebase()
     {
-        $db             = Firebase::database();
-        $firebasePromos = $db->getReference( "/Store" );
-
         echo "Promotions : Searching promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
 
         File::deleteDirectory( $this->promos_path, true );
 
-        $promos         = $this->integration->getOffers();
-        $allPromos      = $firebasePromos->getValue();
+        $awinPromos  = $this->integration->getOffers();
 
-        foreach ( $allPromos as $id => $s )
+        $db          = Firebase::database();
+        $stores      = $this->filterStoresAwin( $db );
+
+        $fbRef       = $db->getReference( "/Store" );
+        $fbPromos    = $fbRef->getValue();
+        $fbAuxPromos = [];
+
+        foreach ( $fbPromos as $push => $promo )
         {
-            if (strpos( $id, "-awin" ) !== false )
-            {
-                if ( !isset( $promos[ $id ] ) )
-                {
-                    echo "Promotions : Disab. Promo. ID = $id\n";
-                    $p[ "isPublished" ] = false;
-                    $p[ "active"      ] = false;
+            if ( strpos( $push, "-cofry"      ) !== false ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
+            if ( !isset( $promo[ "establishmentId" ] )    ) continue;
 
-                    $firebasePromos->update( [ $id => $p ] );
+            if ( strpos( $push, "-awin" ) !== false )
+            {
+                if ( $promo[ "isPublished" ] || $promo[ "active" ] )
+                {
+                    // Disabling all old promotions
+                    echo "Promotions : Disab. Promo. ID = $push\n";
+                    $promo[ "isPublished" ] = false;
+                    $promo[ "active"      ] = false;
+                    $promo[ "origin"      ] = "awin";
+                    $fbRef->update( [ $push => $promo ] );
                 }
+
+                continue;
+            }
+
+            if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
+            {
+                // Disabling all promotions with push
+                echo "Promotions : Disab. Promo. ID = $push\n";
+                $promo[ "isPublished" ] = false;
+                $promo[ "active"      ] = false;
+                $fbRef->update( [ $push => $promo ] );
+
+                $fbAuxPromos[ $push ] = $promo;
             }
         }
 
-        echo "Promotions : Sending promos to Firebase\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Sending promos to Firebase" ] );
+        echo "Promotions : Sending promotions to Firebase\n";
+        Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
 
-        foreach ( $promos as $id => $s )
+        foreach ( $awinPromos as $id => $promo )
         {
-            echo "Promotions : Insert/Update Promo ID = $id\n";
-
-            if ( isset( $allStores[ $id ] ) )
+            foreach ( $stores as $push => $store )
             {
-                $desc = $allStores[ $id ][ "descricao" ];
-                $desc = explode( "\n\n#", $desc );
+                $awinId = substr( $promo[ "establishmentId" ], 6 );
 
-                if ( count( $desc ) > 1 )
+                if ( $awinId != $store[ "partnerEstablishmentId" ] ) continue;
+
+                $promo[ "establishmentId" ] = $push;
+                break;
+            }
+
+            $founded = false;
+
+            if ( !empty( $fbAuxPromos ) )
+            {
+                foreach ( $fbAuxPromos as $push => $fbPromo )
                 {
-                    array_shift( $desc );
+                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
-                    $aux = "";
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+                    $founded = true;
 
-                    $s[ "descricao" ] .= $aux;
+                    $descrip = $fbPromo[ "description" ];
+                    $descrip = explode( "\n\n#", $descrip );
+
+                    if ( count( $descrip ) > 1 )
+                    {
+                        $aux = "";
+                        array_shift( $descrip );
+
+                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+
+                        $promo[ "description" ] .= $aux;
+                    }
+
+                    $fbRef->update( [ $push => $promo ] );
+
+                    echo "Promotions : Updated Promo. ID = $push\n";
+                    break;
                 }
             }
 
-            $firebasePromos->update( [ $id => $s ] );
+            if ( !$founded )
+            {
+                $push = $fbRef->push()->getKey();
+                $fbRef->update( [ $push => $promo ] );
+
+                echo "Promotions : Created Promo. ID = $push\n";
+            }
         }
-    }
-
-    /**
-     * Get the file names from list of files
-     *
-     * @param array $files
-     * @return array $fileNames
-     */
-    private function getFileNames( array $files )
-    {
-        $fileNames = [];
-
-        foreach( $files as $file )
-            array_push( $fileNames, pathinfo( $file )[ "basename" ] );
-
-        return $fileNames;
     }
 
     /**
@@ -364,4 +488,106 @@ class AwinController extends Controller
         File::deleteDirectory( $this->stores_path, true );
         File::deleteDirectory( $this->promos_path, true );
     }
+
+    /**
+     * Send and update reports to Firebase
+     *
+     * @return void
+     */
+    private function insertReportsFirebase()
+    {
+        echo "Reports : Searching for new transactions\n";
+        Log::channel( "awin" )->info( "Reports", [ "Searching for new transactions" ] );
+
+        $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
+
+        // new transactions
+        $reports = $this->integration->getReports();
+
+        echo "Reports : Sending new transactions to Firebase\n";
+        Log::channel( "awin" )->info( "Reports", [ "Sending new transactions to Firebase" ] );
+
+        foreach ( $reports as &$report )
+        {
+            $report[ "validationDate"   ] = null;
+            $report[ "commissionStatus" ] = "pending";
+
+            foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
+
+            $push = $fbRef->push()->getKey();
+            $fbRef->update( [ $push => $report ] );
+
+            echo "Reports : New transaction ID = $push\n";
+        }
+
+        echo "Reports : Searching for updated transactions\n";
+        Log::channel( "awin" )->info( "Reports", [ "Searching for updated transactions" ] );
+
+        // update transaction
+        $updReports = $this->integration->getReports( true );
+        $fbReports  = $fbRef->getValue();
+
+        echo "Reports : Sending updated transactions to Firebase\n";
+        Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
+
+        foreach ( $fbReports as $push => $fbReport )
+        {
+            foreach ( $updReports as $uReport )
+            {
+                $id         = $fbReport[ "id"           ] == $uReport[ "id"           ];
+                $advertiser = $fbReport[ "advertiserId" ] == $uReport[ "advertiserId" ];
+
+                if ( !$id || !$advertiser ) continue;
+
+                $fbReport = $uReport;
+                break;
+            }
+
+            $fbRef->update( [ $push => $fbReport ] );
+
+            echo "Reports : Updated transaction ID = $push\n";
+        }
+    }
+
+    /**
+     * Get the file names from list of files
+     *
+     * @param array $files
+     * @return array $fileNames
+     */
+    private function getFileNames( array $files )
+    {
+        $fileNames = [];
+
+        foreach( $files as $file ) array_push( $fileNames, pathinfo( $file )[ "basename" ] );
+
+        return $fileNames;
+    }
+
+    /**
+     *
+     * @param Database $db
+     * @return array
+     */
+    private function filterStoresAwin( Database $db )
+    {
+        $ref    = $db->getReference( "/Estabelecimento-v2" );
+        $stores = $ref->getValue();
+        $aux    = [];
+
+        foreach ( $stores as $push => $store )
+        {
+            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+            if ( !isset( $store[ "origin"                 ] ) ) continue;
+            if ( strpos( $push, "-awin"       ) !== false     ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
+            if ( "awin" != $store[ "origin" ]                 ) continue;
+
+            $aux[ $push ] = $store;
+        }
+
+        return $aux;
+    }
+
 }

@@ -14,11 +14,10 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+        \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
+        \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
+        \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
         \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,
-
-        \App\Console\Commands\Cofry\DeleteImages::class,
-        \App\Console\Commands\Cofry\ProcessImages::class,
-        \App\Console\Commands\Cofry\ProcessStoresPromos::class,
 
         \App\Console\Commands\Log\ClearLogFile::class,
 
@@ -48,25 +47,32 @@ class Kernel extends ConsoleKernel
     {
         if ( config( "app.env" ) == "production" )
         {
-            // Trimestral
-            $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
-            // Mensal, 1º às 01h00
-            $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
+            // // Trimestral
+            // $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
+            // // Mensal, 1º às 01h00
+            // $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
+
+
+            // Awin Triibo Integration
+            // Lojas, promoções e imagens - Diariamente às 02 e às 14h
+            $schedule->command( "awin:process --option=all" )->twiceDaily( 3, 15 )->runInBackground();
+            // Relatórios - Diariamente às 01h -- relatórios do dia anterior
+            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:00" )->runInBackground();
 
 
             // Cofry Triibo Integration
             // Lojas e promoções - Diariamente às 02 e às 14h
-            $schedule->command( "process:storepromo --option=all" )->twiceDaily( 2, 14 )->runInBackground();
+            $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
             // Imagens - Diariamente às 02h05
-            $schedule->command( "delete:images"      )->dailyAt( "02:05" )->runInBackground();
+            $schedule->command( "cofry:delete_images"           )->dailyAt( "02:05" )->runInBackground();
             // Imagens - Diariamente às 02h10
-            $schedule->command( "process:images"     )->dailyAt( "02:15" )->runInBackground();
+            $schedule->command( "cofry:process_images"          )->dailyAt( "02:15" )->runInBackground();
 
-            // SocialSoul Triibo Integration
-            // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
-            $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
-            // Relatórios - Diariamente às 4h
-            $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
+            // // SocialSoul Triibo Integration
+            // // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
+            // $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
+            // // Relatórios - Diariamente às 4h
+            // $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
 
 
             // Mautic Pipedrive Integration
@@ -98,8 +104,8 @@ class Kernel extends ConsoleKernel
             // $schedule->command( "sku:delete_fs"        )->twiceDaily( 5, 8 )->runInBackground();
 
 
-            // Clear Logs
-            $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
+            // // Clear Logs
+            // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
         }
     }
 

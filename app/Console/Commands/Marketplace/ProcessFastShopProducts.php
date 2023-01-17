@@ -129,6 +129,17 @@ class ProcessFastShopProducts extends Command
 
                     try
                     {
+                        foreach ( $array as $p )
+                        {
+                            Log::channel( "fastshop-upd" )->info( "Product update", [
+                                "sku"            => $p[ "sku"            ],
+                                "regular_price"  => $p[ "regular_price"  ],
+                                "sale_price"     => $p[ "sale_price"     ],
+                                "stock_quantity" => $p[ "stock_quantity" ],
+                                "stock_status"   => $p[ "stock_quantity" ],
+                            ] );
+                        }
+
                         Product::batch( [ $action => $array ] );
                         $array = [];
                         $i++;

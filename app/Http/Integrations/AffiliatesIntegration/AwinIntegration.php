@@ -126,11 +126,14 @@ class AwinIntegration
         return $promotions;
     }
 
-    public function getReports()
+    /**
+     *
+     * @param boolean $isUpdate
+     * @return array
+     */
+    public function getReports( bool $isUpdate = false )
     {
-        $reports = $this->searchReports();
-
-        return $reports;
+        return $this->searchReports( $isUpdate );
     }
 
     /**
@@ -178,7 +181,7 @@ class AwinIntegration
     }
 
     /**
-     * SocialSoul offer == Triibo Store (FB) / Default promotion
+     * Awin offer == Triibo Store (FB) / Default promotion
      *
      * @param [type] $id
      * @return array
@@ -250,23 +253,45 @@ class AwinIntegration
         ];
     }
 
-    private function searchReports()
+    /**
+     *
+     * @param boolean $isUpdate
+     * @return array
+     */
+    private function searchReports( bool $isUpdate )
     {
-        $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
-        $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
-        $start    = date( "Y-m-d", $sunday   ) . "T00:00:00";
-        $end      = date( "Y-m-d", $saturday ) . "T23:59:59";
+        // $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
+        // $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
+        // $start    = date( "Y-m-d", $sunday   ) . "T00:00:00";
+        // $end      = date( "Y-m-d", $saturday ) . "T23:59:59";
 
-        // $start    = "2022-12-01T00:00:00";
-        // $end      = "2022-12-07T23:59:59";
+        // if ( $isUpdate )
+        // {
+        //     $date     = "2023-01-01";
+        //     $start    = "{$date}T00:00:00";
+        //     $date     = "2023-01-11";
+        //     $end      = "{$date}T23:59:59";
+        // }
+        // else
+        // {
+        //     $date     = "2022-12-01";
+        //     $start    = "{$date}T00:00:00";
+        //     $date     = "2022-12-31";
+        //     $end      = "{$date}T23:59:59";
+        // }
 
-        $url      = "{$this->url_transactions}/?startDate={$start}&endDate={$end}&timezone=" . self::TZ;
-        $response = Http::withToken( $this->tkn )->get( $url );
-        $data     = json_decode( $response->body(), true );
+        $date     = date( "Y-m-d", strtotime( "yesterday" ) );
+        $start    = "{$date}T00:00:00";
+        $end      = "{$date}T23:59:59";
 
-        // tratar dados
+        $query    = "?startDate={$start}";
+        $query   .= "&endDate={$end}";
+        $query   .= "&timezone=" . self::TZ;
+        $query   .= ( $isUpdate ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
-        return $data;
+        $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+
+        return json_decode( $response->body(), true );
     }
 
     /**
@@ -351,7 +376,9 @@ class AwinIntegration
 
                 "tags"                   => [ "awin" ],
 
-                "keyWordsSet"            => []
+                "keyWordsSet"            => [],
+
+                "origin"                 => "awin",
             ];
         }
 
@@ -405,6 +432,8 @@ class AwinIntegration
             $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
 
             $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
 
@@ -436,6 +465,8 @@ class AwinIntegration
                 "tags"               => [ "Cashback", "Promoção" ],
 
                 "keyWordsSet"        => [],
+
+                "origin"             => "awin",
             ];
 
             if ( $offer[ "type" ] == "voucher" )
@@ -452,10 +483,9 @@ class AwinIntegration
 
     /**
      *
-     *
-     * @param String $logo
-     * @param String $path
-     * @param String $prefix
+     * @param string $logo
+     * @param string $path
+     * @param string $prefix
      * @return void
      */
     private static function saveImage( string $path, string $imageName, string $url )
@@ -485,6 +515,12 @@ class AwinIntegration
         return false;
     }
 
+    /**
+     *
+     * @param integer $storeId
+     * @param string $url
+     * @return string
+     */
     private function urlTracking( int $storeId, string $url )
     {
         $body     = [
@@ -516,6 +552,10 @@ class AwinIntegration
         return $url;
     }
 
+    /**
+     *
+     * @return array
+     */
     public function schGetStores()
     {
         return $this->stores;

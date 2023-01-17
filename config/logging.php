@@ -151,6 +151,11 @@ return [
             "path"   => storage_path( "logs/fastshop-img.log" ),
             "level"  => "debug"
         ],
+        "fastshop-upd" => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/fastshop-upd.log" ),
+            "level"  => "debug"
+        ],
     ],
 
 ];

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Cofry;
+namespace App\Console\Commands\Affiliates\Cofry;
 
 use File;
 use Illuminate\Console\Command;
@@ -13,7 +13,7 @@ class DeleteImages extends Command
      *
      * @var string
      */
-    protected $signature = "delete:images";
+    protected $signature = "cofry:delete_images";
 
     /**
      * The console command description.
@@ -40,12 +40,12 @@ class DeleteImages extends Command
     public function handle()
     {
         echo "DEL : Deleting images\n";
-        Log::channel("cofry")->info("Images", [ "Deleting images" ]);
+        Log::channel( "cofry" )->info( "Images", [ "Deleting images" ] );
 
-        File::deleteDirectory(public_path("images/estabelecimentos/"), true);
-        File::deleteDirectory(public_path("images/promos/"),           true);
+        File::deleteDirectory( public_path( "images/estabelecimentos/" ), true );
+        File::deleteDirectory( public_path( "images/promos/" ),           true );
 
         echo "DEL : Successfully deleted\n";
-        Log::channel("cofry")->info("Images", [ "Successfully deleted" ]);
+        Log::channel( "cofry" )->info( "Images", [ "Successfully deleted" ] );
     }
 }

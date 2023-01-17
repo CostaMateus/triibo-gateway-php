@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Cofry;
+namespace App\Console\Commands\Affiliates\Cofry;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -13,7 +13,7 @@ class ProcessStoresPromos extends Command
      *
      * @var string
      */
-    protected $signature = "process:storepromo
+    protected $signature = "cofry:process_sp
                             {--option= : Options: promotions, stores or all }";
 
     /**
