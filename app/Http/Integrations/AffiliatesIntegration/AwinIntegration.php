@@ -325,7 +325,11 @@ class AwinIntegration
 
             $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
             $imageName     = "awin_{$store[ "id" ]}_{$auxName}.png";
-            $imageName     = self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) ? $imageName : "awin_standard.png";
+            $imageName     = ( $store[ "logoUrl" ] )
+                                ? ( ( self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) )
+                                    ? $imageName
+                                    : "awin_standard.png" )
+                                : "awin_standard.png";
 
             $stores[ $id ] = [
                 "partnerEstablishmentId" => $store[ "id" ],
