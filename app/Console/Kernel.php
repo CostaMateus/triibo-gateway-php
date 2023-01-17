@@ -47,10 +47,17 @@ class Kernel extends ConsoleKernel
     {
         if ( config( "app.env" ) == "production" )
         {
-            // Trimestral
-            $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
-            // Mensal, 1º às 01h00
-            $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
+            // // Trimestral
+            // $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
+            // // Mensal, 1º às 01h00
+            // $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
+
+
+            // Awin Triibo Integration
+            // Lojas, promoções e imagens - Diariamente às 02 e às 14h
+            $schedule->command( "awin:process --option=all" )->twiceDaily( 3, 15 )->runInBackground();
+            // Relatórios - Diariamente às 01h -- relatórios do dia anterior
+            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:00" )->runInBackground();
 
 
             // Cofry Triibo Integration
@@ -97,8 +104,8 @@ class Kernel extends ConsoleKernel
             // $schedule->command( "sku:delete_fs"        )->twiceDaily( 5, 8 )->runInBackground();
 
 
-            // Clear Logs
-            $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
+            // // Clear Logs
+            // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
         }
     }
 
