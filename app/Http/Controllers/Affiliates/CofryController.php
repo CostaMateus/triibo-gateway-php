@@ -262,9 +262,10 @@ class CofryController extends Controller
         {
             foreach ( $stores as $push1 => $store )
             {
-                $cofryId = substr( $promo[ "establishmentId" ], 6 );
+                $p = $promo[ "establishmentId"        ];
+                $s = $store[ "partnerEstablishmentId" ];
 
-                if ( $cofryId != $store[ "partnerEstablishmentId" ] ) continue;
+                if ( $p != $s ) continue;
 
                 $promo[ "establishmentId" ] = $push1;
                 break;

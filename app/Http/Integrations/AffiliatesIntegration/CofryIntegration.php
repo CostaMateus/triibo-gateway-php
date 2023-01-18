@@ -198,7 +198,7 @@ class CofryIntegration
 
             $cashback             = number_format( ( float ) $promo[ "CashbackClient" ], $promo[ "CashbackFormat" ], ",", "" );
 
-            $idStore              = "-cofry" . $promo[ "uuid" ];
+            $idStore              = $promo[ "uuid" ];
             $id                   = $idStore . str_replace( ".", "", $promo[ "ProductAPIID" ] );
 
             $establishmentName    = trim( $promo[ "Advertiser" ] );
@@ -291,7 +291,7 @@ class CofryIntegration
 
         foreach ( $data as $store )
         {
-            $idStore             = "-cofry" . $store[ "uuid" ];
+            $idStore             = $store[ "uuid" ];
 
             $establishmentName   = trim( $store[ "Advertiser" ] );
 
@@ -381,7 +381,7 @@ class CofryIntegration
 
         foreach ( $data as $store )
         {
-            $id                 = "-cofry" . $store[ "uuid" ];
+            $id                 = $store[ "uuid" ];
 
             $storeName          = trim( $store[ "Advertiser" ] );
 
@@ -403,7 +403,7 @@ class CofryIntegration
             $descricao          = $store[ "About" ] . "\n\n" . $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" );
 
             $res[ $id ]         = [
-                "partnerEstablishmentId" => $store[ "uuid" ],
+                "partnerEstablishmentId" => $id,
                 "cashbackDefault"        => $cashback,
 
                 "enableDate"             => $dateEn,
