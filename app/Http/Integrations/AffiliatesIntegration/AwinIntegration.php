@@ -415,7 +415,7 @@ class AwinIntegration
             ];
         }
 
-        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insert( $newStores );
+        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insertOrIgnore( $newStores );
 
         return $stores;
     }
