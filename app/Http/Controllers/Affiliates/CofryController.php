@@ -168,7 +168,7 @@ class CofryController extends Controller
             $founded = false;
             $cofryId = substr( $id, 6 );
 
-            foreach ( $fbAuxStores as $push => $fbStore )
+            foreach ( $fbAuxStores as $push1 => $fbStore )
             {
                 if ( $cofryId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
@@ -187,18 +187,18 @@ class CofryController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
-                $fbRef->update( [ $push => $store ] );
+                $fbRef->update( [ $push1 => $store ] );
 
-                echo "Stores : Updated Estab. ID = $push\n";
+                echo "Stores : Updated Estab. ID = $push1\n";
                 break;
             }
 
             if ( !$founded )
             {
-                $push = $fbRef->push()->getKey();
-                $fbRef->update( [ $push => $store ] );
+                $newPush = $fbRef->push()->getKey();
+                $fbRef->update( [ $newPush => $store ] );
 
-                echo "Stores : Created Estab. ID = $push\n";
+                echo "Stores : Created Estab. ID = $newPush\n";
             }
         }
     }
@@ -260,13 +260,13 @@ class CofryController extends Controller
 
         foreach ( $cofryPromos as $id => $promo )
         {
-            foreach ( $stores as $push => $store )
+            foreach ( $stores as $push1 => $store )
             {
                 $cofryId = substr( $promo[ "establishmentId" ], 6 );
 
                 if ( $cofryId != $store[ "partnerEstablishmentId" ] ) continue;
 
-                $promo[ "establishmentId" ] = $push;
+                $promo[ "establishmentId" ] = $push1;
                 break;
             }
 
@@ -274,12 +274,11 @@ class CofryController extends Controller
 
             if ( !empty( $fbAuxPromos ) )
             {
-                foreach ( $fbAuxPromos as $push => $fbPromo )
+                foreach ( $fbAuxPromos as $push2 => $fbPromo )
                 {
                     if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
                     $founded = true;
-
                     $descrip = $fbPromo[ "description" ];
                     $descrip = explode( "\n\n#", $descrip );
 
@@ -293,19 +292,19 @@ class CofryController extends Controller
                         $promo[ "description" ] .= $aux;
                     }
 
-                    $fbRef->update( [ $push => $promo ] );
+                    $fbRef->update( [ $push2 => $promo ] );
 
-                    echo "Promotions : Updated Promo. ID = $push\n";
+                    echo "Promotions : Updated Promo. ID = $push2\n";
                     break;
                 }
             }
 
             if ( !$founded )
             {
-                $push = $fbRef->push()->getKey();
-                $fbRef->update( [ $push => $promo ] );
+                $newPush = $fbRef->push()->getKey();
+                $fbRef->update( [ $newPush => $promo ] );
 
-                echo "Promotions : Created Promo. ID = $push\n";
+                echo "Promotions : Created Promo. ID = $newPush\n";
             }
         }
     }
