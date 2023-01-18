@@ -312,7 +312,7 @@ class AwinIntegration
         {
             return [
                 "success" => true,
-                "code"    => null,
+                "code"    => 0,
                 "data"    => $response->json()
             ];
         }
