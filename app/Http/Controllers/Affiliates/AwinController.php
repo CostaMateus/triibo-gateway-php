@@ -271,11 +271,10 @@ class AwinController extends Controller
         foreach ( $awinStores as $id => $store )
         {
             $founded = false;
-            $awinId  = substr( $id, 5 );
 
             foreach ( $fbAuxStores as $push1 => $fbStore )
             {
-                if ( $awinId != $fbStore[ "partnerEstablishmentId" ] ) continue;
+                if ( $id != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
                 $founded = true;
 
@@ -370,9 +369,10 @@ class AwinController extends Controller
         {
             foreach ( $stores as $push1 => $store )
             {
-                $awinId = substr( $promo[ "establishmentId" ], 6 );
+                $p = $promo[ "establishmentId"        ];
+                $s = $store[ "partnerEstablishmentId" ];
 
-                if ( $awinId != $store[ "partnerEstablishmentId" ] ) continue;
+                if ( $p != $s ) continue;
 
                 $promo[ "establishmentId" ] = $push1;
                 break;

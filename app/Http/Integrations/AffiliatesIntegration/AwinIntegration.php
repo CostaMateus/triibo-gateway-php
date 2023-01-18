@@ -80,8 +80,12 @@ class AwinIntegration
 
             Helper::usort( "id", $stores[ "data" ] );
 
-            foreach ( $stores[ "data" ] as &$store )
+            foreach ( $stores[ "data" ] as $key => &$store )
             {
+                $key  += 1;
+                $count = count( $stores[ "data" ] );
+                echo "Stores : Loading establishments {$key} of {$count}\n";
+
                 $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
             }
 
@@ -99,7 +103,7 @@ class AwinIntegration
         $promotions = [];
         $stores     = $this->getStores();
 
-        foreach ( $stores as $key => $store )
+        foreach ( $stores as $store )
         {
             $id         = $store[ "partnerEstablishmentId" ];
             $offers     = $this->searchOffers( $id );
@@ -166,16 +170,17 @@ class AwinIntegration
 
             if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
             {
-                sleep( 10 );
+                sleep( 5 );
                 return $this->searchStoresDetails( $id );
             }
 
-            return [ [ "max" => 0 ] ];
+            return [ [ "min" => 0, "max" => 0 ] ];
         }
 
         $data     = $response->json();
+        $key      = array_search( "percentage", array_column( $data[ "commissionRange" ], "type" ) );
 
-        return $data[ "commissionRange" ];
+        return $data[ "commissionRange" ][ $key ];
     }
 
     /**
@@ -335,12 +340,12 @@ class AwinIntegration
 
         foreach ( $data as $store )
         {
-            $id            = self::ID . $store[ "id" ];
+            $id            = $store[ "id" ];
             $cashback      = "";
             $url           = Helper::parseUrl( $store[ "displayUrl" ] );
             $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
 
-            if ( $cashback = reset( $store[ "commissionRange" ] ) )
+            if ( $cashback = $store[ "commissionRange" ] )
             {
                 $cashback = ( float ) $cashback[ "max" ] / 2;
                 $cashback = number_format( $cashback, 1, ",", "" );
@@ -354,7 +359,7 @@ class AwinIntegration
             else
             {
                 $newStores[] = [
-                    "affiliate_id"   => $store[ "id" ],
+                    "affiliate_id"   => $id,
                     "affiliate_name" => "awin",
                     "domain"         => $url,
                     "commission"     => $cashback,
@@ -364,7 +369,7 @@ class AwinIntegration
             }
 
             $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
-            $imageName     = "awin_{$store[ "id" ]}_{$auxName}.png";
+            $imageName     = "awin_{$id}_{$auxName}.png";
             $imageName     = ( $store[ "logoUrl" ] )
                                 ? ( ( self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) )
                                     ? $imageName
@@ -372,7 +377,7 @@ class AwinIntegration
                                 : "awin_standard.png";
 
             $stores[ $id ] = [
-                "partnerEstablishmentId" => $store[ "id" ],
+                "partnerEstablishmentId" => $id,
                 "cashbackDefault"        => $cashback,
 
                 "enableDate"             => $dateEn,
@@ -410,7 +415,7 @@ class AwinIntegration
             ];
         }
 
-        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insert( $newStores );
+        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insertOrIgnore( $newStores );
 
         return $stores;
     }
@@ -427,7 +432,7 @@ class AwinIntegration
 
         foreach ( $data as $offer )
         {
-            $idStore           = self::ID . $offer[ "advertiser" ][ "id" ];
+            $idStore           = $offer[ "advertiser" ][ "id" ];
             $id                = $idStore . $offer[ "promotionId" ];
 
             $establishmentName = $offer[ "advertiser" ][ "name" ];
