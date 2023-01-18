@@ -294,7 +294,7 @@ class CofryController extends Controller
 
                     $fbRef->update( [ $push2 => $promo ] );
 
-                    echo "Promotions : Updated Promo. ID = $push2\n";
+                    echo "Promotions : Updated Promo. ID = $push2 | $push1\n";
                     break;
                 }
             }
@@ -304,7 +304,7 @@ class CofryController extends Controller
                 $newPush = $fbRef->push()->getKey();
                 $fbRef->update( [ $newPush => $promo ] );
 
-                echo "Promotions : Created Promo. ID = $newPush\n";
+                echo "Promotions : Created Promo. ID = $newPush | $push1\n";
             }
         }
     }
