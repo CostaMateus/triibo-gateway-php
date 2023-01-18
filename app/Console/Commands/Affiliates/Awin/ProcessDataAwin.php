@@ -85,7 +85,7 @@ class ProcessDataAwin extends Command
         echo "Command : Start processing of Images\n";
         Log::channel( "awin" )->info( "Images", [ "Start processing of Images" ]);
 
-        $awin = new AwinController();
+        $awin = new AwinController( false );
         $awin->images();
 
         echo "Command : End Images processing\n";
@@ -108,7 +108,7 @@ class ProcessDataAwin extends Command
         echo "Command : Start processing of Promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Start processing of Promotions" ]);
 
-        $awin = new AwinController();
+        // $awin = new AwinController();
         $awin->promotions();
 
         echo "Command : End Promotions processing\n";
@@ -118,7 +118,7 @@ class ProcessDataAwin extends Command
         echo "Command : Start processing of Images\n";
         Log::channel( "awin" )->info( "Images", [ "Start processing of Images" ]);
 
-        $awin = new AwinController();
+        // $awin = new AwinController();
         $awin->images();
 
         echo "Command : End Images processing\n";
@@ -131,7 +131,7 @@ class ProcessDataAwin extends Command
         echo "Command : Start processing of Reports\n";
         Log::channel( "awin" )->info( "Reports", [ "Start processing of Reports" ]);
 
-        $awin = new AwinController();
+        $awin = new AwinController( false );
         $awin->reports();
 
         echo "Command : End Reports processing\n";
