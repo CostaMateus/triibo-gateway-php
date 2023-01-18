@@ -273,7 +273,7 @@ class AwinController extends Controller
             $founded = false;
             $awinId  = substr( $id, 5 );
 
-            foreach ( $fbAuxStores as $push => $fbStore )
+            foreach ( $fbAuxStores as $push1 => $fbStore )
             {
                 if ( $awinId != $fbStore[ "partnerEstablishmentId" ] ) continue;
 
@@ -292,18 +292,18 @@ class AwinController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
-                $fbRef->update( [ $push => $store ] );
+                $fbRef->update( [ $push1 => $store ] );
 
-                echo "Stores : Updated Estab. ID = $push\n";
+                echo "Stores : Updated Estab. ID = $push1\n";
                 break;
             }
 
             if ( !$founded )
             {
-                $push = $fbRef->push()->getKey();
-                $fbRef->update( [ $push => $store ] );
+                $newPush = $fbRef->push()->getKey();
+                $fbRef->update( [ $newPush => $store ] );
 
-                echo "Stores : Created Estab. ID = $push\n";
+                echo "Stores : Created Estab. ID = $newPush\n";
             }
         }
     }
@@ -344,6 +344,7 @@ class AwinController extends Controller
                     $promo[ "isPublished" ] = false;
                     $promo[ "active"      ] = false;
                     $promo[ "origin"      ] = "awin";
+
                     $fbRef->update( [ $push => $promo ] );
                 }
 
@@ -367,13 +368,13 @@ class AwinController extends Controller
 
         foreach ( $awinPromos as $id => $promo )
         {
-            foreach ( $stores as $push => $store )
+            foreach ( $stores as $push1 => $store )
             {
                 $awinId = substr( $promo[ "establishmentId" ], 6 );
 
                 if ( $awinId != $store[ "partnerEstablishmentId" ] ) continue;
 
-                $promo[ "establishmentId" ] = $push;
+                $promo[ "establishmentId" ] = $push1;
                 break;
             }
 
@@ -381,12 +382,11 @@ class AwinController extends Controller
 
             if ( !empty( $fbAuxPromos ) )
             {
-                foreach ( $fbAuxPromos as $push => $fbPromo )
+                foreach ( $fbAuxPromos as $push2 => $fbPromo )
                 {
                     if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
                     $founded = true;
-
                     $descrip = $fbPromo[ "description" ];
                     $descrip = explode( "\n\n#", $descrip );
 
@@ -400,19 +400,19 @@ class AwinController extends Controller
                         $promo[ "description" ] .= $aux;
                     }
 
-                    $fbRef->update( [ $push => $promo ] );
+                    $fbRef->update( [ $push2 => $promo ] );
 
-                    echo "Promotions : Updated Promo. ID = $push\n";
+                    echo "Promotions : Updated Promo. ID = $push2 | $push1\n";
                     break;
                 }
             }
 
             if ( !$founded )
             {
-                $push = $fbRef->push()->getKey();
-                $fbRef->update( [ $push => $promo ] );
+                $newPush = $fbRef->push()->getKey();
+                $fbRef->update( [ $newPush => $promo ] );
 
-                echo "Promotions : Created Promo. ID = $push\n";
+                echo "Promotions : Created Promo. ID = $newPush | $push1\n";
             }
         }
     }
