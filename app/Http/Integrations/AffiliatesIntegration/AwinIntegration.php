@@ -157,7 +157,18 @@ class AwinIntegration
 
         $response = Http::withToken( $this->tkn )->get( $url );
 
-        if ( !$response->successful() ) return [];
+        if ( !$response->successful() )
+        {
+            $err = json_decode( $response->body(), true );
+
+            if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+            {
+                sleep( 10 );
+                return $this->searchStoresDetails( $id );
+            }
+
+            return [ [ "max" => 0 ] ];
+        }
 
         $data     = $response->json();
 
