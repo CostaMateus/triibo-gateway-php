@@ -25,19 +25,19 @@ class CofryController extends Controller
         {
             echo "Stores : Establishments init\n";
 
-            $fbStores    = Firebase::database()->getReference( "/Estabelecimento-v2" )->getValue();
+            $fbStores    = Firebase::database()->getReference( "/Store" )->getValue();
 
             foreach ( $fbStores as $push => $store )
             {
-                if ( strpos( $push, "-cofry"      ) !== false     ) continue;
-                if ( strpos( $push, "-awin"       ) !== false     ) continue;
-                if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
-                if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+                if ( strpos( $push, "-awin"       ) !== false ) continue;
+                if ( strpos( $push, "-cofry"      ) !== false ) continue;
+                if ( strpos( $push, "-socialsoul" ) !== false ) continue;
+                // if ( !isset( $store[ "establishmentId" ] )    ) continue;
 
                 if ( isset( $store[ "origin" ] ) && in_array( $store[ "origin" ], [ "awin", "cofry", "socialsoul" ] ) )
                 {
                     echo "Stores : Delete establishments id = $push\n";
-                    Firebase::database()->getReference( "Estabelecimento-v2/{$push}" )->remove();
+                    Firebase::database()->getReference( "Store/{$push}" )->remove();
                 }
             }
 
