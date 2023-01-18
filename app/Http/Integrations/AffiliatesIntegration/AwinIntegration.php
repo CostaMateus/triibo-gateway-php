@@ -37,7 +37,7 @@ class AwinIntegration
     protected $base        = 100; // base de calculo, ex 100 reais gastos
     protected $rate        = 10;  // taxa de conversão, 10 pontos a cada 1 real
 
-    public function __construct()
+    public function __construct( bool $loadStores = true )
     {
         $env       = config( "awin.env"                 );
         $url       = config( "awin.{$env}.url"          );
@@ -58,8 +58,11 @@ class AwinIntegration
         // Url Tracking
         $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
 
-        $this->stores                     = $this->getStores();
-        $this->storesLocal                = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
+        if ( $loadStores )
+        {
+            $this->stores      = $this->getStores();
+            $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
+        }
     }
 
     /**
@@ -286,7 +289,33 @@ class AwinIntegration
 
         $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
 
-        return json_decode( $response->body(), true );
+        if ( !$response->successful() )
+        {
+            $err = json_decode( $response->body(), true );
+
+            if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+            {
+                sleep( 10 );
+
+                return $this->searchReports( $isUpdate );
+            }
+            else
+            {
+                return [
+                    "success" => false,
+                    "code"    => 4001,
+                    "data"    => null
+                ];
+            }
+        }
+        else
+        {
+            return [
+                "success" => true,
+                "code"    => null,
+                "data"    => $response->json()
+            ];
+        }
     }
 
     /**

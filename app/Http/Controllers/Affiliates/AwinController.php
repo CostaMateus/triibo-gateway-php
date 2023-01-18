@@ -18,9 +18,9 @@ class AwinController extends Controller
     protected $stores_path;
     protected $promos_path;
 
-    public function __construct()
+    public function __construct( bool $loadStores = true )
     {
-        $this->integration = new AwinIntegration();
+        $this->integration = new AwinIntegration( $loadStores );
         $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
         $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
@@ -504,20 +504,28 @@ class AwinController extends Controller
         // new transactions
         $reports = $this->integration->getReports();
 
-        echo "Reports : Sending new transactions to Firebase\n";
-        Log::channel( "awin" )->info( "Reports", [ "Sending new transactions to Firebase" ] );
-
-        foreach ( $reports as &$report )
+        if ( $reports[ "success" ] && !empty( $reports[ "data" ] ) )
         {
-            $report[ "validationDate"   ] = null;
-            $report[ "commissionStatus" ] = "pending";
+            echo "Reports : Sending new transactions to Firebase\n";
+            Log::channel( "awin" )->info( "Reports", [ "Sending new transactions to Firebase" ] );
 
-            foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
+            foreach ( $reports[ "data" ] as $report )
+            {
+                $report[ "validationDate"   ] = null;
+                $report[ "commissionStatus" ] = "pending";
 
-            $push = $fbRef->push()->getKey();
-            $fbRef->update( [ $push => $report ] );
+                foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
 
-            echo "Reports : New transaction ID = $push\n";
+                $push = $fbRef->push()->getKey();
+                $fbRef->update( [ $push => $report ] );
+
+                echo "Reports : New transaction ID = $push\n";
+            }
+        }
+        else
+        {
+            echo "Reports : No new transactions\n";
+            Log::channel( "awin" )->info( "Reports", [ "No new transactions" ] );
         }
 
         echo "Reports : Searching for updated transactions\n";
@@ -525,27 +533,36 @@ class AwinController extends Controller
 
         // update transaction
         $updReports = $this->integration->getReports( true );
-        $fbReports  = $fbRef->getValue();
 
-        echo "Reports : Sending updated transactions to Firebase\n";
-        Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
-
-        foreach ( $fbReports as $push => $fbReport )
+        if ( $updReports[ "success" ] && !empty( $updReports[ "data" ] ) )
         {
-            foreach ( $updReports as $uReport )
+            $fbReports  = $fbRef->getValue();
+
+            echo "Reports : Sending updated transactions to Firebase\n";
+            Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
+
+            foreach ( $fbReports as $push => $fbReport )
             {
-                $id         = $fbReport[ "id"           ] == $uReport[ "id"           ];
-                $advertiser = $fbReport[ "advertiserId" ] == $uReport[ "advertiserId" ];
+                foreach ( $updReports[ "data" ] as $uReport )
+                {
+                    $id         = $fbReport[ "id"           ] == $uReport[ "id"           ];
+                    $advertiser = $fbReport[ "advertiserId" ] == $uReport[ "advertiserId" ];
 
-                if ( !$id || !$advertiser ) continue;
+                    if ( !$id || !$advertiser ) continue;
 
-                $fbReport = $uReport;
-                break;
+                    $fbReport = $uReport;
+                    break;
+                }
+
+                $fbRef->update( [ $push => $fbReport ] );
+
+                echo "Reports : Updated transaction ID = $push\n";
             }
-
-            $fbRef->update( [ $push => $fbReport ] );
-
-            echo "Reports : Updated transaction ID = $push\n";
+        }
+        else
+        {
+            echo "Reports : No transactions for update\n";
+            Log::channel( "awin" )->info( "Reports", [ "No transactions for update" ] );
         }
     }
 
