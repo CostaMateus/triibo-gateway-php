@@ -347,7 +347,13 @@ class AwinIntegration
 
             if ( $cashback = $store[ "commissionRange" ] )
             {
-                $cashback = ( float ) $cashback[ "max" ] / 2;
+                $min      = ( float ) $cashback[ "min" ];
+                $max      = ( float ) $cashback[ "max" ];
+
+                $media    = ( $max + $min ) / 2;
+                $half     = $media / 2;
+
+                $cashback = ( $half >= $min ) ? ( float ) $min * 0.8 : ( float ) $half;
                 $cashback = number_format( $cashback, 1, ",", "" );
             }
 
@@ -450,7 +456,7 @@ class AwinIntegration
             $points            = $this->base * $this->rate * ( $cashback / 100 );
 
             $description       = $offer[ "description" ];
-            $description      .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base}.";
+            $description      .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base} em compras.";
 
             $detailsDescrip    = $offer[ "description" ];
 
