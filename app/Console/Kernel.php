@@ -60,13 +60,16 @@ class Kernel extends ConsoleKernel
             $schedule->command( "awin:process --option=reports" )->dailyAt( "01:00" )->runInBackground();
 
 
-            // Cofry Triibo Integration
-            // Lojas e promoções - Diariamente às 02 e às 14h
-            $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
-            // Imagens - Diariamente às 02h05
-            $schedule->command( "cofry:delete_images"           )->dailyAt( "02:05" )->runInBackground();
-            // Imagens - Diariamente às 02h10
-            $schedule->command( "cofry:process_images"          )->dailyAt( "02:15" )->runInBackground();
+            /**
+             * TODO reativar após reverter o código de create/update da Cofry
+             */
+            // // Cofry Triibo Integration
+            // // Lojas e promoções - Diariamente às 02 e às 14h
+            // $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
+            // // Imagens - Diariamente às 02h05
+            // $schedule->command( "cofry:delete_images"           )->dailyAt( "02:05" )->runInBackground();
+            // // Imagens - Diariamente às 02h10
+            // $schedule->command( "cofry:process_images"          )->dailyAt( "02:15" )->runInBackground();
 
             // // SocialSoul Triibo Integration
             // // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
