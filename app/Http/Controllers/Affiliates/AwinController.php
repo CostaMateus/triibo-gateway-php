@@ -320,9 +320,13 @@ class AwinController extends Controller
                 $fbRef1   = Firebase::database()->getReference( "/Estabelecimento-Aprovacoes" );
                 $date     = new DateTime( date( "Y-m-d H:i:s.u" ) );
                 $date     = ( int ) $date->format( "U" ) * 1000;
+
+                /**
+                 * TODO trocar 'requesterId' pelo usuário do sistema
+                 */
                 $approval = [
                     "id"           => $newPush,
-                    "requesterId"  => "TyOs6ICiBkRLdgQ4WDMZxeX84dA3",
+                    "requesterId"  => "TyOs6ICiBkRLdgQ4WDMZxeX84dA3", // Mateus - Homol
                     "lastModified" => $date,
                     "requestDate"  => $date,
                     "status"       => "aberto",
