@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Affiliates;
 
+use DateTime;
 use Throwable;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\Log;
@@ -234,34 +235,39 @@ class AwinController extends Controller
         $fbStores    = $fbRef->getValue();
         $fbAuxStores = [];
 
-        foreach ( $fbStores as $push => $store )
+        foreach ( $fbStores as $push => $fbStore )
         {
-            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
-            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false       ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
+            if ( !isset( $fbStore[ "partnerEstablishmentId" ] ) ) continue;
 
             if ( strpos( $push, "-awin" ) !== false )
             {
-                if ( $store[ "isPublished" ] )
+                if ( $fbStore[ "isPublished" ] )
                 {
                     // Disabling all old stores
-                    echo "Stores : Disab. Estab. ID = $push\n";
-                    $store[ "isPublished" ] = false;
-                    $store[ "origin"      ] = "awin";
-                    $fbRef->update( [ $push => $store ] );
+                    echo "Stores : Disab. Estab. ID = {$push}\n";
+                    $fbStore[ "isPublished" ] = false;
+                    $fbStore[ "origin"      ] = "awin";
+                    $fbRef->update( [ $push => $fbStore ] );
                 }
 
                 continue;
             }
 
-            if ( isset( $store[ "origin" ] ) && $store[ "origin" ] == "awin" )
+            if ( isset( $fbStore[ "origin" ] ) && $fbStore[ "origin" ] == "awin" )
             {
-                // Disabling all stores with push
-                echo "Stores : Disab. Estab. ID = $push\n";
-                $store[ "isPublished" ] = false;
-                $fbRef->update( [ $push => $store ] );
+                if ( !isset( $awinStores[ $fbStore[ "partnerEstablishmentId" ] ] ) )
+                {
+                    // Disabling stores that are not on the list
+                    $fbStore[ "isPublished" ] = false;
+                    $fbRef->update( [ $push => $fbStore ] );
 
-                $fbAuxStores[ $push ] = $store;
+                    echo "Stores : Disab. Estab. ID = {$push}\n";
+                    continue;
+                }
+
+                $fbAuxStores[ $push ] = $fbStore;
             }
         }
 
@@ -291,18 +297,41 @@ class AwinController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
+                if ( $store[ "fotoThumb" ] != $fbStore[ "fotoThumb" ] )
+                {
+                    File::delete( $this->stores_path . $store[ "fotoThumb" ] );
+                    $store[ "fotoThumb"  ] = $fbStore[ "fotoThumb"  ];
+                    $store[ "listaFotos" ] = $fbStore[ "listaFotos" ];
+                }
+
                 $fbRef->update( [ $push1 => $store ] );
 
-                echo "Stores : Updated Estab. ID = $push1\n";
+                echo "Stores : Updated Estab. ID = {$push1}\n";
                 break;
             }
 
             if ( !$founded )
             {
-                $newPush = $fbRef->push()->getKey();
+                $store[ "isPublished" ] = false;
+
+                $newPush  = $fbRef->push()->getKey();
                 $fbRef->update( [ $newPush => $store ] );
 
-                echo "Stores : Created Estab. ID = $newPush\n";
+                $fbRef1   = Firebase::database()->getReference( "/Estabelecimento-Aprovacoes" );
+                $date     = new DateTime( date( "Y-m-d H:i:s.u" ) );
+                $date     = ( int ) $date->format( "U" ) * 1000;
+                $approval = [
+                    "id"           => $newPush,
+                    "requesterId"  => "TyOs6ICiBkRLdgQ4WDMZxeX84dA3",
+                    "lastModified" => $date,
+                    "requestDate"  => $date,
+                    "status"       => "aberto",
+                ];
+
+                $newPush1 = $fbRef1->push()->getKey();
+                $fbRef1->update( [ $newPush1 => $approval ] );
+
+                echo "Stores : Created Estab. ID = {$newPush} | Need approval ID = {$newPush1}\n";
             }
         }
     }
@@ -339,7 +368,7 @@ class AwinController extends Controller
                 if ( $promo[ "isPublished" ] || $promo[ "active" ] )
                 {
                     // Disabling all old promotions
-                    echo "Promotions : Disab. Promo. ID = $push\n";
+                    echo "Promotions : Disab. Promo. ID = {$push}\n";
                     $promo[ "isPublished" ] = false;
                     $promo[ "active"      ] = false;
                     $promo[ "origin"      ] = "awin";
@@ -352,11 +381,16 @@ class AwinController extends Controller
 
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
             {
-                // Disabling all promotions with push
-                echo "Promotions : Disab. Promo. ID = $push\n";
-                $promo[ "isPublished" ] = false;
-                $promo[ "active"      ] = false;
-                $fbRef->update( [ $push => $promo ] );
+                if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
+                {
+                    // Disabling promotions that are not on the list
+                    $promo[ "isPublished" ] = false;
+                    $promo[ "active"      ] = false;
+                    $fbRef->update( [ $push => $promo ] );
+
+                    echo "Promotions : Disab. Promo. ID = {$push}\n";
+                    continue;
+                }
 
                 $fbAuxPromos[ $push ] = $promo;
             }
@@ -402,7 +436,7 @@ class AwinController extends Controller
 
                     $fbRef->update( [ $push2 => $promo ] );
 
-                    echo "Promotions : Updated Promo. ID = $push2 | $push1\n";
+                    echo "Promotions : Updated Promo. ID = {$push2}\n";
                     break;
                 }
             }
@@ -412,7 +446,7 @@ class AwinController extends Controller
                 $newPush = $fbRef->push()->getKey();
                 $fbRef->update( [ $newPush => $promo ] );
 
-                echo "Promotions : Created Promo. ID = $newPush | $push1\n";
+                echo "Promotions : Created Promo. ID = {$newPush}\n";
             }
         }
     }
@@ -454,9 +488,6 @@ class AwinController extends Controller
                 }
                 catch ( FirebaseException $e )
                 {
-                    // $resumeUri = $uploader->getResumeUri();
-                    // $object    = $uploader->resume( $resumeUri );
-
                     echo "Images : Image, Firebase process error - aborted\n";
                     Log::channel( "awin" )->critical( "Images", [
                         "code"    => "C-403",
@@ -519,7 +550,7 @@ class AwinController extends Controller
                 $push = $fbRef->push()->getKey();
                 $fbRef->update( [ $push => $report ] );
 
-                echo "Reports : New transaction ID = $push\n";
+                echo "Reports : New transaction ID = {$push}\n";
             }
         }
         else
@@ -556,7 +587,7 @@ class AwinController extends Controller
 
                 $fbRef->update( [ $push => $fbReport ] );
 
-                echo "Reports : Updated transaction ID = $push\n";
+                echo "Reports : Updated transaction ID = {$push}\n";
             }
         }
         else
