@@ -7,13 +7,19 @@ use Throwable;
 use App\Helpers\Helper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
-use Kreait\Firebase\Contract\Database;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\CofryIntegration;
 
 class CofryController extends Controller
 {
+    protected $log;
+
+    public function __construct()
+    {
+        $this->log = Log::channel( "cofry" );
+    }
+
     /**
      * Process stores and promotions
      *
@@ -121,192 +127,120 @@ class CofryController extends Controller
     public function insertStoresFirebase()
     {
         echo "Stores : Searching establishments\n";
-        Log::channel( "cofry" )->info( "Stores", [ "Searching establishments" ] );
+        $this->log->info( "Stores", [ "Searching establishments" ] );
 
         $cofryStores = CofryIntegration::getEstabelecimentos();
-
         $fbRef       = Firebase::database()->getReference( "/Estabelecimento-v2" );
         $fbStores    = $fbRef->getValue();
-        $fbAuxStores = [];
 
-        foreach ( $fbStores as $push => $store )
+        foreach ( $fbStores as $push => $fbStore )
         {
-            if ( strpos( $push, "-awin"       ) !== false     ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
-            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
-
             if ( strpos( $push, "-cofry" ) !== false )
             {
-                if ( $store[ "isPublished" ] )
+                // Desativa só as lojas que não forem encontradas na nova carga
+                if ( !isset( $cofryStores[ $push ] ) )
                 {
-                    // Disabling all old stores
-                    echo "Stores : Disab. Estab. ID = $push\n";
-                    $store[ "isPublished" ] = false;
-                    $store[ "origin"      ] = "cofry";
-                    $fbRef->update( [ $push => $store ] );
+                    $fbStore[ "isPublished" ] = false;
+                    $fbRef->update( [ $push => $fbStore ] );
+
+                    echo "Stores : Disab. Estab. ID = {$push}\n";
                 }
-
-                continue;
-            }
-
-            if ( isset( $store[ "origin" ] ) && $store[ "origin" ] == "cofry" )
-            {
-                // Disabling all stores with push
-                echo "Stores : Disab. Estab. ID = $push\n";
-                $store[ "isPublished" ] = false;
-                $fbRef->update( [ $push => $store ] );
-
-                $fbAuxStores[ $push ] = $store;
             }
         }
 
         echo "Stores : Sending establishments to Firebase\n";
-        Log::channel( "cofry" )->info( "Stores", [ "Sending establishments to Firebase" ] );
+        $this->log->info( "Stores", [ "Sending establishments to Firebase" ] );
 
         foreach ( $cofryStores as $id => $store )
         {
-            $founded = false;
-            $cofryId = substr( $id, 6 );
+            $status = "Created";
 
-            foreach ( $fbAuxStores as $push1 => $fbStore )
+            // Trata a descrição da loja que já está cadastrada
+            if ( isset( $fbStores[ $id ] ) )
             {
-                if ( $cofryId != $fbStore[ "partnerEstablishmentId" ] ) continue;
+                $desc = $fbStores[ $id ][ "descricao" ];
+                $desc = explode( "\n\n#", $desc );
 
-                $founded = true;
-
-                $descrip = $fbStore[ "descricao" ];
-                $descrip = explode( "\n\n#", $descrip );
-
-                if ( count( $descrip ) > 1 )
+                if ( count( $desc ) > 1 )
                 {
                     $aux = "";
-                    array_shift( $descrip );
+                    array_shift( $desc );
 
-                    foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
 
                     $store[ "descricao" ] .= $aux;
                 }
 
-                $fbRef->update( [ $push1 => $store ] );
-
-                echo "Stores : Updated Estab. ID = $push1\n";
-                break;
+                $status = "Updated";
             }
 
-            if ( !$founded )
-            {
-                $newPush = $fbRef->push()->getKey();
-                $fbRef->update( [ $newPush => $store ] );
+            // Atualiza ou cria a loja
+            $fbRef->update([ $id => $store ] );
 
-                echo "Stores : Created Estab. ID = $newPush\n";
-            }
+            echo "Stores : {$status} Estab. ID = {$id}\n";
         }
     }
 
     /**
-     * Update and create promotions on Firebase
+     * Process promotions and send to Firebase
      *
      * @return void
      */
     public function insertPromosFirebase()
     {
         echo "Promotions : Searching for promotions\n";
-        Log::channel( "cofry" )->info( "Promotions", [ "Searching for promotions" ] );
+        $this->log->info( "Promotions", [ "Searching for promotions" ] );
 
         $cofryPromos = CofryIntegration::getPromocoes();
-
-        $db          = Firebase::database();
-        $stores      = $this->filterStoresCofry( $db );
-
-        $fbRef       = $db->getReference( "/Store" );
+        $fbRef       = Firebase::database()->getReference( "/Store" );
         $fbPromos    = $fbRef->getValue();
-        $fbAuxPromos = [];
 
-        foreach ( $fbPromos as $push => $promo )
+        foreach ( $fbPromos as $push => $fbPromo )
         {
-            if ( strpos( $push, "-awin"       ) !== false ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
-            if ( !isset( $promo[ "establishmentId" ] )    ) continue;
-
             if ( strpos( $push, "-cofry" ) !== false )
             {
-                if ( $promo[ "isPublished" ] || $promo[ "active" ] )
+                // Desativa só as promoções que não forem encontradas na nova carga
+                if ( !isset( $promos[ $push ] ) )
                 {
-                    // Disabling all old promotions
-                    echo "Promotions : Disab. Promo. ID = $push\n";
-                    $promo[ "isPublished" ] = false;
-                    $promo[ "active"      ] = false;
-                    $promo[ "origin"      ] = "cofry";
-                    $fbRef->update( [ $push => $promo ] );
+                    $fbPromo[ "isPublished" ] = false;
+                    $fbPromo[ "active"      ] = false;
+                    $fbRef->update( [ $push => $fbPromo ] );
+
+                    echo "Promotions : Disab. Promo. ID = {$push}\n";
                 }
-
-                continue;
-            }
-
-            if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "cofry" )
-            {
-                // Disabling all promotions with push
-                echo "Promotions : Disab. Promo. ID = $push\n";
-                $promo[ "isPublished" ] = false;
-                $promo[ "active"      ] = false;
-                $fbRef->update( [ $push => $promo ] );
-
-                $fbAuxPromos[ $push ] = $promo;
             }
         }
 
         echo "Promotions : Sending promotions to Firebase\n";
-        Log::channel( "cofry" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
+        $this->log->info( "Promotions", [ "Sending promotions to Firebase" ] );
 
         foreach ( $cofryPromos as $id => $promo )
         {
-            foreach ( $stores as $push1 => $store )
+            $status = "Created";
+
+            // Trata a descrição da promoção que já está cadastrada
+            if ( isset( $fbPromos[ $id ] ) )
             {
-                $p = $promo[ "establishmentId"        ];
-                $s = $store[ "partnerEstablishmentId" ];
+                $desc = $fbPromos[ $id ][ "description" ];
+                $desc = explode( "\n\n#", $desc );
 
-                if ( $p != $s ) continue;
-
-                $promo[ "establishmentId" ] = $push1;
-                break;
-            }
-
-            $founded = false;
-
-            if ( !empty( $fbAuxPromos ) )
-            {
-                foreach ( $fbAuxPromos as $push2 => $fbPromo )
+                if ( count( $desc ) > 1 )
                 {
-                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
+                    $aux = "";
+                    array_shift( $desc );
 
-                    $founded = true;
-                    $descrip = $fbPromo[ "description" ];
-                    $descrip = explode( "\n\n#", $descrip );
+                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
 
-                    if ( count( $descrip ) > 1 )
-                    {
-                        $aux = "";
-                        array_shift( $descrip );
-
-                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
-
-                        $promo[ "description" ] .= $aux;
-                    }
-
-                    $fbRef->update( [ $push2 => $promo ] );
-
-                    echo "Promotions : Updated Promo. ID = $push2 | $push1\n";
-                    break;
+                    $promo[ "description" ] .= $aux;
                 }
+
+                $status = "Updated";
             }
 
-            if ( !$founded )
-            {
-                $newPush = $fbRef->push()->getKey();
-                $fbRef->update( [ $newPush => $promo ] );
+            // Atualiza ou cria a promoção
+            $fbRef->update( [ $id => $promo ] );
 
-                echo "Promotions : Created Promo. ID = $newPush | $push1\n";
-            }
+            echo "Promotions : {$status} Promo. ID = {$id}\n";
         }
     }
 
@@ -331,7 +265,7 @@ class CofryController extends Controller
         if ( empty( $filesStores ) || empty( $filesPromos ) )
         {
             echo "IMG : Generating images\n";
-            Log::channel( "cofry" )->info( "Images", [ "Generating images" ] );
+            $this->log->info( "Images", [ "Generating images" ] );
             CofryIntegration::getImagens();
 
             $filesStores = File::allFiles(public_path( $lcStore ) );
@@ -339,33 +273,15 @@ class CofryController extends Controller
         }
 
         echo "IMG : Capturing names - $lcStore\n";
-        Log::channel( "cofry" )->info( "Images", [ "Capturing names - $lcStore" ] );
-        $fileNameStores = self::getFileNames( $filesStores );
+        $this->log->info( "Images", [ "Capturing names - $lcStore" ] );
+        $fileNameStores = $this->getFileNames( $filesStores );
 
         echo "IMG : Capturing names - $lcPromo\n";
-        Log::channel( "cofry" )->info( "Images", [ "Capturing names - $lcPromo" ] );
-        $fileNamePromos = self::getFileNames( $filesPromos );
+        $this->log->info( "Images", [ "Capturing names - $lcPromo" ] );
+        $fileNamePromos = $this->getFileNames( $filesPromos );
 
-        // ~ 20 min
-        self::execUploadImages( $fileNameStores, $lcStore, $fbStore );
-
-        // ~ 57 min
-        self::execUploadImages( $fileNamePromos, $lcPromo, $fbPromo );
-    }
-
-    /**
-     * Recupera uma lista de exclusão de lojas, dado o parceiro
-     *
-     * @param string $partner
-     * @return array
-     */
-    public static function getDenylist( $partner )
-    {
-        $db       = Firebase::database();
-        $firebase = $db->getReference( "/Partners-Denylist/$partner" );
-        $denylist = $firebase->getValue();
-
-        return $denylist;
+        $this->execUploadImages( $fileNameStores, $lcStore, $fbStore );
+        $this->execUploadImages( $fileNamePromos, $lcPromo, $fbPromo );
     }
 
     /**
@@ -374,7 +290,7 @@ class CofryController extends Controller
      * @param array $files
      * @return array $fileNames
      */
-    private static function getFileNames( array $files )
+    private function getFileNames( array $files )
     {
         $fileNames = [];
 
@@ -392,13 +308,13 @@ class CofryController extends Controller
      * @param string $fbFolder
      * @return void
      */
-    private static function execUploadImages( array $images, string $lcFolder, string $fbFolder )
+    private function execUploadImages( array $images, string $lcFolder, string $fbFolder )
     {
         $st     = Firebase::storage();
         $bucket = $st->getBucket();
 
         echo "IMG : Start sending images to Firebase - $lcFolder\n";
-        Log::channel( "cofry" )->info( "Images", [ "Start sending images to Firebase - $lcFolder" ] );
+        $this->log->info( "Images", [ "Start sending images to Firebase - $lcFolder" ] );
 
         foreach ( $images as $img )
         {
@@ -417,7 +333,7 @@ class CofryController extends Controller
                 $resumeUri = $uploader->getResumeUri();
                 $object    = $uploader->resume( $resumeUri );
 
-                Log::channel( "cofry" )->critical( "Images", [
+                $this->log->critical( "Images", [
                     "code"    => "C-403",
                     "info"    => $img,
                     "error"   => "An error has occurred while working with the SDK",
@@ -428,7 +344,7 @@ class CofryController extends Controller
             }
             catch ( Throwable $e )
             {
-                Log::channel( "cofry" )->critical( "Images", [
+                $this->log->critical( "Images", [
                     "code"    => "C-503",
                     "info"    => $img,
                     "error"   => "A not-Firebase specific error has occurred",
@@ -440,33 +356,6 @@ class CofryController extends Controller
         }
 
         echo "IMG : End uploading images to Firebase - $lcFolder\n";
-        Log::channel( "cofry" )->info( "Images", [ "End uploading images to Firebase - $lcFolder" ] );
+        $this->log->info("Images", [ "End uploading images to Firebase - $lcFolder" ]);
     }
-
-    /**
-     *
-     * @param Database $db
-     * @return array
-     */
-    private function filterStoresCofry( Database $db )
-    {
-        $ref    = $db->getReference( "/Estabelecimento-v2" );
-        $stores = $ref->getValue();
-        $aux    = [];
-
-        foreach ( $stores as $push => $store )
-        {
-            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
-            if ( !isset( $store[ "origin"                 ] ) ) continue;
-            if ( strpos( $push, "-awin"       ) !== false     ) continue;
-            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
-            if ( "cofry" != $store[ "origin" ]                ) continue;
-
-            $aux[ $push ] = $store;
-        }
-
-        return $aux;
-    }
-
 }
