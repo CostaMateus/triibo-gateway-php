@@ -8,10 +8,11 @@ use Gregwar\Image\Image;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
-use App\Http\Controllers\Affiliates\CofryController;
+use Kreait\Laravel\Firebase\Facades\Firebase;
 
 class CofryIntegration
 {
+    const ID           = "-cofry";
     const URL_PROMO    = "https://www.cofry.com.br/offer/import";
     const URL_STORE    = "https://www.cofry.com.br/store/import";
     const URL_STATUS   = "https://www.cofry.com.br/store-check/import";
@@ -190,20 +191,18 @@ class CofryIntegration
         $dateEn  = ( int ) $date->format( "U" ) * 1000;
         $date    = $date->add( new DateInterval( "P7Y" ) );
         $dateDis = ( int ) $date->format( "U" ) * 1000;
-        $i       = 1;
 
-        foreach ( $data as $key => $promo )
+        foreach ( $data as $promo )
         {
-            ( $key > 0 && $promo[ "uuid" ] == $data[ $key - 1 ][ "uuid" ] ) ? $i++ : $i = 1;
+            $idStore              = self::ID . $promo[ "uuid" ];
+            $idPromo              = str_replace( ".", "", $promo[ "ProductAPIID" ] );
+            $id                   = $idStore . $idPromo;
 
             $cashback             = number_format( ( float ) $promo[ "CashbackClient" ], $promo[ "CashbackFormat" ], ",", "" );
 
-            $idStore              = $promo[ "uuid" ];
-            $id                   = $idStore . str_replace( ".", "", $promo[ "ProductAPIID" ] );
-
             $establishmentName    = trim( $promo[ "Advertiser" ] );
 
-            $denylist             = CofryController::getDenylist( "Mapfre" );
+            $denylist             = self::getDenylist( "Mapfre" );
 
             $promo[ "ItemCode" ]  = str_replace( " ",      "", $promo[ "ItemCode" ] );
             $promo[ "ItemCode" ]  = str_replace( "Cupom:", "", $promo[ "ItemCode" ] );
@@ -235,7 +234,7 @@ class CofryIntegration
             $promo[ "ItemTitle" ] = str_replace( "Use ******",         "Use " . $promo[ "ItemCode" ], $promo[ "ItemTitle" ] );
 
             $res[ $id ]           = [
-                "partnerPromotionId" => $id,
+                "partnerPromotionId" => $idPromo,
 
                 "establishmentId"    => $idStore,
                 "establishmentName"  => $establishmentName,
@@ -291,17 +290,18 @@ class CofryIntegration
 
         foreach ( $data as $store )
         {
-            $idStore             = $store[ "uuid" ];
-
-            $establishmentName   = trim( $store[ "Advertiser" ] );
-
-            $denylist            = CofryController::getDenylist( "Mapfre" );
-
-            $cashback            = number_format( ( float ) $store[ "CashbackClient" ], $store[ "CashbackFormat" ], ",", "" );
+            $idStore             = self::ID . $store[ "uuid" ];
 
             $auxAdv              = preg_replace( "/[^\w\s]/", "", iconv( "UTF-8", "ASCII//TRANSLIT//IGNORE", $store[ "Advertiser" ] ) );
             $auxAdv              = str_replace( "\t", "", $auxAdv );
-            $idPromo             = $idStore . strtolower( str_replace( " ", "", $auxAdv ) );
+            $idPromo             = strtolower( str_replace( " ", "", $auxAdv ) );
+            $id                  = $idStore . $idPromo;
+
+            $establishmentName   = trim( $store[ "Advertiser" ] );
+
+            $denylist            = self::getDenylist( "Mapfre" );
+
+            $cashback            = number_format( ( float ) $store[ "CashbackClient" ], $store[ "CashbackFormat" ], ",", "" );
 
             $store[ "Logo"     ] = str_replace( "https://imgcofrynew.s3.amazonaws.com/", "", $store[ "Logo" ] );
             $store[ "Logo"     ] = self::PREFIX_PROMO . ( ( basename( $store[ "Logo" ] ) != "" ) ? basename( $store[ "Logo" ] ) : "standard.png" );
@@ -326,7 +326,7 @@ class CofryIntegration
 
             $description     = $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" ) . ( $rules[ "specific" ] != "" ? "\n\n" . $rules[ "specific" ] : "" );
 
-            $res[ $idPromo ] = [
+            $res[ $id ]      = [
                 "partnerPromotionId" => $idPromo,
 
                 "establishmentId"    => $idStore,
@@ -357,7 +357,7 @@ class CofryIntegration
                 "type"               => "businessPartner",
                 "url"                => "{urlCofry}",
 
-                "keyWordsSet"        => [ ],
+                "keyWordsSet"        => [],
 
                 "origin"             => "cofry",
             ];
@@ -381,11 +381,11 @@ class CofryIntegration
 
         foreach ( $data as $store )
         {
-            $id                 = $store[ "uuid" ];
+            $id                 = self::ID . $store[ "uuid" ];
 
             $storeName          = trim( $store[ "Advertiser" ] );
 
-            $denylist           = CofryController::getDenylist( "Mapfre" );
+            $denylist           = self::getDenylist( "Mapfre" );
 
             $cashback           = number_format( ( float ) $store[ "CashbackClient" ], $store[ "CashbackFormat" ], ",", "" );
 
@@ -403,7 +403,7 @@ class CofryIntegration
             $descricao          = $store[ "About" ] . "\n\n" . $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" );
 
             $res[ $id ]         = [
-                "partnerEstablishmentId" => $id,
+                "partnerEstablishmentId" => $store[ "uuid" ],
                 "cashbackDefault"        => $cashback,
 
                 "enableDate"             => $dateEn,
@@ -429,7 +429,7 @@ class CofryIntegration
 
                 "tags"                   => [ ...$store[ "Segment" ] ],
 
-                "keyWordsSet"            => [ ],
+                "keyWordsSet"            => [],
 
                 "origin"                 => "cofry",
             ];
@@ -462,7 +462,7 @@ class CofryIntegration
         {
             // horarios
             foreach ( range( 1,7 ) as $key ) {
-                $res[ ] = [
+                $res[] = [
                     "tipo"   => "aberto",
                     "turnos" => [
                         [
@@ -495,7 +495,7 @@ class CofryIntegration
      */
     public static function getImagens()
     {
-        $stores = self::getStoresActive();
+        $stores    = self::getStoresActive();
 
         foreach ( $stores as $store )
             if ( $store[ "Logo" ] ) self::saveImage( $store[ "Logo" ] );
@@ -543,4 +543,14 @@ class CofryIntegration
         }
     }
 
+    /**
+     * Retrieves an exclusion list of stores, given the partner
+     *
+     * @param string $partner
+     * @return array
+     */
+    private static function getDenylist( $partner )
+    {
+        return Firebase::database()->getReference( "/Partners-Denylist/$partner" )->getValue();
+    }
 }
