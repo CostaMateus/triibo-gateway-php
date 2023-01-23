@@ -320,10 +320,6 @@ class AwinController extends Controller
                 $fbRef1   = Firebase::database()->getReference( "/Estabelecimento-Aprovacoes" );
                 $date     = new DateTime( date( "Y-m-d H:i:s.u" ) );
                 $date     = ( int ) $date->format( "U" ) * 1000;
-
-                /**
-                 * TODO trocar 'requesterId' pelo usuário do sistema
-                 */
                 $approval = [
                     // Sistema Triibo - +5510999991477
                     "requesterId"  => "J4NjCHtvxuRojrXb29whbsNPAy33",
