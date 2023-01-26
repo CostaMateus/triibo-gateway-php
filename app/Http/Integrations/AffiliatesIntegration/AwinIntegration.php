@@ -353,7 +353,7 @@ class AwinIntegration
                 $media    = ( $max + $min ) / 2;
                 $half     = $media / 2;
 
-                $cashback = ( $half >= $min ) ? ( float ) $half : ( float ) $min * 0.8;
+                $cashback = ( $half >= $min ) ? ( float ) $min * 0.8 : ( float ) $half;
                 $cashback = number_format( $cashback, 1, ",", "" );
             }
 
