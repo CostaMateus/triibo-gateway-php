@@ -491,4 +491,18 @@ class Helper
         return $domain;
     }
 
+    public static function getCashback( $data )
+    {
+        $min      = ( float ) $data[ "min" ];
+        $max      = ( float ) $data[ "max" ];
+
+        $media    = ( $max + $min ) / 2;
+        $half     = $media / 2;
+
+        $cashback = ( $half >= $min ) ? ( float ) $min * 0.8 : ( float ) $half;
+        $cashback = number_format( $cashback, 1, ",", "" );
+
+        return $cashback;
+    }
+
 }
