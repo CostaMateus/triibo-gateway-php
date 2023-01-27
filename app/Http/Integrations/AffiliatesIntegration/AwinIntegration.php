@@ -10,6 +10,7 @@ use Gregwar\Image\Image;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 
 class AwinIntegration
 {
@@ -70,7 +71,7 @@ class AwinIntegration
      *
      * @return array
      */
-    public function getStores()
+    public function getStores( $withoutTranslate = false )
     {
         if ( empty( $this->stores ) )
         {
@@ -92,6 +93,8 @@ class AwinIntegration
             return $stores[ "data" ];
         }
 
+        if ( $withoutTranslate ) return $this->stores;
+
         return $this->translateStores( $this->stores );
     }
 
@@ -100,7 +103,9 @@ class AwinIntegration
      */
     public function getOffers()
     {
-        $promotions = [];
+        $storesOrig = $this->getStores( true );
+        $promotions = $this->translatePromotionDefault( $storesOrig );
+
         $stores     = $this->getStores();
 
         foreach ( $stores as $store )
@@ -111,7 +116,7 @@ class AwinIntegration
             if ( empty( $offers[ "data" ] ) ) continue;
 
             $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
-            $promotions = array_merge( $promotions, $offers );
+            $promotions = $promotions + $offers;
         }
 
         return $promotions;
@@ -427,6 +432,89 @@ class AwinIntegration
     }
 
     /**
+     * Translates Awin stores into Triibo promotions default
+     *
+     * @param array $data
+     * @return array
+     */
+    private function translatePromotionDefault( array $data )
+    {
+        $promotions = [];
+
+        $date       = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn     = ( int ) $date->format( "U" ) * 1000;
+        $date       = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis    = ( int ) $date->format( "U" ) * 1000;
+
+        foreach ( $data as $store )
+        {
+            $establishmentName = $store[ "name" ];
+            $establishmentName = explode( " BR", $establishmentName )[ 0 ];
+
+            $idStore           = $store[ "id" ];
+            $idPromo           = strtolower( str_replace( " ", "", Helper::slugify( $establishmentName, "" ) ) );
+            $id                = $idStore . $idPromo;
+
+            $cashback          = "";
+
+            if ( $store[ "commissionRange" ] )
+                $cashback = Helper::getCashback( $store[ "commissionRange" ] );
+
+            $title             = "Ganhe {$cashback}% de volta!";
+
+            $cashback          = str_replace( ",", ".", $cashback );
+            $points            = $this->base * $this->rate * ( $cashback / 100 );
+
+            $description       = "Receba parte do valor de suas compras de volta em pontos.";
+            $description      .= "\nGanhe {$points} pontos a cada R\${$this->base} em compras.";
+
+            $imageNamePromo    = "awin_common_promotion.webp";
+
+            $url               = $this->urlTracking( $store[ "id" ], $store[ "displayUrl" ] );
+
+            $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
+                "establishmentId"    => $idStore,
+                "establishmentName"  => $establishmentName,
+
+                "title"              => $title,
+                "detailsTitle"       => $title,
+
+                "description"        => $description,
+                "detailsDescription" => $description,
+
+                "enableDate"         => $dateEn,
+                "disableDate"        => $dateDis,
+                "dueDate"            => $dateDis,
+
+                "isPublished"        => true,
+                "active"             => true,
+
+                "lat"                => -15.52047783763576,
+                "long"               => -48.015408891158984,
+
+                "level"              => 1,
+
+                "photo"              => $imageNamePromo,
+                "thumbnail"          => $imageNamePromo,
+
+                "region"             => "nacional",
+                "type"               => "businessPartner",
+                "url"                => $url,
+
+                "tags"               => [ "Cashback" ],
+
+                "keyWordsSet"        => [],
+
+                "origin"             => "awin",
+            ];
+        }
+
+        return $promotions;
+    }
+
+    /**
      * Translates Awin offer into Triibo promotions
      *
      * @param array $data
@@ -456,7 +544,7 @@ class AwinIntegration
             $points            = $this->base * $this->rate * ( $cashback / 100 );
 
             $description       = $offer[ "description" ];
-            $description      .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base} em compras.";
+            $description      .= "\n\nGanhe {$points} pontos a cada R\${$this->base} em compras.";
 
             $detailsDescrip    = $offer[ "description" ];
 
