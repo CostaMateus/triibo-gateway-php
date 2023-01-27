@@ -460,10 +460,10 @@ class AwinIntegration
             if ( $store[ "commissionRange" ] )
                 $cashback = Helper::getCashback( $store[ "commissionRange" ] );
 
+            $title             = "Ganhe {$cashback}% de volta!";
+
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
-
-            $title             = "Ganhe {$cashback}% de volta!";
 
             $description       = "Receba parte do valor de suas compras de volta em pontos.";
             $description      .= "\nGanhe {$points} pontos a cada R\${$this->base} em compras.";
