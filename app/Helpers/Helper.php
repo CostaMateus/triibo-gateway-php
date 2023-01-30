@@ -499,7 +499,16 @@ class Helper
         $media    = ( $max + $min ) / 2;
         $half     = $media / 2;
 
-        $cashback = ( $half >= $min ) ? ( float ) $min * 0.8 : ( float ) $half;
+        if ( $half >= $min )
+        {
+            $cashback = ( float ) $min * 0.8;
+            $cashback = ( $cashback < 1 ) ? 1.0 : $cashback;
+        }
+        else
+        {
+            $cashback = ( float ) $half;
+        }
+
         $cashback = number_format( $cashback, 1, ",", "" );
 
         return $cashback;
