@@ -403,8 +403,6 @@ class AwinController extends Controller
 
         foreach ( $awinPromos as $id => $promo )
         {
-            echo "ID: {$id}\n";
-
             foreach ( $stores as $push1 => $store )
             {
                 $p = $promo[ "establishmentId"        ];
