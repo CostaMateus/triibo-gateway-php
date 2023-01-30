@@ -89,8 +89,8 @@ class Kernel extends ConsoleKernel
 
 
             // Marketplace
-            // Process FS products
-            $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
+            // // Process FS products
+            // // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
             $schedule->command( "mkt:get_skus"         )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
