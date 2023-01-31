@@ -111,17 +111,15 @@ class AwinIntegration
         foreach ( $stores as $store )
         {
             $id         = $store[ "partnerEstablishmentId" ];
-
             echo "Promotions : Loading promotions for store: {$id}\n";
             $offers     = $this->searchOffers( $id );
 
             if ( empty( $offers[ "data" ] ) ) continue;
 
-            $count = count( $offers[ "data" ] );
-            echo "Promotions : Loaded total {$count} for store: {$id}\n";
-
             $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
+            dump( $offers );
             $promotions = $promotions + $offers;
+            dump( $promotions );
         }
 
         return $promotions;
@@ -246,14 +244,11 @@ class AwinIntegration
             {
                 $page++;
 
-                $resp       = $response->json();
+                $resp = $response->json();
 
                 if ( !empty( $resp[ "data" ] ) )
                 {
-                    $data  = array_merge( $data, $resp[ "data" ] );
-
-                    $count = count( $resp[ "data" ] );
-                    echo "Promotions : Loaded {$count} for store: {$id}\n";
+                    $data = array_merge( $data, $resp[ "data" ] );
                 }
 
                 $pagination = $resp[ "pagination" ];
