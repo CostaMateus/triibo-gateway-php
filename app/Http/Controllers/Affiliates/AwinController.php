@@ -399,59 +399,59 @@ class AwinController extends Controller
             }
         }
 
-        echo "Promotions : Sending promotions to Firebase\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
+        // echo "Promotions : Sending promotions to Firebase\n";
+        // Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
 
-        foreach ( $awinPromos as $id => $promo )
-        {
-            foreach ( $stores as $push1 => $store )
-            {
-                $p = $promo[ "establishmentId"        ];
-                $s = $store[ "partnerEstablishmentId" ];
+        // foreach ( $awinPromos as $id => $promo )
+        // {
+        //     foreach ( $stores as $push1 => $store )
+        //     {
+        //         $p = $promo[ "establishmentId"        ];
+        //         $s = $store[ "partnerEstablishmentId" ];
 
-                if ( $p != $s ) continue;
+        //         if ( $p != $s ) continue;
 
-                $promo[ "establishmentId" ] = $push1;
-                break;
-            }
+        //         $promo[ "establishmentId" ] = $push1;
+        //         break;
+        //     }
 
-            $founded = false;
+        //     $founded = false;
 
-            if ( !empty( $fbAuxPromos ) )
-            {
-                foreach ( $fbAuxPromos as $push2 => $fbPromo )
-                {
-                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
+        //     if ( !empty( $fbAuxPromos ) )
+        //     {
+        //         foreach ( $fbAuxPromos as $push2 => $fbPromo )
+        //         {
+        //             if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
-                    $founded = true;
-                    $descrip = $fbPromo[ "description" ];
-                    $descrip = explode( "\n\n#", $descrip );
+        //             $founded = true;
+        //             $descrip = $fbPromo[ "description" ];
+        //             $descrip = explode( "\n\n#", $descrip );
 
-                    if ( count( $descrip ) > 1 )
-                    {
-                        $aux = "";
-                        array_shift( $descrip );
+        //             if ( count( $descrip ) > 1 )
+        //             {
+        //                 $aux = "";
+        //                 array_shift( $descrip );
 
-                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+        //                 foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
 
-                        $promo[ "description" ] .= $aux;
-                    }
+        //                 $promo[ "description" ] .= $aux;
+        //             }
 
-                    $fbRef->update( [ $push2 => $promo ] );
+        //             $fbRef->update( [ $push2 => $promo ] );
 
-                    echo "Promotions : Updated Promo. ID = {$push2}\n";
-                    break;
-                }
-            }
+        //             echo "Promotions : Updated Promo. ID = {$push2}\n";
+        //             break;
+        //         }
+        //     }
 
-            if ( !$founded )
-            {
-                $newPush = $fbRef->push()->getKey();
-                $fbRef->update( [ $newPush => $promo ] );
+        //     if ( !$founded )
+        //     {
+        //         $newPush = $fbRef->push()->getKey();
+        //         $fbRef->update( [ $newPush => $promo ] );
 
-                echo "Promotions : Created Promo. ID = {$newPush}\n";
-            }
-        }
+        //         echo "Promotions : Created Promo. ID = {$newPush}\n";
+        //     }
+        // }
     }
 
     /**
