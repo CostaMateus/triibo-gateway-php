@@ -386,9 +386,10 @@ class AwinController extends Controller
                 if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
                 {
                     // Disabling promotions that are not on the list
-                    $promo[ "isPublished" ] = false;
-                    $promo[ "active"      ] = false;
-                    $fbRef->update( [ $push => $promo ] );
+                    // $promo[ "isPublished" ] = false;
+                    // $promo[ "active"      ] = false;
+                    // $fbRef->update( [ $push => $promo ] );
+                    $fbRef->update( [ $push => null ] );
 
                     echo "Promotions : Disab. Promo. ID = {$push}\n";
                     continue;
