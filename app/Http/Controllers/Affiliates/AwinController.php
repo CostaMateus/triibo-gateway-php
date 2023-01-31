@@ -21,9 +21,9 @@ class AwinController extends Controller
 
     public function __construct( bool $loadStores = true )
     {
-        $this->integration = new AwinIntegration( $loadStores );
-        $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
-        $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
+        // $this->integration = new AwinIntegration( $loadStores );
+        // $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
+        // $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
 
     /**
@@ -348,9 +348,9 @@ class AwinController extends Controller
         echo "Promotions : Searching promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
 
-        File::deleteDirectory( $this->promos_path, true );
+        // File::deleteDirectory( $this->promos_path, true );
 
-        $awinPromos  = $this->integration->getOffers();
+        // $awinPromos  = $this->integration->getOffers();
 
         $db          = Firebase::database();
         $stores      = $this->filterStoresAwin( $db );
@@ -383,8 +383,8 @@ class AwinController extends Controller
 
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
             {
-                if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
-                {
+                // if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
+                // {
                     // Disabling promotions that are not on the list
                     // $promo[ "isPublished" ] = false;
                     // $promo[ "active"      ] = false;
@@ -393,9 +393,9 @@ class AwinController extends Controller
 
                     echo "Promotions : Disab. Promo. ID = {$push}\n";
                     continue;
-                }
+                // }
 
-                $fbAuxPromos[ $push ] = $promo;
+                // $fbAuxPromos[ $push ] = $promo;
             }
         }
 
