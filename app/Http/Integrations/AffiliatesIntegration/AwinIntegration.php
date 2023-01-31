@@ -120,8 +120,6 @@ class AwinIntegration
             $promotions = $promotions + $offers;
         }
 
-        dd( array_keys( $promotions ) );
-
         return $promotions;
     }
 
