@@ -117,10 +117,10 @@ class AwinIntegration
             if ( empty( $offers[ "data" ] ) ) continue;
 
             $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
-            dump( $offers );
             $promotions = $promotions + $offers;
-            dump( $promotions );
         }
+
+        dd( array_keys( $promotions ) );
 
         return $promotions;
     }
