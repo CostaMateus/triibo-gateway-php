@@ -410,7 +410,8 @@ class AwinController extends Controller
             $p = $promo[ "establishmentId" ];
 
             $index = array_search( $p, array_column( $stores, "partnerEstablishmentId" ) );
-            dd( $index );
+            $keys  = array_keys( $stores );
+            dd( $index, $keys );
 
             foreach ( $stores as $push1 => $store )
             {
