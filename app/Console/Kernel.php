@@ -26,9 +26,9 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\GetMktProductSkus::class,
         \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
+        \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
-        \App\Console\Commands\Marketplace\UpdateProductWithoutImage::class,
         \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
         \App\Console\Commands\Marketplace\WithoutHubFastShop::class,
 
@@ -98,7 +98,7 @@ class Kernel extends ConsoleKernel
             // Delete duplicate SKUs
             $schedule->command( "mkt:delete_duplicate_sku"       )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
-            $schedule->command( "sku:private"                    )->dailyAt( "02:05" )->runInBackground();
+            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:05" )->runInBackground();
             // Update FS products instock, sc 05/14/33
             $schedule->command( "sku:update"                     )->dailyAt( "06:00" )->runInBackground();
             // Remove FS products without SKU
