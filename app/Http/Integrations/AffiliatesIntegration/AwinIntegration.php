@@ -83,7 +83,7 @@ class AwinIntegration
 
             // TODO remove
             $index = array_search( 20946, array_column( $stores[ "data" ], "id" ) );
-            $stores[ "data" ] = $stores[ "data" ][ $index ];
+            $stores[ "data" ][ 0 ] = $stores[ "data" ][ $index ];
 
             foreach ( $stores[ "data" ] as $key => &$store )
             {
