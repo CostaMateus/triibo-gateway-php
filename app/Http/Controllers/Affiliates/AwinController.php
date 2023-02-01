@@ -409,7 +409,7 @@ class AwinController extends Controller
         {
             usleep( 500000 );
 
-            echo "Promotions : Promo. AWIN ID = {$push} | ===========================\n";
+            echo "Promotions : Promo. AWIN ID = {$id} | ===========================\n";
 
             foreach ( $stores as $push1 => $store )
             {
