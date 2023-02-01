@@ -112,15 +112,13 @@ class FastshopController extends Controller
                 $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
 
                 /**
-                 * TODO
-                 * Verificar problema com duplicação de SKU no WooCommerce
+                 * TODO Verificar problema com duplicação de SKU no WooCommerce
                  * Acompanhar issue #27295
                  * https://github.com/woocommerce/woocommerce/issues/27295
                  *
-                 * ?
-                 * Solução temporária
+                 * ? Solução temporária
                  * Schedule sku:delete
-                 * Excluí SKUs duplicados, diariamente ás 03:03.
+                 * Excluí SKUs duplicados, diariamente ás 01:03.
                  */
                 if ( !$searchSku->first() )
                     $product = Product::create( $wcData );
@@ -192,36 +190,50 @@ class FastshopController extends Controller
 
         try
         {
-            $data  = [
-                "action"     => "update",
-                "data"       => json_encode( $request->all() ),
-                "created_at" => now(),
-                "updated_at" => now(),
-            ];
+            $fsData  = $request->all();
+            $sku     = ( $fsData[ "ProductId" ] == $fsData[ "SellerStockKeepingUnitId" ] ) ? $fsData[ "ProductId" ] : $fsData[ "SellerStockKeepingUnitId" ];
 
-            $saved = DB::table( "fastshop_products" )->insert( $data );
+            unset( $fsData[ "Pricing" ], $fsData[ "AvailableQuantity" ] );
 
-            if ( !$saved ) throw new Exception( "Unable to save the product data" );
+            $founded = DB::table( "fastshop_products" )->where( "product_sku", "FS-{$sku}" )->first();
 
-            // $fsData = $request->all();
+            if ( !$founded )
+            {
+                $data  = [
+                    "product_sku" => "FS-{$sku}",
+                    "action"      => "create",
+                    "status"      => "unprocessed",
+                    "data"        => json_encode( $fsData ),
+                    "created_at"  => now(),
+                    "updated_at"  => now(),
+                ];
 
-            // $fsData[ "CategoryFullPath" ] = ( is_null( $fsData[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $fsData[ "CategoryFullPath" ] );
+                $saved = DB::table( "fastshop_products" )->insert( $data );
 
-            // // Converte produto da FS para WC
-            // $wcData    = DataTranslator::translate( "newProduct", $fsData );
+                if ( !$saved ) throw new Exception( "Unable to save the product data" );
+            }
+            else
+            {
+                $fsData[ "ProductName" ] = "Samsung Galaxy JBLBOOMBX2PTOB Alterado";
 
-            // // Atualiza produto no Marketplace
-            // $searchSku = Product::all( [ "sku" => $wcData[ "sku" ] ] );
+                $fsDataEnc = json_encode( $fsData );
 
-            // if ( !$searchSku->first() )
-            // {
-            //     return response()->json( [
-            //         "errorCode" => "404",
-            //         "message"   => "something wrong on update product"
-            //     ], 404 );
-            // }
+                similar_text( $fsDataEnc, $founded->data, $perc );
 
-            // Product::update( $searchSku->first()->id, $wcData );
+                if ( $perc != 100 )
+                {
+                    $data    = [
+                        "action"     => "update",
+                        "status"     => "unprocessed",
+                        "data"       => $fsDataEnc,
+                        "updated_at" => now()
+                    ];
+
+                    $updated = DB::table( "fastshop_products" )->where( "id", $founded->id )->update( $data );
+
+                    if ( !$updated ) throw new Exception( "Unable to update the product data" );
+                }
+            }
 
             return response()->json( [
                 "errorCode" => null,
