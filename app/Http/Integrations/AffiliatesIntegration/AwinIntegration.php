@@ -82,8 +82,8 @@ class AwinIntegration
             Helper::usort( "id", $stores[ "data" ] );
 
             // TODO remove
-            $key = array_search( 20946, array_column( $stores[ "data" ], "id" ) );
-            $stores[ "data" ] = $stores[ "data" ][ $key ];
+            $index = array_search( 20946, array_column( $stores[ "data" ], "id" ) );
+            $stores[ "data" ] = $stores[ "data" ][ $index ];
 
             foreach ( $stores[ "data" ] as $key => &$store )
             {
