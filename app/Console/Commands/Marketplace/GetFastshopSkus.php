@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Product;
 use Exception;
 
-class GetMktProductSkus extends Command
+class GetFastshopSkus extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "mkt:get_skus";
+    protected $signature = "mkt:get_fastshop_skus";
 
     /**
      * The console command description.
@@ -40,8 +40,6 @@ class GetMktProductSkus extends Command
      */
     public function handle()
     {
-        DB::table( "marketplace_product_skus" )->truncate();
-
         $ended = false;
         $page  = 1;
         $data  = [];
@@ -80,7 +78,27 @@ class GetMktProductSkus extends Command
 
                     if ( count( $data ) == 100 )
                     {
-                        DB::table( "marketplace_product_skus" )->insert( $data );
+                        $dataInsert = [];
+
+                        foreach( $data as $sku )
+                        {
+                            $product = DB::table( "marketplace_product_skus" )
+                                        ->where( "product_id",  $sku[ "product_id"  ] )
+                                        ->first();
+
+                            if ( !$product )
+                            {
+                                $dataInsert[] = $sku;
+                                continue;
+                            }
+
+                            DB::table( "marketplace_product_skus" )
+                                ->where( "product_id",  $sku[ "product_id"  ] )
+                                ->update( $sku );
+                        }
+
+                        DB::table( "marketplace_product_skus" )->insert( $dataInsert );
+
                         $data = [];
                     }
                 }
@@ -91,8 +109,6 @@ class GetMktProductSkus extends Command
             }
         }
         while ( !$ended );
-
-        DB::table( "marketplace_product_skus" )->insert( $data );
 
         echo "Finished sku processing\n";
     }

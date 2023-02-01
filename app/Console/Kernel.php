@@ -24,7 +24,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
         \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
-        \App\Console\Commands\Marketplace\GetMktProductSkus::class,
+        \App\Console\Commands\Marketplace\GetFastshopSkus::class,
         \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
         \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
@@ -92,17 +92,19 @@ class Kernel extends ConsoleKernel
             // Process FS products
             // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
-            $schedule->command( "mkt:get_skus"                    )->dailyAt( "00:01" )->runInBackground();
+            $schedule->command( "mkt:get_fastshop_skus"           )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
             $schedule->command( "mkt:get_categories"              )->dailyAt( "23:59" )->runInBackground();
             // Delete duplicate SKUs
             $schedule->command( "mkt:delete_duplicate_sku"        )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
             $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:05" )->runInBackground();
-            // Update FS products instock, sc 05/14/33
-            $schedule->command( "mkt:update_fastshop_products"    )->dailyAt( "06:00" )->runInBackground();
             // Remove FS products without SKU
             $schedule->command( "mkt:delete_product_without_sku"  )->dailyAt( "05:00" )->runInBackground();
+
+            // TODO esse processo vai mudar, vai funcionar com a tabela local marketplace_products_skus
+            // Update FS products instock, sc 05/14/33
+            $schedule->command( "mkt:update_fastshop_products"    )->dailyAt( "06:00" )->runInBackground();
 
 
             // // Clear Logs
