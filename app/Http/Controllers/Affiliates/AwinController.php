@@ -407,26 +407,9 @@ class AwinController extends Controller
         {
             echo "Promotions : Promo. AWIN ID = {$id} | ===========================\n";
 
-            $p = $promo[ "establishmentId" ];
-
-            $index = array_search( $p, array_column( $stores, "partnerEstablishmentId" ) );
-            $keys  = array_keys( $stores );
-            dd( $index, $keys );
-
-            foreach ( $stores as $push1 => $store )
-            {
-                $p = $promo[ "establishmentId"        ];
-                $s = $store[ "partnerEstablishmentId" ];
-
-                echo "Promotions : Compare ID = {$p} | {$s}\n";
-
-                if ( $p != $s ) continue;
-
-                echo "Promotions : Promo. AWIN achou\n";
-
-                $promo[ "establishmentId" ] = $push1;
-                break;
-            }
+            $keys    = array_keys( $stores );
+            $index   = array_search( $promo[ "establishmentId" ], array_column( $stores, "partnerEstablishmentId" ) );
+            $promo[ "establishmentId" ] = $keys[ $index ];
 
             $founded = false;
 
