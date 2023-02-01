@@ -81,6 +81,12 @@ class AwinIntegration
 
             Helper::usort( "id", $stores[ "data" ] );
 
+            // TODO remove
+            $index = array_search( 20946, array_column( $stores[ "data" ], "id" ) );
+            $aux   = $stores[ "data" ][ $index ];
+            $stores[ "data" ]   = [];
+            $stores[ "data" ][] = $aux;
+
             foreach ( $stores[ "data" ] as $key => &$store )
             {
                 $key  += 1;
@@ -111,6 +117,7 @@ class AwinIntegration
         foreach ( $stores as $store )
         {
             $id         = $store[ "partnerEstablishmentId" ];
+            echo "Promotions : Loading promotions for store: {$id}\n";
             $offers     = $this->searchOffers( $id );
 
             if ( empty( $offers[ "data" ] ) ) continue;
@@ -241,10 +248,12 @@ class AwinIntegration
             {
                 $page++;
 
-                $resp       = $response->json();
+                $resp = $response->json();
 
                 if ( !empty( $resp[ "data" ] ) )
+                {
                     $data = array_merge( $data, $resp[ "data" ] );
+                }
 
                 $pagination = $resp[ "pagination" ];
 
