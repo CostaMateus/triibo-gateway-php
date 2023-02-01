@@ -21,9 +21,9 @@ class AwinController extends Controller
 
     public function __construct( bool $loadStores = true )
     {
-        $this->integration = new AwinIntegration( $loadStores );
-        $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
-        $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
+        // $this->integration = new AwinIntegration( $loadStores );
+        // $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
+        // $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
 
     // /**
@@ -348,16 +348,16 @@ class AwinController extends Controller
         echo "Promotions : Searching promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
 
-        File::deleteDirectory( $this->promos_path, true );
+        // File::deleteDirectory( $this->promos_path, true );
 
-        $awinPromos  = $this->integration->getOffers();
+        // $awinPromos  = $this->integration->getOffers();
 
         $db          = Firebase::database();
-        $stores      = $this->filterStoresAwin( $db );
+        // $stores      = $this->filterStoresAwin( $db );
 
         $fbRef       = $db->getReference( "/Store" );
         $fbPromos    = $fbRef->getValue();
-        $fbAuxPromos = [];
+        // $fbAuxPromos = [];
 
         foreach ( $fbPromos as $push => $promo )
         {
@@ -367,99 +367,84 @@ class AwinController extends Controller
 
             if ( strpos( $push, "-awin" ) !== false )
             {
-                if ( $promo[ "isPublished" ] || $promo[ "active" ] )
-                {
-                    // Disabling all old promotions
-                    echo "Promotions : Disab. Promo. ID = {$push}\n";
-                    $promo[ "isPublished" ] = false;
-                    $promo[ "active"      ] = false;
-                    $promo[ "origin"      ] = "awin";
-
-                    $fbRef->update( [ $push => $promo ] );
-                }
+                // if ( $promo[ "isPublished" ] || $promo[ "active" ] )
+                // {
+                //     // Disabling all old promotions
+                //     echo "Promotions : Disab. Promo. ID = {$push}\n";
+                //     $promo[ "isPublished" ] = false;
+                //     $promo[ "active"      ] = false;
+                //     $promo[ "origin"      ] = "awin";
+                //     $fbRef->update( [ $push => $promo ] );
+                // }
 
                 continue;
             }
 
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
             {
-                if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
-                {
-                    // Disabling promotions that are not on the list
-                    $promo[ "isPublished" ] = false;
-                    $promo[ "active"      ] = false;
-                    $fbRef->update( [ $push => $promo ] );
+                // if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
+                // {
+                //     // Disabling promotions that are not on the list
+                //     $promo[ "isPublished" ] = false;
+                //     $promo[ "active"      ] = false;
+                //     $fbRef->update( [ $push => $promo ] );
 
-                    echo "Promotions : Disab. Promo. ID = {$push} | nao achou na lista, desab.\n";
-                    continue;
-                }
+                //     echo "Promotions : Disab. Promo. ID = {$push}\n";
+                //     continue;
+                // }
 
-                echo "Promotions : Promo. ID = {$push} | achou na lista, add pra dps\n";
+                // $fbAuxPromos[ $push ] = $promo;
 
-                $fbAuxPromos[ $push ] = $promo;
+                $fbRef->update( [ $push => null ] );
             }
         }
 
-        echo "Promotions : Sending promotions to Firebase\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
+        // echo "Promotions : Sending promotions to Firebase\n";
+        // Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
 
-        foreach ( $awinPromos as $id => $promo )
-        {
-            echo "Promotions : Promo. AWIN ID = {$id} | ===========================\n";
+        // foreach ( $awinPromos as $id => $promo )
+        // {
+        //     $keys    = array_keys( $stores );
+        //     $index   = array_search( $promo[ "establishmentId" ], array_column( $stores, "partnerEstablishmentId" ) );
+        //     $promo[ "establishmentId" ] = $keys[ $index ];
 
-            $keys    = array_keys( $stores );
-            $index   = array_search( $promo[ "establishmentId" ], array_column( $stores, "partnerEstablishmentId" ) );
-            $promo[ "establishmentId" ] = $keys[ $index ];
+        //     $founded = false;
 
-            $founded = false;
+        //     if ( !empty( $fbAuxPromos ) )
+        //     {
+        //         foreach ( $fbAuxPromos as $push2 => $fbPromo )
+        //         {
+        //             if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
 
-            if ( !empty( $fbAuxPromos ) )
-            {
-               echo "Promotions : Lista comparativa do FB NAO vazia | update \n";
+        //             $founded = true;
+        //             $descrip = $fbPromo[ "description" ];
+        //             $descrip = explode( "\n\n#", $descrip );
 
-                foreach ( $fbAuxPromos as $push2 => $fbPromo )
-                {
-                    echo "Promotions : Compare ID = {$id} | {$fbPromo[ "partnerPromotionId" ]}\n";
+        //             if ( count( $descrip ) > 1 )
+        //             {
+        //                 $aux = "";
+        //                 array_shift( $descrip );
 
-                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
+        //                 foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
 
-                    echo "Promotions : Promo. AWIN achou FB\n";
+        //                 $promo[ "description" ] .= $aux;
+        //             }
 
-                    $founded = true;
-                    $descrip = $fbPromo[ "description" ];
-                    $descrip = explode( "\n\n#", $descrip );
+        //             $fbRef->update( [ $push2 => $promo ] );
 
-                    if ( count( $descrip ) > 1 )
-                    {
-                        $aux = "";
-                        array_shift( $descrip );
+        //             echo "Promotions : Updated Promo. ID = {$push2}\n";
+        //             break;
+        //         }
+        //     }
 
-                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
+        //     if ( !$founded )
+        //     {
+        //         $newPush = $fbRef->push()->getKey();
+        //         $fbRef->update( [ $newPush => $promo ] );
 
-                        $promo[ "description" ] .= $aux;
-                    }
-
-                    $fbRef->update( [ $push2 => $promo ] );
-
-                    echo "Promotions : Updated Promo. ID = {$push2}\n";
-                    break;
-                }
-            }
-            else
-            {
-               echo "Promotions : Lista comparativa do FB VAZIA | create all \n";
-            }
-
-            if ( !$founded )
-            {
-                echo "Promotions : Promo. AWIN NAO achou FB\n";
-
-                $newPush = $fbRef->push()->getKey();
-                $fbRef->update( [ $newPush => $promo ] );
-
-                echo "Promotions : Created Promo. ID = {$newPush}\n";
-            }
-        }
+        //         echo "Promotions : Created Promo. ID = {$newPush}\n";
+        //     }
+        // }
     }
 
     // /**
