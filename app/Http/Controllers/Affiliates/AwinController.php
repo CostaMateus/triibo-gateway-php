@@ -361,8 +361,6 @@ class AwinController extends Controller
 
         foreach ( $fbPromos as $push => $promo )
         {
-            echo "Promotions : Promo. ID = {$push} | ===========================\n";
-
             if ( strpos( $push, "-cofry"      ) !== false ) continue;
             if ( strpos( $push, "-socialsoul" ) !== false ) continue;
             if ( !isset( $promo[ "establishmentId" ] )    ) continue;
@@ -383,7 +381,7 @@ class AwinController extends Controller
                 continue;
             }
 
-            sleep( 1 );
+            usleep( 500000 );
 
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
             {
@@ -409,7 +407,7 @@ class AwinController extends Controller
 
         foreach ( $awinPromos as $id => $promo )
         {
-            sleep( 1 );
+            usleep( 500000 );
 
             echo "Promotions : Promo. AWIN ID = {$push} | ===========================\n";
 
