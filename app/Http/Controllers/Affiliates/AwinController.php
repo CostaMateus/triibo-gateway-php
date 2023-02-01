@@ -381,8 +381,6 @@ class AwinController extends Controller
                 continue;
             }
 
-            usleep( 500000 );
-
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
             {
                 if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
@@ -407,8 +405,6 @@ class AwinController extends Controller
 
         foreach ( $awinPromos as $id => $promo )
         {
-            usleep( 500000 );
-
             echo "Promotions : Promo. AWIN ID = {$id} | ===========================\n";
 
             foreach ( $stores as $push1 => $store )
