@@ -6,7 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Category;
 
-class GetMktProductCategories extends Command
+class GetCategories extends Command
 {
     /**
      * The name and signature of the console command.

@@ -22,7 +22,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Log\ClearLogFile::class,
 
         \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
-        \App\Console\Commands\Marketplace\GetMktProductCategories::class,
+        \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\GetMktProductSkus::class,
         \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
         \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
