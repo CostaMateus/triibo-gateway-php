@@ -22,10 +22,10 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Log\ClearLogFile::class,
 
         \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
+        \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\GetMktProductSkus::class,
         \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
-        \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
         \App\Console\Commands\Marketplace\SetPublishProduct::class,
         \App\Console\Commands\Marketplace\UpdatePipeStages::class,
         \App\Console\Commands\Marketplace\UpdateProductWithoutImage::class,
@@ -92,17 +92,17 @@ class Kernel extends ConsoleKernel
             // Process FS products
             // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
-            $schedule->command( "mkt:get_skus"             )->dailyAt( "00:01" )->runInBackground();
+            $schedule->command( "mkt:get_skus"                   )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
-            $schedule->command( "mkt:get_categories"       )->dailyAt( "23:59" )->runInBackground();
+            $schedule->command( "mkt:get_categories"             )->dailyAt( "23:59" )->runInBackground();
             // Delete duplicate SKUs
-            $schedule->command( "mkt:delete_duplicate_sku" )->dailyAt( "01:03" )->runInBackground();
+            $schedule->command( "mkt:delete_duplicate_sku"       )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
-            $schedule->command( "sku:private"          )->dailyAt( "02:05" )->runInBackground();
+            $schedule->command( "sku:private"                    )->dailyAt( "02:05" )->runInBackground();
             // Update FS products instock, sc 05/14/33
-            $schedule->command( "sku:update"           )->dailyAt( "06:00" )->runInBackground();
-            // // Remove FS products without SKU
-            // $schedule->command( "sku:delete_fs"        )->twiceDaily( 5, 8 )->runInBackground();
+            $schedule->command( "sku:update"                     )->dailyAt( "06:00" )->runInBackground();
+            // Remove FS products without SKU
+            $schedule->command( "mkt:delete_product_without_sku" )->dailyAt( "05:00" )->runInBackground();
 
 
             // // Clear Logs
