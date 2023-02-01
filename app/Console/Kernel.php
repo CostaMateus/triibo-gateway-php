@@ -47,9 +47,9 @@ class Kernel extends ConsoleKernel
         if ( config( "app.env" ) == "production" )
         {
             // // Trimestral
-            // $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
+            // // $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
             // // Mensal, 1º às 01h00
-            // $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
+            // // $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
 
 
             // Awin Triibo Integration
@@ -70,26 +70,17 @@ class Kernel extends ConsoleKernel
 
             // // SocialSoul Triibo Integration
             // // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
-            // $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
+            // // $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
             // // Relatórios - Diariamente às 4h
-            // $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
+            // // $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
 
 
-            // Mautic Pipedrive Integration
-            // Diariamente às 05h00
-            $schedule->command( "update:stages" )->weeklyOn( 1, "5:00" )->runInBackground();
-
-
-            // // Triibo
-            // // Diariamente às 03h
-            // $schedule->command("unset:updateDate")->dailyAt("03:00")->runInBackground();
-            // // Diariamente às 03h02
-            // $schedule->command("unset:vouchers")->dailyAt("03:02")->runInBackground();
+            // // Mautic Pipedrive Integration
+            // // Toda segunda às 05h00
+            // // $schedule->command( "mkt:update_pipedrive_stages" )->weeklyOn( 1, "5:00" )->runInBackground();
 
 
             // Marketplace
-            // Process FS products
-            // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
             // Get SKUs
             $schedule->command( "mkt:get_fastshop_skus"           )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
@@ -102,12 +93,18 @@ class Kernel extends ConsoleKernel
             $schedule->command( "mkt:delete_product_without_sku"  )->dailyAt( "05:00" )->runInBackground();
 
             // TODO esse processo vai mudar, vai funcionar com a tabela local marketplace_products_skus
+            //
+            // TODO - processa tabela marketplace_products_skus
             // Update FS products instock, sc 05/14/33
-            $schedule->command( "mkt:update_fastshop_products"    )->dailyAt( "06:00" )->runInBackground();
+            // $schedule->command( "mkt:update_fastshop_products"    )->dailyAt( "06:00" )->runInBackground();
+            //
+            // TODO - processa tabela fastshop_products
+            // Process FS products
+            // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
 
 
             // // Clear Logs
-            // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
+            // // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
         }
     }
 
