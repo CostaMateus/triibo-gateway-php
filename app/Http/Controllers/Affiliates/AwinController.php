@@ -407,6 +407,11 @@ class AwinController extends Controller
         {
             echo "Promotions : Promo. AWIN ID = {$id} | ===========================\n";
 
+            $p = $promo[ "establishmentId" ];
+
+            $index = array_search( $p, array_column( $stores, "partnerEstablishmentId" ) );
+            dd( $index );
+
             foreach ( $stores as $push1 => $store )
             {
                 $p = $promo[ "establishmentId"        ];
