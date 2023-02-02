@@ -16,5 +16,5 @@
 <br>
 
 Saudações,<br>
-Integração SocialSoul
+Integração Awin
 @endcomponent
