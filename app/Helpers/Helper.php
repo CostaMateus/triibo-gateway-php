@@ -462,9 +462,10 @@ class Helper
     {
         $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
         $subjects = [
-            "awin"       => "{$env} - Integração Awin",
-            "cofry"      => "{$env} - Integração Cofry",
-            "socialsoul" => "{$env} - Integração SocialSoul",
+            "awin"        => "{$env} - Integração Awin",
+            "cofry"       => "{$env} - Integração Cofry",
+            "socialsoul"  => "{$env} - Integração SocialSoul",
+            "marketplace" => "{$env} - Integração Marketplace",
         ];
 
         $mail     = [
