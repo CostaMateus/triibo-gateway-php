@@ -25,8 +25,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\GetFastshopSkus::class,
+        \App\Console\Commands\Marketplace\GetProductInfosFastShop::class,
         \App\Console\Commands\Marketplace\GetStockPriceFastShop::class,
-        \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
         \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
         \App\Console\Commands\Marketplace\UpdateFastshopProducts::class,
         \App\Console\Commands\Marketplace\UpdatePipedriveStages::class,
@@ -81,23 +81,19 @@ class Kernel extends ConsoleKernel
 
 
             // Marketplace
-            // TODO - processa tabela marketplace_products_skus
-            // Get stock/price FS
-            $schedule->command( "mkt:get_stock_price_fs"          )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
             $schedule->command( "mkt:get_categories"              )->dailyAt( "23:59" )->runInBackground();
+            // Get stock/price FS
+            $schedule->command( "mkt:get_stock_price_fs"          )->dailyAt( "00:01" )->runInBackground();
             // Delete duplicate SKUs
             $schedule->command( "mkt:delete_duplicate_sku"        )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
             $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:05" )->runInBackground();
             // Remove FS products without SKU
             $schedule->command( "mkt:delete_product_without_sku"  )->dailyAt( "05:00" )->runInBackground();
-
-            // TODO esse processo vai mudar, vai funcionar com a tabela local marketplace_products_skus
-            //
-            // TODO - processa tabela fastshop_products
-            // Process FS products
-            // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
+            // Process product informations FS
+            $schedule->command( "mkt:get_product_infos_fs --action=create" )->dailyAt( "02:00" )->runInBackground();
+            $schedule->command( "mkt:get_product_infos_fs --action=update" )->dailyAt( "03:00" )->runInBackground();
 
 
             // // Clear Logs
