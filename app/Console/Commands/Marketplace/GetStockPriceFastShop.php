@@ -61,7 +61,7 @@ class GetStockPriceFastShop extends Command
         $end   = now();
         $diff  = $start->diffInMinutes( $end );
 
-        echo "Runtime {$diff} seconds\n";
+        echo "Runtime {$diff} minutes\n";
     }
 
 
