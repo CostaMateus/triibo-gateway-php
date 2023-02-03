@@ -53,8 +53,19 @@ class GetStockPriceFastShop extends Command
      */
     public function handle()
     {
-        $this->updateFastShopStockPrice();
+        $start = now();
+
+        $skus  = $this->updateFastShopStockPrice();
+        $this->updateMarketplaceStockPrice( $skus );
+
+        $end   = now();
+        $diff  = $start->diffInMinutes( $end );
+
+        echo "Runtime {$diff} seconds\n";
     }
+
+
+    // ==================== FASTSHOP =====================
 
     private function updateFastShopStockPrice()
     {
@@ -63,7 +74,7 @@ class GetStockPriceFastShop extends Command
         $skus = DB::table( "marketplace_product_skus" )
                     ->where( "status", "active" )
                     ->orWhereNull( "status" )
-                    ->limit( 100 )
+                    // ->limit( 10 )
                     ->get()->toArray();
 
         $skus = json_decode( json_encode( $skus ), true );
@@ -115,7 +126,7 @@ class GetStockPriceFastShop extends Command
 
         echo "Updating the local table\n";
 
-        foreach ( $aux as $sku )
+        foreach ( $aux as &$sku )
         {
             $index = array_search( $sku[ "product_sku" ], array_column( $data, "product_sku" ) );
 
@@ -128,7 +139,7 @@ class GetStockPriceFastShop extends Command
                 else
                     $sku[ "updated_at" ] = now();
 
-                if ( $sku[ "inactive" ] )
+                if ( $sku[ "status" ] == "inactive" )
                 {
                     if ( $product[ "stock" ] == 0 )
                     {
@@ -166,6 +177,8 @@ class GetStockPriceFastShop extends Command
         }
 
         echo "Finished FS stock/price update process\n";
+
+        return $aux;
     }
 
     private function prepareData( $array )
@@ -252,5 +265,56 @@ class GetStockPriceFastShop extends Command
             echo "FS response data conversion failed\n";
             Helper::sendMailNotification( "marketplace", "translateFsData()", "Exception", $e );
         }
+    }
+
+
+    // =================== MARKETPLACE ===================
+
+    private function updateMarketplaceStockPrice( $array )
+    {
+        echo "Starting MKT stock/price update process\n";
+
+        $data = $this->translateWcData( $array );
+        $data = array_chunk( $data, 100 );
+        $y    = count( $data );
+
+        foreach ( $data as $i => $skus )
+        {
+            ++$i;
+            echo "Sending SKUs to MKT - pack {$i} of {$y}\n";
+
+            try
+            {
+                Product::batch( [ "update" => $skus ] );
+            }
+            catch ( Exception $e )
+            {
+                echo "failure to send SKUs to MKT - pack {$i} of {$y}\n";
+                Helper::sendMailNotification( "marketplace", "updateMarketplaceStockPrice()", "Exception", $e );
+            }
+        }
+
+        echo "Finished MKT stock/price update process\n";
+    }
+
+    private function translateWcData( $array )
+    {
+        echo "Converting data WC format\n";
+
+        $data = [];
+
+        foreach ( $array as $sku )
+        {
+            $data[] = [
+                "id"             => $sku[ "product_id"    ],
+                "sku"            => $sku[ "product_sku"   ],
+                "regular_price"  => $sku[ "regular_price" ],
+                "sale_price"     => $sku[ "sale_price"    ],
+                "stock_quantity" => $sku[ "stock" ],
+                "stock_status"   => $sku[ "stock" ] == 0 ? "outofstock" : "instock",
+            ];
+        }
+
+        return $data;
     }
 }
