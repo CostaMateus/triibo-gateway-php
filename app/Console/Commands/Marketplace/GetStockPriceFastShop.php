@@ -79,6 +79,8 @@ class GetStockPriceFastShop extends Command
 
         $skus = json_decode( json_encode( $skus ), true );
 
+        if ( empty( $skus ) ) return null;
+
         echo "SKUs loaded from local table\n";
 
         $aux  = [];
@@ -272,6 +274,8 @@ class GetStockPriceFastShop extends Command
 
     private function updateMarketplaceStockPrice( $array )
     {
+        if ( empty( $array ) ) return;
+
         echo "Starting MKT stock/price update process\n";
 
         $data = $this->translateWcData( $array );
