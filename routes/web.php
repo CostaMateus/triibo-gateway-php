@@ -7,16 +7,18 @@
 // use Devio\Pipedrive\Pipedrive;
 // use Triibo\Mautic\Facades\Mautic;
 use App\Helpers\Helper;
+use Gregwar\Image\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
 // use Triibo\Mautic\Models\MauticConsumer;
 // use App\Notifications\WebhookMarketplace;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\UserController;
 use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Term;
 use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Coupon;
+use App\Http\Controllers\ChatGuruController;
 use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
@@ -76,53 +78,70 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
+Route::get( "/fs", function () {
+
+    $products = Storage::get( "1-fs-data.json" );
+    $products = json_decode( $products, true );
+
+    // dump( $products[4], $products[5] );
+
+    // $s0     = json_encode( $products[4] );
+    // $s1     = json_encode( $products[5] );
+
+    // dump( $s0, $s1 );
+
+    // similar_text( $s0, $s1, $perc );
+
+    // dd( $perc );
 
 
-Route::get( "/wc", function () {
 
-    $ended = false;
-    $page  = 1;
-    $per   = 100;
+    $fsData  = $products[0];
+    $sku     = ( $fsData[ "ProductId" ] == $fsData[ "SellerStockKeepingUnitId" ] ) ? $fsData[ "ProductId" ] : $fsData[ "SellerStockKeepingUnitId" ];
 
-    $aux   = [];
+    $founded = DB::table( "fastshop_products" )->where( "product_sku", "FS-{$sku}" )->first();
 
-    do
+    if ( !$founded )
     {
-        try
+        unset( $fsData[ "Pricing" ], $fsData[ "AvailableQuantity" ] );
+
+        $data  = [
+            "product_sku" => "FS-" . $sku,
+            "action"      => "create",
+            "status"      => "unprocessed",
+            "data"        => json_encode( $fsData ),
+            "created_at"  => now(),
+            "updated_at"  => now(),
+        ];
+
+        $saved = DB::table( "fastshop_products" )->insert( $data );
+
+        if ( !$saved ) throw new Exception( "Unable to save the product data" );
+
+        dd( $saved );
+    }
+    else
+    {
+        $fsData[ "Width" ] = 97000;
+        $fsDataEnc         = json_encode( $fsData );
+
+        similar_text( $fsDataEnc, $founded->data, $perc );
+
+        if ( $perc != 100 )
         {
-            $products = Product::all( [
-                "per_page" => $per,
-                "page"     => $page,
-            ] );
+            $updated = DB::table( "fastshop_products" )
+                        ->where( "id", $founded->id )
+                        ->update( [
+                            "action"     => "update",
+                            "status"     => "unprocessed",
+                            "data"       => json_encode( $fsData ),
+                            "updated_at" => now()
+                        ] );
 
-            if ( $products->count() < 100 ) $ended = true;
-            if ( $page > 3                ) $ended = true;
-
-            $page++;
-
-            foreach ( $products as $p )
-            {
-                if ( strpos( $p->sku, "FS-" ) === false ) continue;
-                if ( $p->stock_quantity > 0             ) continue;
-
-                $aux[] = [
-                    "id"             => $p->id,
-                    "sku"            => str_replace( "FS-", "", $p->sku ),
-                    "regular_price"  => $p->regular_price,
-                    "sale_price"     => $p->sale_price,
-                    "stock_status"   => $p->stock_status,
-                    "stock_quantity" => $p->stock_quantity
-                ];
-            }
-        }
-        catch (Exception $e)
-        {
-            $ended = false;
+            dd( $fsData, $updated );
         }
     }
-    while ( !$ended );
 
-    Storage::put( "FS-SKU-" . date( "Ymd-his" ) . ".json", json_encode( $aux, JSON_UNESCAPED_SLASHES ) );
+    dd( "ok" );
 
-    dd( count( $aux ) );
 } );
