@@ -40,10 +40,6 @@ class GetStockPriceFastShop extends Command
     public function __construct()
     {
         parent::__construct();
-
-        $this->env       = config( "fastshop.env"                   );
-        $this->fsUrl     = config( "fastshop.$this->env.fs.url"     );
-        $this->fsHeaders = config( "fastshop.$this->env.fs.headers" );
     }
 
     /**
@@ -122,8 +118,8 @@ class GetStockPriceFastShop extends Command
 
         if ( empty( $aux ) ) return;
 
-        $fsData   = $this->prepareData( $aux );
-        $response = $this->getStockPrice( $fsData );
+        $fsData   = Helper::prepareDataFs( $aux, "product_sku" );
+        $response = Helper::getStockPriceFS( $fsData );
         $data     = $this->translateFsData( $response );
 
         echo "Updating the local table\n";
@@ -181,50 +177,6 @@ class GetStockPriceFastShop extends Command
         echo "Finished FS stock/price update process\n";
 
         return $aux;
-    }
-
-    private function prepareData( $array )
-    {
-        echo "Formatting SKUs to query in FS\n";
-
-        $items  = [];
-
-        foreach ( $array as $sku )
-        {
-            $items[] = [
-                "id"       => substr( $sku[ "product_sku" ], 3 ),
-                "quantity" => 1,
-                "seller"   => "FSH"
-            ];
-        }
-
-        return [
-            "items"          => $items,
-            "postalCode"     => "",
-            "country"        => "",
-            "geoCoordinates" => []
-        ];
-    }
-
-    private function getStockPrice( $body )
-    {
-        $count = count( $body[ "items" ] );
-        echo "Querying {$count} SKUs at once\n";
-
-        try
-        {
-            $url      = "$this->fsUrl/pvt/orderForms/simulation";
-            $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->get( $url );
-
-            if ( $response->successful() ) return $response->json();
-
-            throw new Exception( "Unable to query FastShop products data" );
-        }
-        catch ( Exception $e )
-        {
-            echo "FS SKUs query failed\n";
-            Helper::sendMailNotification( "marketplace", "getStockPrice()", "Exception", $e );
-        }
     }
 
     private function translateFsData( $array )

@@ -2,10 +2,12 @@
 
 namespace App\Helpers;
 
+use Exception;
 use App\Models\User;
-use App\Notifications\ScheduleFailure;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
+use App\Notifications\ScheduleFailure;
 
 class Helper
 {
@@ -513,6 +515,58 @@ class Helper
         $cashback = number_format( $cashback, 1, ",", "" );
 
         return $cashback;
+    }
+
+    public static function prepareDataFs( $array, $field )
+    {
+        echo "Formatting SKUs to query in FS\n";
+
+        $items  = [];
+
+        foreach ( $array as $sku )
+        {
+            $id      = ( strpos( $sku[ $field ], "FS-" ) === false )
+                        ? $sku[ $field ]
+                        : substr( $sku[ $field ], 3 );
+
+            $items[] = [
+                "id"       => $id,
+                "quantity" => 1,
+                "seller"   => "FSH"
+            ];
+        }
+
+        return [
+            "items"          => $items,
+            "postalCode"     => "",
+            "country"        => "",
+            "geoCoordinates" => []
+        ];
+    }
+
+    public static function getStockPriceFS( $body )
+    {
+        $env       = config( "fastshop.env"             );
+        $fsUrl     = config( "fastshop.$env.fs.url"     );
+        $fsHeaders = config( "fastshop.$env.fs.headers" );
+
+        $count     = count( $body[ "items" ] );
+        echo "Querying {$count} SKUs at once\n";
+
+        try
+        {
+            $url      = "$fsUrl/pvt/orderForms/simulation";
+            $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->get( $url );
+
+            if ( $response->successful() ) return $response->json();
+
+            throw new Exception( "Unable to query FastShop products data" );
+        }
+        catch ( Exception $e )
+        {
+            echo "FS SKUs query failed\n";
+            Helper::sendMailNotification( "marketplace", "getStockPrice()", "Exception", $e );
+        }
     }
 
 }
