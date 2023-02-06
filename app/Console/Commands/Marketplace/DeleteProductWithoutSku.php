@@ -51,6 +51,7 @@ class DeleteProductWithoutSku extends Command
             ( $env == "local" ) ? 4451 : 4310, // 14 B
             ( $env == "local" ) ? 4345 : 4311, // 33 C
         ];
+        $fsId   = ( $env == "local" ) ? 3158 : 4265;
 
         do
         {
@@ -70,11 +71,15 @@ class DeleteProductWithoutSku extends Command
 
                 foreach ( $aux as $p )
                 {
+                    if ( $p->store->id != $fsId ) continue;
+
                     // not empty sku
                     if ( !empty( $p->sku ) ) continue;
 
                     // not shipping-class of FS
                     if ( !in_array( $p->shipping_class_id, $fsIds ) ) continue;
+
+                    echo "{$p->id}\n";
 
                     $delete[] = [
                         "id"    => $p->id,
