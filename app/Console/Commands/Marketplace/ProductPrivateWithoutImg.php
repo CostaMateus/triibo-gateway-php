@@ -7,14 +7,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
-class UpdateProductWithoutImage extends Command
+class ProductPrivateWithoutImg extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "sku:private";
+    protected $signature = "mkt:product_private_without_img";
 
     /**
      * The console command description.
@@ -79,7 +79,7 @@ class UpdateProductWithoutImage extends Command
                     }
                 }
             }
-            catch (Exception $e)
+            catch ( Exception $e )
             {
                 $ended = false;
             }

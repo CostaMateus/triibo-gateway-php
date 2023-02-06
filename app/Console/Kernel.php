@@ -21,16 +21,15 @@ class Kernel extends ConsoleKernel
 
         \App\Console\Commands\Log\ClearLogFile::class,
 
-        \App\Console\Commands\Marketplace\DuplicateSKUs::class,
-        \App\Console\Commands\Marketplace\GetMktProductCategories::class,
-        \App\Console\Commands\Marketplace\GetMktProductSkus::class,
-        \App\Console\Commands\Marketplace\ProcessFastShopProducts::class,
-        \App\Console\Commands\Marketplace\RemoveSkuFastShop::class,
-        \App\Console\Commands\Marketplace\SetPublishProduct::class,
-        \App\Console\Commands\Marketplace\UpdatePipeStages::class,
-        \App\Console\Commands\Marketplace\UpdateProductWithoutImage::class,
-        \App\Console\Commands\Marketplace\UpdateStockFastShop::class,
-        \App\Console\Commands\Marketplace\WithoutHubFastShop::class,
+        \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
+        \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
+        \App\Console\Commands\Marketplace\GetCategories::class,
+        \App\Console\Commands\Marketplace\GetFastshopSkus::class,
+        \App\Console\Commands\Marketplace\GetProductInfosFastShop::class,
+        \App\Console\Commands\Marketplace\GetStockPriceFastShop::class,
+        \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
+        \App\Console\Commands\Marketplace\UpdateFastshopProducts::class,
+        \App\Console\Commands\Marketplace\UpdatePipedriveStages::class,
 
         \App\Console\Commands\Triibo\SyncIdsMP::class,
         \App\Console\Commands\Triibo\UnsetUpdateDate::class,
@@ -48,16 +47,16 @@ class Kernel extends ConsoleKernel
         if ( config( "app.env" ) == "production" )
         {
             // // Trimestral
-            // $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
+            // // $schedule->exec( "composer self-update" )->quarterly()->runInBackground();
             // // Mensal, 1º às 01h00
-            // $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
+            // // $schedule->exec( "composer update"      )->monthlyOn( 1, "00:45" )->runInBackground();
 
 
-            // // Awin Triibo Integration
-            // // Lojas, promoções e imagens - Diariamente às 03h
-            // $schedule->command( "awin:process --option=all" )->dailyAt( "03:00" )->runInBackground();
-            // // Relatórios - Diariamente às 01h -- relatórios do dia anterior
-            // $schedule->command( "awin:process --option=reports" )->dailyAt( "01:00" )->runInBackground();
+            // Awin Triibo Integration
+            // Lojas, promoções e imagens - Diariamente às 03h
+            $schedule->command( "awin:process --option=all" )->dailyAt( "03:00" )->runInBackground();
+            // Relatórios - Diariamente às 01h -- relatórios do dia anterior
+            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:00" )->runInBackground();
 
 
             // Cofry Triibo Integration
@@ -71,42 +70,34 @@ class Kernel extends ConsoleKernel
 
             // // SocialSoul Triibo Integration
             // // Lojas, promoções e imagens - Diariamente às 02h30 e às 14h30
-            // $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
+            // // $schedule->command( "socialsoul:process --option=all"     )->twiceDaily( 3, 15 )->runInBackground();
             // // Relatórios - Diariamente às 4h
-            // $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
+            // // $schedule->command( "socialsoul:process --option=reports" )->dailyAt( "04:00" )->runInBackground();
 
 
-            // Mautic Pipedrive Integration
-            // Diariamente às 05h00
-            $schedule->command( "update:stages" )->weeklyOn( 1, "5:00" )->runInBackground();
-
-
-            // // Triibo
-            // // Diariamente às 03h
-            // $schedule->command("unset:updateDate")->dailyAt("03:00")->runInBackground();
-            // // Diariamente às 03h02
-            // $schedule->command("unset:vouchers")->dailyAt("03:02")->runInBackground();
+            // // Mautic Pipedrive Integration
+            // // Toda segunda às 05h00
+            // // $schedule->command( "mkt:update_pipedrive_stages" )->weeklyOn( 1, "5:00" )->runInBackground();
 
 
             // Marketplace
-            // // Process FS products
-            // // $schedule->command( "sku:process_fs_products --action=update" )->hourly()->runInBackground();
-            // Get SKUs
-            $schedule->command( "mkt:get_skus"         )->dailyAt( "00:01" )->runInBackground();
             // Get Categories
-            $schedule->command( "mkt:get_categories"   )->dailyAt( "23:59" )->runInBackground();
+            $schedule->command( "mkt:get_categories"              )->dailyAt( "23:59" )->runInBackground();
+            // Get stock/price FS
+            $schedule->command( "mkt:get_stock_price_fs"          )->dailyAt( "00:01" )->runInBackground();
             // Delete duplicate SKUs
-            $schedule->command( "sku:delete_duplicate" )->dailyAt( "01:03" )->runInBackground();
+            $schedule->command( "mkt:delete_duplicate_sku"        )->dailyAt( "01:03" )->runInBackground();
             // Change status of products without images
-            $schedule->command( "sku:private"          )->dailyAt( "02:05" )->runInBackground();
-            // Update FS products instock, sc 05/14/33
-            $schedule->command( "sku:update"           )->dailyAt( "06:00" )->runInBackground();
-            // // Remove FS products without SKU
-            // $schedule->command( "sku:delete_fs"        )->twiceDaily( 5, 8 )->runInBackground();
+            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:05" )->runInBackground();
+            // Remove FS products without SKU
+            $schedule->command( "mkt:delete_product_without_sku"  )->dailyAt( "05:00" )->runInBackground();
+            // Process product informations FS
+            $schedule->command( "mkt:get_product_infos_fs --action=create" )->dailyAt( "02:00" )->runInBackground();
+            $schedule->command( "mkt:get_product_infos_fs --action=update" )->dailyAt( "03:00" )->runInBackground();
 
 
             // // Clear Logs
-            // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
+            // // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
         }
     }
 

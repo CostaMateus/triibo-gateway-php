@@ -6,21 +6,21 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-class DuplicateSKUs extends Command
+class DeleteDuplicateSku extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'sku:delete_duplicate';
+    protected $signature = "mkt:delete_duplicate_sku";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Delete duplicate SKUs in the marketplace';
+    protected $description = "Delete duplicate SKUs in the marketplace";
 
     /**
      * Create a new command instance.
@@ -39,7 +39,8 @@ class DuplicateSKUs extends Command
      */
     public function handle()
     {
-        $DB = (config("app.env") == "local") ? "dev-mkt" : "prd-mkt";
+        $DB   = ( config( "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
+        $conn = DB::connection( $DB );
 
         do {
             $select_posts = "
@@ -64,36 +65,36 @@ class DuplicateSKUs extends Command
                 WHERE post_type = 'product';
             ";
 
-            $posts = DB::connection($DB)->select($select_posts);
+            $posts = $conn->select( $select_posts );
 
-            if (count($posts) > 0)
+            if ( count( $posts ) > 0 )
             {
                 $del_metas = "DELETE FROM wp_postmeta WHERE ";
                 $del_posts = "DELETE FROM wp_posts    WHERE ";
 
-                foreach ($posts as $key => $post)
+                foreach ( $posts as $key => $post )
                 {
-                    if ($key == array_key_last($posts))
+                    if ( $key == array_key_last( $posts ) )
                     {
-                        $del_metas .= "post_id = $post->ID;";
-                        $del_posts .= "ID      = $post->ID;";
+                        $del_metas .= "post_id = {$post->ID};";
+                        $del_posts .= "ID      = {$post->ID};";
                     }
                     else
                     {
-                        $del_metas .= "post_id = $post->ID OR ";
-                        $del_posts .= "ID      = $post->ID OR ";
+                        $del_metas .= "post_id = {$post->ID} OR ";
+                        $del_posts .= "ID      = {$post->ID} OR ";
                     }
                 }
 
-                $result_metas = DB::connection($DB)->delete($del_metas);
-                $result_posts = DB::connection($DB)->delete($del_posts);
+                $result_metas = $conn->delete( $del_metas );
+                $result_posts = $conn->delete( $del_posts );
 
-                Log::channel("fastshop")->info("Deleting duplicate SKUs", [
+                Log::channel( "fastshop" )->info( "Deleting duplicate SKUs", [
                     "posts" => $result_posts,
                     "metas" => $result_metas
-                ]);
+                ] );
             }
         }
-        while(count($posts) > 0);
+        while( count( $posts ) > 0 );
     }
 }

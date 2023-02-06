@@ -6,14 +6,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Http\Integrations\MauticIntegration;
 
-class UpdatePipeStages extends Command
+class UpdatePipedriveStages extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "update:stages";
+    protected $signature = "mkt:update_pipedrive_stages";
 
     /**
      * The console command description.
@@ -39,10 +39,10 @@ class UpdatePipeStages extends Command
      */
     public function handle()
     {
-        Log::channel("marketplace")->info("update-stages", [ "Start processing of update Stages/Status/Labels" ]);
+        Log::channel( "marketplace" )->info( "update-stages", [ "Start processing of update Stages/Status/Labels" ] );
 
         MauticIntegration::updateStages();
 
-        Log::channel("marketplace")->info("update-stages", [ "End Stages/Status/Labels processing" ]);
+        Log::channel( "marketplace" )->info( "update-stages", [ "End Stages/Status/Labels processing" ] );
     }
 }

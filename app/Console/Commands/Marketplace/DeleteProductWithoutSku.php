@@ -7,14 +7,14 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
-class RemoveSkuFastShop extends Command
+class DeleteProductWithoutSku extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "sku:delete_fs";
+    protected $signature = "mkt:delete_product_without_sku";
 
     /**
      * The console command description.

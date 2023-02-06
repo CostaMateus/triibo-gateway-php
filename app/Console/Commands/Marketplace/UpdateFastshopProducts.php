@@ -7,14 +7,14 @@ use Illuminate\Support\Facades\Http;
 use Codexshaper\WooCommerce\Facades\Product;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
-class UpdateStockFastShop extends Command
+class UpdateFastshopProducts extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = "sku:update
+    protected $signature = "mkt:update_fastshop_products
                             {--stock=instock : Status of stock. Options: instock or outofstock}
                             {--hub=*         : Hub ID. Options: 00, 05, 14 or 33}";
 
@@ -95,8 +95,6 @@ class UpdateStockFastShop extends Command
             echo "Performing update to HUBs [{$msg}] with stock_status " . strtoupper( $stock ) . "\n";
         }
 
-
-
         // PERFORMING
         foreach ( $hubs as $i => $hub )
         {
@@ -134,8 +132,6 @@ class UpdateStockFastShop extends Command
                         // not the same class as searched
                         if ( $i == "00" && $p->shipping_class != "fast-shop" ) continue;
                         if ( $p->shipping_class != "fast-shop-{$i}"          ) continue;
-
-
 
                         $wcData   = [
                             "postalCode" => "04024-020", // Triibo
