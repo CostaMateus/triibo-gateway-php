@@ -103,7 +103,7 @@ class GetStockPriceFastShop extends Command
                 $sku[ "status"         ] = "inactive";
                 $sku[ "inactivated_at" ] = now();
 
-                $ok = DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
+                DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
                 continue;
             }
 
@@ -137,7 +137,7 @@ class GetStockPriceFastShop extends Command
                 else
                     $sku[ "updated_at" ] = now();
 
-                if ( $sku[ "status" ] == "inactive" )
+                if ( $sku[ "status" ] == "inactive" || $sku[ "status" ] == null )
                 {
                     if ( $product[ "stock" ] == 0 )
                     {
