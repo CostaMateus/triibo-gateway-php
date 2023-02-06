@@ -214,8 +214,6 @@ class FastshopController extends Controller
             }
             else
             {
-                $fsData[ "ProductName" ] = "Samsung Galaxy JBLBOOMBX2PTOB Alterado";
-
                 $fsDataEnc = json_encode( $fsData );
 
                 similar_text( $fsDataEnc, $founded->data, $perc );
