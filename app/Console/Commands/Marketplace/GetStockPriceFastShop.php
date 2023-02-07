@@ -7,10 +7,8 @@ use App\Helpers\Helper;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
-use App\Http\Integrations\FastshopIntegration\Notification;
 
 class GetStockPriceFastShop extends Command
 {
@@ -58,6 +56,7 @@ class GetStockPriceFastShop extends Command
         $diff  = $start->diffInMinutes( $end );
 
         echo "Runtime {$diff} minutes\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Runtime {$diff} minutes" ] );
     }
 
 
@@ -66,63 +65,62 @@ class GetStockPriceFastShop extends Command
     private function updateFastShopStockPrice()
     {
         echo "Starting FS stock/price update process\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Starting FS stock/price update process" ] );
 
-        $skus = DB::table( "marketplace_product_skus" )
-                    ->where( "status", "active" )
-                    ->orWhereNull( "status" )
-                    // ->limit( 10 )
-                    ->get()->toArray();
-
+        $skus = DB::table( "marketplace_product_skus" )->get()->toArray();
         $skus = json_decode( json_encode( $skus ), true );
 
         if ( empty( $skus ) ) return null;
 
         echo "SKUs loaded from local table\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "SKUs loaded from local table" ] );
 
         $aux  = [];
 
         foreach ( $skus as $sku )
         {
-            if ( $sku[ "updated_at" ] == null )
-            {
-                $aux[] = $sku;
-                continue;
-            }
-
-            $upd   = new Carbon( $sku[ "updated_at"     ] );
-            $inact = new Carbon( $sku[ "inactivated_at" ] );
             $now   = Carbon::now();
 
-            if ( $upd->diff( $now )->days <= 15 )
+            if ( in_array( $sku[ "status" ], [ null, "active" ] ) )
             {
-                $aux[] = $sku;
-                continue;
-            }
-            else if ( $sku[ "status" ] == "active" )
-            {
-                $sku[ "status"         ] = "inactive";
-                $sku[ "inactivated_at" ] = now();
+                $upd = new Carbon( $sku[ "updated_at" ] );
 
-                DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
-                continue;
+                if ( $upd->diff( $now )->days <= 15 )
+                {
+                    $aux[] = $sku;
+                    continue;
+                }
+                else
+                {
+                    $sku[ "status"         ] = "inactive";
+                    $sku[ "inactivated_at" ] = now();
+
+                    DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
+                    continue;
+                }
             }
 
-            if ( $inact->diff( $now )->days > 15 )
+            $inact = new Carbon( $sku[ "inactivated_at" ] );
+            if ( $sku[ "status" ] == "inactive" && $inact->diff( $now )->days > 15 )
             {
                 $aux[] = $sku;
                 continue;
             }
         }
 
-        echo "SKUs with update date less than 15 days\n";
-
-        if ( empty( $aux ) ) return;
+        if ( empty( $aux ) )
+        {
+            echo "Starting FS stock/price - no data to process\n";
+            Log::channel( "fastshop" )->info( "FS stock-price", [ "Starting FS stock/price - no data to process" ] );
+            return;
+        }
 
         $fsData   = Helper::prepareDataFs( $aux, "product_sku" );
         $response = Helper::getStockPriceFS( $fsData );
         $data     = $this->translateFsData( $response );
 
         echo "Updating the local table\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Updating the local table" ] );
 
         foreach ( $aux as &$sku )
         {
@@ -132,49 +130,56 @@ class GetStockPriceFastShop extends Command
             {
                 $product = $data[ $index ];
 
-                if ( $sku[ "stock" ] == 0 && $product[ "stock" ] == 0 )
-                    unset( $sku[ "updated_at" ] );
-                else
-                    $sku[ "updated_at" ] = now();
+                $sku[ "updated_at" ] = ( $sku[ "stock" ] != $product[ "stock" ] ) ? now() : $sku[ "updated_at" ];
 
-                if ( $sku[ "status" ] == "inactive" || $sku[ "status" ] == null )
+                if ( in_array( $sku[ "status" ], [ null, "inactive" ] ) )
                 {
-                    if ( $product[ "stock" ] == 0 )
+                    if ( $product[ "stock" ] == 0 && $product[ "stock" ] == $sku[ "stock" ] )
                     {
+                        $sku[ "status"         ] = "inactive";
                         $sku[ "inactivated_at" ] = now();
                     }
                     else
                     {
-                        $sku[ "inactivated_at" ] = null;
                         $sku[ "status"         ] = "active";
+                        $sku[ "inactivated_at" ] = null;
                     }
                 }
 
-                $sku[ "regular_price"  ] = $product[ "regular_price" ];
+                $sku[ "regular_prcie"  ] = $product[ "regular_price" ];
                 $sku[ "sale_price"     ] = $product[ "sale_price"    ];
                 $sku[ "stock"          ] = $product[ "stock"         ];
                 $sku[ "consulted_at"   ] = now();
 
                 $ok = DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
 
-                if ( !$ok ) echo "{$sku[ "product_sku" ]} fails to save SKU\n";
+                if ( !$ok )
+                {
+                    echo "{$sku[ "product_sku" ]} fails to save SKU\n";
+                    Log::channel( "fastshop" )->info( "FS stock-price", [ "{$sku[ "product_sku" ]} fails to save SKU" ] );
+                }
             }
             else
             {
                 $sku[ "stock"          ] = 0;
                 $sku[ "status"         ] = "inactive";
                 $sku[ "consulted_at"   ] = now();
-                $sku[ "inactivated_at" ] = now();
+                $sku[ "inactivated_at" ] = ( !$sku[ "inactivated_at" ] ) ? $sku[ "inactivated_at" ] : now();
 
                 $ok = DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
 
-                if ( !$ok ) echo "{$sku[ "product_sku" ]} fails to save SKU\n";
+                if ( !$ok )
+                {
+                    echo "{$sku[ "product_sku" ]} fails to save SKU\n";
+                    Log::channel( "fastshop" )->info( "FS stock-price", [ "{$sku[ "product_sku" ]} fails to save SKU" ] );
+                }
             }
 
             if ( $ok ) echo "{$sku[ "product_sku" ]} successfully saved\n";
         }
 
         echo "Finished FS stock/price update process\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Finished FS stock/price update process" ] );
 
         return $aux;
     }
@@ -182,6 +187,7 @@ class GetStockPriceFastShop extends Command
     private function translateFsData( $array )
     {
         echo "Converting FS response data\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Converting FS response data" ] );
 
         try
         {
@@ -217,6 +223,7 @@ class GetStockPriceFastShop extends Command
         catch ( Exception $e )
         {
             echo "FS response data conversion failed\n";
+            Log::channel( "fastshop" )->info( "FS stock-price", [ "FS response data conversion failed" ] );
             Helper::sendMailNotification( "marketplace", "translateFsData()", "Exception", $e );
         }
     }
@@ -229,6 +236,7 @@ class GetStockPriceFastShop extends Command
         if ( empty( $array ) ) return;
 
         echo "Starting MKT stock/price update process\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Starting MKT stock/price update process" ] );
 
         $data = $this->translateWcData( $array );
         $data = array_chunk( $data, 100 );
@@ -238,6 +246,7 @@ class GetStockPriceFastShop extends Command
         {
             ++$i;
             echo "Sending SKUs to MKT - pack {$i} of {$y}\n";
+            Log::channel( "fastshop" )->info( "FS stock-price", [ "Sending SKUs to MKT - pack {$i} of {$y}" ] );
 
             try
             {
@@ -245,17 +254,20 @@ class GetStockPriceFastShop extends Command
             }
             catch ( Exception $e )
             {
-                echo "failure to send SKUs to MKT - pack {$i} of {$y}\n";
+                echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
+                Log::channel( "fastshop" )->info( "FS stock-price", [ "Failure to send SKUs to MKT - pack {$i} of {$y}" ] );
                 Helper::sendMailNotification( "marketplace", "updateMarketplaceStockPrice()", "Exception", $e );
             }
         }
 
         echo "Finished MKT stock/price update process\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Finished MKT stock/price update process" ] );
     }
 
     private function translateWcData( $array )
     {
         echo "Converting data WC format\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Converting data WC format" ] );
 
         $data = [];
 
