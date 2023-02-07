@@ -126,6 +126,8 @@ class GetProductInfosFastShop extends Command
         $wcData = array_chunk( $wcData, 100 );
         $y      = count( $wcData );
 
+        $fail   = [];
+
         foreach ( $wcData as $i => $skus )
         {
             ++$i;
@@ -137,13 +139,19 @@ class GetProductInfosFastShop extends Command
             }
             catch ( Exception $e )
             {
-                echo "failure to send SKUs to MKT - pack {$i} of {$y}\n";
+                echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
                 Helper::sendMailNotification( "marketplace", "process()", "Exception", $e );
+
+                $fail = array_merge( $fail, $skus );
             }
         }
 
         foreach ( $auxProduct as $product )
         {
+            if ( !empty( $fail ) )
+                if ( false !== array_search( $product[ "sku" ], array_column( $fail, "sku" ) ) )
+                    continue;
+
             DB::table( "fastshop_products" )
                 ->where( "id", $product[ "id" ] )
                 ->update( [
