@@ -670,6 +670,7 @@ class FastshopController extends Controller
             {
                 $log = [ $data[ "order" ][ "id" ] . " : meta_data '_fastshop_order_id' not found" ];
                 Log::order( "info", "Approved order error", $log );
+                Notification::notify( "approvedOrderError2", $data );
 
                 return response()->json( [
                     "errorCode" => "4002",
