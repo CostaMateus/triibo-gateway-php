@@ -146,7 +146,7 @@ class GetStockPriceFastShop extends Command
                     }
                 }
 
-                $sku[ "regular_prcie"  ] = $product[ "regular_price" ];
+                $sku[ "regular_price"  ] = $product[ "regular_price" ];
                 $sku[ "sale_price"     ] = $product[ "sale_price"    ];
                 $sku[ "stock"          ] = $product[ "stock"         ];
                 $sku[ "consulted_at"   ] = now();
