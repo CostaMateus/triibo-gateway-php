@@ -27,6 +27,9 @@ class Notification
             case "approvedOrderError":
                 return self::orderError( $data, 3 );
             break;
+            case "approvedOrderError2":
+                return self::orderError( $data, 5 );
+            break;
         }
     }
 
@@ -57,6 +60,10 @@ class Notification
 
             case 4:
                 $title = "Pedido cancelado pela Fast Shop";
+            break;
+
+            case 5:
+                $title = "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'";
             break;
         }
 
