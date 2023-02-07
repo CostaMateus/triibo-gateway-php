@@ -552,6 +552,7 @@ class Helper
 
         $count     = count( $body[ "items" ] );
         echo "Querying {$count} SKUs at once\n";
+        Log::channel( "fastshop" )->info( "FS stock-price", [ "Querying {$count} SKUs at once" ] );
 
         try
         {
@@ -565,6 +566,7 @@ class Helper
         catch ( Exception $e )
         {
             echo "FS SKUs query failed\n";
+            Log::channel( "fastshop" )->info( "FS stock-price", [ "FS SKUs query failed" ] );
             Helper::sendMailNotification( "marketplace", "getStockPrice()", "Exception", $e );
         }
     }
