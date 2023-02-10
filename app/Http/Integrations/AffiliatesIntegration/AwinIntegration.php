@@ -666,20 +666,21 @@ class AwinIntegration
                         ->withBody( json_encode( $body ), "application/json" )
                         ->post( $this->url_linkbuilder );
 
-        if( !$response->successful() ) return $url;
+        if ( !$response->successful() )
+        {
+            $err = json_decode( $response->body(), true );
+
+            if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+            {
+                sleep( 10 );
+                return $this->urlTracking( $storeId, $url );
+            }
+
+            return $url;
+        }
 
         $response = $response->json();
-
-        $url      = $response[ "url" ];
-        $url      = str_replace( "&campaign=",  "", $url );
-        $url      = str_replace( "&clickref2=", "", $url );
-        $url      = str_replace( "&clickref3=", "", $url );
-        $url      = str_replace( "&clickref4=", "", $url );
-        $url      = str_replace( "&clickref5=", "", $url );
-        $url      = str_replace( "&clickref6=", "", $url );
-        $url      = str_replace( "%7Buser-triibo-id%7D", "{user-triibo-id}", $url );
-
-        return $url;
+        return Helper::treatUrlAwin( $response[ "url" ] );
     }
 
     /**
