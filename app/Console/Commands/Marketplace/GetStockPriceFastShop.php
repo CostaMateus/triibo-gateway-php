@@ -76,11 +76,10 @@ class GetStockPriceFastShop extends Command
         Log::channel( "fastshop" )->info( "FS stock-price", [ "SKUs loaded from local table" ] );
 
         $aux  = [];
+        $now  = Carbon::now();
 
         foreach ( $skus as $sku )
         {
-            $now   = Carbon::now();
-
             if ( in_array( $sku[ "status" ], [ null, "active" ] ) )
             {
                 $upd = new Carbon( $sku[ "updated_at" ] );
@@ -130,30 +129,31 @@ class GetStockPriceFastShop extends Command
             {
                 $product = $data[ $index ];
 
-                $sku[ "updated_at" ] = ( $sku[ "stock" ] != $product[ "stock" ] ) ? now() : $sku[ "updated_at" ];
+                $upd     = new Carbon( $sku[ "updated_at" ] );
 
-                if ( in_array( $sku[ "status" ], [ null, "inactive" ] ) )
+                if (
+                    $product[ "stock"         ] == 0 &&
+                    $product[ "stock"         ] == $sku[ "stock"         ] &&
+                    $product[ "regular_price" ] == $sku[ "regular_price" ] &&
+                    $product[ "sale_price"    ] == $sku[ "sale_price"    ] )
                 {
-                    if (
-                        $product[ "stock"         ] == 0 &&
-                        $product[ "stock"         ] == $sku[ "stock"         ] &&
-                        $product[ "regular_price" ] == $sku[ "regular_price" ] &&
-                        $product[ "sale_price"    ] == $sku[ "sale_price"    ] )
+                    if ( $upd->diff( $now )->days > 15 || in_array( $sku[ "status" ], [ null, "inactive" ] ) )
                     {
                         $sku[ "status"         ] = "inactive";
                         $sku[ "inactivated_at" ] = now();
                     }
-                    else
-                    {
-                        $sku[ "status"         ] = "active";
-                        $sku[ "inactivated_at" ] = null;
-                    }
+                }
+                else
+                {
+                    $sku[ "status"         ] = "active";
+                    $sku[ "updated_at"     ] = now();
+                    $sku[ "inactivated_at" ] = null;
                 }
 
-                $sku[ "regular_price"  ] = $product[ "regular_price" ];
-                $sku[ "sale_price"     ] = $product[ "sale_price"    ];
-                $sku[ "stock"          ] = $product[ "stock"         ];
-                $sku[ "consulted_at"   ] = now();
+                $sku[ "regular_price" ] = $product[ "regular_price" ];
+                $sku[ "sale_price"    ] = $product[ "sale_price"    ];
+                $sku[ "stock"         ] = $product[ "stock"         ];
+                $sku[ "consulted_at"  ] = now();
 
                 $ok = DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
 
