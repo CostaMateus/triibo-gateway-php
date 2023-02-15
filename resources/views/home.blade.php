@@ -19,6 +19,7 @@
 
                 @include( "doc_parts.plugin-triibo-api-services" )
                 @include( "doc_parts.plugin-triibo-assinaturas"  )
+                @include( "doc_parts.plugin-triibo-auth"         )
                 @include( "doc_parts.plugin-triibo-eventos"      )
                 @include( "doc_parts.plugin-triibo-fastshop"     )
 
