@@ -16,9 +16,9 @@
                         Atualmente tem só tem o provedor Cielo.<br>
                         <br>
                         Depende dos plugins:<br>
-                        -Triibo API Services;<br>
-                        -WooCommerce;<br>
-                        -WooCommerce Subscription;
+                        - Triibo API Services;<br>
+                        - WooCommerce;<br>
+                        - WooCommerce Subscription;
                     </p>
                 </div>
             </div>

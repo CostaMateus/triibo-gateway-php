@@ -18,8 +18,8 @@
                         Recebe da Integração informações e atualizações enviadas pela FastShop.<br>
                         <br>
                         Depende dos plugins:<br>
-                        -Triibo API Services;<br>
-                        -WooCommerce;
+                        - Triibo API Services;<br>
+                        - WooCommerce;
                     </p>
                 </div>
             </div>
