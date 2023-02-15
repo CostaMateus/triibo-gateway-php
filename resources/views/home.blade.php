@@ -12,6 +12,7 @@
             <div class="accordion accordion-flush " id="accordionTriibo">
 
                 @include('doc_parts.chatguru')
+                @include('doc_parts.awin')
                 @include('doc_parts.cofry')
                 @include('doc_parts.fastshop')
                 @include('doc_parts.mautic')
