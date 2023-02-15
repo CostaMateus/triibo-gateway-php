@@ -9,7 +9,7 @@
         </div>
         <div class="col-md-8" >
 
-            <div class="accordion accordion-flush " id="accordionTriibo" >
+            <div class="accordion accordion-flush" id="accordionTriibo" >
 
                 @include('doc_parts.chatguru')
                 @include('doc_parts.awin')
