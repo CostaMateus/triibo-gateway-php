@@ -25,7 +25,7 @@
                     <div>
                         <p class="my-4 h3" >Fast Shop</p>
 
-                        <div id="changenotification" class="mb-4 border-bottom" >
+                        <div id="changenotification" class="mb-4" >
                             <p class="mb-2 h4 text-decoration-underline">Notificação de catálogo</p>
                             <p class="mb-0" style="font-size: .75rem">
                                 <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/notificacao-de-catalogo" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
@@ -46,7 +46,7 @@
                             </p>
                         </div>
 
-                        <div id="skusuggestion" class="mb-4 border-bottom" >
+                        <div id="skusuggestion" class="mb-4" >
                             <p class="mb-2 h4 text-decoration-underline">Registro de catálogo</p>
                             <p class="mb-0" style="font-size: .75rem">
                                 <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/registro-de-catalogo" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
@@ -60,7 +60,7 @@
                             </p>
                         </div>
 
-                        <div id="invoiceNotification" class="mb-4 border-bottom" >
+                        <div id="invoiceNotification" class="mb-4" >
                             <p class="mb-2 h4 text-decoration-underline">Pedido Despachado</p>
                             <p class="mb-0" style="font-size: .75rem">
                                 <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-faturado-ou-despachado" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
@@ -76,7 +76,7 @@
                             </p>
                         </div>
 
-                        <div id="deliveredNotification" class="mb-4 border-bottom" >
+                        <div id="deliveredNotification" class="mb-4" >
                             <p class="mb-2 h4 text-decoration-underline">Pedido Entregue</p>
                             <p class="mb-0" style="font-size: .75rem">
                                 <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-entregue" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
@@ -111,92 +111,137 @@
 
                     <hr>
 
-                    <div>
-                        <p class="my-4 h3" >Marketplace Triibo</p>
+                    <div id="plugin" >
+                        <p class="my-4 h3" >Marketplace Triibo (plugin #Triibo_Fast_Shop)</p>
 
-                        <div id="Triibo_Fastshop_Orders" >
-                            <p class="mb-2 h4">Plugin Triibo_Fastshop_Orders</p>
-
-                            <div id="updatesku" class="mb-4 border-bottom" >
-                                <p class="mb-2 h4 text-decoration-underline">Atualização de preço e estoque</p>
-                                <p class="mb-0" style="font-size: .75rem">
-                                    <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/atualizacao-de-preco-estoque" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
-                                </p>
-                                <p class="mb-0" ><strong>POST</strong></p>
-                                <p class="mb-0 font-monospace text-break" >
-                                    <mark>/wc/updatesku/<var>{sku}</var></mark>
-                                </p>
-                                <p class="mb-0" >
-                                    Consulta o <var>{sku}</var> na FS e atualiza preço e estoque.
-                                </p>
-                            </div>
-
-                            <div id="freightcalculation" class="mb-4 border-bottom"  >
-                                <p class="mb-2 h4 text-decoration-underline">Cálculo de frete</p>
-                                <p class="mb-0" style="font-size: .75rem">
-                                    <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/calculo-de-frete" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
-                                </p>
-                                <p class="mb-0" ><strong>POST</strong></p>
-                                <p class="mb-0 font-monospace text-break" >
-                                    <mark>/wc/freightcalculation</mark>
-                                </p>
-                                <p class="mb-0" >
-                                    Consulta o frete na FS, para determinado par de SKU e CEP informados.
-                                </p>
-                            </div>
+                        <div id="updatesku" class="mb-4" >
+                            <p class="mb-2 h4 text-decoration-underline">Atualização de preço e estoque</p>
+                            <p class="mb-0" style="font-size: .75rem">
+                                <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/atualizacao-de-preco-estoque" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
+                            </p>
+                            <p class="mb-0" ><strong>POST</strong></p>
+                            <p class="mb-0 font-monospace text-break" >
+                                <mark>/wc/updatesku/<var>{sku}</var></mark>
+                            </p>
+                            <p class="mb-0" >
+                                Consulta o <var>{sku}</var> na FS e atualiza preço e estoque.
+                            </p>
                         </div>
 
-                        <div id="Triibo_Fastshop_Shipping" class="mt-4" >
-                            <p class="mb-2 h4">Plugin Triibo_Fastshop_Shipping</p>
-
-                            <div id="ordercreation" class="mb-4 border-bottom" >
-                                <p class="mb-2 h4 text-decoration-underline">Criação de pedido</p>
-                                <p class="mb-0" style="font-size: .75rem">
-                                    <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/criacao-de-pedido" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
-                                </p>
-                                <p class="mb-0" ><strong>POST</strong></p>
-                                <p class="mb-0 font-monospace text-break" >
-                                    <mark>/wc/ordercreation/<var>{orderId}</var></mark>
-                                </p>
-                                <p class="mb-0" >
-                                    O <var>{orderId}</var> é o número do pedido no Marketplace.
-                                    <br>
-                                    Quando uma compra é finalizada no Marketplace, informará a FS do <var>{orderId}</var> realizado.
-                                </p>
-                            </div>
-
-                            <div id="orderapproved" class="mb-4 border-bottom"  >
-                                <p class="mb-2 h4 text-decoration-underline">Pedido Aprovado e Pago</p>
-                                <p class="mb-0" style="font-size: .75rem">
-                                    <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-aprovado-e-pago" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
-                                </p>
-                                <p class="mb-0" ><strong>POST</strong></p>
-                                <p class="mb-0 font-monospace text-break" >
-                                    <mark>/wc/orderapproved/<var>{orderId}</var></mark>
-                                </p>
-                                <p class="mb-0" >
-                                    O <var>{orderId}</var> é o número do pedido no Marketplace.
-                                    <br>
-                                    Quando o pagamento do <var>{orderId}</var> for aprovado, informará a FS para prosseguir para a entrega.
-                                </p>
-                            </div>
-
-                            <div id="ordercancelation" class="mb-4 border-bottom"  >
-                                <p class="mb-2 h4 text-decoration-underline">Pedido Cancelado pelo Marketplace</p>
-                                <p class="mb-0" style="font-size: .75rem">
-                                    <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-cancelado-pelo-marketplace" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
-                                </p>
-                                <p class="mb-0" ><strong>POST</strong></p>
-                                <p class="mb-0 font-monospace text-break" >
-                                    <mark>/wc/ordercancelation/<var>{orderId}</var></mark>
-                                </p>
-                                <p class="mb-0" >
-                                    O <var>{orderId}</var> é o número do pedido no Marketplace.
-                                    <br>
-                                    Quando o <var>{orderId}</var> for cancelado no Markerplace, informará a FS para prosseguir com o cancelamento.
-                                </p>
-                            </div>
+                        <div id="freightcalculation" class="mb-4" >
+                            <p class="mb-2 h4 text-decoration-underline">Cálculo de frete</p>
+                            <p class="mb-0" style="font-size: .75rem">
+                                <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/calculo-de-frete" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
+                            </p>
+                            <p class="mb-0" ><strong>POST</strong></p>
+                            <p class="mb-0 font-monospace text-break" >
+                                <mark>/wc/freightcalculation</mark>
+                            </p>
+                            <p class="mb-0" >
+                                Consulta o frete na FS, para determinado par de SKU e CEP informados.
+                            </p>
                         </div>
+
+                        <div id="ordercreation" class="mb-4" >
+                            <p class="mb-2 h4 text-decoration-underline">Criação de pedido</p>
+                            <p class="mb-0" style="font-size: .75rem">
+                                <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/criacao-de-pedido" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
+                            </p>
+                            <p class="mb-0" ><strong>POST</strong></p>
+                            <p class="mb-0 font-monospace text-break" >
+                                <mark>/wc/ordercreation/<var>{orderId}</var></mark>
+                            </p>
+                            <p class="mb-0" >
+                                O <var>{orderId}</var> é o número do pedido no Marketplace.
+                                <br>
+                                Quando uma compra é finalizada no Marketplace, informará a FS do <var>{orderId}</var> realizado.
+                            </p>
+                        </div>
+
+                        <div id="orderapproved" class="mb-4" >
+                            <p class="mb-2 h4 text-decoration-underline">Pedido Aprovado e Pago</p>
+                            <p class="mb-0" style="font-size: .75rem">
+                                <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-aprovado-e-pago" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
+                            </p>
+                            <p class="mb-0" ><strong>POST</strong></p>
+                            <p class="mb-0 font-monospace text-break" >
+                                <mark>/wc/orderapproved/<var>{orderId}</var></mark>
+                            </p>
+                            <p class="mb-0" >
+                                O <var>{orderId}</var> é o número do pedido no Marketplace.
+                                <br>
+                                Quando o pagamento do <var>{orderId}</var> for aprovado, informará a FS para prosseguir para a entrega.
+                            </p>
+                        </div>
+
+                        <div id="ordercancelation" class="mb-4" >
+                            <p class="mb-2 h4 text-decoration-underline">Pedido Cancelado pelo Marketplace</p>
+                            <p class="mb-0" style="font-size: .75rem">
+                                <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-cancelado-pelo-marketplace" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
+                            </p>
+                            <p class="mb-0" ><strong>POST</strong></p>
+                            <p class="mb-0 font-monospace text-break" >
+                                <mark>/wc/ordercancelation/<var>{orderId}</var></mark>
+                            </p>
+                            <p class="mb-0" >
+                                O <var>{orderId}</var> é o número do pedido no Marketplace.
+                                <br>
+                                Quando o <var>{orderId}</var> for cancelado no Markerplace, informará a FS para prosseguir com o cancelamento.
+                            </p>
+                        </div>
+                    </div>
+
+                    <hr>
+
+                    <div id="integration" >
+                        <p class="my-4 h3" >Integração FS</p>
+                        <p class="mb-0" >Ações automáticas</p>
+                        <ul class="mb-0" >
+                            <li>
+                                Importa, do MKT para a Integração, todas as categorias de produtos
+                                <span class="text-muted h7" >(diariamente às 23h59)</span>
+                                <br>
+                                <p class="mb-1" >Processo necessário para agilizar a criação/atualização dos produtos</p>
+                                <p><mark >app\Console\Commands\Marketplace\GetCategories.php</mark></p>
+                            </li>
+                            <li>
+                                Atualiza toda base de SKU da FastShop
+                                <span class="text-muted h7" >(diariamente às 00h01)</span>
+                                <br>
+                                <p class="mb-0 fw-bold" >Atualização da base local</p>
+                                <p class="mb-1" >
+                                    1) Todos SKUs que seguirem os critérios abaixo, são consultados, de uma só vez, na FastShop.<br>
+                                    - <var>status</var> igual a <var>active</var> ou <var>null</var> e <var>updated_at</var> igual ou inferior a 15 dias (quando maior, recebe <var>status</var> igual a <var>inactive</var> e <var>inactivated_at</var> com a data atual)<br>
+                                    - <var>status</var> igual a <var>inactive</var> e <var>inactivated_at</var> maior que 15 dias
+                                </p>
+                                <p class="mb-1" >
+                                    2) Os dados locais são comparados com resultados da consulta (<var>response</var>).<br>
+                                    - se o <var>SKU</var> local não for encontrado no <var>response</var>, o mesmo se torna <var>inactive</var><br>
+                                    - caso <var>stock</var> for 0 (zero), <var>regular_price</var> e <var>sale_price</var> não tiverem alteração, o <var>updated_at</var> for maior que 15 dias ou o SKU tiver <var>status</var> igual a <var>inactive</var>, o <var>inactivated_at</var> é atualizado para data atual<br>
+                                    - caso contrário, <var>updated_at</var> recebe data atual e <var>status</var> recebe <var>active</var>
+                                </p>
+
+                                <p class="mb-0 fw-bold" >Atualização do MKT</p>
+                                <p class="mb-1" >Dos dados SKUs selecionados no ponto 1 da atualização local, são enviados em grupos de 100 para atualização no MKT.</p>
+
+                                <p><mark >app\Console\Commands\Marketplace\GetStockPriceFastShop.php</mark></p>
+                            </li>
+                            <li>
+                                Exclui SKUs duplicados da FastShop
+                                <span class="text-muted h7" >(diariamente às 01h03)</span>
+                                <p><mark >app\Console\Commands\Marketplace\DeleteDuplicateSku.php</mark></p>
+                            </li>
+                            <li>
+                                Torna privado os SKUs que estão sem imagem
+                                <span class="text-muted h7" >(diariamente às 02h05)</span>
+                                <p><mark >app\Console\Commands\Marketplace\ProductPrivateWithoutImg.php</mark></p>
+                            </li>
+                            <li>
+                                Exclui produtos sem SKUs da FastShop
+                                <span class="text-muted h7" >(diariamente às 05h)</span>
+                                <p><mark >app\Console\Commands\Marketplace\DeleteProductWithoutSku.php</mark></p>
+                            </li>
+                        </ul>
                     </div>
 
                 </div>

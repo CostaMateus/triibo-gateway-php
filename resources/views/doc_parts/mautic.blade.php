@@ -1,22 +1,22 @@
 
-    <div class="accordion-item">
-        <p class="accordion-header h2" id="headingMauticPipe">
+    <div class="accordion-item" >
+        <p class="accordion-header h2" id="headingMauticPipe" >
             <button class="accordion-button" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapseMauticPipe"
                 aria-expanded="true" aria-controls="collapseMauticPipe" >
-                Integração Mautic <i class="bi bi-arrow-left px-1"></i> Pipedrive
+                Integração Mautic <i class="bi bi-arrow-left px-1" ></i> Pipedrive
             </button>
         </p>
         <div id="collapseMauticPipe" class="accordion-collapse collapse" aria-labelledby="headingMauticPipe" data-bs-parent="#accordionTriibo" >
-            <div class="accordion-body">
-                <div id="marketplace">
-                    <h3 class="text-center mb-3" >Integração Mautic <i class="bi bi-arrow-left px-1"></i> Pipedrive</h3>
+            <div class="accordion-body" >
+                <div id="marketplace" >
+                    <h3 class="text-center mb-3" >Integração Mautic <i class="bi bi-arrow-left px-1" ></i> Pipedrive</h3>
                     <p class="text-center d-none" >Os dados fluem do Pipedrive para Comunica.Mautic apenas.</p>
-                    <p class="mb-0" >Ações automáticas</p>
+                    <p class="mb-0" >Ações automáticas (<b>DESATIVADO</b>)</p>
                     <ul class="" >
                         <li>
                             Atualiza os campos:
-                            <span class="text-muted h7" >(todos os dias às 05h)</span>
+                            <span class="text-muted h7" >(toda segunda às 05h)</span>
                             <ul>
                                 <li>Pipedrive Funil</li>
                                 <li>Pipedrive Funil Status</li>
@@ -92,8 +92,8 @@
                     <table class="table table-sm col-12 col-md-10 mx-auto" >
                         <thead>
                             <tr>
-                                <th class="text-end w-50"   colspan="2" scope="col">Mautic</th>
-                                <th class="text-start w-50" colspan="2" scope="col">Pipedrive</th>
+                                <th class="text-end w-50"   colspan="2" scope="col" >Mautic</th>
+                                <th class="text-start w-50" colspan="2" scope="col" >Pipedrive</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -184,14 +184,14 @@
                         </tbody>
                     </table>
 
-                    <p class="mt-2 mb-0">Links úteis</p>
+                    {{-- <p class="mt-2 mb-0" >Links úteis</p>
                     <ul>
                         <li>
                             Sincroniza IDs <span class="text-muted h7" >(apenas se encontrar o e-mail da organização no Mautic)</span>
                             <br>
                             <a href="{{ route("sync.ids") }}" target="_blank" >Sincronizar agora!</a>
                         </li>
-                    </ul>
+                    </ul> --}}
                 </div>
             </div>
         </div>
