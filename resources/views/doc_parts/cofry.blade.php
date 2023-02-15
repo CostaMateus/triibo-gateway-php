@@ -15,7 +15,7 @@
                     <ul class="mb-0" >
                         <li>
                             Importa imagens
-                            <span class="text-muted h7" >(todos os dias às 02h)</span>
+                            <span class="text-muted h7" >(todos os dias às 02h15)</span>
                         </li>
                         <li>
                             Importa lojas e promoções
