@@ -14,6 +14,7 @@
                     <p class="mb-0" >
                         Adiciona forma de pagamento recorrente da Triibo.<br>
                         Atualmente tem só tem o provedor Cielo.<br>
+                        <br>
                         Depende dos plugins:<br>
                         -Triibo API Services;<br>
                         -WooCommerce;<br>

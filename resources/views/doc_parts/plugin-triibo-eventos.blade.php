@@ -13,6 +13,9 @@
                     <h3 class="text-center" >Triibo Eventos</h3>
                     <p class="mb-0" >
                         Dispara eventos para a Triibo dada certas condições.<br>
+                        Eventos:<br>
+                        -pedidos de +R$50, com <var>status processando</var> e se tiver conta Triibo vinculada, recebe pontos Triibo;<br>
+                        <br>
                         Depende dos plugins:<br>
                         -Triibo API Services;<br>
                         -WooCommerce;
