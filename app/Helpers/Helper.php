@@ -496,8 +496,8 @@ class Helper
 
     public static function getCashback( $data )
     {
-        $min      = ( float ) $data[ "min" ];
-        $max      = ( float ) $data[ "max" ];
+        $min      = ( isset( $data[ "min" ] ) ) ? ( float ) $data[ "min" ] : 0;
+        $max      = ( isset( $data[ "max" ] ) ) ? ( float ) $data[ "max" ] : 0;
 
         $media    = ( $max + $min ) / 2;
         $half     = $media / 2;
