@@ -555,6 +555,8 @@ class AwinController extends Controller
             {
                 foreach ( $updReports[ "data" ] as $uReport )
                 {
+                    if ( !isset( $fbReport[ "id" ] ) || !isset( $fbReport[ "advertiserId" ] ) ) continue;
+
                     $id         = $fbReport[ "id"           ] == $uReport[ "id"           ];
                     $advertiser = $fbReport[ "advertiserId" ] == $uReport[ "advertiserId" ];
 
