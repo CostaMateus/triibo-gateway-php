@@ -4,6 +4,7 @@ namespace App\Http\Integrations\AffiliatesIntegration;
 
 use DateTime;
 use DateInterval;
+use App\Helpers\Helper;
 use Gregwar\Image\Image;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
@@ -400,7 +401,8 @@ class CofryIntegration
             $rules[ "general" ] = str_replace( "<ol><li>",   "",   $rules[ "general" ] );
             $rules[ "general" ] = str_replace( "</li></ol>", "",   $rules[ "general" ] );
             $rules[ "general" ] = str_replace( "</li><li>",  "\n", $rules[ "general" ] );
-            $descricao          = $store[ "About" ] . "\n\n" . $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" );
+            $description        = $store[ "About" ] . "\n\n" . $rules[ "general" ] . ( $rules[ "additional" ] != "" ? "\n\n" . $rules[ "additional" ] : "" );
+            $description        = Helper::addTagsToDescriptionCofry( $description, $store[ "Segment" ] );
 
             $res[ $id ]         = [
                 "partnerEstablishmentId" => $store[ "uuid" ],
@@ -419,7 +421,7 @@ class CofryIntegration
                 "long"                   => -48.015408891158984,
 
                 "nome"                   => $storeName,
-                "descricao"              => $descricao,
+                "descricao"              => $description,
 
                 "fotoThumb"              => $store[ "Logo" ],
                 "listaFotos"             => [ $store[ "Logo" ], ],
