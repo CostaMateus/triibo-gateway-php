@@ -584,4 +584,18 @@ class Helper
         return $url;
     }
 
+    public static function addTagsToDescriptionCofry( string $desc, array $tags )
+    {
+        $desc .= "\n";
+
+        foreach ( $tags as $tag )
+        {
+            if ( $tag == "Cofry" ) continue;
+
+            $tag   = "\n#cofry_" . self::slugify( $tag, "_" );
+            $desc .= $tag;
+        }
+
+        return $desc;
+    }
 }
