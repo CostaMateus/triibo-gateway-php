@@ -586,8 +586,6 @@ class Helper
 
     public static function addTagsToDescriptionCofry( string $desc, array $tags )
     {
-        $desc .= "\n";
-
         foreach ( $tags as $tag )
         {
             if ( $tag == "Cofry" ) continue;
