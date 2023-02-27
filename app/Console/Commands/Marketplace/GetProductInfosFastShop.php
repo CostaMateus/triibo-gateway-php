@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
@@ -140,6 +141,10 @@ class GetProductInfosFastShop extends Command
             catch ( Exception $e )
             {
                 echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
+
+                echo $e->getMessage() . "\n";
+                Storage::append( "fs-json-erro-" . date("Ymd-his") . ".txt", $e->getMessage() . "\n" );
+
                 Helper::sendMailNotification( "marketplace", "process()", "Exception", $e );
 
                 $fail = array_merge( $fail, $skus );

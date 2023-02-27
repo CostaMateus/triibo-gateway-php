@@ -51,7 +51,7 @@ class AwinController extends Controller
                 "code"    => "C-401",
                 "info"    => "Establishment, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
-                "message" => $e->getMessage()
+                "message" => $e
             ] );
 
             Helper::sendMailNotification( "awin", "insertStoresFirebase()", "FirebaseException", $e );
@@ -63,7 +63,7 @@ class AwinController extends Controller
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e->getMessage(),
+                "message" => $e,
             ] );
 
             Helper::sendMailNotification( "awin", "insertStoresFirebase()", "Throwable", $e );
@@ -95,7 +95,7 @@ class AwinController extends Controller
                 "code"    => "C-401",
                 "info"    => "Promotion, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
-                "message" => $e->getMessage()
+                "message" => $e
             ] );
 
             Helper::sendMailNotification( "awin", "insertOffersFirebase()", "FirebaseException", $e );
@@ -107,7 +107,7 @@ class AwinController extends Controller
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e->getMessage(),
+                "message" => $e,
             ] );
 
             Helper::sendMailNotification( "awin", "insertOffersFirebase()", "Throwable", $e );
@@ -198,7 +198,7 @@ class AwinController extends Controller
                 "code"    => "C-401",
                 "info"    => "Reports, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
-                "message" => $e->getMessage()
+                "message" => $e
             ] );
 
             Helper::sendMailNotification( "awin", "insertReportsFirebase()", "FirebaseException", $e );
@@ -210,7 +210,7 @@ class AwinController extends Controller
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e->getMessage(),
+                "message" => $e,
             ] );
 
             Helper::sendMailNotification( "awin", "insertReportsFirebase()", "Throwable", $e );
@@ -472,7 +472,7 @@ class AwinController extends Controller
                         "code"    => "C-403",
                         "info"    => $img,
                         "error"   => "An error has occurred while working with the SDK",
-                        "message" => $e->getMessage(),
+                        "message" => $e,
                     ] );
 
                     Helper::sendMailNotification( "awin", "insertImagesFirebase()", "FirebaseException", $e );
@@ -484,7 +484,7 @@ class AwinController extends Controller
                         "code"    => "C-503",
                         "info"    => $img,
                         "error"   => "A not-Firebase specific error has occurred",
-                        "message" => $e->getMessage(),
+                        "message" => $e,
                     ] );
 
                     Helper::sendMailNotification( "awin", "insertImagesFirebase()", "Throwable", $e );
