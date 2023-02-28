@@ -142,12 +142,11 @@ class GetProductInfosFastShop extends Command
             {
                 echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
 
-                echo $e->getMessage() . "\n";
-                Storage::append( "fs-json-erro-" . date("Ymd-his") . ".txt", $e->getMessage() . "\n" );
-
-                Helper::sendMailNotification( "marketplace", "process()", "Exception", $e );
-
-                $fail = array_merge( $fail, $skus );
+                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
+                    Helper::sendMailNotification( "marketplace", "process()", "Exception", $e );
+                    $fail = array_merge( $fail, $skus );
+                }
             }
         }
 
