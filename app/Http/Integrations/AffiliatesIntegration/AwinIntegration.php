@@ -658,7 +658,7 @@ class AwinIntegration
             "advertiserId"   => $storeId,
             "destinationUrl" => $url,
             "parameters"     => [
-                "clickref" => "{user-triibo-id}",
+                "clickref" => "{uid}",
             ],
         ];
 

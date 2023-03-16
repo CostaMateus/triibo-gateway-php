@@ -579,7 +579,7 @@ class Helper
         $url = str_replace( "&clickref4=", "", $url );
         $url = str_replace( "&clickref5=", "", $url );
         $url = str_replace( "&clickref6=", "", $url );
-        $url = str_replace( "%7Buser-triibo-id%7D", "{user-triibo-id}", $url );
+        $url = str_replace( "%7Buid%7D", "{uid}", $url );
 
         return $url;
     }
