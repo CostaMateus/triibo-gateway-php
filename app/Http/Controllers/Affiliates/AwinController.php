@@ -304,6 +304,8 @@ class AwinController extends Controller
                     $store[ "listaFotos" ] = $fbStore[ "listaFotos" ];
                 }
 
+                unset( $store[ "isPublished" ] );
+
                 $fbRef->update( [ $push1 => $store ] );
 
                 echo "Stores : Updated Estab. ID = {$push1}\n";
