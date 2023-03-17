@@ -413,7 +413,6 @@ class AwinIntegration
                     "type"  => "telefone",
                     "value" => "+5511944965799"
                 ] ],
-                "contatos"               => [ "+5511944965799" ],
 
                 "fotoThumb"              => $imageName,
                 "listaFotos"             => [ $imageName ],
