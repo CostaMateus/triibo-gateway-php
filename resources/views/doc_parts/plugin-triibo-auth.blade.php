@@ -4,7 +4,7 @@
             <button class="accordion-button" type="button"
                 data-bs-toggle="collapse" data-bs-target="#collapsePluginAuth"
                 aria-expanded="true" aria-controls="collapsePluginAuth" >
-                Plugin MKT - Triibo Auth (<b>INCOMPLETO</b>)
+                Plugin MKT - Triibo Auth
             </button>
         </p>
         <div id="collapsePluginAuth" class="accordion-collapse collapse" aria-labelledby="headingPluginAuth" data-bs-parent="#accordionTriibo" >
@@ -12,7 +12,7 @@
                 <div id="pluginAuth" >
                     <h3 class="text-center" >Triibo Auth</h3>
                     <p class="mb-0" >
-                        Adiciona as opções:<br>
+                        Adiciona as opções (cada uma é independente):<br>
                         - login pela Triibo ao MKT;<br>
                         - forçar o login pela Triibo antes do checkout;<br>
                         - login no MKT vindo do Triibo App;<br>
