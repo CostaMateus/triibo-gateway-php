@@ -259,9 +259,13 @@ class GetStockPriceFastShop extends Command
             catch ( Exception $e )
             {
                 echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
-                echo $e->getMessage() . "\n";
-                Log::channel( "fastshop" )->info( "FS stock-price", [ "Failure to send SKUs to MKT - pack {$i} of {$y}" ] );
-                Helper::sendMailNotification( "marketplace", "updateMarketplaceStockPrice()", "Exception", $e );
+
+                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
+                    echo $e->getMessage() . "\n";
+                    Log::channel( "fastshop" )->info( "FS stock-price", [ "Failure to send SKUs to MKT - pack {$i} of {$y}" ] );
+                    Helper::sendMailNotification( "marketplace", "updateMarketplaceStockPrice()", "Exception", $e );
+                }
             }
         }
 
