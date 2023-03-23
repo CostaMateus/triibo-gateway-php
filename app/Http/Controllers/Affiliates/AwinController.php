@@ -304,8 +304,7 @@ class AwinController extends Controller
                     $store[ "listaFotos" ] = $fbStore[ "listaFotos" ];
                 }
 
-                // $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
-                $store[ "isPublished" ] = true;
+                $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
 
                 $fbRef->update( [ $push1 => $store ] );
 
