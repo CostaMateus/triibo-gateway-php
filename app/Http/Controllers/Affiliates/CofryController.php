@@ -171,6 +171,8 @@ class CofryController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
+                if ( isset( $fbStores[ $id ][ "hasPromo" ] ) ) $store[ "hasPromo" ] = $fbStores[ $id ][ "hasPromo" ];
+
                 $status = "Updated";
             }
 

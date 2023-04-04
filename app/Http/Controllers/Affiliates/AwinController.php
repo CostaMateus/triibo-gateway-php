@@ -306,6 +306,8 @@ class AwinController extends Controller
 
                 $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
 
+                if ( isset( $fbStore[ "hasPromo" ] ) ) $store[ "hasPromo" ] = $fbStore[ "hasPromo" ];
+
                 $fbRef->update( [ $push1 => $store ] );
 
                 echo "Stores : Updated Estab. ID = {$push1}\n";
