@@ -353,17 +353,8 @@ class AwinIntegration
             $url           = Helper::parseUrl( $store[ "displayUrl" ] );
             $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
 
-            if ( $cashback = $store[ "commissionRange" ] )
-            {
-                $min      = ( float ) $cashback[ "min" ];
-                $max      = ( float ) $cashback[ "max" ];
-
-                $media    = ( $max + $min ) / 2;
-                $half     = $media / 2;
-
-                $cashback = ( $half >= $min ) ? ( float ) $min * 0.8 : ( float ) $half;
-                $cashback = number_format( $cashback, 1, ",", "" );
-            }
+            if ( $store[ "commissionRange" ] )
+                $cashback = Helper::getCashback( $store[ "commissionRange" ] );
 
             if ( $key !== false )
             {
