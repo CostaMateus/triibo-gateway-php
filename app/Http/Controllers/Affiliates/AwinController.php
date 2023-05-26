@@ -525,9 +525,6 @@ class AwinController extends Controller
 
             foreach ( $reports[ "data" ] as $report )
             {
-                $report[ "validationDate"   ] = null;
-                $report[ "commissionStatus" ] = "pending";
-
                 foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
 
                 $push = $fbRef->push()->getKey();
@@ -566,11 +563,15 @@ class AwinController extends Controller
 
                     if ( !$id || !$advertiser ) continue;
 
+                    foreach ( $fbReport as $key => $value )
+                        if ( !isset( $uReport[ $key ] ) )
+                            $uReport[ $key ] = $value;
+
                     $fbReport = $uReport;
                     break;
                 }
 
-                $fbRef->update( [ $push => $fbReport ] );
+                $fbRef->updates( [ $push => $fbReport ] );
 
                 echo "Reports : Updated transaction ID = {$push}\n";
             }
