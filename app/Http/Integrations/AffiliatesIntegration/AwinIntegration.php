@@ -346,42 +346,39 @@ class AwinIntegration
 
                 $aux = [];
 
-                $aux[ "uid"             ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
-                                            ? $report[ "clickRefs" ][ "clickRef" ]
-                                            : null;
+                $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
+                                              ? $report[ "clickRefs" ][ "clickRef" ]
+                                              : null;
 
-                $aux[ "partner"         ] = "awin";
-                $aux[ "transactionId"   ] = $report[ "id" ];
+                $aux[ "partner"           ] = "awin";
+                $aux[ "transactionId"     ] = $report[ "id" ];
 
-                $aux[ "transactionDate" ] = strtotime( $report[ "transactionDate" ] );
-                $aux[ "processingDate"  ] = null;
-                $aux[ "updateDate"      ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
-                $aux[ "updateDate"      ] = strtotime( $aux[ "updateDate" ] );
+                $aux[ "transactionDate"   ] = strtotime( $report[ "transactionDate" ] );
+                $aux[ "processingDate"    ] = null;
+                $aux[ "updateDate"        ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
+                $aux[ "updateDate"        ] = strtotime( $aux[ "updateDate" ] );
 
-                $aux[ "advertiserId"    ] = $id;
-                $aux[ "advertiserName"  ] = $store[ "nome" ];
+                $aux[ "advertiserId"      ] = $id;
+                $aux[ "advertiserName"    ] = $store[ "nome" ];
 
-                $aux[ "status"          ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
+                $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
 
-                if ( $isUpdate )
-                {
-                    $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];           // 500  | 500
-                    $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];           //  25  |   0
-                    $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0; //   5% |   0
-                    $commissionClient           = ( float ) $store[ "cashbackDefault" ];                         //   2% |   0,8%
-                    $commissionTriibo           = $totalCommission - $commissionClient;                          //   3% |  -0,8%
+                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];           // 500  | 500
+                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];           //  25  |   0
+                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0; //   5% |   0
+                $commissionClient           = ( float ) $store[ "cashbackDefault" ];                         //   2% |   0,8%
+                $commissionTriibo           = $totalCommission - $commissionClient;                          //   3% |  -0,8%
 
-                    $aux[ "amount"            ] = $totalOrder;                                                   // 500  | 500
-                    $aux[ "amountClient"      ] = ( $totalOrder * $commissionClient ) / 100;                     //  10  |   4
-                    $aux[ "amountTriibo"      ] = ( $totalOrder * $commissionTriibo ) / 100;                     //  15  |  -4
-                    $aux[ "amountPartner"     ] = null;
+                $aux[ "amount"            ] = $totalOrder;                                                   // 500  | 500
+                $aux[ "amountClient"      ] = ( $totalOrder * $commissionClient ) / 100;                     //  10  |   4
+                $aux[ "amountTriibo"      ] = ( $totalOrder * $commissionTriibo ) / 100;                     //  15  |  -4
+                $aux[ "amountPartner"     ] = null;
 
-                    $aux[ "commissionClient"  ] = $commissionClient;
-                    $aux[ "commissionTriibo"  ] = $commissionTriibo;
-                    $aux[ "commissionPartner" ] = null;
-                }
+                $aux[ "commissionClient"  ] = $commissionClient;
+                $aux[ "commissionTriibo"  ] = $commissionTriibo;
+                $aux[ "commissionPartner" ] = null;
 
-                $report[ "metaData" ] = $aux;
+                $report[ "metaData" ]       = $aux;
             }
         }
 
