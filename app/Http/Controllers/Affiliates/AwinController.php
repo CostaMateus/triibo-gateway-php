@@ -10,6 +10,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Kreait\Firebase\Contract\Database;
 use MrShan0\PHPFirestore\FirestoreClient;
+use MrShan0\PHPFirestore\FirestoreDocument;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -529,7 +530,11 @@ class AwinController extends Controller
         echo "Reports : Searching for new transactions\n";
         Log::channel( "awin" )->info( "Reports", [ "Searching for new transactions" ] );
 
+        // instance Realtime
         $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
+
+        // instance Firestore
+        $fsRef   = $this->getFirestore();
 
         // new transactions
         $reports = $this->integration->getReports();
@@ -543,8 +548,14 @@ class AwinController extends Controller
             {
                 foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
 
+                // create Realtime
                 $push = $fbRef->push()->getKey();
                 $fbRef->update( [ $push => $report ] );
+
+                // create Firestore
+                $document = new FirestoreDocument;
+                $document->fillValues( $report[ "metaData" ] );
+                $fsRef->addDocument( "triibo-purchases-cashback", $document );
 
                 echo "Reports : New transaction ID = {$push}\n";
             }
@@ -563,7 +574,7 @@ class AwinController extends Controller
 
         if ( $updReports[ "success" ] && !empty( $updReports[ "data" ] ) )
         {
-            $fbReports  = $fbRef->getValue();
+            $fbReports = $fbRef->getValue();
 
             echo "Reports : Sending updated transactions to Firebase\n";
             Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
@@ -587,7 +598,7 @@ class AwinController extends Controller
                     break;
                 }
 
-                $fbRef->updates( [ $push => $fbReport ] );
+                $fbRef->update( [ $push => $fbReport ] );
 
                 echo "Reports : Updated transaction ID = {$push}\n";
             }
