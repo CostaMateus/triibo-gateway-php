@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Kreait\Firebase\Contract\Database;
+use MrShan0\PHPFirestore\FirestoreClient;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -18,12 +19,27 @@ class AwinController extends Controller
     protected $integration;
     protected $stores_path;
     protected $promos_path;
+    protected $firestore = null;
 
     public function __construct( bool $loadStores = true )
     {
         $this->integration = new AwinIntegration( $loadStores );
         $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
         $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return FirestoreClient
+     */
+    private function getFirestore()
+    {
+        return new FirestoreClient(
+            config( "firestore.project_id" ),
+            config( "firestore.api_key"    ),
+            config( "firestore.database"   ),
+        );
     }
 
     /**
