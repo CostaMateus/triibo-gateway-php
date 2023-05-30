@@ -530,10 +530,10 @@ class AwinController extends Controller
         echo "Reports : Searching for new transactions\n";
         Log::channel( "awin" )->info( "Reports", [ "Searching for new transactions" ] );
 
-        // instance Realtime
+        // instance of Realtime
         $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
 
-        // instance Firestore
+        // instance of Firestore
         $fsRef   = $this->getFirestore();
 
         // new transactions
@@ -548,11 +548,11 @@ class AwinController extends Controller
             {
                 foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
 
-                // create Realtime
+                // create in Realtime
                 $push = $fbRef->push()->getKey();
                 $fbRef->update( [ $push => $report ] );
 
-                // create Firestore
+                // create in Firestore
                 $document = new FirestoreDocument;
                 $document->fillValues( $report[ "metaData" ] );
                 $fsRef->addDocument( "triibo-purchases-cashback", $document );
@@ -574,7 +574,11 @@ class AwinController extends Controller
 
         if ( $updReports[ "success" ] && !empty( $updReports[ "data" ] ) )
         {
+            // reports of Realtime
             $fbReports = $fbRef->getValue();
+
+            // reports of Firestore
+            $fsReports = $fsRef->listDocuments( "triibo-purchases-cashback" )[ "documents" ];
 
             echo "Reports : Sending updated transactions to Firebase\n";
             Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
@@ -598,6 +602,22 @@ class AwinController extends Controller
                     break;
                 }
 
+                foreach ( $fsReports as $fsReport )
+                {
+                    if ( !isset( $fbReport[ "metaData" ] ) )
+                        continue;
+
+                    if ( $fsReport->get( "transactionId" ) != $fbReport[ "metaData" ][ "transactionId" ] )
+                        continue;
+
+                    $path = $fsReport->getRelativeName();
+                    $path = preg_replace( "/\//", "", $path, 1 );
+
+                    // update in Firestore
+                    $fsRef->updateDocument( $path, $fbReport[ "metaData" ], true );
+                }
+
+                // update in Realtime
                 $fbRef->update( [ $push => $fbReport ] );
 
                 echo "Reports : Updated transaction ID = {$push}\n";
