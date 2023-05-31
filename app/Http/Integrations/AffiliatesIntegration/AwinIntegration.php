@@ -336,65 +336,65 @@ class AwinIntegration
             ];
         }
 
-        $stores = $this->getStores();
-
-        // if ( $isUpdate )
-        //     $data[ "data" ] = json_decode( Storage::get( "reports.update.json" ), true );
-        // else
-        //     $data[ "data" ] = json_decode( Storage::get( "reports.json" ), true );
-
-        foreach( $stores as $id => $store )
-        {
-            foreach ( $data[ "data" ] as &$report )
-            {
-                if ( $id == $report[ "advertiserId" ] ) continue;
-
-                $aux = [];
-
-                $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
-                                              ? $report[ "clickRefs" ][ "clickRef" ]
-                                              : null;
-
-                $aux[ "partner"           ] = "awin";
-                $aux[ "transactionId"     ] = $report[ "id" ];
-
-                $aux[ "transactionDate"   ] = strtotime( $report[ "transactionDate" ] );
-                $aux[ "processingDate"    ] = null;
-                $aux[ "updateDate"        ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
-                $aux[ "updateDate"        ] = strtotime( $aux[ "updateDate" ] );
-
-                $aux[ "advertiserId"      ] = $id;
-                $aux[ "advertiserName"    ] = $store[ "nome" ];
-
-                $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
-
-                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
-                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
-
-                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
-                $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
-
-                $commissionClient           = ( float ) str_replace( ",", ".", $store[ "cashbackDefault" ] ); //   2% |   0,8%
-
-                $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
-                $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
-
-                $amountClient               = ( $totalOrder * $commissionClient ) / 100;                      //  10  |   4
-                $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;                      //  15  |  -4
-
-                $aux[ "amount"            ] = $totalOrder;                                                    // 500  | 500
-                $aux[ "amountCommission"  ] = $commission;                                                    // 500  | 500
-                $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
-                $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
-                $aux[ "amountPartner"     ] = null;
-
-                $aux[ "commissionClient"  ] = $commissionClient;
-                $aux[ "commissionTriibo"  ] = $commissionTriibo;
-                $aux[ "commissionPartner" ] = null;
-
-                $report[ "metaData" ]       = $aux;
-            }
-        }
+        // $stores = $this->getStores();
+        //
+        // // if ( $isUpdate )
+        // //     $data[ "data" ] = json_decode( Storage::get( "reports.update.json" ), true );
+        // // else
+        // //     $data[ "data" ] = json_decode( Storage::get( "reports.json" ), true );
+        //
+        // foreach( $stores as $id => $store )
+        // {
+        //     foreach ( $data[ "data" ] as &$report )
+        //     {
+        //         if ( $id == $report[ "advertiserId" ] ) continue;
+        //
+        //         $aux = [];
+        //
+        //         $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
+        //                                       ? $report[ "clickRefs" ][ "clickRef" ]
+        //                                       : null;
+        //
+        //         $aux[ "partner"           ] = "awin";
+        //         $aux[ "transactionId"     ] = $report[ "id" ];
+        //
+        //         $aux[ "transactionDate"   ] = strtotime( $report[ "transactionDate" ] );
+        //         $aux[ "processingDate"    ] = null;
+        //         $aux[ "updateDate"        ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
+        //         $aux[ "updateDate"        ] = strtotime( $aux[ "updateDate" ] );
+        //
+        //         $aux[ "advertiserId"      ] = $id;
+        //         $aux[ "advertiserName"    ] = $store[ "nome" ];
+        //
+        //         $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
+        //
+        //         $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
+        //         $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
+        //
+        //         $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
+        //         $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
+        //
+        //         $commissionClient           = ( float ) str_replace( ",", ".", $store[ "cashbackDefault" ] ); //   2% |   0,8%
+        //
+        //         $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
+        //         $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
+        //
+        //         $amountClient               = ( $totalOrder * $commissionClient ) / 100;                      //  10  |   4
+        //         $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;                      //  15  |  -4
+        //
+        //         $aux[ "amount"            ] = $totalOrder;                                                    // 500  | 500
+        //         $aux[ "amountCommission"  ] = $commission;                                                    // 500  | 500
+        //         $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
+        //         $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
+        //         $aux[ "amountPartner"     ] = null;
+        //
+        //         $aux[ "commissionClient"  ] = $commissionClient;
+        //         $aux[ "commissionTriibo"  ] = $commissionTriibo;
+        //         $aux[ "commissionPartner" ] = null;
+        //
+        //         $report[ "metaData" ]       = $aux;
+        //     }
+        // }
 
         return $data;
     }
