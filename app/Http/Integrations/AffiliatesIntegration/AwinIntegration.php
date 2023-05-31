@@ -92,7 +92,7 @@ class AwinIntegration
                 $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
 
                 // $auxStores[] = $store;
-                // if ( $key == 10 ) break;
+                // if ( $key == 5 ) break;
             }
 
             return $stores[ "data" ];
@@ -286,7 +286,7 @@ class AwinIntegration
         // {
         //     $date     = "2023-01-01";
         //     $start    = "{$date}T00:00:00";
-        //     $date     = "2023-01-11";
+        //     $date     = "2023-01-31";
         //     $end      = "{$date}T23:59:59";
         // }
         // else
@@ -338,6 +338,11 @@ class AwinIntegration
 
         $stores = $this->getStores();
 
+        // if ( $isUpdate )
+        //     $data[ "data" ] = json_decode( Storage::get( "reports.update.json" ), true );
+        // else
+        //     $data[ "data" ] = json_decode( Storage::get( "reports.json" ), true );
+
         foreach( $stores as $id => $store )
         {
             foreach ( $data[ "data" ] as &$report )
@@ -363,15 +368,24 @@ class AwinIntegration
 
                 $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
 
-                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];           // 500  | 500
-                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];           //  25  |   0
-                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0; //   5% |   0
-                $commissionClient           = ( float ) $store[ "cashbackDefault" ];                         //   2% |   0,8%
-                $commissionTriibo           = $totalCommission - $commissionClient;                          //   3% |  -0,8%
+                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
+                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
 
-                $aux[ "amount"            ] = $totalOrder;                                                   // 500  | 500
-                $aux[ "amountClient"      ] = ( $totalOrder * $commissionClient ) / 100;                     //  10  |   4
-                $aux[ "amountTriibo"      ] = ( $totalOrder * $commissionTriibo ) / 100;                     //  15  |  -4
+                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
+                $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
+
+                $commissionClient           = ( float ) str_replace( ",", ".", $store[ "cashbackDefault" ] ); //   2% |   0,8%
+
+                $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
+                $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
+
+                $amountClient               = ( $totalOrder * $commissionClient ) / 100;                      //  10  |   4
+                $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;                      //  15  |  -4
+
+                $aux[ "amount"            ] = $totalOrder;                                                    // 500  | 500
+                $aux[ "amountCommission"  ] = $commission;                                                    // 500  | 500
+                $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
+                $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
                 $aux[ "amountPartner"     ] = null;
 
                 $aux[ "commissionClient"  ] = $commissionClient;
