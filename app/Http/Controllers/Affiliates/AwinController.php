@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Kreait\Firebase\Contract\Database;
-use MrShan0\PHPFirestore\FirestoreClient;
-use MrShan0\PHPFirestore\FirestoreDocument;
+// use MrShan0\PHPFirestore\FirestoreClient;
+// use MrShan0\PHPFirestore\FirestoreDocument;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -20,7 +20,7 @@ class AwinController extends Controller
     protected $integration;
     protected $stores_path;
     protected $promos_path;
-    protected $firestore = null;
+    // protected $firestore = null;
 
     public function __construct( bool $loadStores = true )
     {
@@ -29,19 +29,19 @@ class AwinController extends Controller
         $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
     }
 
-    /**
-     * Undocumented function
-     *
-     * @return FirestoreClient
-     */
-    private function getFirestore()
-    {
-        return new FirestoreClient(
-            config( "firestore.project_id" ),
-            config( "firestore.api_key"    ),
-            config( "firestore.database"   ),
-        );
-    }
+    // /**
+    //  * Undocumented function
+    //  *
+    //  * @return FirestoreClient
+    //  */
+    // private function getFirestore()
+    // {
+    //     return new FirestoreClient(
+    //         config( "firestore.project_id" ),
+    //         config( "firestore.api_key"    ),
+    //         config( "firestore.database"   ),
+    //     );
+    // }
 
     /**
      * Process stores
@@ -533,8 +533,8 @@ class AwinController extends Controller
         // instance of Realtime
         $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
 
-        // instance of Firestore
-        $fsRef   = $this->getFirestore();
+        // // instance of Firestore
+        // $fsRef   = $this->getFirestore();
 
         // new transactions
         $reports = $this->integration->getReports();
@@ -552,10 +552,10 @@ class AwinController extends Controller
                 $push = $fbRef->push()->getKey();
                 $fbRef->update( [ $push => $report ] );
 
-                // create in Firestore
-                $document = new FirestoreDocument;
-                $document->fillValues( $report[ "metaData" ] );
-                $fsRef->addDocument( "triibo-purchases-cashback", $document );
+                // // create in Firestore
+                // $document = new FirestoreDocument;
+                // $document->fillValues( $report[ "metaData" ] );
+                // $fsRef->addDocument( "triibo-purchases-cashback", $document );
 
                 echo "Reports : New transaction ID = {$push}\n";
             }
@@ -577,8 +577,8 @@ class AwinController extends Controller
             // reports of Realtime
             $fbReports = $fbRef->getValue();
 
-            // reports of Firestore
-            $fsReports = $fsRef->listDocuments( "triibo-purchases-cashback" )[ "documents" ];
+            // // reports of Firestore
+            // $fsReports = $fsRef->listDocuments( "triibo-purchases-cashback" )[ "documents" ];
 
             echo "Reports : Sending updated transactions to Firebase\n";
             Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
@@ -602,20 +602,20 @@ class AwinController extends Controller
                     break;
                 }
 
-                foreach ( $fsReports as $fsReport )
-                {
-                    if ( !isset( $fbReport[ "metaData" ] ) )
-                        continue;
-
-                    if ( $fsReport->get( "transactionId" ) != $fbReport[ "metaData" ][ "transactionId" ] )
-                        continue;
-
-                    $path = $fsReport->getRelativeName();
-                    $path = preg_replace( "/\//", "", $path, 1 );
-
-                    // update in Firestore
-                    $fsRef->updateDocument( $path, $fbReport[ "metaData" ], true );
-                }
+                // foreach ( $fsReports as $fsReport )
+                // {
+                //     if ( !isset( $fbReport[ "metaData" ] ) )
+                //         continue;
+                //
+                //     if ( $fsReport->get( "transactionId" ) != $fbReport[ "metaData" ][ "transactionId" ] )
+                //         continue;
+                //
+                //     $path = $fsReport->getRelativeName();
+                //     $path = preg_replace( "/\//", "", $path, 1 );
+                //
+                //     // update in Firestore
+                //     $fsRef->updateDocument( $path, $fbReport[ "metaData" ], true );
+                // }
 
                 // update in Realtime
                 $fbRef->update( [ $push => $fbReport ] );
