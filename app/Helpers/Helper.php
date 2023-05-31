@@ -596,4 +596,13 @@ class Helper
 
         return $desc;
     }
+
+    public static function awinReportStatus( string $status )
+    {
+        // pending, approved, declined
+        $status = strtolower( $status );
+        $status = ( $status == "declined" ) ? "denied" : $status;
+
+        return $status;
+    }
 }
