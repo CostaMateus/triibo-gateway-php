@@ -514,13 +514,13 @@ class AwinController extends Controller
         echo "Reports : Searching for new transactions\n";
         Log::channel( "awin" )->info( "Reports", [ "Searching for new transactions" ] );
 
-        // instance of Realtime
-        $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
+        // instance of purchases-awin
+        $fbAwin  = Firebase::database()->getReference( "/Triibo-Purchases-Awin"     );
 
-        // instance of Firestore
-        $fsRef   = Firebase::firestore()->database()->collection( "triibo-purchases-cashback" );
+        // instance of purchases-cashback
+        $fbCash  = Firebase::database()->getReference( "/Triibo-Purchases-Cashback" );
 
-        // new transactions
+        // new transactions awin
         $reports = $this->integration->getReports();
 
         if ( $reports[ "success" ] && !empty( $reports[ "data" ] ) )
@@ -532,14 +532,15 @@ class AwinController extends Controller
             {
                 foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
 
-                // create in Realtime
-                $push = $fbRef->push()->getKey();
-                $fbRef->update( [ $push => $report ] );
+                // create in purchases-awin
+                $pushAwin = $fbAwin->push()->getKey();
+                $fbAwin->update( [ $pushAwin => $report ] );
 
-                // create in Firestore
-                $doc = $fsRef->add( $report[ "metaData" ] );
+                // create in purchases-cashback
+                $pushCash = $fbCash->push()->getKey();
+                $fbCash->update( [ $pushCash => $report[ "metaData" ] ] );
 
-                echo "Reports : New transaction ID = {$push} | {$doc->id()}\n";
+                echo "Reports : New transaction ID = {$pushAwin} | {$pushCash}\n";
             }
         }
         else
@@ -556,53 +557,62 @@ class AwinController extends Controller
 
         if ( $updReports[ "success" ] && !empty( $updReports[ "data" ] ) )
         {
-            // reports of Realtime
-            $fbReports = $fbRef->getValue();
+            // reports purchases-awin
+            $fbReportsAwin = $fbAwin->getValue();
 
-            // reports of Firestore
-            $fsReports = $fsRef->listDocuments();
+            // reports purchases-cashback
+            $fbReportsCash = $fbCash->getValue();
 
             echo "Reports : Sending updated transactions to Firebase\n";
             Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
 
-            foreach ( $fbReports as $push => $fbReport )
+            // purchases-awin
+            foreach ( $fbReportsAwin as $pushAwin => $fbReportAwin )
             {
                 foreach ( $updReports[ "data" ] as $uReport )
                 {
-                    if ( !isset( $fbReport[ "id" ] ) || !isset( $fbReport[ "advertiserId" ] ) ) continue;
+                    if ( !isset( $fbReportAwin[ "id" ] ) || !isset( $fbReportAwin[ "advertiserId" ] ) ) continue;
 
-                    $id         = $fbReport[ "id"           ] == $uReport[ "id"           ];
-                    $advertiser = $fbReport[ "advertiserId" ] == $uReport[ "advertiserId" ];
+                    $id         = $fbReportAwin[ "id"           ] == $uReport[ "id"           ];
+                    $advertiser = $fbReportAwin[ "advertiserId" ] == $uReport[ "advertiserId" ];
 
                     if ( !$id || !$advertiser ) continue;
 
-                    foreach ( $fbReport as $key => $value )
+                    foreach ( $fbReportAwin as $key => $value )
                         if ( !isset( $uReport[ $key ] ) )
                             $uReport[ $key ] = $value;
 
-                    $fbReport = $uReport;
+                    $fbReportAwin = $uReport;
                     break;
                 }
 
-                foreach ( $fsReports as $fsReport )
+                $fbAwin->update( [ $pushAwin => $fbReportAwin ] );
+
+                echo "Reports : Updated Awin transaction ID = {$pushAwin}\n";
+            }
+
+            // purchases-cashback
+            foreach ( $fbReportsCash as $pushCash => $fbReportCash )
+            {
+                foreach ( $updReports[ "data" ] as $uReport )
                 {
-                    if ( !isset( $fbReport[ "metaData" ] ) )
-                        continue;
+                    $transaction = $fbReportCash[ "transactionId" ] == $uReport[ "metaData" ][ "transactionId" ];
+                    $advertiser  = $fbReportCash[ "advertiserId"  ] == $uReport[ "metaData" ][ "advertiserId"  ];
+                    $uid         = isset( $fbReportCash[ "uid" ] ) && ( $fbReportCash[ "uid"  ] == $uReport[ "metaData" ][ "uid" ] );
 
-                    $data = $fsReport->snapshot()->data();
+                    if ( $transaction && $advertiser && $uid )
+                    {
+                        foreach ( $fbReportCash as $key => $value )
+                            if ( in_array( $key, [ "status", "updateDate" ] ) )
+                                $fbReportCash[ $key ] = $uReport[ "metaData"][ $key ];
 
-                    if ( $data[ "transactionId" ] != $fbReport[ "metaData" ][ "transactionId" ] )
-                        continue;
-
-                    // update in Firestore
-                    $fsReport->set( $fbReport[ "metaData" ] );
-                    break;
+                        break;
+                    }
                 }
 
-                // update in Realtime
-                $fbRef->update( [ $push => $fbReport ] );
+                $fbCash->update( [ $pushCash => $fbReportCash ] );
 
-                echo "Reports : Updated transaction ID = {$push} | {$fsReport->id()}\n";
+                echo "Reports : Updated Cash transaction ID = {$pushCash}\n";
             }
         }
         else
