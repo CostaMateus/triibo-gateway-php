@@ -358,10 +358,10 @@ class AwinIntegration
                 $aux[ "partner"           ] = "awin";
                 $aux[ "transactionId"     ] = $report[ "id" ];
 
-                $aux[ "transactionDate"   ] = strtotime( $report[ "transactionDate" ] );
+                $aux[ "transactionDate"   ] = Helper::convertDatetime( $report[ "transactionDate" ] );
                 $aux[ "processingDate"    ] = null;
                 $aux[ "updateDate"        ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
-                $aux[ "updateDate"        ] = strtotime( $aux[ "updateDate" ] );
+                $aux[ "updateDate"        ] = Helper::convertDatetime( $aux[ "updateDate" ] );
 
                 $aux[ "advertiserId"      ] = $id;
                 $aux[ "advertiserName"    ] = $store[ "nome" ];

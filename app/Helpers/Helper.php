@@ -4,6 +4,7 @@ namespace App\Helpers;
 
 use Exception;
 use App\Models\User;
+use DateTimeImmutable;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -604,5 +605,13 @@ class Helper
         $status = ( $status == "declined" ) ? "denied" : $status;
 
         return $status;
+    }
+
+    public static function convertDatetime( string $datetime )
+    {
+        $date = new DateTimeImmutable( $datetime );
+        $date = ( int ) $date->format( "Uv" ); // Timestamp in milliseconds
+
+        return $date;
     }
 }
