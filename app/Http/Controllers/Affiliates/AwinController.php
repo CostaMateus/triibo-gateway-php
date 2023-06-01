@@ -9,8 +9,6 @@ use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Kreait\Firebase\Contract\Database;
-use MrShan0\PHPFirestore\FirestoreClient;
-use MrShan0\PHPFirestore\FirestoreDocument;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -27,20 +25,6 @@ class AwinController extends Controller
         $this->integration = new AwinIntegration( $loadStores );
         $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
         $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
-    }
-
-    /**
-     * Undocumented function
-     *
-     * @return FirestoreClient
-     */
-    private function getFirestore()
-    {
-        return new FirestoreClient(
-            config( "firestore.project_id" ),
-            config( "firestore.api_key"    ),
-            config( "firestore.database"   ),
-        );
     }
 
     /**
@@ -534,7 +518,7 @@ class AwinController extends Controller
         $fbRef   = Firebase::database()->getReference( "/Triibo-Purchases-Awin" );
 
         // instance of Firestore
-        $fsRef   = $this->getFirestore();
+        $fsRef   = Firebase::firestore()->database()->collection( "triibo-purchases-cashback" );
 
         // new transactions
         $reports = $this->integration->getReports();
@@ -553,11 +537,9 @@ class AwinController extends Controller
                 $fbRef->update( [ $push => $report ] );
 
                 // create in Firestore
-                $document = new FirestoreDocument;
-                $document->fillValues( $report[ "metaData" ] );
-                $fsRef->addDocument( "triibo-purchases-cashback", $document );
+                $doc = $fsRef->add( $report[ "metaData" ] );
 
-                echo "Reports : New transaction ID = {$push}\n";
+                echo "Reports : New transaction ID = {$push} | {$doc->id()}\n";
             }
         }
         else
@@ -578,7 +560,7 @@ class AwinController extends Controller
             $fbReports = $fbRef->getValue();
 
             // reports of Firestore
-            $fsReports = $fsRef->listDocuments( "triibo-purchases-cashback" )[ "documents" ];
+            $fsReports = $fsRef->listDocuments();
 
             echo "Reports : Sending updated transactions to Firebase\n";
             Log::channel( "awin" )->info( "Reports", [ "Sending updated transactions to Firebase" ] );
@@ -607,20 +589,20 @@ class AwinController extends Controller
                     if ( !isset( $fbReport[ "metaData" ] ) )
                         continue;
 
-                    if ( $fsReport->get( "transactionId" ) != $fbReport[ "metaData" ][ "transactionId" ] )
+                    $data = $fsReport->snapshot()->data();
+
+                    if ( $data[ "transactionId" ] != $fbReport[ "metaData" ][ "transactionId" ] )
                         continue;
 
-                    $path = $fsReport->getRelativeName();
-                    $path = preg_replace( "/\//", "", $path, 1 );
-
                     // update in Firestore
-                    $fsRef->updateDocument( $path, $fbReport[ "metaData" ], true );
+                    $fsReport->set( $fbReport[ "metaData" ] );
+                    break;
                 }
 
                 // update in Realtime
                 $fbRef->update( [ $push => $fbReport ] );
 
-                echo "Reports : Updated transaction ID = {$push}\n";
+                echo "Reports : Updated transaction ID = {$push} | {$fsReport->id()}\n";
             }
         }
         else
