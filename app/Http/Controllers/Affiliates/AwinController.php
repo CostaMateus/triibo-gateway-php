@@ -18,7 +18,7 @@ class AwinController extends Controller
     protected $integration;
     protected $stores_path;
     protected $promos_path;
-    protected $firestore = null;
+    // protected $firestore = null;
 
     public function __construct( bool $loadStores = true )
     {
