@@ -59,6 +59,9 @@
                         @else
 
                             <li>
+                                <a class="nav-link" href="{{ route('log-viewer.index') }}" >{{ __('common.logs') }}</a>
+                            </li>
+                            <li>
                                 <a class="nav-link" href="{{ route('users.index') }}" >{{ __('common.user.management') }}</a>
                             </li>
                             <li class="nav-item dropdown" >
