@@ -530,7 +530,7 @@ class AwinController extends Controller
 
             foreach ( $reports[ "data" ] as $report )
             {
-                foreach ( $report as $key => &$value ) is_null( $value ) ? "" : $value;
+                $report   = Helper::setEmptyString( $report );
 
                 // create in purchases-awin
                 $pushAwin = $fbAwin->push()->getKey();
@@ -572,6 +572,8 @@ class AwinController extends Controller
                 foreach ( $updReports[ "data" ] as $uReport )
                 {
                     if ( !isset( $fbReportAwin[ "id" ] ) || !isset( $fbReportAwin[ "advertiserId" ] ) ) continue;
+
+                    $uReport    = Helper::setEmptyString( $uReport );
 
                     $id         = $fbReportAwin[ "id"           ] == $uReport[ "id"           ];
                     $advertiser = $fbReportAwin[ "advertiserId" ] == $uReport[ "advertiserId" ];
