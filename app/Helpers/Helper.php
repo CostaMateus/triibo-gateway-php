@@ -614,4 +614,19 @@ class Helper
 
         return $date;
     }
+
+    public static function setEmptyString( array $data )
+    {
+        $aux = [];
+
+        foreach ( $data as $key => $value )
+        {
+            if ( !is_array( $value ) )
+                $aux[ $key ] = ( $value == null ) ? "" : $value;
+            else
+                $aux[ $key ] = self::isNull( $value );
+        }
+
+        return $aux;
+    }
 }
