@@ -918,7 +918,7 @@ class FastshopController extends Controller
         try
         {
             // Consulta produto na FS
-            $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->get( $url );
+            $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if ( $response->successful() )
             {
