@@ -170,7 +170,7 @@ class AwinIntegration
      *
      * @return array
      */
-    public function searchStoresDetails( int $id )
+    public function searchStoresDetails( int $id, bool $allInfo = false )
     {
         $url      = "{$this->url_programmedetails}?advertiserId={$id}";
 
@@ -183,16 +183,23 @@ class AwinIntegration
             if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
             {
                 sleep( 5 );
-                return $this->searchStoresDetails( $id );
+                return $this->searchStoresDetails( $id, $allInfo );
             }
 
-            return [ [ "min" => 0, "max" => 0 ] ];
+            $data = [
+                "commissionRange" => [ [ "min" => 0, "max" => 0 ] ],
+                "programmeInfo"   => [
+                    "name" => "Não encontrado"
+                ]
+            ];
+
+            return ( $allInfo ) ? $data : $data[ "commissionRange" ][ 0 ];
         }
 
         $data     = $response->json();
         $key      = array_search( "percentage", array_column( $data[ "commissionRange" ], "type" ) );
 
-        return $data[ "commissionRange" ][ $key ];
+        return ( $allInfo ) ? $data : $data[ "commissionRange" ][ $key ];
     }
 
     /**
@@ -275,7 +282,7 @@ class AwinIntegration
      * @param boolean $isUpdate
      * @return array
      */
-    private function searchReports( bool $isUpdate )
+    private function searchReports( bool $isUpdate = false )
     {
         // $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
         // $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
@@ -284,16 +291,16 @@ class AwinIntegration
 
         // if ( $isUpdate )
         // {
-        //     $date     = "2023-01-01";
+        //     $date     = "2023-07-01";
         //     $start    = "{$date}T00:00:00";
-        //     $date     = "2023-01-31";
+        //     $date     = "2023-07-31";
         //     $end      = "{$date}T23:59:59";
         // }
         // else
         // {
-        //     $date     = "2022-12-01";
+        //     $date     = "2023-08-01";
         //     $start    = "{$date}T00:00:00";
-        //     $date     = "2022-12-31";
+        //     $date     = "2023-08-31";
         //     $end      = "{$date}T23:59:59";
         // }
 
@@ -336,37 +343,36 @@ class AwinIntegration
             ];
         }
 
-        $stores = $this->getStores();
-
-        // if ( $isUpdate )
-        //     $data[ "data" ] = json_decode( Storage::get( "reports.update.json" ), true );
-        // else
-        //     $data[ "data" ] = json_decode( Storage::get( "reports.json" ), true );
-
-        foreach( $stores as $id => $store )
+        if ( !empty( $data[ "data" ] ) )
         {
             foreach ( $data[ "data" ] as &$report )
             {
-                if ( $id == $report[ "advertiserId" ] ) continue;
+                $aux       = [];
 
-                $aux = [];
+                $storeId   = $report[ "advertiserId" ];
+                $storeInfo = $this->searchStoresDetails( $storeId, true );
+                $cashback  = Helper::getCashback( $storeInfo[ "commissionRange" ] );
+                $storeName = explode( " BR", $storeInfo[ "programmeInfo" ][ "name" ] )[ 0 ];
 
                 $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
-                                              ? $report[ "clickRefs" ][ "clickRef" ]
-                                              : null;
+                                                ? $report[ "clickRefs" ][ "clickRef" ]
+                                                : null;
 
                 $aux[ "partner"           ] = "awin";
                 $aux[ "transactionId"     ] = $report[ "id" ];
-
                 $aux[ "transactionDate"   ] = Helper::convertDatetime( $report[ "transactionDate" ] );
                 $aux[ "processingDate"    ] = null;
-                $aux[ "updateDate"        ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
+                $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
+
+                $aux[ "updateDate"        ] = ( !$isUpdate && $aux[ "status" ] == "pending" )
+                                                ? $report[ "transactionDate" ]
+                                                : $report[ "validationDate"  ];
+
                 $aux[ "updateDate"        ] = Helper::convertDatetime( $aux[ "updateDate" ] );
 
-                $aux[ "advertiserId"      ] = $id;
-                $aux[ "advertiserName"    ] = $store[ "nome" ];
+                $aux[ "advertiserId"      ] = $storeId;
+                $aux[ "advertiserName"    ] = $storeName;
 
-                $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
 
                 $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
                 $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
@@ -374,7 +380,7 @@ class AwinIntegration
                 $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
                 $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
 
-                $commissionClient           = ( float ) str_replace( ",", ".", $store[ "cashbackDefault" ] ); //   2% |   0,8%
+                $commissionClient           = ( float ) str_replace( ",", ".", $cashback ); //   2% |   0,8%
 
                 $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
                 $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
