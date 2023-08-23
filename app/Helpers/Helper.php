@@ -568,7 +568,7 @@ class Helper
         {
             echo "FS SKUs query failed\n";
             Log::channel( "fastshop" )->info( "FS stock-price", [ "FS SKUs query failed" ] );
-            Helper::sendMailNotification( "marketplace", "postStockPrice()", "Exception", $e );
+            Helper::sendMailNotification( "marketplace", "getStockPriceFS()", "Exception", $e );
         }
     }
 
