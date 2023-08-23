@@ -558,7 +558,7 @@ class Helper
         try
         {
             $url      = "$fsUrl/pvt/orderForms/simulation";
-            $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->get( $url );
+            $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if ( $response->successful() ) return $response->json();
 
@@ -568,7 +568,7 @@ class Helper
         {
             echo "FS SKUs query failed\n";
             Log::channel( "fastshop" )->info( "FS stock-price", [ "FS SKUs query failed" ] );
-            Helper::sendMailNotification( "marketplace", "getStockPrice()", "Exception", $e );
+            Helper::sendMailNotification( "marketplace", "getStockPriceFS()", "Exception", $e );
         }
     }
 
