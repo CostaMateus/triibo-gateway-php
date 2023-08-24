@@ -624,7 +624,7 @@ class Helper
             if ( !is_array( $value ) )
                 $aux[ $key ] = ( $value == null ) ? "" : $value;
             else
-                $aux[ $key ] = self::isNull( $value );
+                $aux[ $key ] = self::setEmptyString( $value );
         }
 
         return $aux;
