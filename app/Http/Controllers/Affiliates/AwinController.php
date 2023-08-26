@@ -499,6 +499,13 @@ class AwinController extends Controller
                 $fbRef->update( [ $newPush => $promo ] );
 
                 echo "Promotions : Created Promo. ID = {$newPush}\n";
+
+                \DB::table( "affiliates_promotions" )->insert( [
+                    "push_id"    => $newPush,
+                    "data"       => json_encode( $promo ),
+                    "created_at" => now(),
+                    "updated_at" => now(),
+                ] );
             }
         }
 
