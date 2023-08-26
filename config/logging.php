@@ -115,6 +115,11 @@ return [
             "path"   => storage_path( "logs/awin.log"         ),
             "level"  => "debug"
         ],
+        "awin_promotions" => [
+            "driver" => "single",
+            "path"   => storage_path( "logs/awin_promo.log"   ),
+            "level"  => "debug"
+        ],
         "cofry"      => [
             "driver" => "single",
             "path"   => storage_path( "logs/cofry.log"        ),
@@ -144,16 +149,6 @@ return [
         "fastshop"     => [
             "driver" => "single",
             "path"   => storage_path( "logs/fastshop.log"     ),
-            "level"  => "debug"
-        ],
-        "fastshop-img" => [
-            "driver" => "single",
-            "path"   => storage_path( "logs/fastshop-img.log" ),
-            "level"  => "debug"
-        ],
-        "fastshop-upd" => [
-            "driver" => "single",
-            "path"   => storage_path( "logs/fastshop-upd.log" ),
             "level"  => "debug"
         ],
     ],

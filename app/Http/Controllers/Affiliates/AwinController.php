@@ -353,7 +353,22 @@ class AwinController extends Controller
         echo "Promotions : Searching promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
 
+        /**
+         * TODO remover:
+         * logs awin_promotions
+         * array chg_p_arr
+         * counters new_p, chg_p, dis_p
+         * var aps_sql
+         */
+        Log::channel( "awin_promotions" )->info( "Promotions", [ "Start process - " . date( "Y-m-d H:i:s" ) ] );
+
         File::deleteDirectory( $this->promos_path, true );
+
+        $chg_p_arr   = [];
+        $new_p       = 0;
+        $chg_p       = 0;
+        $dis_p       = 0;
+        $aps_sql     = \DB::table( "affiliates_promotions" )->get()->keyBy( "push_id" );
 
         $awinPromos  = $this->integration->getOffers();
 
@@ -373,8 +388,12 @@ class AwinController extends Controller
 
             if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
             {
+                if ( !$promo[ "active" ] ) continue;
+
                 if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
                 {
+                    $dis_p++;
+
                     // Disabling promotions that are not on the list
                     $promo[ "isPublished" ] = false;
                     $promo[ "active"      ] = false;
@@ -421,18 +440,77 @@ class AwinController extends Controller
                     $fbRef->update( [ $push2 => $promo ] );
 
                     echo "Promotions : Updated Promo. ID = {$push2}\n";
+
+                    // =================================
+                    if ( isset( $aps_sql[ $push2 ] ) )
+                    {
+                        $aux_aps = json_decode( $aps_sql[ $push2 ]->data, true );
+                        $changes = Helper::array_diff_assoc_recursive( $aux_aps, $promo );
+
+                        if ( count( $changes ) > 0 )
+                        {
+                            $hasChg   = false;
+                            $chg_keys = array_keys( $changes );
+                            $ignore   = [ "enableDate", "disableDate", "dueDate" ];
+
+                            foreach ( $chg_keys as $key )
+                            {
+                                if ( !in_array( $key, $ignore ) )
+                                {
+                                    $hasChg = true;
+                                    break;
+                                }
+                            }
+
+                            if ( $hasChg )
+                            {
+                                $chg_p++;
+
+                                foreach ( $changes as $key => &$change )
+                                {
+                                    if ( in_array( $key, $ignore ) )
+                                    {
+                                        usent( $changes[ $key ] );
+                                        continue;
+                                    }
+
+                                    $change = [
+                                        "old" => $aux_aps[ $key ],
+                                        "new" => $promo[ $key ],
+                                    ];
+                                }
+
+                                $chg_p_arr[ $push2 ] = $changes;
+
+                                \DB::table( "affiliates_promotions" )->where( "push_id", $push2 )->update( [ "data" => json_encode( $promo ) ] );
+                            }
+                        }
+                    }
+                    // =================================
                     break;
                 }
             }
 
             if ( !$founded )
             {
+                $new_p++;
+
                 $newPush = $fbRef->push()->getKey();
                 $fbRef->update( [ $newPush => $promo ] );
 
                 echo "Promotions : Created Promo. ID = {$newPush}\n";
             }
         }
+
+        // =================================
+        Log::channel( "awin_promotions" )->info( "Promotions", [
+            "new_promos" => $new_p,
+            "dis_promos" => $dis_p,
+            "chg_promos" => $chg_p,
+            "changes"    => $chg_p_arr
+        ] );
+        Log::channel( "awin_promotions" )->info( "Promotions", [ "End process - " . date( "Y-m-d H:i:s" ) ] );
+        Log::channel( "awin_promotions" )->info( "Promotions", [ "=================================" ] );
     }
 
     /**
