@@ -470,7 +470,7 @@ class AwinController extends Controller
                                 {
                                     if ( in_array( $key, $ignore ) )
                                     {
-                                        usent( $changes[ $key ] );
+                                        unset( $changes[ $key ] );
                                         continue;
                                     }
 
