@@ -118,7 +118,7 @@ class AwinIntegration
      *
      * Awin offer == Triibo Store (firebase) / Promotion
      *
-     * @return  void
+     * @return  array
      */
     public function getOffers()
     {
