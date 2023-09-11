@@ -96,7 +96,7 @@ class AwinIntegration
             {
                 $key  += 1;
                 $count = count( $establishments[ "data" ] );
-                echo "Stores : Loading establishments {$key} of {$count}\n";
+                echo "Establishments : Loading establishments {$key} of {$count}\n";
 
                 $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
 
