@@ -44,6 +44,9 @@ class AwinController extends Controller
         $this->promotions_path     = public_path( "images/affiliates/awin/promotions/"     );
     }
 
+    /**
+     * TODO remover após usar em prod
+     */
     public function populate()
     {
         $fbRef            = Firebase::database()->getReference( "/Estabelecimento-v2" );

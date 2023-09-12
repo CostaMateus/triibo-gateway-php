@@ -40,6 +40,7 @@ class ProcessDataAwin extends Command
     public function handle()
     {
         $opts   = [
+            "populate", // TODO remover após usar em prod
             "establishments",
             "promotions",
             "images",
@@ -56,60 +57,22 @@ class ProcessDataAwin extends Command
             return 0;
         }
 
-        $this->{$option}();
+        if ( $option == "all" )
+        {
+            /**
+             * Process establishments, promotions and images
+             */
+            $this->processOption( [ "establishments", "promotions", "images" ] );
+        }
+        else
+        {
+            /**
+             * Process establishments / promotions / images / reports / populate
+             */
+            $this->processOption( $option );
+        }
 
         return 1;
-    }
-
-    /**
-     * Process establishments, promotions and images
-     *
-     * @return  void
-     */
-    private function all()
-    {
-        $this->processOption( [ "establishments", "promotions", "images" ] );
-    }
-
-    /**
-     * Process establishments
-     *
-     * @param   string|array  $option
-     * @return  void
-     */
-    private function establishments()
-    {
-        $this->processOption( "establishments" );
-    }
-
-    /**
-     * Process promotions
-     *
-     * @return  void
-     */
-    private function promotions()
-    {
-        $this->processOption( "promotions" );
-    }
-
-    /**
-     * Process images
-     *
-     * @return  void
-     */
-    private function images()
-    {
-        $this->processOption( "images" );
-    }
-
-    /**
-     * Process reports
-     *
-     * @return  void
-     */
-    private function reports()
-    {
-        $this->processOption( "reports" );
     }
 
     /**
