@@ -19,6 +19,18 @@ class AwinController extends Controller
     protected $establishments_path;
     protected $promotions_path;
 
+    const IGNORE_FIELDS = [
+        "establishment" => [
+            "dataAlteracao",
+            "dataInclusao",
+            "disableDate",
+            "enableDate",
+            "listaFotos",
+            "fotoThumb",
+        ],
+        "offers"        => []
+    ];
+
     /**
      * Constructor
      *
@@ -405,6 +417,9 @@ class AwinController extends Controller
 
             $data    = json_decode( $estabFounded->data, true );
             $changes = Helper::array_diff_assoc_recursive( $awinEstablishment, $data );
+
+            foreach ( self::IGNORE_FIELDS[ "establishment" ] as $field )
+                unset( $changes[ $field ] );
 
             /**
              * No changes founded
