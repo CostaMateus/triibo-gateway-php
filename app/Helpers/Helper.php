@@ -20,7 +20,7 @@ class Helper
      * @param   array ...$arrays
      * @return  array
      */
-    public static function array_diff_assoc_recursive( array $array, array ...$arrays )
+    public static function arrayDiffAssocRecursive( array $array, array ...$arrays )
     {
         $func = function ( $array1, $array2 ) use ( &$func )
         {
@@ -65,7 +65,7 @@ class Helper
         return $diffs;
     }
 
-    public static function array_orderby()
+    public static function arrayOrderBy()
     {
         $args = func_get_args();
         $data = array_shift($args);
@@ -90,6 +90,19 @@ class Helper
         call_user_func_array('array_multisort', $args);
 
         return array_pop($args);
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param   mixed   $needle     Value to look for.
+     * @param   string  $column     Column in which the value will be looked for.
+     * @param   array   $arr        Array with data.
+     * @return  int|string|false    The key for needle if it is found in the array, false otherwise.
+     */
+    public static function arraySearchByKey( mixed $needle, string $column, array $arr )
+    {
+        return array_search( $needle, array_column( $arr, $column ) );
     }
 
     /**
