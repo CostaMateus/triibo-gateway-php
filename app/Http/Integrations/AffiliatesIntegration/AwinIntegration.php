@@ -380,7 +380,7 @@ class AwinIntegration
 
                 $aux[ "partner"           ] = "awin";
                 $aux[ "transactionId"     ] = $report[ "id" ];
-                $aux[ "transactionDate"   ] = Helper::convertDatetime( $report[ "transactionDate" ] );
+                $aux[ "transactionDate"   ] = Helper::getDateTimeUnix( $report[ "transactionDate" ], true );
                 $aux[ "processingDate"    ] = null;
                 $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
 
@@ -388,7 +388,7 @@ class AwinIntegration
                                                 ? $report[ "transactionDate" ]
                                                 : $report[ "validationDate"  ];
 
-                $aux[ "updateDate"        ] = Helper::convertDatetime( $aux[ "updateDate" ] );
+                $aux[ "updateDate"        ] = Helper::getDateTimeUnix( $aux[ "updateDate" ], true );
 
                 $aux[ "advertiserId"      ] = $establishmentId;
                 $aux[ "advertiserName"    ] = $establishmentName;
@@ -435,10 +435,8 @@ class AwinIntegration
     {
         // $newStores = [];
         $establishments = [];
-        $date           = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $dateEn         = ( int ) $date->format( "U" ) * 1000;
-        $date           = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis        = ( int ) $date->format( "U" ) * 1000;
+        $dateEn         = Helper::getDateTimeUnix();
+        $dateDis        = Helper::getDateTimeUnixInterval( "P7Y" );
 
         foreach ( $data as $estab )
         {
@@ -527,11 +525,8 @@ class AwinIntegration
     private function translatePromotionDefault( array $data )
     {
         $promotions = [];
-
-        $date       = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $dateEn     = ( int ) $date->format( "U" ) * 1000;
-        $date       = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis    = ( int ) $date->format( "U" ) * 1000;
+        $dateEn     = Helper::getDateTimeUnix();
+        $dateDis    = Helper::getDateTimeUnixInterval( "P7Y" );
 
         foreach ( $data as $estab )
         {
@@ -620,13 +615,8 @@ class AwinIntegration
             $establishmentName = $offer[ "advertiser" ][ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            $date              = $offer[ "startDate" ] . " 00:00:00";
-            $date              = new DateTime( date( $date ) );
-            $dateEn            = ( int ) $date->format( "U" ) * 1000;
-
-            $date              = $offer[ "endDate"   ] . "23:59:00";
-            $date              = new DateTime( date( $date ) );
-            $dateDis           = ( int ) $date->format( "U" ) * 1000;
+            $dateEn            = Helper::getDateTimeUnix( $offer[ "startDate" ] . " 00:00:00" );
+            $dateDis           = Helper::getDateTimeUnix( $offer[ "endDate"   ] . " 23:59:00" );
 
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
