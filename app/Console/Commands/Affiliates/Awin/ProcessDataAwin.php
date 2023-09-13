@@ -113,7 +113,7 @@ class ProcessDataAwin extends Command
             echo "Command : Start processing of {$name}\n";
             Log::channel( "awin" )->info( "{$name}", [ "Start processing of {$name}" ]);
 
-            $load = ( $option == "images" || $option == "reports" ) ? false : true;
+            $load = ( in_array( $option, [ "images", "reports", "populate" ] ) ) ? false : true;
 
             $awin = new AwinController( $load );
             $awin->{$option}();
