@@ -198,6 +198,7 @@ class AwinIntegration
 
             if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
             {
+                echo "Establishments : Retry in 5 seconds\n";
                 sleep( 5 );
                 return $this->searchEstablishmentsDetails( $id, $allInfo );
             }
