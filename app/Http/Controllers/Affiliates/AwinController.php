@@ -59,12 +59,11 @@ class AwinController extends Controller
         {
             $affiliate_id   = $store[ "origin" ] . $origin_id;
             $local_estabs[] = [
-                "origin"       => $store[ "origin"      ],
+                "origin"       => $store[ "origin" ],
                 "origin_id"    => $origin_id,
                 "affiliate_id" => $affiliate_id,
                 "push_id"      => null,
-                "is_published" => $store[ "isPublished" ],
-                "name"         => $store[ "nome"        ],
+                "name"         => $store[ "nome"   ],
                 "data"         => json_encode( $store ),
                 "created_at"   => now(),
                 "updated_at"   => now(),
@@ -357,12 +356,11 @@ class AwinController extends Controller
             {
                 $affiliate_id = $awinEstablishment[ "origin" ] . $awinEstablishment[ "partnerEstablishmentId" ];
                 $localData[]  = [
-                    "origin"       => $awinEstablishment[ "origin"      ],
+                    "origin"       => $awinEstablishment[ "origin" ],
                     "origin_id"    => $id,
                     "affiliate_id" => $affiliate_id,
                     "push_id"      => null,
-                    "is_published" => $awinEstablishment[ "isPublished" ],
-                    "name"         => $awinEstablishment[ "nome"        ],
+                    "name"         => $awinEstablishment[ "nome"   ],
                     "data"         => json_encode( $awinEstablishment ),
                     "created_at"   => now(),
                     "updated_at"   => now(),
