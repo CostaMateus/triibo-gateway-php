@@ -31,7 +31,7 @@ class AwinController extends Controller
         "fotoThumb",
     ];
 
-    const IGNORE_OFFERS_FIELDS         = [];
+    const IGNORE_PROMOTIONS_FIELDS     = [];
 
     /**
      * Constructor
@@ -155,7 +155,7 @@ class AwinController extends Controller
     {
         try
         {
-            $this->insertOffersFirebase();
+            $this->insertPromotionsFirebase();
             echo "Promotions : Promotions sent successfully\n";
             Log::channel( "awin" )->info( "Promotions", [
                 "code"    => 0,
@@ -174,7 +174,7 @@ class AwinController extends Controller
                 "message" => $e
             ] );
 
-            Helper::sendMailNotification( "awin", "insertOffersFirebase()", "FirebaseException", $e );
+            Helper::sendMailNotification( "awin", "insertPromotionsFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
@@ -186,7 +186,7 @@ class AwinController extends Controller
                 "message" => $e,
             ] );
 
-            Helper::sendMailNotification( "awin", "insertOffersFirebase()", "Throwable", $e );
+            Helper::sendMailNotification( "awin", "insertPromotionsFirebase()", "Throwable", $e );
         }
     }
 
@@ -493,7 +493,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    private function insertOffersFirebase()
+    private function insertPromotionsFirebase()
     {
         echo "Promotions : Searching promotions\n";
         Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
