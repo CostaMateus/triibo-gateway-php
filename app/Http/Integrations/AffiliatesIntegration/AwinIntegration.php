@@ -21,7 +21,7 @@ class AwinIntegration
     // protected $env;
     protected $tkn;
 
-    protected $url_offers;
+    protected $url_promotions;
 
     protected $url_programmes;
     protected $url_programmedetails;
@@ -56,7 +56,7 @@ class AwinIntegration
         $this->url_programmedetails       = "{$url}/publishers/{$p_id}/programmedetails";       // advertiserId
 
         // Promotions
-        $this->url_offers                 = "{$url}/publisher/{$p_id}/promotions";              //
+        $this->url_promotions             = "{$url}/publisher/{$p_id}/promotions";              //
 
         $this->url_commissiongroups       = "{$url}/publishers/{$p_id}/commissiongroups";       // advertiserId
         $this->url_commissionsharingrules = "{$url}/publishers/{$p_id}/commissionsharingrules"; //
@@ -114,13 +114,13 @@ class AwinIntegration
     }
 
     /**
-     * Get and translate, Awin offers (promotions)
+     * Get and translate, Awin promotions
      *
-     * Awin offer == Triibo Store (firebase) / Promotion
+     * Awin promotion == Triibo Store (firebase) / Promotion
      *
      * @return  array
      */
-    public function getOffers()
+    public function getPromotions()
     {
         $establishmentsOrig = $this->getEstablishments( true );
         $promotions         = $this->translatePromotionDefault( $establishmentsOrig );
@@ -131,12 +131,12 @@ class AwinIntegration
         {
             $id         = $estab[ "partnerEstablishmentId" ];
             echo "Promotions : Loading promotions for establishment: {$id}\n";
-            $offers     = $this->searchOffers( $id );
+            $promos     = $this->searchPromotions( $id );
 
-            if ( empty( $offers[ "data" ] ) ) continue;
+            if ( empty( $promos[ "data" ] ) ) continue;
 
-            $offers     = $this->translateOffers( $offers[ "data" ], $estab[ "cashbackDefault" ] );
-            $promotions = $promotions + $offers;
+            $promos     = $this->translatePromotions( $promos[ "data" ], $estab[ "cashbackDefault" ] );
+            $promotions = $promotions + $promos;
         }
 
         return $promotions;
@@ -220,14 +220,14 @@ class AwinIntegration
     }
 
     /**
-     * Get Awin offers (promotions)
+     * Get Awin promotions (promotions)
      *
-     * Awin offer == Triibo Store (firebase) / Default promotion
+     * Awin promotion == Triibo Store (firebase) / Default promotion
      *
      * @param   integer     $id        Establishment id
      * @return  array
      */
-    private function searchOffers( int $id )
+    private function searchPromotions( int $id )
     {
         $data  = [];
 
@@ -251,7 +251,7 @@ class AwinIntegration
 
             $response = Http::withToken( $this->tkn )
                             ->withBody( json_encode( $body ), "application/json" )
-                            ->post( $this->url_offers );
+                            ->post( $this->url_promotions );
 
             if ( !$response->successful() )
             {
@@ -597,44 +597,44 @@ class AwinIntegration
     }
 
     /**
-     * Translates Awin offers into Triibo promotions
+     * Translates Awin promotions into Triibo promotions
      *
-     * @param   array   $data       Offers data
+     * @param   array   $data       Promotions data
      * @param   string  $cashback   Cashback value
      * @return  array
      */
-    private function translateOffers( array $data, string $cashback )
+    private function translatePromotions( array $data, string $cashback )
     {
         $promotions = [];
 
-        foreach ( $data as $offer )
+        foreach ( $data as $promotion )
         {
-            $idEstab           = $offer[ "advertiser" ][ "id" ];
-            $id                = $idEstab . $offer[ "promotionId" ];
+            $idEstab           = $promotion[ "advertiser" ][ "id" ];
+            $id                = $idEstab . $promotion[ "promotionId" ];
 
-            $establishmentName = $offer[ "advertiser" ][ "name" ];
+            $establishmentName = $promotion[ "advertiser" ][ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            $dateEn            = Helper::getDateTimeUnix( $offer[ "startDate" ] . " 00:00:00" );
-            $dateDis           = Helper::getDateTimeUnix( $offer[ "endDate"   ] . " 23:59:00" );
+            $dateEn            = Helper::getDateTimeUnix( $promotion[ "startDate" ] . " 00:00:00" );
+            $dateDis           = Helper::getDateTimeUnix( $promotion[ "endDate"   ] . " 23:59:00" );
 
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
 
-            $description       = $offer[ "description" ];
+            $description       = $promotion[ "description" ];
             $description      .= "\n\nGanhe {$points} pontos a cada R\${$this->base} em compras.";
 
-            $detailsDescrip    = $offer[ "description" ];
+            $detailsDescrip    = $promotion[ "description" ];
 
-            if ( $offer[ "type" ] == "voucher" )
-                $detailsDescrip .= "\n\nUtilize o código de desconto " . $offer[ "voucher" ][ "code" ] . " no fechamento da compra.";
+            if ( $promotion[ "type" ] == "voucher" )
+                $detailsDescrip .= "\n\nUtilize o código de desconto " . $promotion[ "voucher" ][ "code" ] . " no fechamento da compra.";
 
-            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $offer[ "endDate" ], true );
+            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $promotion[ "endDate" ], true );
 
             $imageNamePromo    = "awin_common_promotion.webp";
             $imageNameVoucher  = "awin_common_coupon.webp";
 
-            $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
+            $url               = $this->urlTracking( $promotion[ "advertiser" ][ "id" ], $promotion[ "url" ] );
 
             $promotions[ $id ] = [
                 "partnerPromotionId" => $id,
@@ -642,8 +642,8 @@ class AwinIntegration
                 "establishmentId"    => $idEstab,
                 "establishmentName"  => $establishmentName,
 
-                "title"              => $offer[ "description" ],
-                "detailsTitle"       => $offer[ "description" ],
+                "title"              => $promotion[ "description" ],
+                "detailsTitle"       => $promotion[ "description" ],
 
                 "description"        => $description,
                 "detailsDescription" => $detailsDescrip,
@@ -674,9 +674,9 @@ class AwinIntegration
                 "origin"             => "awin",
             ];
 
-            if ( $offer[ "type" ] == "voucher" )
+            if ( $promotion[ "type" ] == "voucher" )
             {
-                $promotions[ $id ][ "checkoutCode" ] = $offer[ "voucher" ][ "code" ];
+                $promotions[ $id ][ "checkoutCode" ] = $promotion[ "voucher" ][ "code" ];
                 $promotions[ $id ][ "tags"         ] = [ "Cashback", "Cupom" ];
                 $promotions[ $id ][ "photo"        ] = $imageNameVoucher;
                 $promotions[ $id ][ "thumbnail"    ] = $imageNameVoucher;
