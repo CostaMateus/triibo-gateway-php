@@ -2,15 +2,11 @@
 
 namespace App\Http\Integrations\AffiliatesIntegration;
 
-use DateTime;
 use Exception;
-use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 class AwinIntegration
 {
@@ -161,7 +157,17 @@ class AwinIntegration
     private function searchEstablishments()
     {
         $url      = "{$this->url_programmes}?relationship=joined"; //&countryCode=" . self::RG;
-        $response = Http::withToken( $this->tkn )->get( $url );
+
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( $url );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+
+            return $this->searchEstablishments();
+        }
 
         if ( !$response->successful() )
         {
@@ -190,7 +196,16 @@ class AwinIntegration
     {
         $url      = "{$this->url_programmedetails}?advertiserId={$id}";
 
-        $response = Http::withToken( $this->tkn )->get( $url );
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( $url );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishmentsDetails(). Retry. " . $e->getMessage() ] );
+
+            return $this->searchEstablishmentsDetails( $id, $allInfo );
+        }
 
         if ( !$response->successful() )
         {
@@ -245,55 +260,65 @@ class AwinIntegration
             ]
         ];
 
-        do
+        try
         {
-            $body[ "pagination" ] = [ "page" => $page ];
-
-            $response = Http::withToken( $this->tkn )
-                            ->withBody( json_encode( $body ), "application/json" )
-                            ->post( $this->url_promotions );
-
-            if ( !$response->successful() )
+            do
             {
-                $err = json_decode( $response->body(), true );
+                $body[ "pagination" ] = [ "page" => $page ];
 
-                if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+                $response = Http::withToken( $this->tkn )
+                                ->withBody( json_encode( $body ), "application/json" )
+                                ->post( $this->url_promotions );
+
+                if ( !$response->successful() )
                 {
-                    sleep( 10 );
+                    $err = json_decode( $response->body(), true );
+
+                    if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+                    {
+                        echo "Promotions : Retry in 10 seconds\n";
+                        sleep( 10 );
+                    }
+                    else
+                    {
+                        return [
+                            "success" => false,
+                            "code"    => 4001,
+                            "data"    => $data
+                        ];
+                    }
                 }
                 else
                 {
-                    return [
-                        "success" => false,
-                        "code"    => 4001,
-                        "data"    => $data
-                    ];
+                    $page++;
+
+                    $resp = $response->json();
+
+                    if ( !empty( $resp[ "data" ] ) )
+                    {
+                        $data = array_merge( $data, $resp[ "data" ] );
+                    }
+
+                    $pagination = $resp[ "pagination" ];
+
+                    if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
+                        $ended = true;
                 }
             }
-            else
-            {
-                $page++;
+            while ( !$ended );
 
-                $resp = $response->json();
-
-                if ( !empty( $resp[ "data" ] ) )
-                {
-                    $data = array_merge( $data, $resp[ "data" ] );
-                }
-
-                $pagination = $resp[ "pagination" ];
-
-                if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
-                    $ended = true;
-            }
+            return [
+                "success" => true,
+                "code"    => 0,
+                "data"    => $data,
+            ];
         }
-        while ( !$ended );
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Promotions", [ "Fail searchPromotions(). Retry. " . $e->getMessage() ] );
 
-        return [
-            "success" => true,
-            "code"    => 0,
-            "data"    => $data,
-        ];
+            return $this->searchPromotions( $id );
+        }
     }
 
     /**
@@ -333,7 +358,16 @@ class AwinIntegration
         $query   .= "&timezone=" . self::TZ;
         $query   .= ( $isUpdate ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
-        $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Reports", [ "Fail searchReports(). Retry. " . $e->getMessage() ] );
+
+            return $this->searchReports( $isUpdate );
+        }
 
         if ( !$response->successful() )
         {
@@ -701,24 +735,23 @@ class AwinIntegration
         try
         {
             $response = Http::get( $url );
-
-            if ( $response->successful() )
-            {
-                file_put_contents( $fullPath, $response->body() );
-
-                $handle = Image::open( $fullPath );
-                $handle->resize( 200, 150, "#FFF" );
-                $handle->save( $fullPath );
-
-                return true;
-            }
         }
         catch ( Exception $e )
         {
-            return false;
+            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+
+            return self::saveImage( $path, $imageName, $url );
         }
 
-        return false;
+        if ( !$response->successful() ) return false;
+
+        file_put_contents( $fullPath, $response->body() );
+
+        $handle = Image::open( $fullPath );
+        $handle->resize( 200, 150, "#FFF" );
+        $handle->save( $fullPath );
+
+        return true;
     }
 
     /**
@@ -739,9 +772,18 @@ class AwinIntegration
             ],
         ];
 
-        $response = Http::withToken( $this->tkn )
-                        ->withBody( json_encode( $body ), "application/json" )
-                        ->post( $this->url_linkbuilder );
+        try
+        {
+            $response = Http::withToken( $this->tkn )
+                            ->withBody( json_encode( $body ), "application/json" )
+                            ->post( $this->url_linkbuilder );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Promotions", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+
+            return $this->urlTracking( $establishmentId, $url );
+        }
 
         if ( !$response->successful() )
         {
