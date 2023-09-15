@@ -44,6 +44,9 @@ class AwinController extends Controller
         $this->integration         = new AwinIntegration( $loadEstablishments );
         $this->establishments_path = public_path( "images/affiliates/awin/establishments/" );
         $this->promotions_path     = public_path( "images/affiliates/awin/promotions/"     );
+
+        File::ensureDirectoryExists( $this->establishments_path );
+        File::ensureDirectoryExists( $this->promotions_path     );
     }
 
     /**
@@ -203,7 +206,7 @@ class AwinController extends Controller
         File::copy( $promotion,      $this->promotions_path     . "/awin_common_promotion.webp" );
 
         $filesEstablishments    = File::allFiles( $this->establishments_path );
-        $filesPromos            = File::allFiles( $this->promotions_path );
+        $filesPromos            = File::allFiles( $this->promotions_path     );
 
         $fileNameEstablishments = [];
         $fileNamePromos         = [];
