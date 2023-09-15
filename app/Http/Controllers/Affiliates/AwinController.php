@@ -95,10 +95,64 @@ class AwinController extends Controller
         \Storage::put( "establishments_firebase.json", json_encode( $firebase_estabs ) );
         \Storage::put( "establishments_local.json",    json_encode( $local_estabs    ) );
 
+        $this->populatePromos();
+
         dd(
-            "local : " . count( $local_estabs    ),
-            "awin  : " . count( $awin_estabs     ),
-            "fire  : " . count( $firebase_estabs )
+            "estabs local : " . count( $local_estabs    ),
+            "estabs awin  : " . count( $awin_estabs     ),
+            "estabs fire  : " . count( $firebase_estabs )
+        );
+    }
+
+    /**
+     * TODO remover após usar em prod
+     */
+    public function populatePromos()
+    {
+        $awin_promos     = $this->integration->getPromotions();
+        $firebase_promos = $this->filterPromotions( Firebase::database()->getReference( "/Store" ) );
+        $local_promos    = [];
+
+        foreach ( $awin_promos as $origin_id => $promo )
+        {
+            $affiliate_id   = $promo[ "origin" ] . $origin_id;
+            $local_promos[] = [
+                "origin"       => $promo[ "origin" ],
+                "origin_id"    => $origin_id,
+                "affiliate_id" => $affiliate_id,
+                "push_id"      => null,
+                "data"         => json_encode( $promo ),
+                "created_at"   => now(),
+                "updated_at"   => now(),
+            ];
+        }
+
+        foreach ( $firebase_promos as $push => $promo )
+        {
+            $search_id = $promo[ "origin" ] . $promo[ "partnerPromotionId" ];
+            $index     = Helper::arraySearchByKey( $search_id, "affiliate_id", $local_promos );
+
+            if ( $index !== false )
+            {
+                $local_promos[ $index ][ "push_id" ] = $push;
+            }
+            else
+            {
+                echo "{$search_id} : false : {$push}\n";
+            }
+        }
+
+        \DB::table( "affiliates_promotions" )->truncate();
+        \DB::table( "affiliates_promotions" )->insert( $local_promos );
+
+        \Storage::put( "promotions_awin.json",     json_encode( $awin_promos     ) );
+        \Storage::put( "promotions_firebase.json", json_encode( $firebase_promos ) );
+        \Storage::put( "promotions_local.json",    json_encode( $local_promos    ) );
+
+        dump(
+            "promos local : " . count( $local_promos    ),
+            "promos awin  : " . count( $awin_promos     ),
+            "promos fire  : " . count( $firebase_promos )
         );
     }
 
@@ -894,5 +948,33 @@ class AwinController extends Controller
         }
 
         return $establishments;
+    }
+
+    /**
+     * Filter Promotions Awin
+     *
+     * @param   Reference   $ref
+     * @return  array       $promotions
+     */
+    private function filterPromotions( Reference $ref )
+    {
+        $promotions = [];
+
+        foreach ( $ref->getValue() as $push => $promo )
+        {
+            if ( strpos( $push, "-awin"       ) !== false ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
+
+            if ( !isset( $promo[ "establishmentId"    ] ) ) continue;
+            if ( !isset( $promo[ "partnerPromotionId" ] ) ) continue;
+            if ( !isset( $promo[ "origin"             ] ) ) continue;
+
+            if ( $promo[ "origin" ] != "awin"             ) continue;
+
+            $promotions[ $push ] = $promo;
+        }
+
+        return $promotions;
     }
 }
