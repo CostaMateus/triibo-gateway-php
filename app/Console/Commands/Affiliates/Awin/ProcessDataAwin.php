@@ -40,8 +40,7 @@ class ProcessDataAwin extends Command
     public function handle()
     {
         $opts   = [
-            "populate",       // TODO remover após usar em prod
-            "populatePromos", // TODO remover após usar em prod
+            "populate", // TODO remover após usar em prod
             "establishments",
             "promotions",
             "images",
