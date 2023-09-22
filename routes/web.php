@@ -81,7 +81,111 @@ Route::group(["middleware" => "auth"], function() {
 
 
 
-Route::get( "/fs", function () {
+Route::get( "/test", function () {
+
+    // $awin = Storage::get( "awin_establishments.json" );
+    // $fire = Storage::get( "firebase_awin_establishments.json" );
+    //
+    // $awin = json_decode( $awin, true );
+    // $fire = json_decode( $fire, true );
+    //
+    // $arr  = [];
+    //
+    // foreach ( $fire as $key => $estab )
+    // {
+    //     $id = $estab[ "partnerEstablishmentId" ];
+    //
+    //     if ( isset( $awin[ $id ] ) )
+    //     {
+    //         $estab[ "push_id" ] = $key;
+    //         $arr[ $id ] = [
+    //             "fire" => $estab,
+    //             "awin" => $awin[ $id ]
+    //         ];
+    //     }
+    // }
+    //
+    // $arr2 = [];
+    //
+    // foreach ( $arr as $id => $data )
+    // {
+    //     $r      = \DB::table( "affiliates_establishments" )->where( "origin_id", $id )->first();
+    //     $arr2[ $id ] = $r;
+    // }
+    //
+    // dd( $arr2 );
+
+
+
+    // ============================================================
+
+
+    $fbRef            = Firebase::database()->getReference( "/Estabelecimento-v2" );
+    $fbEstablishments = $fbRef->getValue();
+
+    $awinEstabs       = [];
+
+    foreach ( $fbEstablishments as $push => $fbEstab )
+    {
+        if ( strpos( $push, "-awin"       ) !== false       ) continue;
+        if ( strpos( $push, "-cofry"      ) !== false       ) continue;
+        if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
+        if ( !isset( $fbEstab[ "partnerEstablishmentId" ] ) ) continue;
+        if ( !isset( $fbEstab[ "origin"                 ] ) ) continue;
+        if ( $fbEstab[ "origin" ] !== "awin"                ) continue;
+
+        $awinEstabs[ $push ] = $fbEstab;
+    }
+
+    // Storage::put( "firebase_awin_establishments.json", json_encode( $awinEstabs ) );
+
+    \DB::table( "affiliates_establishments" )->truncate();
+
+    $now   = now();
+    $data  = [];
+
+    foreach ( $awinEstabs as $push => $store )
+    {
+        $data[] = [
+            "origin"       => $store[ "origin"                 ],
+            "origin_id"    => $store[ "partnerEstablishmentId" ],
+            "affiliate_id" => $store[ "origin" ] . $store[ "partnerEstablishmentId" ],
+            "push_id"      => $push,
+            // "data"         => json_encode( $store ),
+            "data"         => null,
+            "created_at"   => $now,
+            "updated_at"   => $now,
+        ];
+    }
+
+    // Storage::put( "awin_establishments.json", json_encode( $data ) );
+
+    \DB::table( "affiliates_establishments" )->insert( $data );
+
+    $integration = new AwinIntegration( true );
+    $awinEstabs  = $integration->getEstablishments();
+
+    foreach ( $awinEstabs as $id => $estab )
+    {
+        $search_id  = $estab[ "origin" ] . $id;
+        $found      = \DB::table( "affiliates_establishments" )->where( "affiliate_id", $search_id )->first();
+
+        if ( $found )
+        {
+            \DB::table( "affiliates_establishments" )
+                ->where( "affiliate_id", $search_id )
+                ->update( [ "data" => $estab ] );
+        }
+    }
+
+    dd( $data );
+
+
+
+
+    // ============================================================
+
+
 
     // $db          = Firebase::database();
     // $fbRef       = $db->getReference( "/Store" );

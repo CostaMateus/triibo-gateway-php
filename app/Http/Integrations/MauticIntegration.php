@@ -352,7 +352,7 @@ class MauticIntegration
             ];
         }
 
-        $stages = Helper::array_orderby($stages, "pd_id", SORT_ASC, "order_nr", SORT_ASC);
+        $stages = Helper::arrayOrderBy($stages, "pd_id", SORT_ASC, "order_nr", SORT_ASC);
 
         foreach ($stages as &$stage) unset($stage["pd_id"], $stage["order_nr"]);
 

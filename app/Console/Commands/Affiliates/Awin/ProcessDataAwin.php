@@ -13,15 +13,14 @@ class ProcessDataAwin extends Command
      *
      * @var string
      */
-    protected $signature = "awin:process
-                            {--option= : Options: images, promotions, stores, all (IPS) or reports }";
+    protected $signature   = "awin:process {--option= : Options: establishments, promotions, images, all (EPI) or reports }";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Command description";
+    protected $description = "Process Awin data";
 
     /**
      * Create a new command instance.
@@ -41,9 +40,10 @@ class ProcessDataAwin extends Command
     public function handle()
     {
         $opts   = [
-            "images",
+            "populate", // TODO remover após usar em prod
+            "establishments",
             "promotions",
-            "stores",
+            "images",
             "all",
             "reports"
         ];
@@ -53,88 +53,73 @@ class ProcessDataAwin extends Command
         if ( !in_array( $option, $opts ) )
         {
             echo "Invalid option, terminating process!\n";
-            return;
+
+            return 0;
         }
 
-        if ( in_array( $option, [ "promotions", "stores" ] ) )
+        if ( $option == "all" )
         {
-            $this->storesAndPromotions( $option );
+            /**
+             * Process establishments, promotions and images
+             */
+            $this->processOption( [ "establishments", "promotions", "images" ] );
         }
         else
         {
-            $this->{$option}();
+            /**
+             * Process establishments / promotions / images / reports
+             */
+            $this->processOption( $option );
         }
+
+        return 1;
     }
 
-    private function storesAndPromotions( string $option )
+    /**
+     * Process option
+     *
+     * @param   string|array  $option
+     * @return  void
+     */
+    private function processOption( string|array $option )
     {
-        $optionLog  = ucfirst( $option );
+        if ( is_array( $option ) )
+        {
+            $isInit = false;
+            $awin   = null;
 
-        echo "Command : Start processing of {$optionLog}\n";
-        Log::channel( "awin" )->info( $optionLog, [ "Start processing of {$optionLog}" ]);
+            foreach ( $option as $opt )
+            {
+                $name = ucfirst( $opt );
 
-        $awin = new AwinController();
-        $awin->{$option}();
+                echo "Command : Start processing of {$name}\n";
+                Log::channel( "awin" )->info( "{$name}", [ "Start processing of {$name}" ]);
 
-        echo "Command : End {$optionLog} processing\n";
-        Log::channel( "awin" )->info( $optionLog, [ "End {$optionLog} processing" ] );
-    }
+                $load = ( $opt == "images" || $opt == "reports" ) ? false : true;
 
-    private function images()
-    {
-        echo "Command : Start processing of Images\n";
-        Log::channel( "awin" )->info( "Images", [ "Start processing of Images" ]);
+                if ( !$isInit || !$awin )
+                    $awin = new AwinController( $load );
 
-        $awin = new AwinController( false );
-        $awin->images();
+                $awin->{$opt}();
 
-        echo "Command : End Images processing\n";
-        Log::channel( "awin" )->info( "Images", [ "End Images processing" ] );
-    }
+                echo "Command : End {$name} processing\n";
+                Log::channel( "awin" )->info( "{$name}", [ "End {$name} processing" ] );
+            }
+        }
+        else
+        {
+            $name = ucfirst( $option );
 
-    private function all()
-    {
-        // STORES
-        echo "Command : Start processing of Stores\n";
-        Log::channel( "awin" )->info( "Stores", [ "Start processing of Stores" ]);
+            echo "Command : Start processing of {$name}\n";
+            Log::channel( "awin" )->info( "{$name}", [ "Start processing of {$name}" ]);
 
-        $awin = new AwinController();
-        $awin->stores();
+            $load = ( in_array( $option, [ "images", "reports" ] ) ) ? false : true;
 
-        echo "Command : End Stores processing\n";
-        Log::channel( "awin" )->info( "Stores", [ "End Stores processing" ] );
+            $awin = new AwinController( $load );
+            $awin->{$option}();
 
-        // PROMOTIONS
-        echo "Command : Start processing of Promotions\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Start processing of Promotions" ]);
-
-        // $awin = new AwinController();
-        $awin->promotions();
-
-        echo "Command : End Promotions processing\n";
-        Log::channel( "awin" )->info( "Promotions", [ "End Promotions processing" ] );
-
-        // IMAGES
-        echo "Command : Start processing of Images\n";
-        Log::channel( "awin" )->info( "Images", [ "Start processing of Images" ]);
-
-        // $awin = new AwinController();
-        $awin->images();
-
-        echo "Command : End Images processing\n";
-        Log::channel( "awin" )->info( "Images", [ "End Images processing" ] );
-    }
-
-    private function reports()
-    {
-        // REPORTS
-        echo "Command : Start processing of Reports\n";
-        Log::channel( "awin" )->info( "Reports", [ "Start processing of Reports" ]);
-
-        $awin = new AwinController( false );
-        $awin->reports();
-
-        echo "Command : End Reports processing\n";
-        Log::channel( "awin" )->info( "Reports", [ "End Reports processing" ] );
+            echo "Command : End {$name} processing\n";
+            Log::channel( "awin" )->info( "{$name}", [ "End {$name} processing" ] );
+        }
     }
 }
