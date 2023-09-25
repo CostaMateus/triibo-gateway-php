@@ -342,6 +342,8 @@ class MauticIntegration
         // inicio processamento etapas dos funis
         $stages = $pipeApi->stages()->all()->getData();
 
+        dd( $stages );
+
         foreach ($stages as &$stage)
         {
             $stage = [
