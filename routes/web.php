@@ -20,6 +20,7 @@ use Codexshaper\WooCommerce\Facades\Order;
 use Doctrine\Inflector\Rules\Substitution;
 use Codexshaper\WooCommerce\Facades\Coupon;
 use App\Http\Controllers\ChatGuruController;
+use App\Http\Controllers\FastshopController;
 use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
@@ -120,65 +121,65 @@ Route::get( "/test", function () {
     // ============================================================
 
 
-    $fbRef            = Firebase::database()->getReference( "/Estabelecimento-v2" );
-    $fbEstablishments = $fbRef->getValue();
+    // $fbRef            = Firebase::database()->getReference( "/Estabelecimento-v2" );
+    // $fbEstablishments = $fbRef->getValue();
 
-    $awinEstabs       = [];
+    // $awinEstabs       = [];
 
-    foreach ( $fbEstablishments as $push => $fbEstab )
-    {
-        if ( strpos( $push, "-awin"       ) !== false       ) continue;
-        if ( strpos( $push, "-cofry"      ) !== false       ) continue;
-        if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
-        if ( !isset( $fbEstab[ "partnerEstablishmentId" ] ) ) continue;
-        if ( !isset( $fbEstab[ "origin"                 ] ) ) continue;
-        if ( $fbEstab[ "origin" ] !== "awin"                ) continue;
+    // foreach ( $fbEstablishments as $push => $fbEstab )
+    // {
+    //     if ( strpos( $push, "-awin"       ) !== false       ) continue;
+    //     if ( strpos( $push, "-cofry"      ) !== false       ) continue;
+    //     if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
+    //     if ( !isset( $fbEstab[ "partnerEstablishmentId" ] ) ) continue;
+    //     if ( !isset( $fbEstab[ "origin"                 ] ) ) continue;
+    //     if ( $fbEstab[ "origin" ] !== "awin"                ) continue;
 
-        $awinEstabs[ $push ] = $fbEstab;
-    }
+    //     $awinEstabs[ $push ] = $fbEstab;
+    // }
 
-    // Storage::put( "firebase_awin_establishments.json", json_encode( $awinEstabs ) );
+    // // Storage::put( "firebase_awin_establishments.json", json_encode( $awinEstabs ) );
 
-    \DB::table( "affiliates_establishments" )->truncate();
+    // \DB::table( "affiliates_establishments" )->truncate();
 
-    $now   = now();
-    $data  = [];
+    // $now   = now();
+    // $data  = [];
 
-    foreach ( $awinEstabs as $push => $store )
-    {
-        $data[] = [
-            "origin"       => $store[ "origin"                 ],
-            "origin_id"    => $store[ "partnerEstablishmentId" ],
-            "affiliate_id" => $store[ "origin" ] . $store[ "partnerEstablishmentId" ],
-            "push_id"      => $push,
-            // "data"         => json_encode( $store ),
-            "data"         => null,
-            "created_at"   => $now,
-            "updated_at"   => $now,
-        ];
-    }
+    // foreach ( $awinEstabs as $push => $store )
+    // {
+    //     $data[] = [
+    //         "origin"       => $store[ "origin"                 ],
+    //         "origin_id"    => $store[ "partnerEstablishmentId" ],
+    //         "affiliate_id" => $store[ "origin" ] . $store[ "partnerEstablishmentId" ],
+    //         "push_id"      => $push,
+    //         // "data"         => json_encode( $store ),
+    //         "data"         => null,
+    //         "created_at"   => $now,
+    //         "updated_at"   => $now,
+    //     ];
+    // }
 
-    // Storage::put( "awin_establishments.json", json_encode( $data ) );
+    // // Storage::put( "awin_establishments.json", json_encode( $data ) );
 
-    \DB::table( "affiliates_establishments" )->insert( $data );
+    // \DB::table( "affiliates_establishments" )->insert( $data );
 
-    $integration = new AwinIntegration( true );
-    $awinEstabs  = $integration->getEstablishments();
+    // $integration = new AwinIntegration( true );
+    // $awinEstabs  = $integration->getEstablishments();
 
-    foreach ( $awinEstabs as $id => $estab )
-    {
-        $search_id  = $estab[ "origin" ] . $id;
-        $found      = \DB::table( "affiliates_establishments" )->where( "affiliate_id", $search_id )->first();
+    // foreach ( $awinEstabs as $id => $estab )
+    // {
+    //     $search_id  = $estab[ "origin" ] . $id;
+    //     $found      = \DB::table( "affiliates_establishments" )->where( "affiliate_id", $search_id )->first();
 
-        if ( $found )
-        {
-            \DB::table( "affiliates_establishments" )
-                ->where( "affiliate_id", $search_id )
-                ->update( [ "data" => $estab ] );
-        }
-    }
+    //     if ( $found )
+    //     {
+    //         \DB::table( "affiliates_establishments" )
+    //             ->where( "affiliate_id", $search_id )
+    //             ->update( [ "data" => $estab ] );
+    //     }
+    // }
 
-    dd( $data );
+    // dd( $data );
 
 
 
@@ -352,5 +353,18 @@ Route::get( "/test", function () {
     // }
 
     // dd( "ok" );
+
+    // ==================
+
+    // $order = Order::find( 959232 );
+
+    // $control         = new FastshopController();
+    // $data            = $control->getFsOrder( 959232 );
+
+    // $data[ "order" ] = $control->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
+
+    // $body            = DataTranslator::translate( "newOrderFs", $data );
+
+    // dd( $body );
 
 } );
