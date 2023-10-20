@@ -240,6 +240,10 @@ class CofryController extends Controller
                     $promo[ "description" ] .= $aux;
                 }
 
+                if ( isset( $fbPromos[ $id ][ "enableDate"  ] ) ) $promo[ "enableDate"  ] = $fbPromos[ $id ][ "enableDate"  ];
+                if ( isset( $fbPromos[ $id ][ "disableDate" ] ) ) $promo[ "disableDate" ] = $fbPromos[ $id ][ "disableDate" ];
+                if ( isset( $fbPromos[ $id ][ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromos[ $id ][ "dueDate"     ];
+
                 $status = "Updated";
             }
 
