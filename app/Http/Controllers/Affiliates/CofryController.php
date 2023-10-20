@@ -171,7 +171,11 @@ class CofryController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
-                if ( isset( $fbStores[ $id ][ "hasPromo" ] ) ) $store[ "hasPromo" ] = $fbStores[ $id ][ "hasPromo" ];
+                if ( isset( $fbStores[ $id ][ "hasPromo"     ] ) ) $store[ "hasPromo"     ] = $fbStores[ $id ][ "hasPromo"     ];
+
+                if ( isset( $fbStores[ $id ][ "enableDate"   ] ) ) $store[ "enableDate"   ] = $fbStores[ $id ][ "enableDate"   ];
+                if ( isset( $fbStores[ $id ][ "disableDate"  ] ) ) $store[ "disableDate"  ] = $fbStores[ $id ][ "disableDate"  ];
+                if ( isset( $fbStores[ $id ][ "dataInclusao" ] ) ) $store[ "dataInclusao" ] = $fbStores[ $id ][ "dataInclusao" ];
 
                 $status = "Updated";
             }
@@ -235,6 +239,10 @@ class CofryController extends Controller
 
                     $promo[ "description" ] .= $aux;
                 }
+
+                if ( isset( $fbPromos[ $id ][ "enableDate"  ] ) ) $promo[ "enableDate"  ] = $fbPromos[ $id ][ "enableDate"  ];
+                if ( isset( $fbPromos[ $id ][ "disableDate" ] ) ) $promo[ "disableDate" ] = $fbPromos[ $id ][ "disableDate" ];
+                if ( isset( $fbPromos[ $id ][ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromos[ $id ][ "dueDate"     ];
 
                 $status = "Updated";
             }
