@@ -307,7 +307,11 @@ class AwinController extends Controller
 
                 $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
 
-                if ( isset( $fbStore[ "hasPromo" ] ) ) $store[ "hasPromo" ] = $fbStore[ "hasPromo" ];
+                if ( isset( $fbStore[ "hasPromo"     ] ) ) $store[ "hasPromo"     ] = $fbStore[ "hasPromo"     ];
+
+                if ( isset( $fbStore[ "enableDate"   ] ) ) $store[ "enableDate"   ] = $fbStore[ "enableDate"   ];
+                if ( isset( $fbStore[ "disableDate"  ] ) ) $store[ "disableDate"  ] = $fbStore[ "disableDate"  ];
+                if ( isset( $fbStore[ "dataInclusao" ] ) ) $store[ "dataInclusao" ] = $fbStore[ "dataInclusao" ];
 
                 $fbRef->update( [ $push1 => $store ] );
 
@@ -436,6 +440,10 @@ class AwinController extends Controller
 
                         $promo[ "description" ] .= $aux;
                     }
+
+                    if ( isset( $fbPromo[ "enableDate"  ] ) ) $promo[ "enableDate"  ] = $fbPromo[ "enableDate"  ];
+                    if ( isset( $fbPromo[ "disableDate" ] ) ) $promo[ "disableDate" ] = $fbPromo[ "disableDate" ];
+                    if ( isset( $fbPromo[ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromo[ "dueDate"     ];
 
                     $fbRef->update( [ $push2 => $promo ] );
 
