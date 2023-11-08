@@ -144,15 +144,15 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
 
 } );
 
-Route::name( "api.affiliates." )->middleware( "log.route" )->prefix( "affiliates" )->group( function () {
-
-    Route::name( "ss." )->prefix( "socialsoul" )->group( function () {
-        Route::get( "/postback",
-            [ SocialSoulController::class, "postback" ]
-        )->name( "postback" );
-    } );
-
-} );
+// Route::name( "api.affiliates." )->middleware( "log.route" )->prefix( "affiliates" )->group( function () {
+//
+//     Route::name( "ss." )->prefix( "socialsoul" )->group( function () {
+//         Route::get( "/postback",
+//             [ SocialSoulController::class, "postback" ]
+//         )->name( "postback" );
+//     } );
+//
+// } );
 
 
 // // TESTES
