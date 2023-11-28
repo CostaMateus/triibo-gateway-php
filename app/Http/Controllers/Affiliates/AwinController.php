@@ -444,6 +444,7 @@ class AwinController extends Controller
                     if ( isset( $fbPromo[ "enableDate"  ] ) ) $promo[ "enableDate"  ] = $fbPromo[ "enableDate"  ];
                     if ( isset( $fbPromo[ "disableDate" ] ) ) $promo[ "disableDate" ] = $fbPromo[ "disableDate" ];
                     if ( isset( $fbPromo[ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromo[ "dueDate"     ];
+                    if ( isset( $fbPromo[ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromo[ "buttonLabel" ];
 
                     $fbRef->update( [ $push2 => $promo ] );
 
