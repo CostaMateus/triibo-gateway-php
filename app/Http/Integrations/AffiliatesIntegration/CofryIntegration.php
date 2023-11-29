@@ -271,6 +271,7 @@ class CofryIntegration
 
                 "origin"             => "cofry",
                 "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 
@@ -363,6 +364,7 @@ class CofryIntegration
 
                 "origin"             => "cofry",
                 "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 

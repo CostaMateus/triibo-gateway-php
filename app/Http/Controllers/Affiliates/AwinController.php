@@ -446,6 +446,8 @@ class AwinController extends Controller
                     if ( isset( $fbPromo[ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromo[ "dueDate"     ];
                     if ( isset( $fbPromo[ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromo[ "buttonLabel" ];
 
+                    $promo[ "id" ] = ( isset( $fbPromo[ "id" ] ) ) ? $fbPromo[ "id" ] : $push2;
+
                     $fbRef->update( [ $push2 => $promo ] );
 
                     echo "Promotions : Updated Promo. ID = {$push2}\n";
@@ -504,7 +506,9 @@ class AwinController extends Controller
             {
                 $new_p++;
 
-                $newPush = $fbRef->push()->getKey();
+                $newPush       = $fbRef->push()->getKey();
+                $promo[ "id" ] = $newPush;
+
                 $fbRef->update( [ $newPush => $promo ] );
 
                 echo "Promotions : Created Promo. ID = {$newPush}\n";

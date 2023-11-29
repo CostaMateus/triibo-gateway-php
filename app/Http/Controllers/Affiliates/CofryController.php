@@ -245,8 +245,12 @@ class CofryController extends Controller
                 if ( isset( $fbPromos[ $id ][ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromos[ $id ][ "dueDate"     ];
                 if ( isset( $fbPromos[ $id ][ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromos[ $id ][ "buttonLabel" ];
 
-                $status = "Updated";
+                $promo[ "id" ] = ( isset( $fbPromos[ $id ][ "id" ] ) ) ? $fbPromos[ $id ][ "id" ] : $id;
+
+                $status        = "Updated";
             }
+
+            if ( empty( $promo[ "id" ] ) ) $promo[ "id" ] = $id;
 
             // Atualiza ou cria a promoção
             $fbRef->update( [ $id => $promo ] );

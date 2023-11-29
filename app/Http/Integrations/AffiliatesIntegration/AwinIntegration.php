@@ -576,6 +576,7 @@ class AwinIntegration
 
                 "origin"             => "awin",
                 "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 
@@ -663,6 +664,7 @@ class AwinIntegration
 
                 "origin"             => "awin",
                 "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
 
             if ( $offer[ "type" ] == "voucher" )
