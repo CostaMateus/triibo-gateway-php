@@ -245,6 +245,15 @@ class CofryController extends Controller
                 if ( isset( $fbPromos[ $id ][ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromos[ $id ][ "dueDate"     ];
                 if ( isset( $fbPromos[ $id ][ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromos[ $id ][ "buttonLabel" ];
 
+                if ( isset( $fbPromos[ $id ][ "campanhaTriibo" ] ) ) $promo[ "campanhaTriibo" ] = $fbPromos[ $id ][ "campanhaTriibo" ];
+                if ( isset( $fbPromos[ $id ][ "droidWebView"   ] ) ) $promo[ "droidWebView"   ] = $fbPromos[ $id ][ "droidWebView"   ];
+                if ( isset( $fbPromos[ $id ][ "iOSWebView"     ] ) ) $promo[ "iOSWebView"     ] = $fbPromos[ $id ][ "iOSWebView"     ];
+
+                if ( isset( $fbPromos[ $id ][ "showButtonDescription" ] ) ) $promo[ "showButtonDescription" ] = $fbPromos[ $id ][ "showButtonDescription" ];
+                if ( isset( $fbPromos[ $id ][ "buttonDescription"     ] ) ) $promo[ "buttonDescription"     ] = $fbPromos[ $id ][ "buttonDescription"     ];
+                if ( isset( $fbPromos[ $id ][ "showGoToPlace"         ] ) ) $promo[ "showGoToPlace"         ] = $fbPromos[ $id ][ "showGoToPlace"         ];
+                if ( isset( $fbPromos[ $id ][ "goToPlaceLabel"        ] ) ) $promo[ "goToPlaceLabel"        ] = $fbPromos[ $id ][ "goToPlaceLabel"        ];
+
                 $promo[ "id" ] = ( isset( $fbPromos[ $id ][ "id" ] ) ) ? $fbPromos[ $id ][ "id" ] : $id;
 
                 $status        = "Updated";

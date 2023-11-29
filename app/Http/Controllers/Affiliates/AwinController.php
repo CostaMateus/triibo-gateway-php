@@ -446,6 +446,15 @@ class AwinController extends Controller
                     if ( isset( $fbPromo[ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromo[ "dueDate"     ];
                     if ( isset( $fbPromo[ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromo[ "buttonLabel" ];
 
+                    if ( isset( $fbPromo[ "campanhaTriibo" ] ) ) $promo[ "campanhaTriibo" ] = $fbPromo[ "campanhaTriibo" ];
+                    if ( isset( $fbPromo[ "droidWebView"   ] ) ) $promo[ "droidWebView"   ] = $fbPromo[ "droidWebView"   ];
+                    if ( isset( $fbPromo[ "iOSWebView"     ] ) ) $promo[ "iOSWebView"     ] = $fbPromo[ "iOSWebView"     ];
+
+                    if ( isset( $fbPromo[ "showButtonDescription" ] ) ) $promo[ "showButtonDescription" ] = $fbPromo[ "showButtonDescription" ];
+                    if ( isset( $fbPromo[ "buttonDescription"     ] ) ) $promo[ "buttonDescription"     ] = $fbPromo[ "buttonDescription"     ];
+                    if ( isset( $fbPromo[ "showGoToPlace"         ] ) ) $promo[ "showGoToPlace"         ] = $fbPromo[ "showGoToPlace"         ];
+                    if ( isset( $fbPromo[ "goToPlaceLabel"        ] ) ) $promo[ "goToPlaceLabel"        ] = $fbPromo[ "goToPlaceLabel"        ];
+
                     $promo[ "id" ] = ( isset( $fbPromo[ "id" ] ) ) ? $fbPromo[ "id" ] : $push2;
 
                     $fbRef->update( [ $push2 => $promo ] );
