@@ -521,10 +521,10 @@ class DataTranslator
 
         $total = $data[ "total" ];
 
-        if ( !$parent && isset( $data[ "coupon_lines" ][ 0 ] ) )
+        if ( isset( $data[ "coupon_lines" ][ 0 ] ) )
             $total += $data[ "coupon_lines" ][ 0 ][ "discount" ];
 
-        $total = $total + $data[ "discount_total" ];
+        // $total = $total + $data[ "discount_total" ];
         $total = number_format( (float) $total, 2, ".", "" );
         $total = (int) str_replace( ".", "", $total );
 
