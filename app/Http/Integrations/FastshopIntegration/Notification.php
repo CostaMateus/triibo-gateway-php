@@ -3,6 +3,7 @@
 namespace App\Http\Integrations\FastshopIntegration;
 
 use App\Models\User;
+use App\Notifications\FastShop\HubError;
 use App\Notifications\FastShop\OrderError;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
@@ -29,6 +30,10 @@ class Notification
             break;
             case "approvedOrderError2":
                 return self::orderError( $data, 5 );
+            break;
+
+            case "hubError":
+                return self::hubError( $data );
             break;
         }
     }
@@ -78,5 +83,26 @@ class Notification
                      ->get();
 
         foreach ( $users as $user ) $user->notify( new OrderError( $mail ) );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param Array $params
+     * @return void
+     */
+    private static function hubError( array $data )
+    {
+        $mail = [
+            "subject" => "HUB não mapeado - FastShop",
+            "title"   => "Consulta de frete com HUB não mapeado no marketplace",
+            "data"    => $data,
+        ];
+
+        $users = User::where( "email", "mateus.costa@triibo.com.br" )
+                     ->orWhere( "email", "equipemarketplace@triibo.com.br" )
+                     ->get();
+
+        foreach ( $users as $user ) $user->notify( new HubError( $mail ) );
     }
 }
