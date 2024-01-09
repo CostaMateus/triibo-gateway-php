@@ -6,31 +6,33 @@
 // use Mautic\Auth\ApiAuth;
 // use Devio\Pipedrive\Pipedrive;
 // use Triibo\Mautic\Facades\Mautic;
-use App\Helpers\Helper;
-use Gregwar\Image\Image;
+// use App\Helpers\Helper;
+// use Gregwar\Image\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 // use Triibo\Mautic\Models\MauticConsumer;
 // use App\Notifications\WebhookMarketplace;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\UserController;
-use Codexshaper\WooCommerce\Facades\Note;
-use Codexshaper\WooCommerce\Facades\Term;
+// use Codexshaper\WooCommerce\Facades\Note;
+// use Codexshaper\WooCommerce\Facades\Term;
 use Codexshaper\WooCommerce\Facades\Order;
-use Doctrine\Inflector\Rules\Substitution;
-use Codexshaper\WooCommerce\Facades\Coupon;
-use App\Http\Controllers\ChatGuruController;
+// use Doctrine\Inflector\Rules\Substitution;
+// use Codexshaper\WooCommerce\Facades\Coupon;
+// use App\Http\Controllers\ChatGuruController;
 use App\Http\Integrations\MauticIntegration;
-use Codexshaper\WooCommerce\Facades\Product;
-use Codexshaper\WooCommerce\Facades\Category;
-use Kreait\Laravel\Firebase\Facades\Firebase;
-use Codexshaper\WooCommerce\Facades\Attribute;
-use Codexshaper\WooCommerce\Facades\Subscription;
-use App\Http\Controllers\Affiliates\AwinController;
-use Codexshaper\WooCommerce\Facades\PaymentGateway;
-use App\Http\Integrations\FastshopIntegration\DataTranslator;
-use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
-use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
+// use App\Http\Controllers\FastshopController;
+// use App\Http\Integrations\FastshopIntegration\DataTranslator;
+// use Codexshaper\WooCommerce\Facades\Product;
+// use Codexshaper\WooCommerce\Facades\Category;
+// use Kreait\Laravel\Firebase\Facades\Firebase;
+// use Codexshaper\WooCommerce\Facades\Attribute;
+// use Codexshaper\WooCommerce\Facades\Subscription;
+// use App\Http\Controllers\Affiliates\AwinController;
+// use Codexshaper\WooCommerce\Facades\PaymentGateway;
+// use App\Http\Integrations\FastshopIntegration\DataTranslator;
+// use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
+// use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 
 /*
 |--------------------------------------------------------------------------
@@ -82,6 +84,71 @@ Route::group(["middleware" => "auth"], function() {
 
 
 Route::get( "/fs", function () {
+
+    // $parent = null;
+    // $data   = Order::all( [ "parent" => 968447 ] );
+
+    // if ( $data->count() != 0 )
+    // {
+    //     $parent = Order::find( 968447 );
+    // }
+    // else
+    // {
+    //     $data   = [ Order::find( 968447 ) ];
+
+    //     if ( ( $id = $data[ 0 ][ "parent_id" ] ) != 0 )
+    //     {
+    //         $parent = Order::find( $id );
+
+    //         do
+    //         {
+    //             $has_parent = $parent[ "parent_id" ] != 0;
+
+    //             if ( $has_parent )
+    //             {
+    //                 $parent = Order::find( $parent[ "parent_id" ] );
+    //             }
+    //         }
+    //         while ( $has_parent );
+    //     }
+    // }
+
+    // $data = [
+    //     "order"  => json_decode( json_encode( $data   ), true ),
+    //     "parent" => json_decode( json_encode( $parent ), true )
+    // ];
+
+    // // retira os pedidos que não são da FastShop
+    // foreach ( $data[ "order" ] as $key => $order )
+    // {
+    //     // id da FS no dev-marketplace
+    //     $id = config( "fastshop.production.wc.storeId" );
+
+    //     if ( $order[ "store" ][ "id" ] != $id )
+    //         unset( $data[ "order" ][ $key ] );
+    // }
+
+    // $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
+
+    // $c = new FastshopController();
+
+    // // 960724
+    // // 954047
+    // // 950362
+    // // 955957
+    // // 949305
+
+    // // 968493
+    // // 968496
+
+    // $data = $c->getFsOrder( "968496" );
+
+    // $data[ "order" ] = $c->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
+
+    // $body = DataTranslator::translate( "newOrderFs", $data );
+
+    // dd( $data, $body  );
+
 
     // $db          = Firebase::database();
     // $fbRef       = $db->getReference( "/Store" );
