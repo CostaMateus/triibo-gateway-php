@@ -680,7 +680,7 @@ class FastshopController extends Controller
                 return response()->json( [
                     "errorCode" => "4002",
                     "message"   => "Order does not have meta_data '_fastshop_order_id'"
-                ],400 );
+                ], 400 );
             }
 
             $fsOrderId     = $meta[ $meta_key ][ "value" ];
@@ -693,13 +693,20 @@ class FastshopController extends Controller
 
             if( !$response->successful() )
             {
-                Log::order( "info", "Approved order error", $body );
+                $error = $response->json();
+
+                Log::order( "error", "Approved order error", [ $error, $body ] );
                 Notification::notify( "approvedOrderError", $data );
+
+                Note::create( $data[ "order" ][ "id" ], [
+                    "note" => "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ]
+                ] );
 
                 return response()->json( [
                     "errorCode" => "4001",
-                    "message"   => "Something went wrong when reporting order approval"
-                ],400 );
+                    "message"   => "Something went wrong when reporting order approval",
+                    "data"      => [ $error, $body ]
+                ], 400 );
             }
 
             $note  = "PEDIDO APROVADO NA FAST SHOP:\n";
@@ -762,7 +769,7 @@ class FastshopController extends Controller
                 return response()->json( [
                     "errorCode" => "4002",
                     "message"   => "Order does not have meta_data '_fastshop_order_id'"
-                ],400 );
+                ], 400 );
             }
 
             $fsOrderId       = $meta[ $meta_key ][ "value" ];
@@ -775,13 +782,16 @@ class FastshopController extends Controller
 
             if( !$response->successful() )
             {
-                Log::order( "info", "Cancelation order error", $body );
+                $error = $response->json();
+
+                Log::order( "error", "Cancelation order error", [ $error, $body ] );
                 Notification::notify( "cancelationOrderError", $data );
 
                 return response()->json( [
                     "errorCode" => "4001",
-                    "message"   => "Something wrong when canceling the order"
-                ],400 );
+                    "message"   => "Something wrong when canceling the order",
+                    "data"      => [ $error, $body ]
+                ], 400 );
             }
 
             $note  = "PEDIDO CANCELADO NA FAST SHOP:\n";
