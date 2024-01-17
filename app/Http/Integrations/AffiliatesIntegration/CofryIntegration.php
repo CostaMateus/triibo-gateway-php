@@ -270,6 +270,8 @@ class CofryIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "cofry",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 
@@ -361,6 +363,8 @@ class CofryIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "cofry",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 

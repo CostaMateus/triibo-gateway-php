@@ -624,6 +624,8 @@ class AwinIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "awin",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 
@@ -706,6 +708,8 @@ class AwinIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "awin",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
 
             if ( $promotion[ "type" ] == "voucher" )

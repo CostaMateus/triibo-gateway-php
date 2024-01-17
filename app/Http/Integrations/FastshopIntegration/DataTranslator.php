@@ -315,6 +315,17 @@ class DataTranslator
      */
     private static function freightCalcWc( array $data )
     {
+        $hubs = [
+            "KAIVEHUB_Normal_05",
+            "KAIVEHUB_Normal_14",
+            "KAIVEHUB_Normal_33",
+
+            "KAIVEHUB_Normal_4E",
+            "KAIVEHUB_Normal_25",
+            "KAIVEHUB_Normal_60",
+            "KAIVEHUB_Normal_61",
+        ];
+
         $logistics = [];
 
         if ( !empty( $data[ "logisticsInfo" ] ) && !empty( $data[ "items" ] ) )
@@ -333,6 +344,18 @@ class DataTranslator
 
                     $code         = null;
                     $message      = "ok";
+
+                    // Notifica HUB não mapeado
+                    if ( !in_array( $hub, $hubs ) )
+                    {
+                        $error = [
+                            "cep" => $data[ "postalCode" ],
+                            "sku" => "FS-" . $data[ "items" ][ $lg[ "itemIndex" ] ][ "id" ],
+                            "hub" => $hub,
+                        ];
+
+                        Notification::notify( "hubError", $error );
+                    }
                 }
                 else
                 {
@@ -521,10 +544,10 @@ class DataTranslator
 
         $total = $data[ "total" ];
 
-        if ( !$parent && isset( $data[ "coupon_lines" ][ 0 ] ) )
+        if ( isset( $data[ "coupon_lines" ][ 0 ] ) )
             $total += $data[ "coupon_lines" ][ 0 ][ "discount" ];
 
-        $total = $total + $data[ "discount_total" ];
+        // $total = $total + $data[ "discount_total" ];
         $total = number_format( (float) $total, 2, ".", "" );
         $total = (int) str_replace( ".", "", $total );
 

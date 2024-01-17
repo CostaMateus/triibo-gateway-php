@@ -13,6 +13,7 @@ use Codexshaper\WooCommerce\Facades\Note;
 use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
+use Illuminate\Support\Facades\Log as LogSys;
 use App\Http\Integrations\FastshopIntegration\Log;
 use App\Http\Integrations\FastshopIntegration\Notification;
 use App\Http\Integrations\FastshopIntegration\DataTranslator;
@@ -229,7 +230,11 @@ class FastshopController extends Controller
 
                     $updated = DB::table( "fastshop_products" )->where( "id", $founded->id )->update( $data );
 
-                    if ( !$updated ) throw new Exception( "Unable to update the product data" );
+                    if ( !$updated )
+                    {
+                        LogSys::channel( "fastshop" )->error( "Exception - FS - updateSku", [ $founded->id, "FS-{$sku}" ] );
+                        throw new Exception( "Unable to update the product data" );
+                    }
                 }
             }
 

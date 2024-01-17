@@ -22,7 +22,7 @@ class SocialSoulController extends Controller
 
     public function __construct()
     {
-        $this->integration = new SocialSoulIntegration();
+        // $this->integration = new SocialSoulIntegration();
         $this->stores_path = public_path( "images/affiliates/socialsoul/establishments/" );
         $this->promos_path = public_path( "images/affiliates/socialsoul/promotions/"     );
     }
