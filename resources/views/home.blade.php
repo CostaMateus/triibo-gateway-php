@@ -22,6 +22,7 @@
                 @include( "doc_parts.plugin-triibo-auth"         )
                 @include( "doc_parts.plugin-triibo-eventos"      )
                 @include( "doc_parts.plugin-triibo-fastshop"     )
+                @include( "doc_parts.plugin-triibo-payments"     )
 
             </div>
 
