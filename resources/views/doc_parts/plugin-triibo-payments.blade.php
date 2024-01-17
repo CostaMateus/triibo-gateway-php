@@ -2,12 +2,12 @@
 <div class="accordion-item" >
     <p class="accordion-header h2" id="headingPluginPayments" >
         <button class="accordion-button" type="button"
-            data-bs-toggle="collapse" data-bs-target="#collapsePluginAssinaturas"
-            aria-expanded="true" aria-controls="collapsePluginAssinaturas" >
+            data-bs-toggle="collapse" data-bs-target="#collapsePluginPayments"
+            aria-expanded="true" aria-controls="collapsePluginPayments" >
             Plugin MKT - Triibo Payments
         </button>
     </p>
-    <div id="collapsePluginAssinaturas" class="accordion-collapse collapse" aria-labelledby="headingPluginPayments" data-bs-parent="#accordionTriibo" >
+    <div id="collapsePluginPayments" class="accordion-collapse collapse" aria-labelledby="headingPluginPayments" data-bs-parent="#accordionTriibo" >
         <div class="accordion-body" >
             <div id="pluginAssinaturas" >
                 <h3 class="text-center" >Triibo Payments</h3>
