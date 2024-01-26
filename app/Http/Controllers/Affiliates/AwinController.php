@@ -441,14 +441,16 @@ class AwinController extends Controller
                         $promo[ "description" ] .= $aux;
                     }
 
-                    if ( isset( $fbPromo[ "enableDate"  ] ) ) $promo[ "enableDate"  ] = $fbPromo[ "enableDate"  ];
-                    if ( isset( $fbPromo[ "disableDate" ] ) ) $promo[ "disableDate" ] = $fbPromo[ "disableDate" ];
-                    if ( isset( $fbPromo[ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromo[ "dueDate"     ];
-                    if ( isset( $fbPromo[ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromo[ "buttonLabel" ];
+                    if ( isset( $fbPromo[ "isPublished"           ] ) ) $promo[ "isPublished"           ] = $fbPromo[ "isPublished" ];
 
-                    if ( isset( $fbPromo[ "campanhaTriibo" ] ) ) $promo[ "campanhaTriibo" ] = $fbPromo[ "campanhaTriibo" ];
-                    if ( isset( $fbPromo[ "droidWebView"   ] ) ) $promo[ "droidWebView"   ] = $fbPromo[ "droidWebView"   ];
-                    if ( isset( $fbPromo[ "iOSWebView"     ] ) ) $promo[ "iOSWebView"     ] = $fbPromo[ "iOSWebView"     ];
+                    if ( isset( $fbPromo[ "enableDate"            ] ) ) $promo[ "enableDate"            ] = $fbPromo[ "enableDate"  ];
+                    if ( isset( $fbPromo[ "disableDate"           ] ) ) $promo[ "disableDate"           ] = $fbPromo[ "disableDate" ];
+                    if ( isset( $fbPromo[ "dueDate"               ] ) ) $promo[ "dueDate"               ] = $fbPromo[ "dueDate"     ];
+                    if ( isset( $fbPromo[ "buttonLabel"           ] ) ) $promo[ "buttonLabel"           ] = $fbPromo[ "buttonLabel" ];
+
+                    if ( isset( $fbPromo[ "campanhaTriibo"        ] ) ) $promo[ "campanhaTriibo"        ] = $fbPromo[ "campanhaTriibo" ];
+                    if ( isset( $fbPromo[ "droidWebView"          ] ) ) $promo[ "droidWebView"          ] = $fbPromo[ "droidWebView"   ];
+                    if ( isset( $fbPromo[ "iOSWebView"            ] ) ) $promo[ "iOSWebView"            ] = $fbPromo[ "iOSWebView"     ];
 
                     if ( isset( $fbPromo[ "showButtonDescription" ] ) ) $promo[ "showButtonDescription" ] = $fbPromo[ "showButtonDescription" ];
                     if ( isset( $fbPromo[ "buttonDescription"     ] ) ) $promo[ "buttonDescription"     ] = $fbPromo[ "buttonDescription"     ];
