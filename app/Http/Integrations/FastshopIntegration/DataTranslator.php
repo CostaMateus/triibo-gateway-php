@@ -327,6 +327,8 @@ class DataTranslator
 
             "KAIVEHUB_Normal_19",
             "KAIVEHUB_Normal_74",
+
+            "KAIVEHUB_Normal_3E",
         ];
 
         $logistics = [];
