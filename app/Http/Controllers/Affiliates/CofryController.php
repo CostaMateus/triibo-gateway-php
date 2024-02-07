@@ -130,6 +130,15 @@ class CofryController extends Controller
         $this->log->info( "Stores", [ "Searching establishments" ] );
 
         $cofryStores = CofryIntegration::getEstabelecimentos();
+
+        if ( !$cofryStores )
+        {
+            echo "Stores : No establishments found\n";
+            $this->log->info( "Stores", [ "No establishments found" ] );
+
+            return;
+        }
+
         $fbRef       = Firebase::database()->getReference( "/Estabelecimento-v2" );
         $fbStores    = $fbRef->getValue();
 
@@ -171,6 +180,8 @@ class CofryController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
+                $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
+
                 if ( isset( $fbStores[ $id ][ "hasPromo"     ] ) ) $store[ "hasPromo"     ] = $fbStores[ $id ][ "hasPromo"     ];
 
                 if ( isset( $fbStores[ $id ][ "enableDate"   ] ) ) $store[ "enableDate"   ] = $fbStores[ $id ][ "enableDate"   ];
@@ -198,6 +209,15 @@ class CofryController extends Controller
         $this->log->info( "Promotions", [ "Searching for promotions" ] );
 
         $cofryPromos = CofryIntegration::getPromocoes();
+
+        if ( !$cofryPromos )
+        {
+            echo "Promotions : No promotions found\n";
+            $this->log->info( "Promotions", [ "No promotions found" ] );
+
+            return;
+        }
+
         $fbRef       = Firebase::database()->getReference( "/Store" );
         $fbPromos    = $fbRef->getValue();
 
@@ -240,14 +260,16 @@ class CofryController extends Controller
                     $promo[ "description" ] .= $aux;
                 }
 
-                if ( isset( $fbPromos[ $id ][ "enableDate"  ] ) ) $promo[ "enableDate"  ] = $fbPromos[ $id ][ "enableDate"  ];
-                if ( isset( $fbPromos[ $id ][ "disableDate" ] ) ) $promo[ "disableDate" ] = $fbPromos[ $id ][ "disableDate" ];
-                if ( isset( $fbPromos[ $id ][ "dueDate"     ] ) ) $promo[ "dueDate"     ] = $fbPromos[ $id ][ "dueDate"     ];
-                if ( isset( $fbPromos[ $id ][ "buttonLabel" ] ) ) $promo[ "buttonLabel" ] = $fbPromos[ $id ][ "buttonLabel" ];
+                if ( isset( $fbPromos[ $id ][ "isPublished"           ] ) ) $promo[ "isPublished"           ] = $fbPromos[ $id ][ "isPublished"           ];
 
-                if ( isset( $fbPromos[ $id ][ "campanhaTriibo" ] ) ) $promo[ "campanhaTriibo" ] = $fbPromos[ $id ][ "campanhaTriibo" ];
-                if ( isset( $fbPromos[ $id ][ "droidWebView"   ] ) ) $promo[ "droidWebView"   ] = $fbPromos[ $id ][ "droidWebView"   ];
-                if ( isset( $fbPromos[ $id ][ "iOSWebView"     ] ) ) $promo[ "iOSWebView"     ] = $fbPromos[ $id ][ "iOSWebView"     ];
+                if ( isset( $fbPromos[ $id ][ "enableDate"            ] ) ) $promo[ "enableDate"            ] = $fbPromos[ $id ][ "enableDate"            ];
+                if ( isset( $fbPromos[ $id ][ "disableDate"           ] ) ) $promo[ "disableDate"           ] = $fbPromos[ $id ][ "disableDate"           ];
+                if ( isset( $fbPromos[ $id ][ "dueDate"               ] ) ) $promo[ "dueDate"               ] = $fbPromos[ $id ][ "dueDate"               ];
+                if ( isset( $fbPromos[ $id ][ "buttonLabel"           ] ) ) $promo[ "buttonLabel"           ] = $fbPromos[ $id ][ "buttonLabel"           ];
+
+                if ( isset( $fbPromos[ $id ][ "campanhaTriibo"        ] ) ) $promo[ "campanhaTriibo"        ] = $fbPromos[ $id ][ "campanhaTriibo"        ];
+                if ( isset( $fbPromos[ $id ][ "droidWebView"          ] ) ) $promo[ "droidWebView"          ] = $fbPromos[ $id ][ "droidWebView"          ];
+                if ( isset( $fbPromos[ $id ][ "iOSWebView"            ] ) ) $promo[ "iOSWebView"            ] = $fbPromos[ $id ][ "iOSWebView"            ];
 
                 if ( isset( $fbPromos[ $id ][ "showButtonDescription" ] ) ) $promo[ "showButtonDescription" ] = $fbPromos[ $id ][ "showButtonDescription" ];
                 if ( isset( $fbPromos[ $id ][ "buttonDescription"     ] ) ) $promo[ "buttonDescription"     ] = $fbPromos[ $id ][ "buttonDescription"     ];

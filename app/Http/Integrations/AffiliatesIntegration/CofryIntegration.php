@@ -23,12 +23,14 @@ class CofryIntegration
 
     /**
      *
-     * @return array $promos
+     * @return  array|null
      */
     public static function getPromocoes()
     {
         $stores    = self::getStoresCofry();
         $promos    = self::getPromosCofry();
+
+        if ( !$stores || !$promos ) return null;
 
         if ( $stores ) self::usort( $stores );
         if ( $promos ) self::usort( $promos );
@@ -51,11 +53,13 @@ class CofryIntegration
 
     /**
      *
-     * @return array $stores
+     * @return  array|null
      */
     public static function getEstabelecimentos()
     {
         $stores = self::getStoresActive();
+
+        if ( !$stores ) return null;
 
         $stores = self::translatorStore( $stores );
 
@@ -65,7 +69,7 @@ class CofryIntegration
     /**
      * Get promotions Cofry.
      *
-     * @return array $res | null
+     * @return  array|null
      */
     private static function getPromosCofry()
     {
@@ -73,13 +77,16 @@ class CofryIntegration
 
         $res    = $client->post( self::URL_PROMO, self::TOKEN )->json();
 
-        Log::channel( "cofry" )->info( "CofryAPI", [
-            "code"    => $res[ "errorCode" ],
-            "method"  => "getPromosCofry",
-            "message" => $res[ "errorMessage" ]
-        ] );
+        if ( $res )
+        {
+            Log::channel( "cofry" )->info( "CofryAPI", [
+                "code"    => $res[ "errorCode" ],
+                "method"  => "getPromosCofry",
+                "message" => $res[ "errorMessage" ]
+            ] );
 
-        if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
+            if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
+        }
 
         return null;
     }
@@ -87,7 +94,7 @@ class CofryIntegration
     /**
      * Get stores Cofry.
      *
-     * @return array $res | null
+     * @return  array|null
      */
     private static function getStoresCofry()
     {
@@ -95,13 +102,16 @@ class CofryIntegration
 
         $res    = $client->post( self::URL_STORE, self::TOKEN )->json();
 
-        Log::channel( "cofry" )->info( "CofryAPI", [
-            "code"    => $res[ "errorCode" ],
-            "method"  => "getStoresCofry",
-            "message" => $res[ "errorMessage" ]
-        ] );
+        if ( $res )
+        {
+            Log::channel( "cofry" )->info( "CofryAPI", [
+                "code"    => $res[ "errorCode" ],
+                "method"  => "getStoresCofry",
+                "message" => $res[ "errorMessage" ]
+            ] );
 
-        if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
+            if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
+        }
 
         return null;
     }
@@ -109,7 +119,7 @@ class CofryIntegration
     /**
      * Get status stores.
      *
-     * @return array $res | null
+     * @return  array|null
      */
     private static function getStatusStores()
     {
@@ -117,13 +127,16 @@ class CofryIntegration
 
         $res    = $client->post( self::URL_STATUS, self::TOKEN )->json();
 
-        Log::channel( "cofry" )->info( "CofryAPI", [
-            "code"    => $res[ "errorCode" ],
-            "method"  => "getStatusStores",
-            "message" => $res[ "errorMessage" ]
-        ] );
+        if ( $res )
+        {
+            Log::channel( "cofry" )->info( "CofryAPI", [
+                "code"    => $res[ "errorCode" ],
+                "method"  => "getStatusStores",
+                "message" => $res[ "errorMessage" ]
+            ] );
 
-        if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
+            if ( $res[ "errorCode" ] == 0 ) return $res[ "store" ];
+        }
 
         return null;
     }
@@ -131,12 +144,14 @@ class CofryIntegration
     /**
      * Get Cofry actives stores
      *
-     * @return array $stores
+     * @return array|null
      */
     private static function getStoresActive()
     {
         $stores = self::getStoresCofry();
         $status = self::getStatusStores();
+
+        if ( !$stores || $status ) return null;
 
         if ( $stores ) self::usort( $stores );
         if ( $status ) self::usort( $status );
