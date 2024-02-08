@@ -291,7 +291,7 @@ class FastshopController extends Controller
             $fsOrderId = $meta[ $meta_key ][ "value" ];
 
             return response()->json( [
-                "date"    => date_format( now(), "Y-m-d\TH:i:s.uP" ),
+                "date"    => date( "Y-m-d\TH:i:s.uP" ),
                 "orderId" => $fsOrderId,
                 "receipt" => null
             ], 200 );
@@ -339,7 +339,7 @@ class FastshopController extends Controller
             $fsOrderId     = $meta[ $meta_key ][ "value" ];
 
             return response()->json( [
-                "date"    => date_format( now(), "Y-m-d\TH:i:s.uP" ),
+                "date"    => date( "Y-m-d\TH:i:s.uP" ),
                 "orderId" => $fsOrderId,
                 "receipt" => null
             ], 200 );
@@ -376,7 +376,7 @@ class FastshopController extends Controller
             $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
 
             Notification::notify( "cancelationOrderFS", $data );
-            Note::create( $orderId, [ "note" => "PEDIDO CANCELADO PELA FASTSHOP\n" . date_format( now(), "d/m/Y à\s H:i:s" ) ] );
+            Note::create( $orderId, [ "note" => "PEDIDO CANCELADO PELA FASTSHOP\n" . date( "d/m/Y à\s H:i:s" ) ] );
 
             // busca o orderId da FS no meta_data
             $order           = Order::find( $orderId );
@@ -385,7 +385,7 @@ class FastshopController extends Controller
             $fsOrderId       = $meta[ $meta_key ][ "value" ];
 
             return response()->json( [
-                "date"               => date_format( now(), "Y-m-d\TH:i:s.uP" ),
+                "date"               => date( "Y-m-d\TH:i:s.uP" ),
                 "marketPlaceOrderId" => $orderId,
                 "orderId"            => $fsOrderId,
                 "receipt"            => null
