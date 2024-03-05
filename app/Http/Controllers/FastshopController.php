@@ -319,11 +319,11 @@ class FastshopController extends Controller
             $deliveredDate = $request->all()[ "deliveredDate" ];
             $deliveredDate = Helper::convertDeliveryDate( $deliveredDate );
 
-            Order::update( $orderId, [ "status" => "completed" ] );
+            $dataToUpdate  = [ "status" => "completed" ];
+            $noteToCreate  = "ENTREGA REALIZADA\n $deliveredDate";
 
-            $note          = "ENTREGA REALIZADA\n $deliveredDate";
-
-            $this->createNote( $orderId, $note );
+            $this->updateOrder( $orderId, $dataToUpdate );
+            $this->createNote( $orderId, $noteToCreate );
 
             // busca o orderId da FS no meta_data
             $order         = Order::find( $orderId );
@@ -560,7 +560,7 @@ class FastshopController extends Controller
 
         try
         {
-            $data = $this->getFsOrder( $orderId );
+            $data            = $this->getFsOrder( $orderId );
 
             // quando vazio, não é pedido da FS
             if ( empty( $data[ "order" ] ) ) return response()->json( "", 200 );
@@ -587,11 +587,11 @@ class FastshopController extends Controller
             }
 
             // converte pedido WC para FS
-            $body = DataTranslator::translate( "newOrderFs", $data );
-            $url  = "$this->fsUrl/pvt/orders";
+            $body            = DataTranslator::translate( "newOrderFs", $data );
+            $url             = "$this->fsUrl/pvt/orders";
 
             // Cria pedido na FS
-            $response = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
+            $response        = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if ( !$response->successful() )
             {
@@ -612,19 +612,53 @@ class FastshopController extends Controller
                 ], 500 );
             }
 
-            $fsData = $response->json();
+            $fsData          = $response->json();
+            $orderId         = $data[ "order" ][ "id" ];
 
-            Order::update( $data[ "order" ][ "id" ], [
-                "meta_data" => [ [
-                    "key"   => "_fastshop_order_id",
-                    "value" => $fsData[ "orderId" ]
-                ] ]
-            ] );
+            $retryUpdate     = 0;
+            $retryCreate     = 0;
 
-            $orderId = $data[ "order" ][ "id" ];
-            $note    = "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ];
+            // Adiciona meta_data ao pedido, ID da FastShop
+            do
+            {
+                try
+                {
+                    $dataToUpdate = [
+                        "meta_data" => [ [
+                            "key"   => "_fastshop_order_id",
+                            "value" => $fsData[ "orderId" ]
+                        ] ]
+                    ];
 
-            $this->createNote( $orderId, $note );
+                    $this->updateOrder( $orderId, $dataToUpdate );
+
+                    $updatedData  = true;
+                }
+                catch ( Exception $e )
+                {
+                    $updatedData  = false;
+                    $retryUpdate++;
+                }
+            }
+            while ( !$updatedData || $retryUpdate < 3 );
+
+            // Adiciona nota ao pedido no marketplace
+            do
+            {
+                try
+                {
+                    $noteToCreate = "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ];
+                    $this->createNote( $orderId, $noteToCreate );
+
+                    $createdNote  = true;
+                }
+                catch ( Exception $e )
+                {
+                    $createdNote  = false;
+                    $retryCreate++;
+                }
+            }
+            while ( !$createdNote || $retryCreate < 3 );
 
             return response()->json( [
                 "errorCode" => null,
@@ -700,7 +734,7 @@ class FastshopController extends Controller
                     "message"   => "Something went wrong when reporting order approval"
                 ],400 );
             }
-~
+
             $orderId  = $data[ "order" ][ "id" ];
             $note     = "PEDIDO APROVADO NA FAST SHOP:\n";
             $note    .= DataTranslator::translate( "orderStatusChange", $response->json() );
@@ -1121,5 +1155,17 @@ class FastshopController extends Controller
     private function createNote( int $orderId, string $message )
     {
         Note::create( $orderId, [ "note" => $message ] );
+    }
+
+    /**
+     * Atualiza pedido do marketplace
+     *
+     * @param   integer     $orderId
+     * @param   array       $data
+     * @return  void
+     */
+    private function updateOrder( int $orderId, array $data )
+    {
+        Order::update( $orderId, $data );
     }
 }
