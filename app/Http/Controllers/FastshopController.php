@@ -556,7 +556,7 @@ class FastshopController extends Controller
     public function orderCreation( Request $request, $orderId )
     {
         // Verifição de chaves
-        // if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
+        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         try
         {
