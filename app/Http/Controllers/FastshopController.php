@@ -273,16 +273,10 @@ class FastshopController extends Controller
         {
             $fsData    = $request->all();
 
-            if ( !empty( $fsData[ "trackingNumber" ] ) )
-            {
-                $tracking = DataTranslator::translate( "tracking", $fsData );
-                Note::create( $orderId, [ "note" => $tracking ] );
-            }
-            else
-            {
-                $invoice  = DataTranslator::translate( "invoice",  $fsData );
-                Note::create( $orderId, [ "note" => $invoice ] );
-            }
+            $type      = ( !empty( $fsData[ "trackingNumber" ] ) ) ? "tracking" : "invoice";
+            $note      = DataTranslator::translate( $type, $fsData );
+
+            $this->createNote( $orderId, $note );
 
             // busca o orderId da FS no meta_data
             $order     = Order::find( $orderId );
@@ -327,10 +321,9 @@ class FastshopController extends Controller
 
             Order::update( $orderId, [ "status" => "completed" ] );
 
-            Note::create( $orderId, [
-                "note"          => "ENTREGA REALIZADA\n $deliveredDate",
-                "customer_note" => false,
-            ] );
+            $note          = "ENTREGA REALIZADA\n $deliveredDate";
+
+            $this->createNote( $orderId, $note );
 
             // busca o orderId da FS no meta_data
             $order         = Order::find( $orderId );
@@ -376,7 +369,10 @@ class FastshopController extends Controller
             $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
 
             Notification::notify( "cancelationOrderFS", $data );
-            Note::create( $orderId, [ "note" => "PEDIDO CANCELADO PELA FASTSHOP\n" . date( "d/m/Y à\s H:i:s" ) ] );
+
+            $note            = "PEDIDO CANCELADO PELA FASTSHOP\n" . date( "d/m/Y à\s H:i:s" );
+
+            $this->createNote( $orderId, $note );
 
             // busca o orderId da FS no meta_data
             $order           = Order::find( $orderId );
@@ -560,7 +556,7 @@ class FastshopController extends Controller
     public function orderCreation( Request $request, $orderId )
     {
         // Verifição de chaves
-        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
+        // if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE ) return $verify;
 
         try
         {
@@ -573,14 +569,15 @@ class FastshopController extends Controller
 
             if ( $data[ "order" ][ "fs_error" ][ "error" ] )
             {
-                $error = $data[ "order" ][ "fs_error" ];
+                $error   = $data[ "order" ][ "fs_error" ];
 
                 Log::order( "error", "New order error", [ $error, $data ] );
                 Notification::notify( "newOrderError", $data );
 
-                Note::create( $data[ "order" ][ "id" ], [
-                    "note" => DataTranslator::translate( "newOrderFsError", $error )
-                ] );
+                $orderId = $data[ "order" ][ "id" ];
+                $note    = DataTranslator::translate( "newOrderFsError", $error );
+
+                $this->createNote( $orderId, $note );
 
                 return response()->json( [
                     "errorCode" => "5001", // 5001 - erro na consulta dos dados de frete na FS
@@ -603,9 +600,10 @@ class FastshopController extends Controller
                 Log::order( "error", "New order error", [ $error, $body ] );
                 Notification::notify( "newOrderError", $data );
 
-                Note::create( $data[ "order" ][ "id" ], [
-                    "note" => "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ]
-                ] );
+                $orderId = $data[ "order" ][ "id" ];
+                $note    = "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ];
+
+                $this->createNote( $orderId, $note );
 
                 return response()->json( [
                     "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
@@ -616,16 +614,17 @@ class FastshopController extends Controller
 
             $fsData = $response->json();
 
-            Note::create( $data[ "order" ][ "id" ], [
-                "note"      => "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ]
-            ] );
-
             Order::update( $data[ "order" ][ "id" ], [
                 "meta_data" => [ [
                     "key"   => "_fastshop_order_id",
                     "value" => $fsData[ "orderId" ]
                 ] ]
             ] );
+
+            $orderId = $data[ "order" ][ "id" ];
+            $note    = "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ];
+
+            $this->createNote( $orderId, $note );
 
             return response()->json( [
                 "errorCode" => null,
@@ -683,13 +682,13 @@ class FastshopController extends Controller
                 ],400 );
             }
 
-            $fsOrderId     = $meta[ $meta_key ][ "value" ];
+            $fsOrderId       = $meta[ $meta_key ][ "value" ];
 
-            $url           = "$this->fsUrl/pvt/orders/$fsOrderId/fulfill";
-            $body          = [ "marketplaceOrderId" => $data[ "order" ][ "id" ] ];
+            $url             = "$this->fsUrl/pvt/orders/$fsOrderId/fulfill";
+            $body            = [ "marketplaceOrderId" => $data[ "order" ][ "id" ] ];
 
             // envia solicitação a FS
-            $response      = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
+            $response        = Http::withHeaders( $this->fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if( !$response->successful() )
             {
@@ -701,13 +700,12 @@ class FastshopController extends Controller
                     "message"   => "Something went wrong when reporting order approval"
                 ],400 );
             }
+~
+            $orderId  = $data[ "order" ][ "id" ];
+            $note     = "PEDIDO APROVADO NA FAST SHOP:\n";
+            $note    .= DataTranslator::translate( "orderStatusChange", $response->json() );
 
-            $note  = "PEDIDO APROVADO NA FAST SHOP:\n";
-            $note .= DataTranslator::translate( "orderStatusChange", $response->json() );
-
-            Note::create( $data[ "order" ][ "id" ], [
-                "note" => $note
-            ] );
+            $this->createNote( $orderId, $note );
 
             return response()->json( [
                 "errorCode" => null,
@@ -784,11 +782,11 @@ class FastshopController extends Controller
                 ],400 );
             }
 
-            $note  = "PEDIDO CANCELADO NA FAST SHOP:\n";
-            $note .= DataTranslator::translate( "orderStatusChange", $response->json() );
-            Note::create( $data[ "order" ][ "id" ], [
-                "note" => $note
-            ] );
+            $orderId  = $data[ "order" ][ "id" ];
+            $note     = "PEDIDO CANCELADO NA FAST SHOP:\n";
+            $note    .= DataTranslator::translate( "orderStatusChange", $response->json() );
+
+            $this->createNote( $orderId, $note );
 
             return response()->json( [
                 "errorCode" => null,
@@ -1111,5 +1109,17 @@ class FastshopController extends Controller
         }
 
         return $data;
+    }
+
+    /**
+     * Cria nota no pedido do marketplace
+     *
+     * @param   integer     $orderId
+     * @param   string      $message
+     * @return  void
+     */
+    private function createNote( int $orderId, string $message )
+    {
+        Note::create( $orderId, [ "note" => $message ] );
     }
 }
