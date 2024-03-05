@@ -615,50 +615,18 @@ class FastshopController extends Controller
             $fsData          = $response->json();
             $orderId         = $data[ "order" ][ "id" ];
 
-            $retryUpdate     = 0;
-            $retryCreate     = 0;
-
             // Adiciona meta_data ao pedido, ID da FastShop
-            do
-            {
-                try
-                {
-                    $dataToUpdate = [
-                        "meta_data" => [ [
-                            "key"   => "_fastshop_order_id",
-                            "value" => $fsData[ "orderId" ]
-                        ] ]
-                    ];
-
-                    $this->updateOrder( $orderId, $dataToUpdate );
-
-                    $updatedData  = true;
-                }
-                catch ( Exception $e )
-                {
-                    $updatedData  = false;
-                    $retryUpdate++;
-                }
-            }
-            while ( !$updatedData || $retryUpdate < 3 );
+            $dataToUpdate    = [
+                "meta_data" => [ [
+                    "key"   => "_fastshop_order_id",
+                    "value" => $fsData[ "orderId" ]
+                ] ]
+            ];
+            $this->updateOrder( $orderId, $dataToUpdate );
 
             // Adiciona nota ao pedido no marketplace
-            do
-            {
-                try
-                {
-                    $noteToCreate = "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ];
-                    $this->createNote( $orderId, $noteToCreate );
-
-                    $createdNote  = true;
-                }
-                catch ( Exception $e )
-                {
-                    $createdNote  = false;
-                    $retryCreate++;
-                }
-            }
-            while ( !$createdNote || $retryCreate < 3 );
+            $noteToCreate    = "PEDIDO CRIADO NA FAST SHOP:\n#" . $fsData[ "orderId" ];
+            $this->createNote( $orderId, $noteToCreate );
 
             return response()->json( [
                 "errorCode" => null,
@@ -1154,7 +1122,23 @@ class FastshopController extends Controller
      */
     private function createNote( int $orderId, string $message )
     {
-        Note::create( $orderId, [ "note" => $message ] );
+        $retry  = 0;
+        $failed = false;
+
+        do
+        {
+            try
+            {
+                Note::create( $orderId, [ "note" => $message ] );
+                $failed = false;
+            }
+            catch ( Exception $e )
+            {
+                $retry++;
+                $failed = true;
+            }
+        }
+        while ( $failed || $retry < 3 );
     }
 
     /**
@@ -1166,6 +1150,22 @@ class FastshopController extends Controller
      */
     private function updateOrder( int $orderId, array $data )
     {
-        Order::update( $orderId, $data );
+        $retry  = 0;
+        $failed = false;
+
+        do
+        {
+            try
+            {
+                Order::update( $orderId, $data );
+                $failed = false;
+            }
+            catch ( Exception $e )
+            {
+                $retry++;
+                $failed = true;
+            }
+        }
+        while ( $failed || $retry < 3 );
     }
 }
