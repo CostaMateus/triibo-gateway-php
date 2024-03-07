@@ -59,7 +59,7 @@ class CofryIntegration
     {
         $stores = self::getStoresActive();
 
-        if ( !$stores ) return null;
+        if ( empty( $stores ) ) return null;
 
         $stores = self::translatorStore( $stores );
 
@@ -151,7 +151,7 @@ class CofryIntegration
         $stores = self::getStoresCofry();
         $status = self::getStatusStores();
 
-        if ( !$stores || $status ) return null;
+        if ( !$stores || $status ) return [];
 
         if ( $stores ) self::usort( $stores );
         if ( $status ) self::usort( $status );
@@ -517,6 +517,8 @@ class CofryIntegration
     public static function getImagens()
     {
         $stores    = self::getStoresActive();
+
+        if ( empty( $stores ) ) return;
 
         foreach ( $stores as $store )
             if ( $store[ "Logo" ] ) self::saveImage( $store[ "Logo" ] );
