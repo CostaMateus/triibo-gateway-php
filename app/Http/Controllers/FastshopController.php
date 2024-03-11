@@ -1130,7 +1130,7 @@ class FastshopController extends Controller
             try
             {
                 Note::create( $orderId, [ "note" => $message ] );
-                $failed = false;
+                return;
             }
             catch ( Exception $e )
             {
@@ -1138,7 +1138,7 @@ class FastshopController extends Controller
                 $failed = true;
             }
         }
-        while ( $failed || $retry < 3 );
+        while ( $failed && $retry < 3 );
     }
 
     /**
@@ -1158,7 +1158,7 @@ class FastshopController extends Controller
             try
             {
                 Order::update( $orderId, $data );
-                $failed = false;
+                return;
             }
             catch ( Exception $e )
             {
@@ -1166,6 +1166,6 @@ class FastshopController extends Controller
                 $failed = true;
             }
         }
-        while ( $failed || $retry < 3 );
+        while ( $failed && $retry < 3 );
     }
 }
