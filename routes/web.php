@@ -20,7 +20,9 @@ use Codexshaper\WooCommerce\Facades\Order;
 // use Doctrine\Inflector\Rules\Substitution;
 // use Codexshaper\WooCommerce\Facades\Coupon;
 // use App\Http\Controllers\ChatGuruController;
+use Codexshaper\WooCommerce\Facades\Coupon;
 use App\Http\Integrations\MauticIntegration;
+use Codexshaper\WooCommerce\Facades\Customer;
 // use App\Http\Controllers\FastshopController;
 // use App\Http\Integrations\FastshopIntegration\DataTranslator;
 // use Codexshaper\WooCommerce\Facades\Product;
@@ -82,6 +84,79 @@ Route::group(["middleware" => "auth"], function() {
 });
 
 
+Route::prefix( "mkt" )->group( function () {
+
+    Route::get( "/get-customer", function()
+    {
+        $customer = Customer::all( [
+            "per_page" => 100,
+            "search"   => "costa.mack95@hotmail.com"
+        ] );
+
+        dd( $customer );
+    } );
+
+    Route::get( "/get-order/{id}", function( $id )
+    {
+        $order = Order::find( $id );
+
+        dd( $order );
+    } );
+
+    Route::get( "/update-order", function()
+    {
+        $order_id = "972533";
+        $data     = [
+            "customer_id" => 4591,
+        ];
+
+        $order    = Order::update( $order_id, $data );
+
+        dd( $data, $order );
+    } );
+
+    Route::get( "/create-order", function()
+    {
+        $data = [
+            // "customer_id"          => 1717,
+            "payment_method"       => "triibo_assinaturas",
+            "payment_method_title" => "Triibo Assinaturas",
+            "status"               => "on-hold", // pedido entra como aguardando
+            "set_paid"             => false,     // e nao pago
+            "billing"              => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Al Eduardo Prado",
+                "address_2"  => "170",
+                "city"       => "Sao Paulo",
+                "state"      => "SP",
+                "postcode"   => "01218011",
+                "country"    => "Brasil",
+                "email"      => "mateus.costa@triibo.com.br",
+                "phone"      => "11949289507",
+            ],
+            "shipping"             => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Al Eduardo Prado",
+                "address_2"  => "170",
+                "city"       => "Sao Paulo",
+                "state"      => "SP",
+                "postcode"   => "01218011",
+                "country"    => "Brasil",
+            ],
+            "line_items"           => [ [
+                "product_id" => 972529,
+                "quantity"   => 1,
+            ] ],
+        ];
+
+        $order = Order::create( $data );
+
+        dd( $data, $order );
+    } );
+
+} );
 
 Route::get( "/fs", function () {
 
