@@ -59,7 +59,7 @@ class CofryIntegration
     {
         $stores = self::getStoresActive();
 
-        if ( empty( $stores ) ) return null;
+        if ( !$stores ) return null;
 
         $stores = self::translatorStore( $stores );
 
@@ -73,7 +73,7 @@ class CofryIntegration
      */
     private static function getPromosCofry()
     {
-        $client = Http::asForm();
+        $client = Http::withoutVerifying()->asForm();
 
         $res    = $client->post( self::URL_PROMO, self::TOKEN )->json();
 
@@ -98,7 +98,7 @@ class CofryIntegration
      */
     private static function getStoresCofry()
     {
-        $client = Http::asForm();
+        $client = Http::withoutVerifying()->asForm();
 
         $res    = $client->post( self::URL_STORE, self::TOKEN )->json();
 
@@ -123,7 +123,7 @@ class CofryIntegration
      */
     private static function getStatusStores()
     {
-        $client = Http::asForm();
+        $client = Http::withoutVerifying()->asForm();
 
         $res    = $client->post( self::URL_STATUS, self::TOKEN )->json();
 
@@ -151,7 +151,7 @@ class CofryIntegration
         $stores = self::getStoresCofry();
         $status = self::getStatusStores();
 
-        if ( !$stores || $status ) return [];
+        if ( !$stores || !$status ) return null;
 
         if ( $stores ) self::usort( $stores );
         if ( $status ) self::usort( $status );
@@ -518,7 +518,7 @@ class CofryIntegration
     {
         $stores    = self::getStoresActive();
 
-        if ( empty( $stores ) ) return;
+        if ( !$stores ) return;
 
         foreach ( $stores as $store )
             if ( $store[ "Logo" ] ) self::saveImage( $store[ "Logo" ] );
@@ -552,7 +552,7 @@ class CofryIntegration
             $fullPathStore = $pathStore . "/" . self::PREFIX_STORE . $imgName;
             $fullPathPromo = $pathPromo . "/" . self::PREFIX_PROMO . $imgName;
 
-            $response      = Http::get( $logo );
+            $response      = Http::withoutVerifying()->get( $logo );
 
             if ( $response->successful() )
             {
