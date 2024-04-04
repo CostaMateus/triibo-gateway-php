@@ -601,7 +601,7 @@ class FastshopController extends Controller
                 Notification::notify( "newOrderError", $data );
 
                 $orderId = $data[ "order" ][ "id" ];
-                $note    = "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ];
+                $note    = "ERROR FS\n" . $error[ "message" ] . "\nCode: " . $error[ "errorCode" ];
 
                 $this->createNote( $orderId, $note );
 
