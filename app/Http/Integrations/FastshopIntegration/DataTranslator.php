@@ -7,151 +7,146 @@ use Illuminate\Support\Str;
 
 class DataTranslator
 {
+    // Define the default country for the query
+    private const DEFAULT_COUNTRY = "BRA";
 
+    // Define the default seller for the query
+    private const DEFAULT_SELLER  = "FSH";
+
+    /**
+     * Translates the provided data based on the specified type.
+     * This method uses the PHP 8 match expression to determine the appropriate translation method to call.
+     * Each case in the match expression corresponds to a different type of operation that requires translation.
+     * If the type is not recognized, an InvalidArgumentException is thrown.
+     *
+     * @param   string  $type               The type of translation to perform.
+     * @param   array   $data               The data to be translated.
+     * @throws  InvalidArgumentException    If the provided type is unknown.
+     * @return  array|string                The result of the translation, which can be an array or a string.
+     */
     public static function translate( string $type, array $data )
     {
-        switch ( $type ) {
-            case "updateStockPrice":
-                return self::updateStockPrice( $data );
-            break;
-            case "queryStockPrice":
-                return self::queryStockPrice( $data[ 0 ] );
-            break;
-
-            case "newProduct":
-                return self::newProductFsToWc( $data );
-            break;
-
-            case "freightCalcFs":
-                return self::freightCalcFs( $data );
-            break;
-            case "freightCalcWc":
-                return self::freightCalcWc( $data );
-            break;
-            // case "freightCalcFailed":
-            //     return self::freightCalcFailed( $data );
-            // break;
-            case "freightCalcNewOrder":
-                return self::freightCalcNewOrder( $data );
-            break;
-            case "breakingUpFreight":
-                return self::breakingUpFreight( $data );
-            break;
-
-            case "newOrderFs":
-                return self::newOrderFs( $data );
-            break;
-            case "newOrderFsError":
-                return self::newOrderFsError( $data );
-            break;
-            case "orderStatusChange":
-                return self::orderStatusChange( $data );
-            break;
-            case "orderError":
-                return self::orderError( $data );
-            break;
-
-            case "invoice":
-                return self::invoice( $data );
-            break;
-            case "tracking":
-                return self::tracking( $data );
-            break;
-        }
+        return match ( $type )
+        {
+            "updateStockPrice"    => self::updateStockPrice( $data ),     // Handles the translation for updating stock price.
+            "queryStockPrice"     => self::queryStockPrice( $data[ 0 ] ), // Handles the translation for querying stock price.
+            "newProduct"          => self::newProductFsToWc( $data ),     // Handles the translation for adding a new product.
+            "freightCalcFs"       => self::freightCalcFs( $data ),        // Handles the translation for freight calculation from Fast Shop.
+            "freightCalcWc"       => self::freightCalcWc( $data ),        // Handles the translation for freight calculation for WooCommerce.
+            "freightCalcNewOrder" => self::freightCalcNewOrder( $data ),  // Handles the translation for freight calculation for a new order.
+            "breakingUpFreight"   => self::breakingUpFreight( $data ),    // Handles the translation for breaking up freight into multiple shipments.
+            "newOrderFs"          => self::newOrderFs( $data ),           // Handles the translation for creating a new order in Fast Shop.
+            "newOrderFsError"     => self::newOrderFsError( $data ),      // Handles the translation for errors when creating a new order in Fast Shop.
+            "orderStatusChange"   => self::orderStatusChange( $data ),    // Handles the translation for an order status change.
+            "orderError"          => self::orderError( $data ),           // Handles the translation for an order error.
+            "invoice"             => self::invoice( $data ),              // Handles the translation for generating an invoice.
+            "tracking"            => self::tracking( $data ),             // Handles the translation for tracking information.
+            // "freightCalcFailed" => self::freightCalcFailed( $data ),      // This case is commented out and not currently used.
+            default               => throw new \InvalidArgumentException("Unknown type: {$type}"), // Throws an exception for unknown types.
+        };
     }
 
     /**
-     * Converte a atualização de um produto da Fastshop em WooCommerce
+     * This function takes data from a Fast Shop product update and transforms it into the format
+     * required by WooCommerce. It handles logistics information to determine stock status and
+     * calculates prices, ensuring that the product data is ready for WooCommerce operations.
      *
-     * @param array $data
-     * @return array
+     * @param   array   $data   The product data from Fast Shop.
+     * @return  array           The transformed product data for WooCommerce.
      */
     private static function updateStockPrice( array $data )
     {
-        $product = reset( $data );
-        $data    = end( $data );
+        // Attempt to get the product data, defaulting to null if not available.
+        $product       = reset( $data ) ?: null;
 
-        $value   = "-";
-        $class   = "fast-shop";
-        $qntty   = 0;
-        $status  = "outofstock";
+        // Get the last element of the data array which contains the update information.
+        $data          = end( $data );
 
+        // Set default values for the WooCommerce data.
+        $shippingClass = "fast-shop";
+        $quantity      = 0;
+        $stockStatus   = "outofstock";
+        $hubValue      = "-";
+
+        // Check if logistics information is available to update stock status and shipping class.
         if ( !empty( $data[ "logisticsInfo" ] ) )
         {
-            $aux = reset( $data[ "logisticsInfo" ] );
+            $logisticsInfo = reset( $data[ "logisticsInfo" ] );
 
-            if ( !empty( $aux[ "slas" ] ) )
+            // If shipping information is available, extract the hub ID and calculate the shipping class.
+            if ( !empty( $logisticsInfo[ "slas" ] ) )
             {
-                $slas   = reset( $aux[ "slas" ] );
-                $value  = $slas[ "id" ];
-                $hub    = explode( "_", $value );
-                $class  = "fast-shop-" . end( $hub );
+                $slas          = reset( $logisticsInfo[ "slas" ] );
+                $hubValue      = $slas[ "id" ];
+                $hubParts      = explode( "_", $hubValue );
+                $shippingClass = "fast-shop-" . end( $hubParts );
 
-                $qntty  = $aux[ "stockBalance" ];
-                $status = ( $qntty > 0 ) ? "instock" : "outofstock";
+                // Update the quantity and stock status based on the available balance.
+                $quantity      = $logisticsInfo[ "stockBalance" ];
+                $stockStatus   = ( $quantity > 0 ) ? "instock" : "outofstock";
             }
         }
-        else
+        elseif ( $product )
         {
-            $index = ( !$product ) ? "" : ( array_search( "_fastshop_hub", array_column( $product->meta_data, "key" ) ) );
-            $value = ( !$product ) ? "" : ( ( $index !== false ) ? $product->meta_data[ $index ]->value : "-"           );
-            $class = ( !$product ) ? "" : ( $product->shipping_class                                                    );
+            // If the product exists, retrieve the hub value and shipping class from its metadata.
+            $metaDataIndex = array_search( "_fastshop_hub", array_column( $product->meta_data, "key" ) );
+            $hubValue      = ( $metaDataIndex !== false ) ? $product->meta_data[ $metaDataIndex ]->value : "-";
+            $shippingClass = $product->shipping_class;
         }
 
+        // Prepare the WooCommerce data array with stock and shipping information.
+        $wcData        = [
+            "stock_quantity" => $quantity,
+            "stock_status"   => $stockStatus,
+            "manage_stock"   => true,
+            "shipping_class" => $shippingClass,
+            "meta_data"      => [
+                [
+                    "key"   => "_fastshop_hub",
+                    "value" => $hubValue,
+                ]
+            ]
+        ];
+
+        // If item pricing information is available, add it to the WooCommerce data.
         if ( !empty( $data[ "items" ] ) )
         {
-            $item    = $data[ "items" ][ 0 ];
-            $regular = Helper::insertDecimal( $item[ "listPrice" ] );
-            $sale    = Helper::insertDecimal( $item[ "price"     ] );
+            $item                      = $data[ "items" ][ 0 ];
+            $regularPrice              = Helper::insertDecimal( $item[ "listPrice" ] );
+            $salePrice                 = Helper::insertDecimal( $item[ "price"     ] );
 
-            $wcData  = [
-                "regular_price"  => $regular,
-                "sale_price"     => $sale,
-                "stock_quantity" => $qntty,
-                "stock_status"   => $status,
-                "manage_stock"   => true
-            ];
-        }
-        else
-        {
-            $wcData  = [
-                "stock_quantity" => $qntty,
-                "stock_status"   => $status,
-                "manage_stock"   => true
-            ];
+            $wcData[ "regular_price" ] = $regularPrice;
+            $wcData[ "sale_price"    ] = $salePrice;
         }
 
-        $wcData[ "shipping_class" ] = $class;
-        $wcData[ "meta_data"      ] = [ [
-            "key"   => "_fastshop_hub",
-            "value" => $value,
-        ] ];
-
+        // Return the prepared WooCommerce data.
         return $wcData;
     }
 
     /**
-     * Prepara a consulta de preço e estoque
+     * Prepares the query for price and stock information.
      *
-     * @param string $sku
-     * @return array
+     * @param   string  $sku    Stock Keeping Unit identifier.
+     * @return  array           The formatted query with stock and price information.
      */
     private static function queryStockPrice( string $sku )
     {
         return [
-            "items" => [ [
-                "id"       => $sku,
-                "quantity" => 1,
-                "seller"   => "FSH"
-            ] ],
+            "items"          => [
+                [
+                    "id"       => $sku,
+                    "quantity" => 1,
+                    "seller"   => self::DEFAULT_SELLER
+                ]
+            ],
             "postalCode"     => "04024020",
-            "country"        => "BRA",
+            "country"        => self::DEFAULT_COUNTRY,
             "geoCoordinates" => []
         ];
     }
 
     /**
-     * Converte um produto da Fastshop em WooCommerce
+     * Converte um produto da Fast Shop em WooCommerce
      *
      * @param array $data
      * @return array
@@ -281,7 +276,7 @@ class DataTranslator
     }
 
     /**
-     * Prepara uma consulta de frete do WooCommerce para a Fastshop
+     * Prepara uma consulta de frete do WooCommerce para a Fast Shop
      *
      * @param array $data
      * @return array
@@ -295,20 +290,20 @@ class DataTranslator
             $items[] = [
                 "id"       => explode( "FS-", $item[ "sku" ] )[ 1 ],
                 "quantity" => $item[ "quantity" ],
-                "seller"   => "FSH",
+                "seller"   => self::DEFAULT_SELLER,
             ];
         }
 
         return [
             "items"          => $items,
             "postalCode"     => $data[ "postalCode" ],
-            "country"        => "BRA",
+            "country"        => self::DEFAULT_COUNTRY,
             "geoCoordinates" => []
         ];
     }
 
     /**
-     * Converte retorno de frete da Fastshop para WooCommerce
+     * Converte retorno de frete da Fast Shop para WooCommerce
      *
      * @param array $data
      * @return array
@@ -403,7 +398,7 @@ class DataTranslator
     }
 
     /**
-     * Converte retorno de frete da Fastshop para WooCommerce
+     * Converte retorno de frete da Fast Shop para WooCommerce
      * Quando há falta de estoque ou entrega indisponivel
      *
      * @param array $data
@@ -449,7 +444,7 @@ class DataTranslator
     }
 
     /**
-     * Converte retorno de frete da Fastshop para WooCommerce, novo pedido
+     * Converte retorno de frete da Fast Shop para WooCommerce, novo pedido
      *
      * @param array $data
      * @return array
@@ -463,14 +458,14 @@ class DataTranslator
             $items[] = [
                 "id"       => explode( "FS-", $item[ "sku" ] )[ 1 ],
                 "quantity" => $item[ "quantity" ],
-                "seller"   => "FSH",
+                "seller"   => self::DEFAULT_SELLER,
             ];
         }
 
         return [
             "items"          => $items,
             "postalCode"     => $data[ "shipping" ][ "postcode" ],
-            "country"        => "BRA",
+            "country"        => self::DEFAULT_COUNTRY,
             "geoCoordinates" => []
         ];
     }
@@ -598,7 +593,7 @@ class DataTranslator
                     "complement"   => $shipping[ "address_2"    ],
                     "city"         => $shipping[ "city"         ],
                     "state"        => $shipping[ "state"        ],
-                    "country"      => "BRA",
+                    "country"      => self::DEFAULT_COUNTRY,
                 ],
             ],
         ];
