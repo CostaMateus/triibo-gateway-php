@@ -180,7 +180,7 @@ class CofryController extends Controller
                     $store[ "descricao" ] .= $aux;
                 }
 
-                $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
+                // $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
 
                 if ( isset( $fbStores[ $id ][ "hasPromo"     ] ) ) $store[ "hasPromo"     ] = $fbStores[ $id ][ "hasPromo"     ];
 

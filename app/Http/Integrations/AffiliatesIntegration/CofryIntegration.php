@@ -428,7 +428,9 @@ class CofryIntegration
                 "cashbackDefault"        => $cashback,
 
                 "enableDate"             => $dateEn,
+                "updateDate"             => $dateEn,
                 "disableDate"            => $dateDis,
+
                 "dataAlteracao"          => $dateEn,
                 "dataInclusao"           => $dateEn,
 
