@@ -500,28 +500,30 @@ class DataTranslator
     }
 
     /**
-     * Converte os dados do pedido WC para enviar a FS
+     * Converts WooCommerce order data to the format required by FS (Fast Shop).
      *
-     * @param array $data
-     * @return array
+     * @param   array   $data   The original order data from WooCommerce.
+     * @return  array           The order data formatted for FS.
      */
     private static function newOrderFs( array $data )
     {
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
+
+        // Extract parent order data if available, otherwise use the current order data.
         $parent        = $data[ "parent" ] ?? null;
-        $data          = $data[ "order"  ];
+        $order         = $data[ "order"  ];
 
-        $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $data[ "id" ] ] );
-        $auxData       = $data[ "fs_info" ];
+        // Extract the FS information from the order data.
+        $fsInfo        = $order[ "fs_info" ];
 
-        $items         = [];
-        $logisticsInfo = [];
-
-        foreach ( $auxData[ "logisticsInfo" ] as $item )
+        // Map each item to the FS format using the FS information.
+        $items         = array_map( function ( $item ) use ( $fsInfo )
         {
             $idItem  = $item[ "itemIndex" ];
-            $auxItem = $auxData[ "items" ][ $idItem ];
+            $auxItem = $fsInfo[ "items" ][ $idItem ];
 
-            $items[] = [
+            return [
                 "id"                => $auxItem[ "id"             ],
                 "quantity"          => $auxItem[ "quantity"       ],
                 "price"             => $auxItem[ "price"          ],
@@ -533,77 +535,61 @@ class DataTranslator
                 "freightCommission" => 0,
             ];
 
-            $idSla           = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
-            $selectedSla     = $item[ "slas" ][ $idSla ][ "id"               ];
-            $eta             = $item[ "slas" ][ $idSla ][ "shippingEstimate" ];
-            $price           = $item[ "slas" ][ $idSla ][ "price"            ];
+        }, $fsInfo[ "logisticsInfo" ] );
 
-            $logisticsInfo[] = [
-                "itemIndex"        => $idItem,
-                "selectedSla"      => $selectedSla,
+        // Map logistics information to the FS format.
+        $logisticsInfo = array_map( function ( $item )
+        {
+            $idSla       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
+            $selectedSla = $item[ "slas" ][ $idSla ];
+
+            return [
+                "itemIndex"        => $item[ "itemIndex" ],
+                "selectedSla"      => $selectedSla[ "id" ],
                 "lockTTL"          => "3d",
-                "shippingEstimate" => $eta,
-                "price"            => $price,
-                "deliveryWindow"   => []
+                "shippingEstimate" => $selectedSla[ "shippingEstimate" ],
+                "price"            => $selectedSla[ "price"            ],
+                "deliveryWindow"   => [],
             ];
-        }
 
-        $total    = $data[ "total" ];
+        }, $fsInfo[ "logisticsInfo" ] );
 
-        if ( isset( $data[ "coupon_lines" ][ 0 ] ) )
-            $total += $data[ "coupon_lines" ][ 0 ][ "discount" ];
+        // Calculate the total payment value for the marketplace.
+        $total         = $order[ "total" ] + ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
+        $total         = number_format( ( float ) $total, 2, ".", "" );
+        $total         = ( int ) str_replace( ".", "", $total );
 
-        // $total = $total + $data[ "discount_total" ];
-        $total    = number_format( (float) $total, 2, ".", "" );
-        $total    = (int) str_replace( ".", "", $total );
+        // Extract billing and shipping information, using parent data if available.
+        $billing       = $parent[ "billing"  ] ?? $order[ "billing"  ];
+        $shipping      = $parent[ "shipping" ] ?? $order[ "shipping" ];
 
-        // Recupera os dados do pedido pai, se houver
-        $billing  = ( $parent ) ? $parent[ "billing"  ] : $data[ "billing"  ];
-        $shipping = ( $parent ) ? $parent[ "shipping" ] : $data[ "shipping" ];
+        // Determine if the order is from a corporate entity based on the person type.
+        $isCorporate   = isset( $billing[ "persontype" ] ) && $billing[ "persontype" ] === "J";
 
-        // Verifica se o cliente é pessoa jurídica
-        if ( isset( $billing[ "persontype" ] ) && "J" == $billing[ "persontype" ] )
-        {
-            $docType   = "cnpj";
-            $cpf       = "";
-
-            $cnpj      = $billing[ "cnpj"    ];
-            $corpName  = $billing[ "company" ];
-            $corpPhone = $billing[ "phone"   ];
-        }
-        else
-        {
-            $docType   = "cpf";
-            $cpf       = $billing[ "cpf" ];
-
-            $cnpj      = "";
-            $corpName  = "";
-            $corpPhone = "";
-        }
-
-        $new   = [
-            "marketplaceOrderId"          => $data[ "id" ], // id do pedido no mkt
-            "marketplaceServicesEndpoint" => $url,          // api que recebe a "Order Invoice Notification"
+        // Return the formatted order data for FS.
+        return [
+            "marketplaceOrderId"          => $order[ "id" ],
+            "marketplaceServicesEndpoint" => $url,
             "marketplacePaymentValue"     => $total,
             "items"                       => $items,
-            "clientProfileData" => [
+            "clientProfileData"           => [
                 "email"             => $billing[ "email"      ],
                 "firstName"         => $billing[ "first_name" ],
                 "lastName"          => $billing[ "last_name"  ],
                 "phone"             => $billing[ "phone"      ],
-                "documentType"      => $docType,
-                "document"          => $cpf,
-                "corporateDocument" => $cnpj,
-                "corporateName"     => $corpName,
-                "tradeName"         => $corpName,
-                "corporatePhone"    => ( $cnpj ) ? $corpPhone : "",
-                "isCorporate"       => ( $cnpj ) ? true : false,
+                "documentType"      => $isCorporate ? "cnpj"                : "cpf",
+                "document"          => $isCorporate ? ""                    : $billing[ "cpf" ],
+                "corporateDocument" => $isCorporate ? $billing[ "cnpj"    ] : "",
+                "corporateName"     => $isCorporate ? $billing[ "company" ] : "",
+                "tradeName"         => $isCorporate ? $billing[ "company" ] : "",
+                "corporatePhone"    => $isCorporate ? $billing[ "phone"   ] : "",
+                "isCorporate"       => $isCorporate,
                 "stateInscription"  => null,
             ],
-            "shippingData"      => [
+            "shippingData" => [
                 "logisticsInfo" => $logisticsInfo,
                 "address"       => [
-                    "addressType"  => "Desconhecido",
+                    "addressType"  => "",
                     "receiverName" => $shipping[ "first_name"   ] . " " . $shipping[ "last_name" ],
                     "postalCode"   => $shipping[ "postcode"     ],
                     "street"       => $shipping[ "address_1"    ],
@@ -616,8 +602,6 @@ class DataTranslator
                 ],
             ],
         ];
-
-        return $new;
     }
 
     /**
