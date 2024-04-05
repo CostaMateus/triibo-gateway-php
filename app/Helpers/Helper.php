@@ -629,4 +629,77 @@ class Helper
 
         return $aux;
     }
+
+    /**
+     * Generates a short description for a product based on its full description, name, and attributes.
+     *
+     * It includes the voltage attribute if present and formats the description to a maximum length.
+     *
+     * @param   string  $description    The full description of the product.
+     * @param   string  $product_name   The name of the product.
+     * @param   array   $attributes     An array of product attributes.
+     * @return  string                  The generated short description.
+     */
+    public static function getFsProductShortDescription( string $description, string $product_name, array $attributes )
+    {
+        // Extract the first line of the full description.
+        $short     = explode( "\r\n", $description )[ 0 ];
+
+        // Use the product name if the first line is too short.
+        $short     = ( strlen( $short ) <= 50 ) ? $product_name : $short;
+
+        // Limit the description to 140 characters.
+        $short     = Str::limit( $short, 140, " (...)" );
+
+        // Find the voltage attribute, if it exists.
+        $volt_attr = current( array_filter( $attributes, function ( $att )
+        {
+            return Str::lower( $att[ "name" ] ) === "voltagem";
+        } ) );
+
+        // Append voltage information to the short description.
+        if ( $volt_attr )
+        {
+            $val = reset( $volt_attr[ "options" ] );
+            $val = in_array( $val, [ "110", "220" ] ) ? $val . "V" : $val;
+
+            if ( $val !== "NA" )
+                $short .= "\r\n\r\n" . Str::ucfirst( "voltagem" ) . " : $val";
+        }
+
+        return $short;
+    }
+
+    /**
+     * Converts product specifications into an array of WooCommerce-compatible attributes.
+     *
+     * @param   array   $specifications     An array of product specifications.
+     * @return  array                       An array of formatted attributes for WooCommerce.
+     */
+    public static function getFsProductAttributes( array $specifications )
+    {
+        $attributes = [];
+
+        // Iterate through each specification.
+        foreach ( $specifications as $key => $attr )
+        {
+            // Skip the ProductLineId field.
+            if ( $attr[ "fieldName" ] === "ProductLineId" )
+                continue;
+
+            // Convert boolean 'true' to 'SIM'.
+            $field_value  = $attr[ "fieldValue" ] === "true" ? "SIM" : $attr[ "fieldValue" ];
+
+            // Add the attribute to the array.
+            $attributes[] = [
+                "name"      => $attr[ "fieldName" ],
+                "position"  => $key,
+                "visible"   => true,
+                "variation" => true,
+                "options"   => [ $field_value ],
+            ];
+        }
+
+        return $attributes;
+    }
 }

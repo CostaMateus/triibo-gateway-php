@@ -146,133 +146,76 @@ class DataTranslator
     }
 
     /**
-     * Converte um produto da Fast Shop em WooCommerce
+     * Converts a Fast Shop product into a WooCommerce-compatible product array.
      *
-     * @param array $data
-     * @return array
+     * This function processes categories, images, specifications, and pricing to create an array with the necessary
+     * information to register or update a product in WooCommerce.
+     *
+     * @param   array   $data   The product data from Fast Shop.
+     * @return  array           The formatted product data for WooCommerce.
      */
     private static function newProductFsToWc( array $data )
     {
-        $attributes = [];
-        $categories = [];
-        $images     = [];
-
-        // $slug       = Helper::hyphenize( $data[ "ProductName" ] );
-        $slug       = \Str::slug( $data[ "ProductName" ] );
-        $sku        = $data[ "ProductId" ] == $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];
-
-        if ( !empty( $data[ "CategoryFullPath" ] ) )
+        // Map Fast Shop categories to WooCommerce category format.
+        $categories = array_map( function ( $ctg )
         {
-            foreach ( $data[ "CategoryFullPath" ] as $ctg )
-            {
-                $categories[] = [ "id" => $ctg ];
-            }
-        }
+            return [ "id" => $ctg ];
 
-        foreach ( $data[ "Images" ] as $img )
+        }, $data[ "CategoryFullPath" ] ?? [] );
+
+        // Filter and map Fast Shop images to WooCommerce image format.
+        $images     = array_map( function ( $img )
         {
-            if ( !Helper::validateImageUrl( $img[ "imageUrl" ] ) ) continue;
-
-            $images[] = [
+            return [
                 "src"  => $img[ "imageUrl"  ],
                 "name" => $img[ "imageName" ],
                 "alt"  => $img[ "imageName" ]
             ];
-        }
 
-        // VERIFICAR OUTROS PRODUTOS
-        foreach ( $data[ "SkuSpecifications" ] as $key => $attr )
+        }, array_filter( $data[ "Images" ], function ( $img )
         {
-            $attributes[] = [
-                "name"      => $attr[ "fieldName" ],
-                "position"  => $key,
-                "visible"   => true,
-                "variation" => true,
-                "options"   => [
-                    $attr[ "fieldValue" ]
-                ],
-            ];
-        }
-        foreach ( $data[ "ProductSpecifications" ] as $key => $attr )
-        {
-            if ( $attr[ "fieldName" ] == "ProductLineId" ) continue;
+            return Helper::validateImageUrl( $img[ "imageUrl" ] );
+        } ) );
 
-            $fieldValue   = ( $attr[ "fieldValue" ] === "true" ) ? "SIM" : $attr[ "fieldValue" ];
+        // Determine the SKU based on Fast Shop product and seller SKU.
+        $sku        = $data[ "ProductId" ] == $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];
 
-            $attributes[] = [
-                "name"      => $attr[ "fieldName" ],
-                "position"  => $key,
-                "visible"   => true,
-                "variation" => true,
-                "options"   => [ $fieldValue ],
-            ];
-        }
+        // Get product attributes from Fast Shop data.
+        $attributes = Helper::getFsProductAttributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
 
-        $description   = $data[ "ProductDescription" ];
+        // Generate a short description for the product.
+        $shortDescr = Helper::getFsProductShortDescription( $data[ "ProductDescription" ], $data[ "ProductName" ], $attributes );
 
-        $shortDescript = explode( "\r\n", $description )[ 0 ];
-        $shortDescript = ( strlen( $shortDescript ) <= 50 ) ? $data[ "ProductName" ] : $shortDescript;
-        $shortDescript = Str::limit( $shortDescript, 140, " ( ... )" );
-
-        $attr_name     = "";
-        $attr_val      = "";
-
-        foreach ( $attributes as $att )
-        {
-            $name = Str::lower( $att[ "name" ] );
-
-            if ( $name == "voltagem" )
-            {
-                $attr_name = Str::ucfirst( $name );
-                $val       = reset( $att[ "options" ] );
-                $attr_val  = ( $val == "110" || $val == "220" ) ? $val . "V" : $val;
-            }
-        }
-
-        if ( $attr_name && $attr_val && $attr_val != "NA" ) $shortDescript .= "\r\n\r\n$attr_name : $attr_val";
-
-        $wcData         = [
+        // Return the WooCommerce product array.
+        return [
             "name"              => $data[ "ProductName" ],
-            "slug"              => $slug,
-
-            "description"       => $description,
-            "short_description" => $shortDescript,
-            "sku"               => "FS-$sku",
-
+            "slug"              => Str::slug( $data[ "ProductName" ] ),
+            "description"       => $data[ "ProductDescription" ],
+            "short_description" => $shortDescr,
+            "sku"               => "FS-{$sku}",
             "regular_price"     => Helper::insertDecimal( $data[ "Pricing" ][ "ListPrice" ] ),
             "sale_price"        => Helper::insertDecimal( $data[ "Pricing" ][ "SalePrice" ] ),
-
             "manage_stock"      => true,
             "stock_quantity"    => $data[ "AvailableQuantity" ],
             "stock_status"      => $data[ "AvailableQuantity" ] > 0 ? "instock" : "outofstock",
             "backorders"        => "no",
             "sold_individually" => false,
-
             "weight"            => Helper::convertWeight( $data[ "WeightKg" ] ),
             "dimensions"        => [
                 "length" => ( string ) $data[ "Length" ],
                 "width"  => ( string ) $data[ "Width"  ],
                 "height" => ( string ) $data[ "Height" ]
             ],
-
             "shipping_class"    => "fast-shop",
-
             "upsell_ids"        => [],
             "cross_sell_ids"    => [],
             "parent_id"         => 0,
             "purchase_note"     => "",
-
             "tags"              => [ [ "id" => 289 ] ],
-
             "categories"        => $categories,
             "images"            => $images,
             "attributes"        => $attributes,
         ];
-
-        $wcData = json_encode( $wcData, JSON_UNESCAPED_SLASHES );
-        $wcData = json_decode( $wcData, true                   );
-
-        return $wcData;
     }
 
     /**
@@ -470,6 +413,12 @@ class DataTranslator
         ];
     }
 
+    /**
+     * Undocumented function
+     *
+     * @param   array $data
+     * @return  array
+     */
     private static function breakingUpFreight( array $data )
     {
         $newData = [];
