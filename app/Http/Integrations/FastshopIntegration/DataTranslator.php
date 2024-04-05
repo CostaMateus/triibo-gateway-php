@@ -507,11 +507,10 @@ class DataTranslator
      */
     private static function newOrderFs( array $data )
     {
-        $parent        = $data[ "parent" ];
+        $parent        = $data[ "parent" ] ?? null;
         $data          = $data[ "order"  ];
 
         $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $data[ "id" ] ] );
-        $name          = $data[ "billing" ][ "first_name" ] . " " . $data[ "billing" ][ "last_name" ];
         $auxData       = $data[ "fs_info" ];
 
         $items         = [];
@@ -549,56 +548,72 @@ class DataTranslator
             ];
         }
 
-        $total = $data[ "total" ];
+        $total    = $data[ "total" ];
 
         if ( isset( $data[ "coupon_lines" ][ 0 ] ) )
             $total += $data[ "coupon_lines" ][ 0 ][ "discount" ];
 
         // $total = $total + $data[ "discount_total" ];
-        $total = number_format( (float) $total, 2, ".", "" );
-        $total = (int) str_replace( ".", "", $total );
+        $total    = number_format( (float) $total, 2, ".", "" );
+        $total    = (int) str_replace( ".", "", $total );
+
+        // Recupera os dados do pedido pai, se houver
+        $billing  = ( $parent ) ? $parent[ "billing"  ] : $data[ "billing"  ];
+        $shipping = ( $parent ) ? $parent[ "shipping" ] : $data[ "shipping" ];
+
+        // Verifica se o cliente é pessoa jurídica
+        if ( isset( $billing[ "persontype" ] ) && "J" == $billing[ "persontype" ] )
+        {
+            $docType   = "cnpj";
+            $cpf       = "";
+
+            $cnpj      = $billing[ "cnpj"    ];
+            $corpName  = $billing[ "company" ];
+            $corpPhone = $billing[ "phone"   ];
+        }
+        else
+        {
+            $docType   = "cpf";
+            $cpf       = $billing[ "cpf" ];
+
+            $cnpj      = "";
+            $corpName  = "";
+            $corpPhone = "";
+        }
 
         $new   = [
             "marketplaceOrderId"          => $data[ "id" ], // id do pedido no mkt
             "marketplaceServicesEndpoint" => $url,          // api que recebe a "Order Invoice Notification"
             "marketplacePaymentValue"     => $total,
             "items"                       => $items,
-            // wc_order billing
             "clientProfileData" => [
-                "firstName"    => $data[ "billing" ][ "first_name" ],
-                "lastName"     => $data[ "billing" ][ "last_name"  ],
-                "email"        => $data[ "billing" ][ "email"      ],
-                "phone"        => $data[ "billing" ][ "phone"      ],
-                "document"     => ( $parent ) ? $parent[ "billing" ][ "cpf" ] : $data[ "billing" ][ "cpf" ],
-                "documentType" => "cpf",
-                "isCorporate"  => false,
-
-                // "isCorporate"       => true,
-                // "corporateName"     => "TD - Power Informatica LTDA",
-                // "tradeName"         => "TD - Power Informatica LTDA",
-                // "corporateDocument" => "07776469000166",
-                // "corporatePhone"    => "(11) 99200-5881",
-                // "email"             => "ppinho@me.com",
-                // "phone"             => "(11) 99200-5881",
+                "email"             => $billing[ "email"      ],
+                "firstName"         => $billing[ "first_name" ],
+                "lastName"          => $billing[ "last_name"  ],
+                "phone"             => $billing[ "phone"      ],
+                "documentType"      => $docType,
+                "document"          => $cpf,
+                "corporateDocument" => $cnpj,
+                "corporateName"     => $corpName,
+                "tradeName"         => $corpName,
+                "corporatePhone"    => ( $cnpj ) ? $corpPhone : "",
+                "isCorporate"       => ( $cnpj ) ? true : false,
+                "stateInscription"  => null,
             ],
             "shippingData"      => [
-                // wc_order shipping
-                "address"       => [
-                    "addressType"  => "addrType",
-                    "addressId"    => "addrId",
-                    "receiverName" => $name,
-                    "number"       => ( $parent ) ? $parent[ "shipping" ][ "number"       ] : $data[ "shipping" ][ "number"       ],
-                    "neighborhood" => ( $parent ) ? $parent[ "shipping" ][ "neighborhood" ] : $data[ "shipping" ][ "neighborhood" ],
-                    "street"       => $data[ "shipping" ][ "address_1" ],
-                    "complement"   => $data[ "shipping" ][ "address_2" ],
-                    "city"         => $data[ "shipping" ][ "city"      ],
-                    "state"        => $data[ "shipping" ][ "state"     ],
-                    "postalCode"   => $data[ "shipping" ][ "postcode"  ],
-                    "country"      => "BRA",
-
-                    // "receiverName" => "Paulo Pinho",
-                ],
                 "logisticsInfo" => $logisticsInfo,
+                "address"       => [
+                    "addressType"  => "Desconhecido",
+                    "receiverName" => $shipping[ "first_name"   ] . " " . $shipping[ "last_name" ],
+                    "postalCode"   => $shipping[ "postcode"     ],
+                    "street"       => $shipping[ "address_1"    ],
+                    "number"       => $shipping[ "number"       ],
+                    "neighborhood" => $shipping[ "neighborhood" ],
+                    "complement"   => $shipping[ "address_2"    ],
+                    "city"         => $shipping[ "city"         ],
+                    "state"        => $shipping[ "state"        ],
+                    "country"      => "BRA",
+                ],
             ],
         ];
 
@@ -730,4 +745,6 @@ class DataTranslator
 
         return "RASTREAMENTO\n Transportadora: $courier\n Código de rastreio: $trackingNumber\n URL: $trackingUrl";
     }
+
+
 }
