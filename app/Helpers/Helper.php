@@ -702,4 +702,26 @@ class Helper
 
         return $attributes;
     }
+
+    /**
+     * Formats an array of data into a structured string for display.
+     *
+     * This function is used to create a textual representation of the information
+     * contained in an array, with a title and a set of attributes and their labels.
+     *
+     * @param   array   $data           The input data array.
+     * @param   string  $title          The title for the section of formatted information.
+     * @param   array   $attributes     An associative array mapping data keys to their display labels.
+     * @return  string                  A formatted string containing the information.
+     */
+    public static function formatInfo( array $data, string $title, array $attributes )
+    {
+        $info = "$title\n";
+
+        foreach ( $attributes as $key => $label )
+            if ( isset( $data[ $key ] ) )
+                $info .= " $label: {$data[$key]}\n";
+
+        return $info;
+    }
 }

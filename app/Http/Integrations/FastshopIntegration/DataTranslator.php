@@ -655,30 +655,32 @@ class DataTranslator
     }
 
     /**
-     * Nota fiscal
-     * Converte os dados da notificação da FS para a anotação do WC
+     * Formats invoice information for display.
+     *
+     * @param   array   $data   The input data array containing invoice details.
+     * @return  string          A formatted string containing the invoice information.
      */
     private static function invoice( array $data )
     {
-        $invoiceNumber = $data[ "invoiceNumber" ];
-        $invoiceKey    = $data[ "invoiceKey"    ];
-        $invoiceUrl    = $data[ "invoiceUrl"    ];
-
-        return "NOTA FISCAL\n Nº: $invoiceNumber\n Chave: $invoiceKey\n URL: $invoiceUrl";
+        return Helper::formatInfo( $data, "NOTA FISCAL", [
+            "invoiceNumber" => "Nº",
+            "invoiceKey"    => "Chave",
+            "invoiceUrl"    => "URL"
+        ] );
     }
 
     /**
-     * Rastreamento
-     * Converte os dados da notificação da FS para a anotação do WC
+     * Formats tracking information for display.
+     *
+     * @param   array   $data   The input data array containing tracking details.
+     * @return  string          A formatted string containing the tracking information.
      */
     private static function tracking( array $data )
     {
-        $courier        = $data[ "courier"        ];
-        $trackingNumber = $data[ "trackingNumber" ];
-        $trackingUrl    = $data[ "trackingUrl"    ];
-
-        return "RASTREAMENTO\n Transportadora: $courier\n Código de rastreio: $trackingNumber\n URL: $trackingUrl";
+        return Helper::formatInfo( $data, "RASTREAMENTO", [
+            "courier"        => "Transportadora",
+            "trackingNumber" => "Código de rastreio",
+            "trackingUrl"    => "URL"
+        ] );
     }
-
-
 }
