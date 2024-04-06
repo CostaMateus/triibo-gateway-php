@@ -786,4 +786,20 @@ class Helper
 
         }, $logistics );
     }
+
+    /**
+     * Retrieves stock and price information for a given product.
+     *
+     * @param   object  $product    The product object from which data will be extracted.
+     * @return  array               An associative product array.
+     */
+    public static function getProductStockPrice( object $product )
+    {
+        return [
+            "regular_price"  => $product->regular_price,
+            "sale_price"     => $product->sale_price,
+            "stock_quantity" => $product->stock_quantity,
+            "stock_status"   => $product->stock_status,
+        ];
+    }
 }
