@@ -219,26 +219,27 @@ class DataTranslator
     }
 
     /**
-     * Prepara uma consulta de frete do WooCommerce para a Fast Shop
+     * Prepares a WooCommerce shipping query for Fast Shop.
      *
-     * @param array $data
-     * @return array
+     * This function transforms item data into a format suitable for a shipping query with Fast Shop.
+     *
+     * @param   array   $data  The array of data containing items and shipping details.
+     * @return  array          The formatted array suitable for a Fast Shop shipping query.
      */
     private static function freightCalcFs( array $data )
     {
-        $items = [];
-
-        foreach ( $data[ "items" ] as $item )
-        {
-            $items[] = [
-                "id"       => explode( "FS-", $item[ "sku" ] )[ 1 ],
-                "quantity" => $item[ "quantity" ],
-                "seller"   => self::DEFAULT_SELLER,
-            ];
-        }
-
         return [
-            "items"          => $items,
+            // Maps each line item to the desired structure.
+            "items" => array_map( function ( $item )
+            {
+                return [
+                    "id"       => str_replace( "FS-", "", $item[ "sku" ] ),
+                    "quantity" => $item[ "quantity" ],
+                    "seller"   => self::DEFAULT_SELLER,
+                ];
+
+            }, $data[ "items" ] ),
+
             "postalCode"     => $data[ "postalCode" ],
             "country"        => self::DEFAULT_COUNTRY,
             "geoCoordinates" => []
@@ -246,52 +247,56 @@ class DataTranslator
     }
 
     /**
-     * Converte retorno de frete da Fast Shop para WooCommerce
+     * Converts Fast Shop freight return to WooCommerce format.
      *
-     * @param array $data
-     * @return array
+     * This function processes logistics information and converts it to a format compatible with WooCommerce.
+     *
+     * @param   array   $data   The input data containing logistics and item information.
+     * @return  array           Returns an array formatted with logistics information for WooCommerce.
      */
     private static function freightCalcWc( array $data )
     {
-        $hubs = [
-            "KAIVEHUB_Normal_05",
-            "KAIVEHUB_Normal_14",
-            "KAIVEHUB_Normal_33",
-
-            "KAIVEHUB_Normal_4E",
-            "KAIVEHUB_Normal_25",
-            "KAIVEHUB_Normal_60",
-            "KAIVEHUB_Normal_61",
-
-            "KAIVEHUB_Normal_19",
-            "KAIVEHUB_Normal_74",
-
-            "KAIVEHUB_Normal_3E",
-
-            "KAIVEHUB_Normal_97",
-        ];
-
+        // Initialize an empty array to store logistics information.
         $logistics = [];
 
+        // Define a list of known hubs for validation.
+        $hubs      = [
+            "KAIVEHUB_Normal_05", "KAIVEHUB_Normal_14", "KAIVEHUB_Normal_33",
+            "KAIVEHUB_Normal_4E", "KAIVEHUB_Normal_25", "KAIVEHUB_Normal_60",
+            "KAIVEHUB_Normal_61", "KAIVEHUB_Normal_19", "KAIVEHUB_Normal_74",
+            "KAIVEHUB_Normal_3E", "KAIVEHUB_Normal_97",
+        ];
+
+        // Check if logistics information and items are present in the data.
         if ( !empty( $data[ "logisticsInfo" ] ) && !empty( $data[ "items" ] ) )
         {
-            foreach ( $data[ "logisticsInfo" ] as $key => $lg )
+            // Iterate over each logistics information entry.
+            foreach ( $data[ "logisticsInfo" ] as $lg )
             {
-                $idChannel = array_search( "delivery", array_column( $lg[ "deliveryChannels" ], "id"              ) );
-                $idSlas    = array_search( "delivery", array_column( $lg[ "slas"             ], "deliveryChannel" ) );
-
-                if ( $idChannel !== false && $idSlas !== false )
+                // Find the delivery channel and SLA for 'delivery'.
+                $deliveryChannel = current( array_filter( $lg[ "deliveryChannels" ], function ( $channel )
                 {
-                    $stock        = $lg[ "deliveryChannels" ][ $idChannel ][ "stockBalance"     ];
-                    $price        = $lg[ "slas"             ][ $idSlas    ][ "price"            ];
-                    $deliveryTime = $lg[ "slas"             ][ $idSlas    ][ "shippingEstimate" ];
-                    $hub          = $lg[ "slas"             ][ $idSlas    ][ "id"               ];
+                    return $channel[ "id" ] === "delivery";
+                } ) );
+                $slas            = current( array_filter( $lg[ "slas" ], function ( $sla )
+                {
+                    return $sla[ "deliveryChannel" ] === "delivery";
+                } ) );
 
+                // If both delivery channel and SLA are found, process them.
+                if ( $deliveryChannel && $slas )
+                {
+                    $stock        = $deliveryChannel[ "stockBalance" ];
+                    $hub          = $slas[ "id"               ];
+                    $price        = $slas[ "price"            ];
+                    $deliveryTime = $slas[ "shippingEstimate" ];
+
+                    // Default values for code and message.
                     $code         = null;
                     $message      = "ok";
 
-                    // Notifica HUB não mapeado
-                    if ( !in_array( $hub, $hubs ) )
+                    // Notify if the hub is not in the known list of hubs.
+                    if ( !in_array( $hub, $hubs, true ) )
                     {
                         $error = [
                             "cep" => $data[ "postalCode" ],
@@ -304,56 +309,75 @@ class DataTranslator
                 }
                 else
                 {
-                    $stock        = $lg[ "stockBalance" ];
-                    $price        = 0;
-                    $deliveryTime = 0;
-                    $hub          = "";
-
-                    $code         = 4000;
-                    $message      = "Delivery not found";
+                    // If delivery channel or SLA is not found, set default values.
+                    $stock   = $lg[ "stockBalance" ] ?? 0;
+                    $price   = $deliveryTime = $hub = "";
+                    $code    = 4000;
+                    $message = "Delivery not found";
                 }
 
-                $availableQuantity = ( $lg[ "quantity" ] <= $stock ) ? true : false;
-                $logistics[]       = [
-                    "sku"               => "FS-" . $data[ "items" ][ $lg[ "itemIndex" ] ][ "id" ],
-                    "quantity"          => $lg[ "quantity" ],
-                    "stock"             => $stock,
-                    "deliveryPrice"     => Helper::convertPrice( $price ),
-                    "deliveryTime"      => Helper::convertDeliveryTime( $deliveryTime ),
-                    "availableQuantity" => $availableQuantity,
-                    "regular_price"     => Helper::convertPrice( $data[ "items" ][ $lg[ "itemIndex" ] ][ "listPrice" ] ),
-                    "sale_price"        => Helper::convertPrice( $data[ "items" ][ $lg[ "itemIndex" ] ][ "price"     ] ),
-                    "hub"               => $hub,
+                // Check if the item index exists in the items array.
+                $itemIndex = $lg[ "itemIndex" ] ?? null;
 
-                    "code"              => $code,
-                    "message"           => $message,
-                ];
+                if ( $itemIndex !== null && isset( $data[ "items" ][ $itemIndex ] ) )
+                {
+                    $item        = $data[ "items" ][ $itemIndex ];
+
+                    // Add the logistics information for the current item to the array.
+                    $logistics[] = [
+                        "sku"               => "FS-" . $item[ "id" ],
+                        "quantity"          => $lg[ "quantity" ],
+                        "stock"             => $stock,
+                        "deliveryPrice"     => Helper::convertPrice( $price ),
+                        "deliveryTime"      => Helper::convertDeliveryTime( $deliveryTime ),
+                        "availableQuantity" => ( $lg[ "quantity" ] <= $stock ),
+                        "regular_price"     => Helper::convertPrice( $item[ "listPrice" ] ),
+                        "sale_price"        => Helper::convertPrice( $item[ "price"     ] ),
+                        "hub"               => $hub,
+                        "code"              => $code,
+                        "message"           => $message,
+                    ];
+                }
             }
         }
         else
         {
+            // If logistics information or items are missing, call the fallback function.
             $logistics = self::freightCalcFailed( $data );
         }
 
-        $logistics = count( $logistics ) > 1 ? $logistics : $logistics[ 0 ];
-
+        // Return the logistics information array.
         return $logistics;
     }
 
     /**
-     * Converte retorno de frete da Fast Shop para WooCommerce
-     * Quando há falta de estoque ou entrega indisponivel
+     * Convert the Fast Shop freight return to the WooCommerce format.
      *
-     * @param array $data
-     * @return array
+     * Deals with situations where there is a lack of stock or delivery is unavailable.
+     *
+     * @param   array   $data   Input data containing the items and their information.
+     * @return  array           Returns an array formatted with logistics information for WooCommerce.
      */
     private static function freightCalcFailed( array $data )
     {
-        $logistics = [];
+        // Initialize the logistics array with default values in case there are no items.
+        $logistics = [ [
+            "stock"             => 0,
+            "deliveryPrice"     => "0.00",
+            "deliveryTime"      => "0",
+            "availableQuantity" => false,
+            "hub"               => "",
+            "code"              => 4002,
+            "message"           => "SKU currently out-of-stock",
+        ] ];
 
+        // Check if items exist before processing.
         if ( !empty( $data[ "items" ] ) )
         {
-            foreach ( $data[ "items" ] as $key => $product )
+            // Reset logistics to an empty array to populate with actual item data.
+            $logistics = [];
+
+            foreach ( $data[ "items" ] as $product )
             {
                 $logistics[] = [
                     "sku"               => "FS-" . $product[ "id" ],
@@ -370,43 +394,30 @@ class DataTranslator
                 ];
             }
         }
-        else
-        {
-            $logistics[] = [
-                "stock"             => 0,
-                "deliveryPrice"     => "0.00",
-                "deliveryTime"      => "0",
-                "availableQuantity" => false,
-                "hub"               => "",
-                "code"              => 4002,
-                "message"           => "SKU currently out-of-stock",
-            ];
-        }
 
         return $logistics;
     }
 
     /**
-     * Converte retorno de frete da Fast Shop para WooCommerce, novo pedido
+     * Converts Fast Shop freight return to WooCommerce format for a new order.
      *
-     * @param array $data
-     * @return array
+     * @param   array   $data   The input data containing order line items and shipping information.
+     * @return  array           Returns an array formatted with items and shipping information for a new order.
      */
     private static function freightCalcNewOrder( array $data )
     {
-        $items = [];
-
-        foreach ( $data[ "line_items" ] as $item )
-        {
-            $items[] = [
-                "id"       => explode( "FS-", $item[ "sku" ] )[ 1 ],
-                "quantity" => $item[ "quantity" ],
-                "seller"   => self::DEFAULT_SELLER,
-            ];
-        }
-
         return [
-            "items"          => $items,
+            // Maps each line item to the desired structure.
+            "items" => array_map( function ( $item )
+            {
+                return [
+                    "id"       => str_replace( "FS-", "", $ietm[ "sku" ] ),
+                    "quantity" => $item[ "quantity" ],
+                    "seller"   => self::DEFAULT_SELLER,
+                ];
+
+            }, $data[ "line_items" ] ),
+
             "postalCode"     => $data[ "shipping" ][ "postcode" ],
             "country"        => self::DEFAULT_COUNTRY,
             "geoCoordinates" => []
@@ -414,33 +425,28 @@ class DataTranslator
     }
 
     /**
-     * Undocumented function
+     * Splits items into separate arrays for individual freight calculation.
      *
-     * @param   array $data
-     * @return  array
+     * @param   array $data The input data containing items and shipping information.
+     * @return  array An array of data with each item broken out for individual freight calculation.
      */
     private static function breakingUpFreight( array $data )
     {
-        $newData = [];
+        // If there is only one item, return the original data wrapped in an array.
+        if ( count( $data[ "items" ] ) <= 1 )
+            return [ $data ];
 
-        if ( count( $data[ "items" ] ) > 1 )
+        // Maps each line item to the desired structure.
+        return array_map( function ( $item ) use ( $data )
         {
-            foreach ( $data[ "items" ] as $item )
-            {
-                $newData[] = [
-                    "items"          => [ $item ],
-                    "postalCode"     => $data[ "postalCode" ],
-                    "country"        => $data[ "country"    ],
-                    "geoCoordinates" => []
-                ];
-            }
-        }
-        else
-        {
-            $newData[] = $data;
-        }
+            return [
+                "items"          => [ $item ],
+                "postalCode"     => $data[ "postalCode" ],
+                "country"        => self::DEFAULT_COUNTRY,
+                "geoCoordinates" => []
+            ];
 
-        return $newData;
+        }, $data[ "items" ] );
     }
 
     /**
