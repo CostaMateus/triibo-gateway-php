@@ -465,44 +465,14 @@ class DataTranslator
         $order         = $data[ "order"  ];
 
         // Extract the FS information from the order data.
-        $fsInfo        = $order[ "fs_info" ];
+        $fsLogistics   = $order[ "fs_info" ][ "logisticsInfo" ];
+        $fsItems       = $order[ "fs_info" ][ "items" ];
 
         // Map each item to the FS format using the FS information.
-        $items         = array_map( function ( $item ) use ( $fsInfo )
-        {
-            $idItem  = $item[ "itemIndex" ];
-            $auxItem = $fsInfo[ "items" ][ $idItem ];
-
-            return [
-                "id"                => $auxItem[ "id"             ],
-                "quantity"          => $auxItem[ "quantity"       ],
-                "price"             => $auxItem[ "price"          ],
-                "unitMultiplier"    => $auxItem[ "unitMultiplier" ],
-                "Seller"            => $auxItem[ "seller"         ],
-                "priceTags"         => $auxItem[ "priceTags"      ],
-                "isGift"            => false,
-                "commission"        => 10,
-                "freightCommission" => 0,
-            ];
-
-        }, $fsInfo[ "logisticsInfo" ] );
+        $items         = Helper::mapFsOrderItems( $fsLogistics, $fsItems );
 
         // Map logistics information to the FS format.
-        $logisticsInfo = array_map( function ( $item )
-        {
-            $idSla       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
-            $selectedSla = $item[ "slas" ][ $idSla ];
-
-            return [
-                "itemIndex"        => $item[ "itemIndex" ],
-                "selectedSla"      => $selectedSla[ "id" ],
-                "lockTTL"          => "3d",
-                "shippingEstimate" => $selectedSla[ "shippingEstimate" ],
-                "price"            => $selectedSla[ "price"            ],
-                "deliveryWindow"   => [],
-            ];
-
-        }, $fsInfo[ "logisticsInfo" ] );
+        $logisticsInfo = Helper::mapFsLogisticsInfo( $fsLogistics );
 
         // Calculate the total payment value for the marketplace.
         $total         = $order[ "total" ] + ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
@@ -555,102 +525,104 @@ class DataTranslator
     }
 
     /**
-     * Converte o erro retornado na criação do pedido
+     * Converts the error returned during order creation
      *
-     * @param array $data
-     * @return string
+     * @param   array   $data   An associative array containing the error code and SKU errors.
+     * @return  string          A formatted error message string for display or logging.
      */
     private static function newOrderFsError( array $data )
     {
         $code    = $data[ "errorCode" ];
-        $message = "ERROR FS\n";
+        $message = "ERROR FS";
 
-        switch ( $code )
-        {
-            case "4001";
-                $message .= "SKU fora de estoque";
-            break;
+        // Mapping of error codes to messages.
+        $errorMessages = [
+            "4001" => "SKU fora de estoque",
+            "4002" => "Entrega indisponível para o CEP informado",
+            "5001" => "Não foi possível informar o pedido a Fast Shop",
+        ];
 
-            case "4002";
-                $message .= "Entrega indisponível para o CEP informado";
-            break;
+        // Adds the corresponding error message for the code, if it exists.
+        if ( isset( $errorMessages[ $code ] ) )
+            $message .= "\n" . $errorMessages[ $code ];
 
-            case "5001";
-                $message .= "Não foi possível informar o pedido a Fast Shop";
-            break;
-        }
-
+        // Appends SKU-specific error messages.
         foreach ( $data[ "sku" ] as $error )
             foreach ( $error as $sku => $msg )
                 $message .= "\n{$sku} : {$msg}";
 
-        return "$message \nCode: $code";
-    }
-
-    /**
-     * Converte retorno da FS para alteração do status do pedido
-     *
-     * @param array $data
-     * @return string
-     */
-    private static function orderStatusChange( array $data )
-    {
-        $message = "";
-
-        foreach ( $data as $key => $value )
-        {
-            if ( $key == "date" )
-            {
-                $value    = Helper::convertDeliveryDate( $value );
-                $message .= "$value\n";
-            }
-            else if ( $key == "marketPlaceOrderId" )
-            {
-                $message .= "Pedido: #$value\n";
-            }
-            else if ( $key == "orderId" )
-            {
-                $message .= "FS Pedido: #$value\n";
-            }
-            else if ( $key == "receipt" )
-            {
-                $message .= "Protocolo: $value\n";
-            }
-            else
-            {
-                $message .= "$key: $value\n";
-            }
-        }
+        // Appends the error code at the end of the message.
+        $message .= "\nCode: $code";
 
         return $message;
     }
 
     /**
-     * Converte os dados do pedido para enviar email
+     * Converts the response from FS to change the order status.
      *
-     * @package array $data
-     * @return array
+     * @param   array   $data   The input data array containing order status details.
+     * @return  string          A formatted string representing the order status change for display or logging.
+     */
+    private static function orderStatusChange( array $data )
+    {
+        // Initialize the lines array.
+        $lines   = [];
+
+        // Define an associative array to map keys to their respective formats.
+        $formats = [
+            "date"               => fn( $value ) => Helper::convertDeliveryDate($value),
+            "marketPlaceOrderId" => fn( $value ) => "Order: #{$value}",
+            "orderId"            => fn( $value ) => "FS Order: #{$value}",
+            "receipt"            => fn( $value ) => "Protocol: {$value}",
+        ];
+
+        // Iterate over each key-value pair in the data array.
+        foreach ( $data as $key => $value )
+        {
+            // Check if there is a format defined for the current key.
+            if ( isset( $formats[ $key ] ) )
+            {
+                // Apply the format and add to the lines array.
+                $lines[] = $formats[ $key ]( $value );
+            }
+            else
+            {
+                // For all other keys, add the key and value to the lines array.
+                $lines[] = "{$key}: {$value}";
+            }
+        }
+
+        return implode( "\n", $lines );
+    }
+
+    /**
+     * Processes order data to prepare it for an email notification in case of an order error.
+     *
+     * @param    array   $data   The input data array containing order details.
+     * @return   array           An associative array with key order information for constructing the email notification.
      */
     private static function orderError( array $data )
     {
-        if ( empty( $data[ "parent" ] ) )
-        {
-            $orderId    = $data[ "order"  ][ "id" ];
-            $subOrderId = "";
-        }
-        else
-        {
-            $orderId    = $data[ "parent" ][ "id" ];
-            $subOrderId = $data[ "order"  ][ "id" ];
-        }
+        // Determine the main order ID. If the 'parent' key exists, use its ID; otherwise, use the 'order' ID.
+        $orderId    = $data[ "parent" ][ "id" ] ?? $data[ "order" ][ "id" ];
 
+        // Determine the sub-order ID only if the 'parent' key exists, otherwise set it to an empty string.
+        $subOrderId = $data[ "parent" ] ? $data[ "order" ][ "id" ] : "";
+
+        // Extract the customer ID from the order data.
+        $customerId = $data[ "order" ][ "customer_id" ];
+
+        // Extract the billing information for convenience and readability.
+        $billing    = $data[ "order" ][ "billing"     ];
+
+        // Construct and return the associative array with the formatted order information.
         return [
             "orderId"     => $orderId,
             "subOrderId"  => $subOrderId,
-            "customer_id" => $data[ "order" ][ "customer_id" ],
-            "name"        => $data[ "order" ][ "billing"     ][ "first_name" ] . " " . $data[ "order" ][ "billing" ][ "last_name" ],
-            "email"       => $data[ "order" ][ "billing"     ][ "email"      ],
-            "phone"       => $data[ "order" ][ "billing"     ][ "phone"      ],
+            "customer_id" => $customerId,
+            "name"        => $billing[ "first_name" ] . " " . $billing[ "last_name" ],
+            "email"       => $billing[ "email"      ],
+            "phone"       => $billing[ "phone"      ],
         ];
     }
 

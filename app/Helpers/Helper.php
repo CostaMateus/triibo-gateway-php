@@ -724,4 +724,66 @@ class Helper
 
         return $info;
     }
+
+    /**
+     * Maps the logistics information from WooCommerce to the format required by Fast Shop (FS).
+     *
+     * @param   array   $data   The logistics information from a WooCommerce order.
+     * @return  array           The logistics information formatted for FS.
+     */
+    public static function mapFsLogisticsInfo( array $data )
+    {
+        // Map logistics information to the FS format.
+        return array_map( function ( $item )
+        {
+            // Search for the index of the SLA that corresponds to the "delivery" delivery channel.
+            $sla_id       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
+
+            // Select the SLA based on the found index.
+            $selected_sla = $item[ "slas" ][ $sla_id ];
+
+            // Return an array with the logistics information mapped to the FS format.
+            return [
+                "itemIndex"        => $item[ "itemIndex" ],
+                "selectedSla"      => $selected_sla[ "id" ],
+                "lockTTL"          => "3d",
+                "shippingEstimate" => $selected_sla[ "shippingEstimate" ],
+                "price"            => $selected_sla[ "price"            ],
+                "deliveryWindow"   => [],
+            ];
+
+        }, $data );
+    }
+
+    /**
+     * Maps order items from a given logistics array to the format required by Fast Shop (FS).
+     *
+     * @param   array   $logistics  The logistics information related to the order items.
+     * @param   array   $items      The actual items from the order.
+     * @return  array               The order items formatted for FS.
+     */
+    public static function mapFsOrderItems( array $logistics, array $items )
+    {
+        // Use array_map to transform each item to the FS format using the logistics array.
+        return array_map( function ( $item ) use ( $items )
+        {
+            // Retrieve the corresponding item from the items array using the itemIndex.
+            $item_id  = $item[ "itemIndex" ];
+            $aux_item = $items[ $item_id ];
+
+            // Return an array with the item data mapped to the FS format.
+            return [
+                "id"                => $aux_item[ "id"             ],
+                "quantity"          => $aux_item[ "quantity"       ],
+                "price"             => $aux_item[ "price"          ],
+                "unitMultiplier"    => $aux_item[ "unitMultiplier" ],
+                "Seller"            => $aux_item[ "seller"         ],
+                "priceTags"         => $aux_item[ "priceTags"      ],
+                "isGift"            => false,
+                "commission"        => 10,
+                "freightCommission" => 0,
+            ];
+
+        }, $logistics );
+    }
 }
