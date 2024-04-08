@@ -411,7 +411,7 @@ class DataTranslator
             "items" => array_map( function ( $item )
             {
                 return [
-                    "id"       => str_replace( "FS-", "", $ietm[ "sku" ] ),
+                    "id"       => str_replace( "FS-", "", $item[ "sku" ] ),
                     "quantity" => $item[ "quantity" ],
                     "seller"   => self::DEFAULT_SELLER,
                 ];
@@ -457,12 +457,12 @@ class DataTranslator
      */
     private static function newOrderFs( array $data )
     {
-        // Generate the URL for the invoice notification endpoint using the order ID
-        $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
-
         // Extract parent order data if available, otherwise use the current order data.
         $parent        = $data[ "parent" ] ?? null;
         $order         = $data[ "order"  ];
+
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
 
         // Extract the FS information from the order data.
         $fsLogistics   = $order[ "fs_info" ][ "logisticsInfo" ];
@@ -509,7 +509,7 @@ class DataTranslator
             "shippingData" => [
                 "logisticsInfo" => $logisticsInfo,
                 "address"       => [
-                    "addressType"  => "",
+                    "addressType"  => "Desconhecido",
                     "receiverName" => $shipping[ "first_name"   ] . " " . $shipping[ "last_name" ],
                     "postalCode"   => $shipping[ "postcode"     ],
                     "street"       => $shipping[ "address_1"    ],
