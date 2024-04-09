@@ -321,10 +321,10 @@ class DataTranslator
 
                 if ( $itemIndex !== null && isset( $data[ "items" ][ $itemIndex ] ) )
                 {
-                    $item        = $data[ "items" ][ $itemIndex ];
+                    $item      = $data[ "items" ][ $itemIndex ];
 
-                    // Add the logistics information for the current item to the array.
-                    $logistics[] = [
+                    // Add the logistics information for the current item.
+                    $logistics = [
                         "sku"               => "FS-" . $item[ "id" ],
                         "quantity"          => $lg[ "quantity" ],
                         "stock"             => $stock,
@@ -340,7 +340,8 @@ class DataTranslator
                 }
             }
         }
-        else
+
+        if ( empty( $logistics ) )
         {
             // If logistics information or items are missing, call the fallback function.
             $logistics = self::freightCalcFailed( $data );
@@ -361,7 +362,7 @@ class DataTranslator
     private static function freightCalcFailed( array $data )
     {
         // Initialize the logistics array with default values in case there are no items.
-        $logistics = [ [
+        $logistics = [
             "stock"             => 0,
             "deliveryPrice"     => "0.00",
             "deliveryTime"      => "0",
@@ -369,17 +370,15 @@ class DataTranslator
             "hub"               => "",
             "code"              => 4002,
             "message"           => "SKU currently out-of-stock",
-        ] ];
+        ];
 
         // Check if items exist before processing.
         if ( !empty( $data[ "items" ] ) )
         {
-            // Reset logistics to an empty array to populate with actual item data.
-            $logistics = [];
-
+            // Populate with actual item data.
             foreach ( $data[ "items" ] as $product )
             {
-                $logistics[] = [
+                $logistics = [
                     "sku"               => "FS-" . $product[ "id" ],
                     "quantity"          => $product[ "quantity" ],
                     "stock"             => 0,
