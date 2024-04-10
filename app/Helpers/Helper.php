@@ -5,6 +5,7 @@ namespace App\Helpers;
 use Exception;
 use App\Models\User;
 use DateTimeImmutable;
+use Illuminate\Support\Str;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
