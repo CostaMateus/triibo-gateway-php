@@ -228,7 +228,10 @@ class FastshopController extends Controller
                         "updated_at" => now()
                     ];
 
+                    DB::connection()->enableQueryLog();
                     $updated = DB::table( "fastshop_products" )->where( "id", $founded->id )->update( $data );
+                    DB::getQueryLog();
+                    LogSys::channel( "fastshop" )->warning( "DB Query Log - FS - updateSku", DB::getQueryLog() );
 
                     if ( !$updated )
                     {
