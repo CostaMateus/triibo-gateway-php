@@ -104,12 +104,9 @@ Route::group( ["middleware" => "auth" ], function() {
 // =========================================
 Route::prefix( "mkt" )->group( function () {
 
-    Route::get( "/get-customer", function()
+    Route::get( "/get-customer/{id}", function( $id )
     {
-        $customer = Customer::all( [
-            "per_page" => 100,
-            "search"   => "costa.mack95@hotmail.com"
-        ] );
+        $customer = Customer::find( $id );
 
         dd( $customer );
     } );
