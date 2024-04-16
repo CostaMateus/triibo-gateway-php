@@ -230,12 +230,11 @@ class FastshopController extends Controller
 
                     DB::connection()->enableQueryLog();
                     $updated = DB::table( "fastshop_products" )->where( "id", $founded->id )->update( $data );
-                    DB::getQueryLog();
-                    LogSys::channel( "fastshop" )->warning( "DB Query Log - FS - updateSku", DB::getQueryLog() );
 
                     if ( !$updated )
                     {
                         LogSys::channel( "fastshop" )->error( "Exception - FS - updateSku", [ $founded->id, "FS-{$sku}" ] );
+                        LogSys::channel( "fastshop" )->warning( "DB Query Log - FS - updateSku", DB::getQueryLog() );
                         throw new Exception( "Unable to update the product data" );
                     }
                 }
