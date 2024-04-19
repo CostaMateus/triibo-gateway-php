@@ -406,4 +406,17 @@ Route::get( "/fs", function () {
 
     // dd( "ok" );
 
+    // ==================
+
+    // $order = Order::find( 959232 );
+
+    // $control         = new FastshopController();
+    // $data            = $control->getFsOrder( 959232 );
+
+    // $data[ "order" ] = $control->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
+
+    // $body            = DataTranslator::translate( "newOrderFs", $data );
+
+    // dd( $body );
+
 } );
