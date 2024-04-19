@@ -8,7 +8,7 @@ use App\Helpers\Helper;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
-use Kreait\Firebase\Contract\Database;
+use Kreait\Firebase\Database\Reference;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
@@ -16,29 +16,158 @@ use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
 class AwinController extends Controller
 {
     protected $integration;
-    protected $stores_path;
-    protected $promos_path;
-    // protected $firestore = null;
+    protected $establishments_path;
+    protected $promotions_path;
 
-    public function __construct( bool $loadStores = true )
+    // Sistema Triibo +5510999991477
+    const REQUESTER_ID                 = "J4NjCHtvxuRojrXb29whbsNPAy33";
+
+    const IGNORE_ESTABLISHMENTS_FIELDS = [
+        "dataAlteracao",
+        "dataInclusao",
+        "disableDate",
+        "enableDate",
+        "listaFotos",
+        "fotoThumb",
+    ];
+
+    const IGNORE_PROMOTIONS_FIELDS     = [];
+
+    /**
+     * Constructor
+     *
+     * @param   boolean $loadEstablishments     Load establishments from Awin, default true
+     * @return  void
+     */
+    public function __construct( bool $loadEstablishments = true )
     {
-        $this->integration = new AwinIntegration( $loadStores );
-        $this->stores_path = public_path( "images/affiliates/awin/establishments/" );
-        $this->promos_path = public_path( "images/affiliates/awin/promotions/"     );
+        $this->integration         = new AwinIntegration( $loadEstablishments );
+        $this->establishments_path = public_path( "images/affiliates/awin/establishments/" );
+        $this->promotions_path     = public_path( "images/affiliates/awin/promotions/"     );
+
+        File::ensureDirectoryExists( $this->establishments_path );
+        File::ensureDirectoryExists( $this->promotions_path     );
     }
 
     /**
-     * Process stores
-     *
-     * @return void
+     * TODO remover após usar em prod
      */
-    public function stores()
+    public function populate()
+    {
+        $awin_estabs     = $this->integration->getEstablishments();
+        $firebase_estabs = $this->filterEstablishments( Firebase::database()->getReference( "/Estabelecimento-v2" ) );
+        $local_estabs    = [];
+
+        foreach ( $awin_estabs as $origin_id => $store )
+        {
+            $affiliate_id   = $store[ "origin" ] . $origin_id;
+            $local_estabs[] = [
+                "origin"       => $store[ "origin" ],
+                "origin_id"    => $origin_id,
+                "affiliate_id" => $affiliate_id,
+                "push_id"      => null,
+                "name"         => $store[ "nome"   ],
+                "data"         => json_encode( $store ),
+                "created_at"   => now(),
+                "updated_at"   => now(),
+            ];
+        }
+
+        foreach ( $firebase_estabs as $push => $store )
+        {
+            $search_id = $store[ "origin" ] . $store[ "partnerEstablishmentId" ];
+            $index     = Helper::arraySearchByKey( $search_id, "affiliate_id", $local_estabs );
+
+            if ( $index !== false )
+            {
+                $local_estabs[ $index ][ "push_id" ] = $push;
+            }
+            else
+            {
+                echo "{$search_id} : false : {$push}\n";
+            }
+        }
+
+        \DB::table( "affiliates_establishments" )->truncate();
+        \DB::table( "affiliates_establishments" )->insert( $local_estabs );
+
+        \Storage::put( "establishments_awin.json",     json_encode( $awin_estabs     ) );
+        \Storage::put( "establishments_firebase.json", json_encode( $firebase_estabs ) );
+        \Storage::put( "establishments_local.json",    json_encode( $local_estabs    ) );
+
+        $this->populatePromos();
+
+        dd(
+            "estabs local : " . count( $local_estabs    ),
+            "estabs awin  : " . count( $awin_estabs     ),
+            "estabs fire  : " . count( $firebase_estabs )
+        );
+    }
+
+    /**
+     * TODO remover após usar em prod
+     */
+    public function populatePromos()
+    {
+        $awin_promos     = $this->integration->getPromotions();
+        $firebase_promos = $this->filterPromotions( Firebase::database()->getReference( "/Store" ) );
+        $local_promos    = [];
+
+        foreach ( $awin_promos as $origin_id => $promo )
+        {
+            $affiliate_id   = $promo[ "origin" ] . $origin_id;
+            $local_promos[] = [
+                "origin"       => $promo[ "origin" ],
+                "origin_id"    => $origin_id,
+                "affiliate_id" => $affiliate_id,
+                "push_id"      => null,
+                "data"         => json_encode( $promo ),
+                "created_at"   => now(),
+                "updated_at"   => now(),
+            ];
+        }
+
+        foreach ( $firebase_promos as $push => $promo )
+        {
+            $search_id = $promo[ "origin" ] . $promo[ "partnerPromotionId" ];
+            $index     = Helper::arraySearchByKey( $search_id, "affiliate_id", $local_promos );
+
+            if ( $index !== false )
+            {
+                $local_promos[ $index ][ "push_id" ] = $push;
+            }
+            else
+            {
+                echo "{$search_id} : false : {$push}\n";
+            }
+        }
+
+        \DB::table( "affiliates_promotions" )->truncate();
+        \DB::table( "affiliates_promotions" )->insert( $local_promos );
+
+        \Storage::put( "promotions_awin.json",     json_encode( $awin_promos     ) );
+        \Storage::put( "promotions_firebase.json", json_encode( $firebase_promos ) );
+        \Storage::put( "promotions_local.json",    json_encode( $local_promos    ) );
+
+        dump(
+            "promos local : " . count( $local_promos    ),
+            "promos awin  : " . count( $awin_promos     ),
+            "promos fire  : " . count( $firebase_promos )
+        );
+    }
+
+    /**
+     * Process establishments
+     *
+     * @return  void
+     */
+    public function establishments()
     {
         try
         {
-            $this->insertStoresFirebase();
-            echo "Stores : Establishments sent successfully\n";
-            Log::channel( "awin" )->info( "Stores", [
+            $this->insertEstablishmentsFirebase();
+            echo "Establishments : Establishments sent successfully\n";
+            Log::channel( "awin" )->info( "Establishments", [
                 "code"    => 0,
                 "info"    => "Establishments sent successfully",
                 "error"   => NULL,
@@ -47,40 +176,40 @@ class AwinController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            echo "Stores : Establishment, Firebase process error - aborted\n";
-            Log::channel( "awin" )->critical( "Stores", [
+            echo "Establishments : Establishment, Firebase process error - aborted\n";
+            Log::channel( "awin" )->critical( "Establishments", [
                 "code"    => "C-401",
                 "info"    => "Establishment, Firebase process error - aborted",
                 "error"   => "An error has occurred while working with the SDK",
                 "message" => $e
             ] );
 
-            Helper::sendMailNotification( "awin", "insertStoresFirebase()", "FirebaseException", $e );
+            Helper::sendMailNotification( "awin", "insertEstablishmentsFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
-            echo "Stores : Unexpected error - aborted\n";
-            Log::channel( "awin" )->critical( "Stores", [
+            echo "Establishments : Unexpected error - aborted\n";
+            Log::channel( "awin" )->critical( "Establishments", [
                 "code"    => "C-501",
                 "info"    => "Unexpected error - aborted",
                 "error"   => "A not-Firebase specific error has occurred",
                 "message" => $e,
             ] );
 
-            Helper::sendMailNotification( "awin", "insertStoresFirebase()", "Throwable", $e );
+            Helper::sendMailNotification( "awin", "insertEstablishmentsFirebase()", "Throwable", $e );
         }
     }
 
     /**
      * Process promotions
      *
-     * @return void
+     * @return  void
      */
     public function promotions()
     {
         try
         {
-            $this->insertOffersFirebase();
+            $this->insertPromotionsFirebase();
             echo "Promotions : Promotions sent successfully\n";
             Log::channel( "awin" )->info( "Promotions", [
                 "code"    => 0,
@@ -99,7 +228,7 @@ class AwinController extends Controller
                 "message" => $e
             ] );
 
-            Helper::sendMailNotification( "awin", "insertOffersFirebase()", "FirebaseException", $e );
+            Helper::sendMailNotification( "awin", "insertPromotionsFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
@@ -111,43 +240,43 @@ class AwinController extends Controller
                 "message" => $e,
             ] );
 
-            Helper::sendMailNotification( "awin", "insertOffersFirebase()", "Throwable", $e );
+            Helper::sendMailNotification( "awin", "insertPromotionsFirebase()", "Throwable", $e );
         }
     }
 
     /**
      * Process images
      *
-     * @return void
+     * @return  void
      */
     public function images()
     {
-        $store          = public_path( "images/affiliates/awin/standard.png"   );
-        $coupon         = public_path( "images/affiliates/awin/coupon.webp"    );
-        $promotion      = public_path( "images/affiliates/awin/promotion.webp" );
+        $establishments         = public_path( "images/affiliates/awin/standard.png"   );
+        $coupon                 = public_path( "images/affiliates/awin/coupon.webp"    );
+        $promotion              = public_path( "images/affiliates/awin/promotion.webp" );
 
-        File::copy( $store,     $this->stores_path . "/awin_standard.png"          );
-        File::copy( $coupon,    $this->promos_path . "/awin_common_coupon.webp"    );
-        File::copy( $promotion, $this->promos_path . "/awin_common_promotion.webp" );
+        File::copy( $establishments, $this->establishments_path . "/awin_standard.png"          );
+        File::copy( $coupon,         $this->promotions_path     . "/awin_common_coupon.webp"    );
+        File::copy( $promotion,      $this->promotions_path     . "/awin_common_promotion.webp" );
 
-        $filesStores    = File::allFiles( $this->stores_path );
-        $filesPromos    = File::allFiles( $this->promos_path );
+        $filesEstablishments    = File::allFiles( $this->establishments_path );
+        $filesPromos            = File::allFiles( $this->promotions_path     );
 
-        $fileNameStores = [];
-        $fileNamePromos = [];
+        $fileNameEstablishments = [];
+        $fileNamePromos         = [];
 
-        if ( empty( $filesStores ) && empty( $filesPromos ) )
+        if ( empty( $filesEstablishments ) && empty( $filesPromos ) )
         {
             echo "Images : No images to upload\n";
             Log::channel( "awin" )->info( "Images", [ "No images to upload" ] );
             return;
         }
 
-        if ( $filesStores )
+        if ( $filesEstablishments )
         {
             echo "Images : Capturing names - establishments\n";
             Log::channel( "awin" )->info( "Images", [ "Capturing names - establishments" ] );
-            $fileNameStores = $this->getFileNames( $filesStores );
+            $fileNameEstablishments = $this->getFileNames( $filesEstablishments );
         }
 
         if ( $filesPromos )
@@ -158,26 +287,26 @@ class AwinController extends Controller
         }
 
         $this->insertImagesFirebase( [
-            "stores"     => [
-                "files" => $fileNameStores,
-                "lc"    => $this->stores_path,
+            "establishments" => [
+                "files" => $fileNameEstablishments,
+                "lc"    => $this->establishments_path,
                 "fb"    => "estabelecimento/",
             ],
-            "promotions" => [
+            "promotions"     => [
                 "files" => $fileNamePromos,
-                "lc"    => $this->promos_path,
+                "lc"    => $this->promotions_path,
                 "fb"    => "promocao/"
             ]
         ] );
 
-        if ( $filesStores ) File::deleteDirectory( $this->stores_path, true );
-        if ( $filesPromos ) File::deleteDirectory( $this->promos_path, true );
+        if ( $filesEstablishments ) File::deleteDirectory( $this->establishments_path, true );
+        if ( $filesPromos         ) File::deleteDirectory( $this->promotions_path,     true );
     }
 
     /**
      * Process reports
      *
-     * @return void
+     * @return  void
      */
     public function reports()
     {
@@ -218,131 +347,196 @@ class AwinController extends Controller
         }
     }
 
+
+
+
+
     /**
-     * Update and create store on Firebase
+     * Update and create establishments on Firebase
      *
-     * @return void
+     * @return  void
      */
-    private function insertStoresFirebase()
+    private function insertEstablishmentsFirebase()
     {
-        echo "Stores : Searching establishments\n";
-        Log::channel( "awin" )->info( "Stores", [ "Searching establishments" ] );
+        echo "Establishments : Searching establishments\n";
+        // Log::channel( "awin" )->info( "Establishments", [ "Searching establishments" ] );
 
-        File::deleteDirectory( $this->stores_path, true );
+        File::deleteDirectory( $this->establishments_path, true );
 
-        $awinStores  = $this->integration->getStores();
+        $localData           = [];
+        $db                  = Firebase::database();
+        $referenceEstab      = $db->getReference( "/Estabelecimento-v2"            );
+        $referenceApproval   = $db->getReference( "/Estabelecimento-Aprovacoes"    );
+        $referenceChanges    = $db->getReference( "/Establishment-changes-request" );
 
-        $fbRef       = Firebase::database()->getReference( "/Estabelecimento-v2" );
-        $fbStores    = $fbRef->getValue();
-        $fbAuxStores = [];
+        $fireEstablishments  = $this->filterEstablishments( $referenceEstab );
+        $awinEstablishments  = $this->integration->getEstablishments();
+        $localEstablishments = \DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $localEstablishments = json_decode( json_encode( $localEstablishments ), true );
 
-        foreach ( $fbStores as $push => $fbStore )
+        echo "Establishments : Validating establishments\n";
+        // Log::channel( "awin" )->info( "Establishments", [ "Validating establishments" ] );
+
+        /**
+         * Checks if Firebase establishments are on Awin establishments
+         * If not, disable the establishments on Firebase
+         */
+        foreach ( $fireEstablishments as $push => $fireEstablishment )
         {
-            if ( strpos( $push, "-cofry"      ) !== false       ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
-            if ( !isset( $fbStore[ "partnerEstablishmentId" ] ) ) continue;
-
-            if ( strpos( $push, "-awin" ) !== false )
+            if ( !isset( $awinEstablishments[ $fireEstablishment[ "partnerEstablishmentId" ] ] ) )
             {
-                if ( $fbStore[ "isPublished" ] )
+                if ( $fireEstablishment[ "isPublished" ] )
                 {
-                    // Disabling all old stores
-                    echo "Stores : Disab. Estab. ID = {$push}\n";
-                    $fbStore[ "isPublished" ] = false;
-                    $fbStore[ "origin"      ] = "awin";
-                    $fbRef->update( [ $push => $fbStore ] );
+                    /**
+                     * Disabling establishments that are not on the list
+                     */
+                    $fireEstablishment[ "isPublished" ] = false;
+                    $referenceEstab->update( [ $push => $fireEstablishment ] );
+
+                    echo "Establishments : Disabled establishment ID = {$push}\n";
+                    // Log::channel( "awin" )->info( "Establishments", [ "Disabled establishment ID = {$push}" ] );
+
+                    unset( $fireEstablishments[ $push ] );
                 }
+            }
+        }
+
+        /**
+         * Check if Awin establishments are on Local establishments
+         */
+        foreach ( $awinEstablishments as $id => $awinEstablishment )
+        {
+            /**
+             * If not, add to temp variable, $localData
+             */
+            if ( !isset( $localEstablishments[ $id ] ) )
+            {
+                $affiliate_id = $awinEstablishment[ "origin" ] . $id;
+                $localData[]  = [
+                    "origin"       => $awinEstablishment[ "origin" ],
+                    "origin_id"    => $id,
+                    "affiliate_id" => $affiliate_id,
+                    "push_id"      => null,
+                    "name"         => $awinEstablishment[ "nome"   ],
+                    "data"         => json_encode( $awinEstablishment ),
+                    "created_at"   => now(),
+                    "updated_at"   => now(),
+                ];
 
                 continue;
             }
 
-            if ( isset( $fbStore[ "origin" ] ) && $fbStore[ "origin" ] == "awin" )
-            {
-                if ( !isset( $awinStores[ $fbStore[ "partnerEstablishmentId" ] ] ) )
-                {
-                    // Disabling stores that are not on the list
-                    $fbStore[ "isPublished" ] = false;
-                    $fbRef->update( [ $push => $fbStore ] );
+            /**
+             * Compare Awin establishments with Local establishments
+             */
+            $dataEstablishment  = $localEstablishments[ $id ];
+            $localEstablishment = json_decode( $dataEstablishment[ "data" ], true );
 
-                    echo "Stores : Disab. Estab. ID = {$push}\n";
-                    continue;
-                }
+            /**
+             * Get diff between Awin and Local establishments
+             */
+            $diff               = Helper::arrayDiffAssocRecursive( $awinEstablishment, $localEstablishment );
 
-                $fbAuxStores[ $push ] = $fbStore;
-            }
+            /**
+             * Removing ignored fields
+             */
+            foreach ( self::IGNORE_ESTABLISHMENTS_FIELDS as $field )
+                unset( $diff[ $field ] );
+
+            /**
+             * No changes founded
+             */
+            if ( empty( $diff ) ) continue;
+
+            /**
+             * Adding edit approval in Firebase
+             */
+            $date               = Helper::getDateTimeUnix();
+            $approval           = [
+                "requesterId"  => self::REQUESTER_ID,
+                "id"           => $dataEstablishment[ "push_id" ],
+                "lastModified" => $date,
+                "requestDate"  => $date,
+                "status"       => "aberto",
+                "action"       => "edit"
+            ];
+            $newPushApproval    = $referenceApproval->push()->getKey();
+            $referenceApproval->update( [ $newPushApproval => $approval ] );
+
+            /**
+             * Adding edit changes-request in Firebase
+             */
+            $newPushChanges     = $referenceChanges->push()->getKey();
+            $changesRequest     = [
+                "id"                => $newPushChanges,
+                "createDate"        => $date,
+                // "updateDate"        => "",
+                // "reviewDate"        => "",
+                "establishmentId"   => $dataEstablishment[ "push_id" ],
+                "establishmentName" => $dataEstablishment[ "name"    ],
+                "requesterUid"      => self::REQUESTER_ID,
+                // "validatorUid"      => "",
+                // "comment"           => "",
+                "type"              => "validation",
+                "changedFields"     => $diff,
+            ];
+            $referenceChanges->update( [ $newPushChanges => $changesRequest ] );
+
+            /**
+             * Update establishment in Local establishments
+             */
+            \DB::table( "affiliates_establishments" )
+                ->where( "affiliate_id", $dataEstablishment[ "affiliate_id" ] )
+                ->update( [ "data" => json_encode( $awinEstablishment ) ] );
+
+            echo "Establishments : Edited establishment ID = {$dataEstablishment[ "push_id" ]} | Need approval ID = {$newPushApproval} | Change Request ID = {$newPushChanges}\n";
+            // Log::channel( "awin" )->info( "Establishments", [ "Edited establishment ID = {$dataEstablishment[ "push_id" ]} | Need approval ID = {$newPushApproval} | Change Request ID = {$newPushChanges}" ] );
         }
 
-        echo "Stores : Sending establishments to Firebase\n";
-        Log::channel( "awin" )->info( "Stores", [ "Sending establishments to Firebase" ] );
-
-        foreach ( $awinStores as $id => $store )
+        /**
+         * If $localData is not empty
+         */
+        if ( !empty( $localData ) )
         {
-            $founded = false;
+            /**
+             * Add the new establishments ($localData) in the Local establishments
+             */
+            \DB::table( "affiliates_establishments" )->insert( $localData );
+            echo "Establishments : Added " . count( $localData ) . " new establishments in the local table\n";
+            // Log::channel( "awin" )->info( "Establishments", [ "Added " . count( $localData ) . " new establishments in the local table" ] );
 
-            foreach ( $fbAuxStores as $push1 => $fbStore )
+            /**
+             * Add the new establishments on Firebase
+             * And update push_id column in Local establishments
+             */
+            foreach ( $localData as $data )
             {
-                if ( $id != $fbStore[ "partnerEstablishmentId" ] ) continue;
+                $aux                  = $awinEstablishments[ $data[ "origin_id" ] ];
+                $aux[ "isPublished" ] = false;
 
-                $founded = true;
+                $newPushEstab         = $referenceEstab->push()->getKey();
+                $referenceEstab->update( [ $newPushEstab => $aux ] );
 
-                $descrip = $fbStore[ "descricao" ];
-                $descrip = explode( "\n\n#", $descrip );
-
-                if ( count( $descrip ) > 1 )
-                {
-                    $aux = "";
-                    array_shift( $descrip );
-
-                    foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
-
-                    $store[ "descricao" ] .= $aux;
-                }
-
-                if ( $store[ "fotoThumb" ] != $fbStore[ "fotoThumb" ] )
-                {
-                    File::delete( $this->stores_path . $store[ "fotoThumb" ] );
-                    $store[ "fotoThumb"  ] = $fbStore[ "fotoThumb"  ];
-                    $store[ "listaFotos" ] = $fbStore[ "listaFotos" ];
-                }
-
-                $store[ "isPublished" ] = ( isset( $fbStore[ "isPublished" ] ) ) ? $fbStore[ "isPublished" ] : true;
-
-                if ( isset( $fbStore[ "hasPromo"     ] ) ) $store[ "hasPromo"     ] = $fbStore[ "hasPromo"     ];
-
-                if ( isset( $fbStore[ "enableDate"   ] ) ) $store[ "enableDate"   ] = $fbStore[ "enableDate"   ];
-                if ( isset( $fbStore[ "disableDate"  ] ) ) $store[ "disableDate"  ] = $fbStore[ "disableDate"  ];
-                if ( isset( $fbStore[ "dataInclusao" ] ) ) $store[ "dataInclusao" ] = $fbStore[ "dataInclusao" ];
-
-                $fbRef->update( [ $push1 => $store ] );
-
-                echo "Stores : Updated Estab. ID = {$push1}\n";
-                break;
-            }
-
-            if ( !$founded )
-            {
-                $store[ "isPublished" ] = false;
-
-                $newPush  = $fbRef->push()->getKey();
-                $fbRef->update( [ $newPush => $store ] );
-
-                $fbRef1   = Firebase::database()->getReference( "/Estabelecimento-Aprovacoes" );
-                $date     = new DateTime( date( "Y-m-d H:i:s.u" ) );
-                $date     = ( int ) $date->format( "U" ) * 1000;
-                $approval = [
-                    // Sistema Triibo - +5510999991477
-                    "requesterId"  => "J4NjCHtvxuRojrXb29whbsNPAy33",
-
-                    "id"           => $newPush,
+                $date                 = Helper::getDateTimeUnix();
+                $approval             = [
+                    "requesterId"  => self::REQUESTER_ID,
+                    "id"           => $newPushEstab,
                     "lastModified" => $date,
                     "requestDate"  => $date,
                     "status"       => "aberto",
+                    "action"       => "create"
                 ];
 
-                $newPush1 = $fbRef1->push()->getKey();
-                $fbRef1->update( [ $newPush1 => $approval ] );
+                $newPushApproval      = $referenceApproval->push()->getKey();
+                $referenceApproval->update( [ $newPushApproval => $approval ] );
 
-                echo "Stores : Created Estab. ID = {$newPush} | Need approval ID = {$newPush1}\n";
+                echo "Establishments : Created establishment ID = {$newPushEstab} | Need approval ID = {$newPushApproval}\n";
+                // Log::channel( "awin" )->info( "Establishments", [ "Created establishment ID = {$newPushEstab} | Need approval ID = {$newPushApproval}" ] );
+
+                $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerEstablishmentId" ];
+                \DB::table( "affiliates_establishments" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $newPushEstab ] );
+
+                unset( $awinEstablishments[ $data[ "origin_id" ] ] );
             }
         }
     }
@@ -350,205 +544,200 @@ class AwinController extends Controller
     /**
      * Update and create promotions on Firebase
      *
-     * @return void
+     * @return  void
      */
-    private function insertOffersFirebase()
+    private function insertPromotionsFirebase()
     {
         echo "Promotions : Searching promotions\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
+        // Log::channel( "awin" )->info( "Promotions", [ "Searching promotions" ] );
+
+        File::deleteDirectory( $this->promotions_path, true );
+
+        $localData         = [];
+        $db                = Firebase::database();
+        $referencePromo    = $db->getReference( "/Store"                 );
+        $referenceApproval = $db->getReference( "/Store-Aprovacoes"      );
+        $referenceChanges  = $db->getReference( "/Store-changes-request" );
+
+        $firePromotions    = $this->filterPromotions( $referencePromo );
+        $awinPromotions    = $this->integration->getPromotions();
+        $localPromotions   = \DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $localPromotions   = json_decode( json_encode( $localPromotions ), true );
+
+        echo "Promotions : Validating promotions\n";
+        // Log::channel( "awin" )->info( "Promotions", [ "Validating promotions" ] );
 
         /**
-         * TODO remover:
-         * logs awin_promotions
-         * array chg_p_arr
-         * counters new_p, chg_p, dis_p
-         * var aps_sql
+         * Checks if Firebase promotions are on Awin promotions
+         * If not, disable the promotions on Firebase
          */
-        Log::channel( "awin_promotions" )->info( "Promotions", [ "Start process - " . date( "Y-m-d H:i:s" ) ] );
-
-        File::deleteDirectory( $this->promos_path, true );
-
-        $chg_p_arr   = [];
-        $new_p       = 0;
-        $chg_p       = 0;
-        $dis_p       = 0;
-        $aps_sql     = \DB::table( "affiliates_promotions" )->get()->keyBy( "push_id" );
-
-        $awinPromos  = $this->integration->getOffers();
-
-        $db          = Firebase::database();
-        $stores      = $this->filterStoresAwin( $db );
-
-        $fbRef       = $db->getReference( "/Store" );
-        $fbPromos    = $fbRef->getValue();
-        $fbAuxPromos = [];
-
-        foreach ( $fbPromos as $push => $promo )
+        foreach ( $firePromotions as $push => $firePromotion )
         {
-            if ( strpos( $push, "-awin"       ) !== false ) continue;
-            if ( strpos( $push, "-cofry"      ) !== false ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
-            if ( !isset( $promo[ "establishmentId" ] )    ) continue;
-
-            if ( isset( $promo[ "origin" ] ) && $promo[ "origin" ] == "awin" )
+            if ( !isset( $awinPromotions[ $firePromotion[ "partnerPromotionId" ] ] ) )
             {
-                if ( !$promo[ "active" ] ) continue;
-
-                if ( !isset( $awinPromos[ $promo[ "partnerPromotionId" ] ] ) )
+                if ( $firePromotion[ "isPublished" ] )
                 {
-                    $dis_p++;
+                    /**
+                     * Disabling promotions that are not on the list
+                     */
+                    $firePromotion[ "isPublished" ] = false;
+                    $referencePromo->update( [ $push => $firePromotion ] );
 
-                    // Disabling promotions that are not on the list
-                    $promo[ "isPublished" ] = false;
-                    $promo[ "active"      ] = false;
-                    $fbRef->update( [ $push => $promo ] );
+                    echo "Promotions : Disabled promotion ID = {$push}\n";
+                    // Log::channel( "awin" )->info( "Promotions", [ "Disabled promotion ID = {$push}" ] );
 
-                    echo "Promotions : Disab. Promo. ID = {$push}\n";
-                    continue;
+                    unset( $firePromotions[ $push ] );
                 }
-
-                $fbAuxPromos[ $push ] = $promo;
             }
         }
 
-        echo "Promotions : Sending promotions to Firebase\n";
-        Log::channel( "awin" )->info( "Promotions", [ "Sending promotions to Firebase" ] );
-
-        foreach ( $awinPromos as $id => $promo )
+        /**
+         * Check if Awin promotions are on Local promotions
+         */
+        foreach ( $awinPromotions as $id => $awinPromotion )
         {
-            $founded = false;
-            $keys    = array_keys( $stores );
-            $index   = array_search( $promo[ "establishmentId" ], array_column( $stores, "partnerEstablishmentId" ) );
-            $promo[ "establishmentId" ] = $keys[ $index ];
-
-            if ( !empty( $fbAuxPromos ) )
+            /**
+             * If not, add to temp variable, $localData
+             */
+            if ( !isset( $localPromotions[ $id ] ) )
             {
-                foreach ( $fbAuxPromos as $push2 => $fbPromo )
-                {
-                    if ( $id != $fbPromo[ "partnerPromotionId" ] ) continue;
+                $affiliate_id = $awinPromotion[ "origin" ] . $id;
+                $localData[]  = [
+                    "origin"       => $awinPromotion[ "origin" ],
+                    "origin_id"    => $id,
+                    "affiliate_id" => $affiliate_id,
+                    "push_id"      => null,
+                    "data"         => json_encode( $awinPromotion ),
+                    "created_at"   => now(),
+                    "updated_at"   => now(),
+                ];
 
-                    $founded = true;
-                    $descrip = $fbPromo[ "description" ];
-                    $descrip = explode( "\n\n#", $descrip );
-
-                    if ( count( $descrip ) > 1 )
-                    {
-                        $aux = "";
-                        array_shift( $descrip );
-
-                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
-
-                        $promo[ "description" ] .= $aux;
-                    }
-
-                    if ( isset( $fbPromo[ "isPublished"           ] ) ) $promo[ "isPublished"           ] = $fbPromo[ "isPublished" ];
-
-                    if ( isset( $fbPromo[ "enableDate"            ] ) ) $promo[ "enableDate"            ] = $fbPromo[ "enableDate"  ];
-                    if ( isset( $fbPromo[ "disableDate"           ] ) ) $promo[ "disableDate"           ] = $fbPromo[ "disableDate" ];
-                    if ( isset( $fbPromo[ "dueDate"               ] ) ) $promo[ "dueDate"               ] = $fbPromo[ "dueDate"     ];
-                    if ( isset( $fbPromo[ "buttonLabel"           ] ) ) $promo[ "buttonLabel"           ] = $fbPromo[ "buttonLabel" ];
-
-                    if ( isset( $fbPromo[ "campanhaTriibo"        ] ) ) $promo[ "campanhaTriibo"        ] = $fbPromo[ "campanhaTriibo" ];
-                    if ( isset( $fbPromo[ "droidWebView"          ] ) ) $promo[ "droidWebView"          ] = $fbPromo[ "droidWebView"   ];
-                    if ( isset( $fbPromo[ "iOSWebView"            ] ) ) $promo[ "iOSWebView"            ] = $fbPromo[ "iOSWebView"     ];
-
-                    if ( isset( $fbPromo[ "showButtonDescription" ] ) ) $promo[ "showButtonDescription" ] = $fbPromo[ "showButtonDescription" ];
-                    if ( isset( $fbPromo[ "buttonDescription"     ] ) ) $promo[ "buttonDescription"     ] = $fbPromo[ "buttonDescription"     ];
-                    if ( isset( $fbPromo[ "showGoToPlace"         ] ) ) $promo[ "showGoToPlace"         ] = $fbPromo[ "showGoToPlace"         ];
-                    if ( isset( $fbPromo[ "goToPlaceLabel"        ] ) ) $promo[ "goToPlaceLabel"        ] = $fbPromo[ "goToPlaceLabel"        ];
-
-                    $promo[ "id" ] = ( isset( $fbPromo[ "id" ] ) ) ? $fbPromo[ "id" ] : $push2;
-
-                    $fbRef->update( [ $push2 => $promo ] );
-
-                    echo "Promotions : Updated Promo. ID = {$push2}\n";
-
-                    // =================================
-                    if ( isset( $aps_sql[ $push2 ] ) )
-                    {
-                        $aux_aps = json_decode( $aps_sql[ $push2 ]->data, true );
-                        $changes = Helper::array_diff_assoc_recursive( $aux_aps, $promo );
-
-                        if ( count( $changes ) > 0 )
-                        {
-                            $hasChg   = false;
-                            $chg_keys = array_keys( $changes );
-                            $ignore   = [ "enableDate", "disableDate", "dueDate" ];
-
-                            foreach ( $chg_keys as $key )
-                            {
-                                if ( !in_array( $key, $ignore ) )
-                                {
-                                    $hasChg = true;
-                                    break;
-                                }
-                            }
-
-                            if ( $hasChg )
-                            {
-                                $chg_p++;
-
-                                foreach ( $changes as $key => &$change )
-                                {
-                                    if ( in_array( $key, $ignore ) )
-                                    {
-                                        unset( $changes[ $key ] );
-                                        continue;
-                                    }
-
-                                    $change = [
-                                        "old" => $aux_aps[ $key ],
-                                        "new" => $promo[ $key ],
-                                    ];
-                                }
-
-                                $chg_p_arr[ $push2 ] = $changes;
-
-                                \DB::table( "affiliates_promotions" )->where( "push_id", $push2 )->update( [ "data" => json_encode( $promo ) ] );
-                            }
-                        }
-                    }
-                    // =================================
-                    break;
-                }
+                continue;
             }
 
-            if ( !$founded )
-            {
-                $new_p++;
+            /**
+             * Compare Awin promotions with Local promotions
+             */
+            $dataPromotion  = $localPromotions[ $id ];
+            $localPromotion = json_decode( $dataPromotion[ "data" ], true );
 
-                $newPush       = $fbRef->push()->getKey();
-                $promo[ "id" ] = $newPush;
+            /**
+             * Get diff between Awin and Local establishments
+             */
+            $diff           = Helper::arrayDiffAssocRecursive( $awinPromotion, $localPromotion );
 
-                $fbRef->update( [ $newPush => $promo ] );
+            /**
+             * Removing ignored fields
+             */
+            foreach ( self::IGNORE_PROMOTIONS_FIELDS as $field )
+                unset( $diff[ $field ] );
 
-                echo "Promotions : Created Promo. ID = {$newPush}\n";
+            /**
+             * No changes founded
+             */
+            if ( empty( $diff ) ) continue;
 
-                \DB::table( "affiliates_promotions" )->insert( [
-                    "push_id"    => $newPush,
-                    "data"       => json_encode( $promo ),
-                    "created_at" => now(),
-                    "updated_at" => now(),
-                ] );
-            }
+            /**
+             * Adding edit approval in Firebase
+             */
+            $date               = Helper::getDateTimeUnix();
+            $approval           = [
+                "requesterId"  => self::REQUESTER_ID,
+                "id"           => $dataPromotion[ "push_id" ],
+                "lastModified" => $date,
+                "requestDate"  => $date,
+                "status"       => "aberto",
+                "action"       => "edit",
+                "type"         => "promotion",
+            ];
+            $newPushApproval    = $referenceApproval->push()->getKey();
+            $referenceApproval->update( [ $newPushApproval => $approval ] );
+
+            /**
+             * Adding edit changes-request in Firebase
+             */
+            $newPushChanges     = $referenceChanges->push()->getKey();
+            $changesRequest     = [
+                "id"                => $newPushChanges,
+                "createDate"        => $date,
+                // "updateDate"        => "",
+                // "reviewDate"        => "",
+                "storeId"           => $dataPromotion[ "push_id" ],
+                "establishmentId"   => $localPromotion[ "establishmentId"   ],
+                "establishmentName" => $localPromotion[ "establishmentName" ],
+                "requesterUid"      => self::REQUESTER_ID,
+                // "validatorUid"      => "",
+                // "comment"           => "",
+                "type"              => "validation",
+                "changedFields"     => $diff,
+            ];
+            $referenceChanges->update( [ $newPushChanges => $changesRequest ] );
+
+            /**
+             * Update promotion in Local promotions
+             */
+            \DB::table( "affiliates_promotions" )
+                ->where( "affiliate_id", $dataPromotion[ "affiliate_id" ] )
+                ->update( [ "data" => json_encode( $awinPromotion ) ] );
+
+            echo "Promotions : Edited promotion ID = {$dataPromotion[ "push_id" ]} | Need approval ID = {$newPushApproval} | Change Request ID = {$newPushChanges}\n";
+            // Log::channel( "awin" )->info( "Promotions", [ "Edited promotion ID = {$dataPromotion[ "push_id" ]} | Need approval ID = {$newPushApproval} | Change Request ID = {$newPushChanges}" ] );
         }
 
-        // =================================
-        Log::channel( "awin_promotions" )->info( "Promotions", [
-            "new_promos" => $new_p,
-            "dis_promos" => $dis_p,
-            "chg_promos" => $chg_p,
-            "changes"    => $chg_p_arr
-        ] );
-        Log::channel( "awin_promotions" )->info( "Promotions", [ "End process - " . date( "Y-m-d H:i:s" ) ] );
-        Log::channel( "awin_promotions" )->info( "Promotions", [ "=================================" ] );
+        /**
+         * If $localData is not empty
+         */
+        if ( !empty( $localData ) )
+        {
+            /**
+             * Add the new promotions ($localData) in the Local promotions
+             */
+            \DB::table( "affiliates_promotions" )->insert( $localData );
+            echo "Promotions : Added " . count( $localData ) . " new promotions in the local table\n";
+            // Log::channel( "awin" )->info( "Promotions", [ "Added " . count( $localData ) . " new promotions in the local table" ] );
+
+            /**
+             * Add the new promotions on Firebase
+             * And update push_id column in Local promotions
+             */
+            foreach ( $localData as $data )
+            {
+                $aux                  = $awinPromotions[ $data[ "origin_id" ] ];
+                $aux[ "isPublished" ] = false;
+
+                $newPushPromo         = $referencePromo->push()->getKey();
+                $referencePromo->update( [ $newPushPromo => $aux ] );
+
+                $date                 = Helper::getDateTimeUnix();
+                $approval             = [
+                    "requesterId"  => self::REQUESTER_ID,
+                    "id"           => $newPushPromo,
+                    "lastModified" => $date,
+                    "requestDate"  => $date,
+                    "status"       => "aberto",
+                    "action"       => "create",
+                    "type"         => "promotion",
+                ];
+
+                $newPushApproval      = $referenceApproval->push()->getKey();
+                $referenceApproval->update( [ $newPushApproval => $approval ] );
+
+                echo "Promotions : Created promotion ID = {$newPushPromo} | Need approval ID = {$newPushApproval}\n";
+                // Log::channel( "awin" )->info( "Promotions", [ "Created promotion ID = {$newPushPromo} | Need approval ID = {$newPushApproval}" ] );
+
+                $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerPromotionId" ];
+                \DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $newPushPromo ] );
+
+                unset( $awinPromotions[ $data[ "origin_id" ] ] );
+            }
+        }
     }
 
     /**
      * Send images to Firebase Storage
      *
-     * @param array $data
-     * @return void
+     * @param   array $data
+     * @return  void
      */
     private function insertImagesFirebase( array $data )
     {
@@ -609,14 +798,14 @@ class AwinController extends Controller
             Log::channel( "awin" )->info( "Images", [ "End uploading images to Firebase - {$key}" ] );
         }
 
-        File::deleteDirectory( $this->stores_path, true );
-        File::deleteDirectory( $this->promos_path, true );
+        File::deleteDirectory( $this->establishments_path, true );
+        File::deleteDirectory( $this->promotions_path,     true );
     }
 
     /**
      * Send and update reports to Firebase
      *
-     * @return void
+     * @return  void
      */
     private function insertReportsFirebase()
     {
@@ -736,8 +925,8 @@ class AwinController extends Controller
     /**
      * Get the file names from list of files
      *
-     * @param array $files
-     * @return array $fileNames
+     * @param   array   $files
+     * @return  array   $fileNames
      */
     private function getFileNames( array $files )
     {
@@ -749,28 +938,57 @@ class AwinController extends Controller
     }
 
     /**
+     * Filter Establishments Awin
      *
-     * @param Database $db
-     * @return array
+     * @param   Reference   $ref
+     * @return  array       $establishments
      */
-    private function filterStoresAwin( Database $db )
+    private function filterEstablishments( Reference $ref )
     {
-        $ref    = $db->getReference( "/Estabelecimento-v2" );
-        $stores = $ref->getValue();
-        $aux    = [];
+        $establishments = [];
 
-        foreach ( $stores as $push => $store )
+        foreach ( $ref->getValue() as $push => $establishment )
         {
-            if ( !isset( $store[ "partnerEstablishmentId" ] ) ) continue;
-            if ( !isset( $store[ "origin"                 ] ) ) continue;
-            if ( strpos( $push, "-awin"       ) !== false     ) continue;
-            if ( strpos( $push, "-cofry"      ) !== false     ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false     ) continue;
-            if ( "awin" != $store[ "origin" ]                 ) continue;
+            if ( strpos( $push, "-awin"       ) !== false ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
 
-            $aux[ $push ] = $store;
+            if ( !isset( $establishment[ "partnerEstablishmentId" ] ) ) continue;
+            if ( !isset( $establishment[ "origin"                 ] ) ) continue;
+
+            if ( $establishment[ "origin" ] != "awin"                 ) continue;
+
+            $establishments[ $push ] = $establishment;
         }
 
-        return $aux;
+        return $establishments;
+    }
+
+    /**
+     * Filter Promotions Awin
+     *
+     * @param   Reference   $ref
+     * @return  array       $promotions
+     */
+    private function filterPromotions( Reference $ref )
+    {
+        $promotions = [];
+
+        foreach ( $ref->getValue() as $push => $promo )
+        {
+            if ( strpos( $push, "-awin"       ) !== false ) continue;
+            if ( strpos( $push, "-cofry"      ) !== false ) continue;
+            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
+
+            if ( !isset( $promo[ "establishmentId"    ] ) ) continue;
+            if ( !isset( $promo[ "partnerPromotionId" ] ) ) continue;
+            if ( !isset( $promo[ "origin"             ] ) ) continue;
+
+            if ( $promo[ "origin" ] != "awin"             ) continue;
+
+            $promotions[ $push ] = $promo;
+        }
+
+        return $promotions;
     }
 }
