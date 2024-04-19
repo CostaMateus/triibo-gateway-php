@@ -12,13 +12,34 @@
                 <div id="pluginEventos" >
                     <h3 class="text-center" >Triibo Eventos</h3>
                     <p class="mb-0" >
-                        Dispara eventos para a Triibo dada certas condições.<br>
-                        Eventos:<br>
-                        - pedidos de +R$50, com <var>status processando</var> e se tiver conta Triibo vinculada, recebe pontos Triibo;<br>
+                        Dispara eventos para a Triibo dada certas condições.
+                        <br>
+                        Para que os eventos sejam acionados, o usuário precisa ter conta Triibo vinculada
+                        <br><br>
+
+                        Eventos:
+                        <br>
+                        - compras de produto normal, com status <var>concluído</var>, aciona o evento
+                            '<strong>Compra_Marketplace</strong>';
+                        <br>
+                        - compras de assinatura, com status <var>processando</var>, aciona o evento
+                            '<strong>Compra_Marketplace</strong>'
+                        e um dos três eventos de assinatura:
+                            '<strong>Assinatura_Triibo_Vip</strong>',
+                            '<strong>Assinatura_Triibo_Vip_Plano_2</strong>',
+                            '<strong>Assinatura_Triibo_Vip_Plano_3</strong>';
+                        <br>
+                        - renovação de assinatura, aciona o respectivo evento de assinatura:
+                            '<strong>Assinatura_Triibo_Vip</strong>',
+                            '<strong>Assinatura_Triibo_Vip_Plano_2</strong>',
+                            '<strong>Assinatura_Triibo_Vip_Plano_3</strong>';
+                        <br>
+
                         <br>
                         Depende dos plugins:<br>
                         - Triibo API Services;<br>
-                        - WooCommerce;
+                        - WooCommerce;<br>
+                        - WooCommerce Subscription;
                     </p>
                 </div>
             </div>

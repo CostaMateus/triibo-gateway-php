@@ -17,7 +17,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
         \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
         \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
-        \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,
+        // \App\Console\Commands\Affiliates\SocialSoul\ProcessDataSS::class,
 
         \App\Console\Commands\Log\ClearLogFile::class,
 
