@@ -3,40 +3,37 @@
 namespace App\Http\Integrations;
 
 use Devio\Pipedrive\Pipedrive;
-use Illuminate\Support\Facades\Log;
 
 class PipedriveIntegration
 {
+    // Define custom field keys as class constants
+    private const PERSON_FIELD_KEY       = "bd7287f0a9a02de60a8aff83b5905c489b7cf007";
+    private const ORGANIZATION_FIELD_KEY = "918dace587a4707755926d7c02c3bb46ed53d539";
 
     /**
-     * Undocumented function
+     * Updates the Mautic ID in Pipedrive for a given entity class and IDs.
      *
-     * @param string $class
-     * @param array $ids
-     * @return void
+     * This method takes the entity class (either 'persons' or 'organizations') and an associative array
+     * containing the Pipedrive ID ('pd_id') and the Mautic ID ('mautic_id'). It then updates the
+     * corresponding entity in Pipedrive with the provided Mautic ID.
+     *
+     * @param   string  $class  The class of the entity to update ('persons' or 'organizations').
+     * @param   array   $ids    Associative array with 'pd_id' for the Pipedrive ID and 'mautic_id' for the Mautic ID.
+     * @return  void
      */
-    public static function updateMauticId(string $class, array $ids)
+    public static function updateMauticId( string $class, array $ids )
     {
         // Log::channel("marketplace")->info(ucfirst($class), [ "data" => "selecionando API class: $class" ]);
 
-        $pipedrive = new Pipedrive(config("pipedrive.token"));
+        // Initialize Pipedrive API with the provided token from configuration.
+        $pipedrive = new Pipedrive( config( "pipedrive.token" ) );
 
-        switch ($class)
-        {
-            case "persons":
-                $pipedrive->persons->update($ids["pd_id"], [
-                    "bd7287f0a9a02de60a8aff83b5905c489b7cf007" => $ids["mautic_id"]
-                ]);
-            break;
+        // Determine the appropriate field key based on the entity class.
+        $field_key = ( $class === "persons" ) ? self::PERSON_FIELD_KEY : self::ORGANIZATION_FIELD_KEY;
 
-            case "organizations":
-                $pipedrive->organizations->update($ids["pd_id"], [
-                    "918dace587a4707755926d7c02c3bb46ed53d539" => $ids["mautic_id"]
-                ]);
-            break;
-        }
+        // Update the entity in Pipedrive with the new Mautic ID.
+        $pipedrive->{$class}->update( $ids[ "pd_id" ], [ $field_key => $ids[ "mautic_id" ] ] );
 
         // Log::channel("marketplace")->info(ucfirst($class), [ "data" => "chamada API finalizada" ]);
     }
-
 }

@@ -17,11 +17,12 @@ use App\Http\Controllers\UserController;
 // use Codexshaper\WooCommerce\Facades\Note;
 // use Codexshaper\WooCommerce\Facades\Term;
 use Codexshaper\WooCommerce\Facades\Order;
-use Doctrine\Inflector\Rules\Substitution;
+// use Doctrine\Inflector\Rules\Substitution;
+// use Codexshaper\WooCommerce\Facades\Coupon;
+// use App\Http\Controllers\ChatGuruController;
 use Codexshaper\WooCommerce\Facades\Coupon;
-use App\Http\Controllers\ChatGuruController;
-use App\Http\Controllers\FastshopController;
 use App\Http\Integrations\MauticIntegration;
+use Codexshaper\WooCommerce\Facades\Customer;
 // use App\Http\Controllers\FastshopController;
 // use App\Http\Integrations\FastshopIntegration\DataTranslator;
 // use Codexshaper\WooCommerce\Facades\Product;
@@ -46,149 +47,133 @@ use App\Http\Integrations\MauticIntegration;
 |
 */
 
-Auth::routes([
-    "register" => false
-]);
+Auth::routes( [ "register" => false ] );
 
-Route::get("/", function () {
-    return view("welcome", [
+Route::get( "/", function ()
+{
+    return view( "welcome", [
         "showToast" => false,
         "message"   => ""
-    ]);
-})->name("welcome");
+    ] );
+} )->name( "welcome" );
 
-Route::group(["middleware" => "auth"], function() {
+Route::group( ["middleware" => "auth" ], function() {
 
-    Route::get("/home", function () {
-        return view("home");
-    })->name("home");
+    Route::get( "/home", function ()
+    {
+        return view( "home" );
+    } )->name( "home" );
 
-    Route::get("/clear-caches", function() {
-        Artisan::call("optimize:clear");
-        return view("welcome", [ "showToast" => true, "message" => __("marketplace.cache") ]);
-    })->name("clear.caches");
+    Route::get( "/clear-caches", function()
+    {
+        Artisan::call( "optimize:clear" );
+        return view( "welcome", [
+            "showToast" => true,
+            "message"   => __( "marketplace.cache" )
+        ] );
+    } )->name( "clear.caches" );
 
-    Route::get("/update-stages", function() {
+    Route::get( "/update-stages", function()
+    {
         MauticIntegration::updateStages();
-        return view("welcome", [ "showToast" => true, "message" => __("marketplace.update.all.stages") ]);
-    })->name("update.stages");
 
-    Route::get("/sync-ids", function() {
+        return view( "welcome", [
+            "showToast" => true,
+            "message"   => __( "marketplace.update.all.stages" )
+        ] );
+    } )->name( "update.stages" );
+
+    Route::get( "/sync-ids", function()
+    {
         MauticIntegration::syncIdsMauticPipe();
-        return view("welcome", [ "showToast" => true, "message" => __("marketplace.sync.id") ]);
-    })->name("sync.ids");
 
-    Route::resource("users", UserController::class);
+        return view( "welcome", [
+            "showToast" => true,
+            "message"   => __( "marketplace.sync.id" )
+        ] );
+    } )->name( "sync.ids" );
 
-});
+    Route::resource( "users", UserController::class );
 
-
-
-Route::get( "/test", function () {
-
-    // $awin = Storage::get( "awin_establishments.json" );
-    // $fire = Storage::get( "firebase_awin_establishments.json" );
-    //
-    // $awin = json_decode( $awin, true );
-    // $fire = json_decode( $fire, true );
-    //
-    // $arr  = [];
-    //
-    // foreach ( $fire as $key => $estab )
-    // {
-    //     $id = $estab[ "partnerEstablishmentId" ];
-    //
-    //     if ( isset( $awin[ $id ] ) )
-    //     {
-    //         $estab[ "push_id" ] = $key;
-    //         $arr[ $id ] = [
-    //             "fire" => $estab,
-    //             "awin" => $awin[ $id ]
-    //         ];
-    //     }
-    // }
-    //
-    // $arr2 = [];
-    //
-    // foreach ( $arr as $id => $data )
-    // {
-    //     $r      = \DB::table( "affiliates_establishments" )->where( "origin_id", $id )->first();
-    //     $arr2[ $id ] = $r;
-    // }
-    //
-    // dd( $arr2 );
+} );
 
 
 
-    // ============================================================
+// =========================================
+// ============ ROTAS DE TESTE =============
+// =========================================
+Route::prefix( "mkt" )->group( function () {
 
+    Route::get( "/get-customer/{id}", function( $id )
+    {
+        $customer = Customer::find( $id );
 
-    // $fbRef            = Firebase::database()->getReference( "/Estabelecimento-v2" );
-    // $fbEstablishments = $fbRef->getValue();
+        dd( $customer );
+    } );
 
-    // $awinEstabs       = [];
+    Route::get( "/get-order/{id}", function( $id )
+    {
+        $order = Order::find( $id );
 
-    // foreach ( $fbEstablishments as $push => $fbEstab )
-    // {
-    //     if ( strpos( $push, "-awin"       ) !== false       ) continue;
-    //     if ( strpos( $push, "-cofry"      ) !== false       ) continue;
-    //     if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
-    //     if ( !isset( $fbEstab[ "partnerEstablishmentId" ] ) ) continue;
-    //     if ( !isset( $fbEstab[ "origin"                 ] ) ) continue;
-    //     if ( $fbEstab[ "origin" ] !== "awin"                ) continue;
+        dd( $order );
+    } );
 
-    //     $awinEstabs[ $push ] = $fbEstab;
-    // }
+    Route::get( "/update-order", function()
+    {
+        $order_id = "972533";
+        $data     = [
+            "customer_id" => 4591,
+        ];
 
-    // // Storage::put( "firebase_awin_establishments.json", json_encode( $awinEstabs ) );
+        $order    = Order::update( $order_id, $data );
 
-    // \DB::table( "affiliates_establishments" )->truncate();
+        dd( $data, $order );
+    } );
 
-    // $now   = now();
-    // $data  = [];
+    Route::get( "/create-order", function()
+    {
+        $data = [
+            // "customer_id"          => 1717,
+            "payment_method"       => "triibo_assinaturas",
+            "payment_method_title" => "Triibo Assinaturas",
+            "status"               => "on-hold", // pedido entra como aguardando
+            "set_paid"             => false,     // e nao pago
+            "billing"              => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Al Eduardo Prado",
+                "address_2"  => "170",
+                "city"       => "Sao Paulo",
+                "state"      => "SP",
+                "postcode"   => "01218011",
+                "country"    => "Brasil",
+                "email"      => "mateus.costa@triibo.com.br",
+                "phone"      => "11949289507",
+            ],
+            "shipping"             => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Al Eduardo Prado",
+                "address_2"  => "170",
+                "city"       => "Sao Paulo",
+                "state"      => "SP",
+                "postcode"   => "01218011",
+                "country"    => "Brasil",
+            ],
+            "line_items"           => [ [
+                "product_id" => 972529,
+                "quantity"   => 1,
+            ] ],
+        ];
 
-    // foreach ( $awinEstabs as $push => $store )
-    // {
-    //     $data[] = [
-    //         "origin"       => $store[ "origin"                 ],
-    //         "origin_id"    => $store[ "partnerEstablishmentId" ],
-    //         "affiliate_id" => $store[ "origin" ] . $store[ "partnerEstablishmentId" ],
-    //         "push_id"      => $push,
-    //         // "data"         => json_encode( $store ),
-    //         "data"         => null,
-    //         "created_at"   => $now,
-    //         "updated_at"   => $now,
-    //     ];
-    // }
+        $order = Order::create( $data );
 
-    // // Storage::put( "awin_establishments.json", json_encode( $data ) );
+        dd( $data, $order );
+    } );
 
-    // \DB::table( "affiliates_establishments" )->insert( $data );
+} );
 
-    // $integration = new AwinIntegration( true );
-    // $awinEstabs  = $integration->getEstablishments();
-
-    // foreach ( $awinEstabs as $id => $estab )
-    // {
-    //     $search_id  = $estab[ "origin" ] . $id;
-    //     $found      = \DB::table( "affiliates_establishments" )->where( "affiliate_id", $search_id )->first();
-
-    //     if ( $found )
-    //     {
-    //         \DB::table( "affiliates_establishments" )
-    //             ->where( "affiliate_id", $search_id )
-    //             ->update( [ "data" => $estab ] );
-    //     }
-    // }
-
-    // dd( $data );
-
-
-
-
-    // ============================================================
-
-
+Route::get( "/fs", function () {
 
     // $parent = null;
     // $data   = Order::all( [ "parent" => 968447 ] );

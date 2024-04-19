@@ -14,14 +14,14 @@ class ProcessStoresPromos extends Command
      * @var string
      */
     protected $signature = "cofry:process_sp
-                            {--option= : Options: promotions, stores or all }";
+                            {--option= : Options: promotions, establishments or all }";
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = "Processes Cofry stores or promotions";
+    protected $description = "Processes Cofry establishments or promotions";
 
     /**
      * Create a new command instance.
@@ -42,7 +42,7 @@ class ProcessStoresPromos extends Command
     {
         $opts   = [
             "promotions",
-            "stores",
+            "establishments",
             "all",
         ];
 

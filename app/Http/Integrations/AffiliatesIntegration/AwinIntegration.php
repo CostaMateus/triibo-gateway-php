@@ -651,8 +651,15 @@ class AwinIntegration
             $establishmentName = $promotion[ "advertiser" ][ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            $dateEn            = Helper::getDateTimeUnix( $promotion[ "startDate" ] . " 00:00:00" );
-            $dateDis           = Helper::getDateTimeUnix( $promotion[ "endDate"   ] . " 23:59:00" );
+            // $date              = $offer[ "startDate" ] . " 00:00:00";
+            $date              = str_replace( "T", " ", $offer[ "startDate" ] );
+            $date              = new DateTime( date( $date ) );
+            $dateEn            = ( int ) $date->format( "U" ) * 1000;
+
+            // $date              = $offer[ "endDate"   ] . "23:59:00";
+            $date              = str_replace( "T", " ", $offer[ "endDate" ] );
+            $date              = new DateTime( date( $date ) );
+            $dateDis           = ( int ) $date->format( "U" ) * 1000;
 
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
