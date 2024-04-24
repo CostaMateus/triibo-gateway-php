@@ -50,10 +50,10 @@ if ( !function_exists( "log_exception" ) )
      * @param   string      $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
      * @param   string      $method     The method that threw the exception.
      * @param   string      $type       The type of exception that was thrown.
-     * @param   Exception   $e          The exception object.
+     * @param   Throwable   $e          The exception object.
      * @return  void
      */
-    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Exception $e = null )
+    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null )
     {
         $context = [
             "error_code" => $e->getCode(),
