@@ -23,7 +23,7 @@ class CofryController extends Controller
      *
      * @var     string
      */
-    private const LC_STORE_PATH = "images/estabelecimentos/";
+    private const LC_ESTAB_PATH = "images/estabelecimentos/";
 
     /**
      * Define LOCAL path for promotions.
@@ -37,7 +37,7 @@ class CofryController extends Controller
      *
      * @var     string
      */
-    private const FB_STORE_PATH = "estabelecimento/";
+    private const FB_ESTAB_PATH = "estabelecimento/";
 
     /**
      * Define FIREBASE path for promotions.
@@ -49,7 +49,7 @@ class CofryController extends Controller
     /**
      * Process establishments and promotions
      *
-     * @return void
+     * @return  void
      */
     public function all() : void
     {
@@ -60,21 +60,21 @@ class CofryController extends Controller
     /**
      * Process establishments by invoking the Firebase operation for establishments.
      *
-     * @return void
+     * @return  void
      */
     public function establishments() : void
     {
-        $this->processFirebaseOperation( operation_method: "insertEstablishmentFirebase", operation_name: "Establishment" );
+        $this->processFirebaseOperation( operation_method: "insertEstablishmentsFirebase", operation_name: "Establishments" );
     }
 
     /**
      * Process promotions by invoking the Firebase operation for promotions.
      *
-     * @return void
+     * @return  void
      */
     public function promotions() : void
     {
-        $this->processFirebaseOperation( operation_method: "insertPromosFirebase", operation_name: "Promotions" );
+        $this->processFirebaseOperation( operation_method: "insertPromotionsFirebase", operation_name: "Promotions" );
     }
 
     /**
@@ -120,7 +120,7 @@ class CofryController extends Controller
      *
      * @return  void
      */
-    private function insertEstablishmentFirebase() : void
+    private function insertEstablishmentsFirebase() : void
     {
         // Log the start of the establishment search process.
         log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Searching..." ], print: true );
@@ -197,7 +197,7 @@ class CofryController extends Controller
      *
      * @return void
      */
-    private function insertPromosFirebase() : void
+    private function insertPromotionsFirebase() : void
     {
         // Log the start of the promotion search process.
         log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Searching..." ], print: true );
@@ -337,17 +337,17 @@ class CofryController extends Controller
 
     /**
      * This method is responsible for uploading images related to establishments and promotions.
-     * It calls a separate method `processImageUpload` for each type of image, providing the local and Firebase paths.
+     * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
      *
      * @return void
      */
-    public function uploadImages() : void
+    public function images() : void
     {
         // Upload images for establishments by providing the local and Firebase storage paths.
-        $this->processImageUpload( local_path: self::LC_STORE_PATH, firebase_path: self::FB_STORE_PATH, type: "establishment" );
+        $this->processImages( local_path: self::LC_ESTAB_PATH, firebase_path: self::FB_ESTAB_PATH, type: "establishment" );
 
         // Upload images for promotions by providing the local and Firebase storage paths.
-        $this->processImageUpload( local_path: self::LC_PROMO_PATH, firebase_path: self::FB_PROMO_PATH, type: "promotion"     );
+        $this->processImages( local_path: self::LC_PROMO_PATH, firebase_path: self::FB_PROMO_PATH, type: "promotion"     );
     }
 
     /**
@@ -359,7 +359,7 @@ class CofryController extends Controller
      * @param   string  $type           The type of images being processed (e.g., 'establishment', 'promotion').
      * @return  void
      */
-    private function processImageUpload( string $local_path, string $firebase_path, string $type ): void
+    private function processImages( string $local_path, string $firebase_path, string $type ): void
     {
         // Get the full path to the local directory where images are stored.
         $path  = public_path( path: $local_path );
@@ -387,7 +387,7 @@ class CofryController extends Controller
         $file_names = get_files_names( files: $files );
 
         // Execute the upload of images to Firebase using the file names and paths.
-        $this->execUploadImages( images: $file_names, local_folder: $local_path, firebase_folder: $firebase_path, type: $type );
+        $this->insertImagesFirebase( images: $file_names, local_folder: $local_path, firebase_folder: $firebase_path, type: $type );
     }
 
     /**
@@ -403,7 +403,7 @@ class CofryController extends Controller
      * @param   string  $type               A string indicating the type of upload.
      * @return  void
      */
-    private function execUploadImages( array $images, string $local_folder, string $firebase_folder, string $type )
+    private function insertImagesFirebase( array $images, string $local_folder, string $firebase_folder, string $type )
     {
         // Initialize Firebase storage and get the storage bucket.
         $st     = Firebase::storage();
