@@ -37,14 +37,14 @@ class CofryController extends Controller
      *
      * @var     string
      */
-    private const FB_ESTAB_PATH = "estabelecimento/";
+    private const FB_ESTAB_PATH = "estabelecimento";
 
     /**
      * Define FIREBASE path for promotions.
      *
      * @var     string
      */
-    private const FB_PROMO_PATH = "promocao/";
+    private const FB_PROMO_PATH = "promocao";
 
     /**
      * Process establishments and promotions
@@ -195,7 +195,7 @@ class CofryController extends Controller
      * Responsible for processing and synchronizing promotion data with Firebase.
      * It retrieves promotions from Cofry and updates or creates entries in Firebase accordingly.
      *
-     * @return void
+     * @return  void
      */
     private function insertPromotionsFirebase() : void
     {
@@ -339,15 +339,20 @@ class CofryController extends Controller
      * This method is responsible for uploading images related to establishments and promotions.
      * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
      *
-     * @return void
+     * @return  void
      */
     public function images() : void
     {
-        // Upload images for establishments by providing the local and Firebase storage paths.
-        $this->processImages( local_path: self::LC_ESTAB_PATH, firebase_path: self::FB_ESTAB_PATH, type: "establishment" );
+        $types = [ "establishments", "promotions" ];
 
-        // Upload images for promotions by providing the local and Firebase storage paths.
-        $this->processImages( local_path: self::LC_PROMO_PATH, firebase_path: self::FB_PROMO_PATH, type: "promotion"     );
+        foreach ( $types as $type )
+        {
+            $local_path    = $type == "establishments" ? self::LC_ESTAB_PATH : self::LC_PROMO_PATH;
+            $firebase_path = $type == "establishments" ? self::FB_ESTAB_PATH : self::FB_PROMO_PATH;
+
+            // Upload images for {$type} by providing the local and Firebase storage paths.
+            $this->processImages( local_path: $local_path, firebase_path: $firebase_path, type: $type );
+        }
     }
 
     /**
@@ -387,7 +392,7 @@ class CofryController extends Controller
         $file_names = get_files_names( files: $files );
 
         // Execute the upload of images to Firebase using the file names and paths.
-        $this->insertImagesFirebase( images: $file_names, local_folder: $local_path, firebase_folder: $firebase_path, type: $type );
+        $this->insertImagesFirebase( images: $file_names, local_path: $local_path, firebase_path: $firebase_path, type: $type );
     }
 
     /**
@@ -397,20 +402,20 @@ class CofryController extends Controller
      * It takes an array of image file names, the local directory path where the images are stored,
      * the target directory path in Firebase Storage, and a string indicating the type of upload.
      *
-     * @param   array   $images             Array of image file names to upload.
-     * @param   string  $local_folder       The local directory path where the images are stored.
-     * @param   string  $firebase_folder    The target directory path in Firebase Storage.
-     * @param   string  $type               A string indicating the type of upload.
+     * @param   array   $images         Array of image file names to upload.
+     * @param   string  $local_path     The local directory path where the images are stored.
+     * @param   string  $firebase_path  The target directory path in Firebase Storage.
+     * @param   string  $type           A string indicating the type of upload.
      * @return  void
      */
-    private function insertImagesFirebase( array $images, string $local_folder, string $firebase_folder, string $type )
+    private function insertImagesFirebase( array $images, string $local_path, string $firebase_path, string $type )
     {
         // Initialize Firebase storage and get the storage bucket.
-        $st     = Firebase::storage();
-        $bucket = $st->getBucket();
+        $storage = Firebase::storage();
+        $bucket  = $storage->getBucket();
 
         // Get the full local path to the images.
-        $path   = public_path( path: $local_folder );
+        $path    = public_path( path: $local_path );
 
         // Log the start of the upload process.
         log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Sending to Firebase - {$type}..." ], print: true );
@@ -419,7 +424,10 @@ class CofryController extends Controller
         foreach ( $images as $img )
         {
             // Create a resumable uploader instance for the current image.
-            $uploader = $bucket->getResumableUploader( data: fopen( "{$path}{$img}", "r" ), options: [ "name" => "{$firebase_folder}{$img}" ] );
+            $uploader = $bucket->getResumableUploader(
+                data: fopen( "{$path}/{$img}", "r" ),
+                options: [ "name" => "{$firebase_path}/{$img}" ]
+            );
 
             try
             {
@@ -430,14 +438,14 @@ class CofryController extends Controller
             }
             catch ( FirebaseException $e )
             {
-                $message = "Images : An error has occurred while working with the SDK";
+                $message = "Images : An error has occurred while working with the Firebase SDK";
 
                 // Handle Firebase-specific exceptions.
                 log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
             }
             catch ( Throwable $e )
             {
-                $message = "Images : An error has occurred while working with the SDK";
+                $message = "Images : Unexpected error";
 
                 // Handle general exceptions.
                 log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
