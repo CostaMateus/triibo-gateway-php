@@ -1,0 +1,111 @@
+<?php
+/**
+ * Helper functions for various tasks in the application.
+ */
+
+use App\Helpers\Helper;
+
+if ( !function_exists( "log_message" ) )
+{
+    /**
+     * Log a message to a specified channel.
+     *
+     * @param   string  $channel    The name of the log channel to use.
+     * @param   string  $message    The message to log.
+     * @param   string  $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
+     * @param   array   $context    Additional context data to include with the log entry.
+     * @param   bool    $print      Whether to print the message to the console or not.
+     * @param   bool    $notify     Whether to send a notification email or not.
+     * @return  void
+     */
+    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $print = false, bool $notify = false )
+    {
+        // Log the message using the specified log channel and level.
+        Log::channel( $channel )->$level( message: $message, context: $context );
+
+        // If $print is true, print the message to the console.
+        if ( $print )
+            echo $message . "\n";
+
+        // If $notification is true, send a notification email.
+        if ( $notify )
+        {
+            $exception = $context[ "exception" ];
+            $method    = $context[ "method"    ];
+            $type      = $context[ "type"      ];
+
+            // Send an email notification about the exception.
+            Helper::sendMailNotification( blade: $channel, method: $method, catch: $type, e: $exception );
+        }
+    }
+}
+
+if ( !function_exists( "log_exception" ) )
+{
+    /**
+     * Log an exception to a specified channel.
+     *
+     * @param   string      $channel    The name of the log channel to use.
+     * @param   string      $message    The message to log.
+     * @param   string      $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
+     * @param   string      $method     The method that threw the exception.
+     * @param   string      $type       The type of exception that was thrown.
+     * @param   Exception   $e          The exception object.
+     * @return  void
+     */
+    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Exception $e = null )
+    {
+        $context = [
+            "error_code" => $e->getCode(),
+            "message"    => $e->getMessage(),
+            "method"     => $method,
+            "type"       => $type,
+            "exception"  => $e
+        ];
+
+        log_message( channel: $channel, level: $level, message: $message, context: $context, print: true, notify: true );
+    }
+}
+
+if ( !function_exists( "get_files_names" ) )
+{
+    /**
+     * Extracts the file names from an array of file paths.
+     *
+     * @param   array   $files  An array of file paths.
+     * @return  array           An array of file names extracted from the file paths.
+     */
+    function get_file_names( array $files ) : array
+    {
+        // Initialize an array to hold the file names.
+        $files_name = [];
+
+        // Loop through each file path in the provided array.
+        // Extract the file name using pathinfo() and add it to the $files_name array.
+        foreach( $files as $file )
+            $files_name[] = pathinfo( path: $file )[ "basename" ];
+
+        // Return the array of file names.
+        return $files_name;
+    }
+}
+
+if ( !function_exists( "merge_data" ) )
+{
+    /**
+     * Merge data fields from an existing array into a new array.
+     *
+     * @param   array   $new_data       The new data array.
+     * @param   array   $existing_data  The existing data array from Firebase.
+     * @param   array   $fields         The fields to merge.
+     * @return  array                   The merged data array.
+     */
+    function merge_data( array $new_data, array $existing_data, array $fields ) : array
+    {
+        foreach ( $fields as $field )
+            if ( isset( $existing_data[ $field ] ) )
+                $new_data[ $field ] = $existing_data[ $field ];
+
+        return $new_data;
+    }
+}
