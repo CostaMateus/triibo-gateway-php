@@ -4,44 +4,47 @@ namespace App\Http\Controllers\Affiliates;
 
 use File;
 use Throwable;
-use App\Helpers\Helper;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Kreait\Laravel\Firebase\Facades\Firebase;
-use Google\Cloud\Core\Upload\ResumableUploader;
 use Kreait\Firebase\Exception\FirebaseException;
 use App\Http\Integrations\AffiliatesIntegration\CofryIntegration;
 
 class CofryController extends Controller
 {
     /**
-     * Define a class constant for the log channel
+     * Define a class constant for the log channel.
+     *
+     * @var     string
      */
     private const LOG_CHANNEL   = "cofry";
 
     /**
-     * Define local path for establishments and promotions
+     * Define LOCAL path for establishments.
+     *
+     * @var     string
      */
     private const LC_STORE_PATH = "images/estabelecimentos/";
+
+    /**
+     * Define LOCAL path for promotions.
+     *
+     * @var     string
+     */
     private const LC_PROMO_PATH = "images/promos/";
 
     /**
-     * Define Firebase path for establishments and promotions
+     * Define FIREBASE path for establishments.
+     *
+     * @var     string
      */
     private const FB_STORE_PATH = "estabelecimento/";
-    private const FB_PROMO_PATH = "promocao/";
 
     /**
-     * Logger
+     * Define FIREBASE path for promotions.
      *
-     * @var     Log
+     * @var     string
      */
-    protected $log;
-
-    public function __construct()
-    {
-        $this->log = Log::channel( self::LOG_CHANNEL );
-    }
+    private const FB_PROMO_PATH = "promocao/";
 
     /**
      * Process establishments and promotions
@@ -61,7 +64,7 @@ class CofryController extends Controller
      */
     public function establishments() : void
     {
-        $this->processFirebaseOperation( "insertEstablishmentFirebase", "Establishment" );
+        $this->processFirebaseOperation( operation_method: "insertEstablishmentFirebase", operation_name: "Establishment" );
     }
 
     /**
@@ -71,7 +74,7 @@ class CofryController extends Controller
      */
     public function promotions() : void
     {
-        $this->processFirebaseOperation( "insertPromosFirebase", "Promotions" );
+        $this->processFirebaseOperation( operation_method: "insertPromosFirebase", operation_name: "Promotions" );
     }
 
     /**
@@ -88,63 +91,24 @@ class CofryController extends Controller
         {
             // Attempt to call the Firebase operation method.
             $this->{$operation_method}();
+
             // Log the success message if the operation is successful.
-            $this->logSuccess( "{$operation_name} : {$operation_name} sent successfully" );
+            log_message( channel: self::LOG_CHANNEL, message: "{$operation_name} : Sent successfully", print: true );
         }
         catch ( FirebaseException $e )
         {
+            $message = "{$operation_name} : Firebase process error - aborted";
+
             // Handle Firebase-specific exceptions.
-            $this->handleException( $e, "{$operation_name} : {$operation_name}, Firebase process error - aborted", "{$operation_method}()", "FirebaseException" );
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
         }
         catch ( Throwable $e )
         {
+            $message = "{$operation_name} : Unexpected error - aborted";
+
             // Handle general exceptions.
-            $this->handleException( $e, "{$operation_name} : Unexpected error - aborted", "{$operation_method}()", "Throwable" );
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
         }
-    }
-
-    /**
-     * Log success messages and output them to the console.
-     *
-     * @param   string  $message    The success message to log and echo.
-     * @return  void
-     */
-    private function logSuccess( string $message ) : void
-    {
-        echo $message . "\n";
-
-        // Log the success message using the specified log channel.
-        $this->log->info( $message, [
-            "code"    => 0,
-            "info"    => $message,
-            "error"   => null,
-            "message" => null
-        ] );
-    }
-
-    /**
-     * Handle exceptions by logging the error, echoing the error message, and sending an email notification.
-     *
-     * @param   Throwable   $e                  The exception to handle.
-     * @param   string      $message            The message to log and echo.
-     * @param   string      $method             The method where the exception occurred.
-     * @param   string      $exception_type     The type of exception for the email notification.
-     * @return  void
-     */
-    private function handleException( Throwable $e, string $message, string $method, string $exception_type) : void
-    {
-        echo $message . "\n";
-
-        // Log the critical error message using the specified log channel.
-        $this->log->critical( $message, [
-            "code"    => $e->getCode(),
-            "info"    => $message,
-            "error"   => $e->getMessage(),
-            "message" => $e
-        ] );
-
-        // Send an email notification about the exception.
-        Helper::sendMailNotification( self::LOG_CHANNEL, $method, $exception_type, $e );
     }
 
     /**
@@ -159,7 +123,7 @@ class CofryController extends Controller
     private function insertEstablishmentFirebase() : void
     {
         // Log the start of the establishment search process.
-        $this->printAndLog( "info", "Establishments", "Searching..." );
+        log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Searching..." ], print: true );
 
         // Retrieve establishments from the Cofry integration.
         $cofry_establishments    = CofryIntegration::getEstablishments();
@@ -167,13 +131,12 @@ class CofryController extends Controller
         // If no establishments are found, log the event and return early.
         if ( !$cofry_establishments )
         {
-            $this->printAndLog( "info", "Establishments", "No found..." );
-
+            log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "No found..." ], print: true );
             return;
         }
 
         // Get a reference to the Firebase database for establishments.
-        $firebase                = Firebase::database()->getReference( "/Estabelecimento-v2" );
+        $firebase                = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
         $firebase_establishments = $firebase->getValue();
 
         // Loop through the establishments in Firebase.
@@ -188,7 +151,7 @@ class CofryController extends Controller
                     // Mark the establishment as unpublished.
                     $firebase_estab[ "isPublished" ] = false;
                     // Update the establishment in Firebase.
-                    $firebase->update( [ $push => $firebase_estab ] );
+                    $firebase->update( values: [ $push => $firebase_estab ] );
 
                     // Log the deactivation of the establishment.
                     echo "Establishments : Disab. Estab. ID = {$push}\n";
@@ -197,7 +160,7 @@ class CofryController extends Controller
         }
 
         // Log the start of the establishment sending process to Firebase.
-        $this->printAndLog( "info", "Establishments", "Sending to Firebase..." );
+        log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Sending to Firebase..." ], print: true );
 
         // Loop through the establishments retrieved from Cofry.
         foreach ( $cofry_establishments as $id => $establishment )
@@ -209,17 +172,17 @@ class CofryController extends Controller
             if ( isset( $firebase_establishments[ $id ] ) )
             {
                 // Merge the existing description with the new one.
-                $establishment = $this->mergeDescriptions( $establishment, $firebase_establishments[ $id ], "descricao" );
+                $establishment = $this->mergeDescriptions( new_data: $establishment, existing_data: $firebase_establishments[ $id ], key: "descricao" );
 
                 // Merge other establishment data fields.
-                $establishment = $this->mergeEstablishmentData( $establishment, $firebase_establishments[ $id ] );
+                $establishment = $this->mergeEstablishmentData( establishment: $establishment, firebase_establishment: $firebase_establishments[ $id ] );
 
                 // Update the status to 'Updated'.
                 $status        = "Updated";
             }
 
             // Update or create the establishment in Firebase.
-            $firebase->update([ $id => $establishment ] );
+            $firebase->update( values: [ $id => $establishment ] );
 
             // Log the creation or update of the establishment.
             echo "Establishments : {$status} Estab. ID = {$id}\n";
@@ -237,7 +200,7 @@ class CofryController extends Controller
     private function insertPromosFirebase() : void
     {
         // Log the start of the promotion search process.
-        $this->printAndLog( "info", "Promotions", "Searching..." );
+        log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Searching..." ], print: true );
 
         // Retrieve promotions from the Cofry integration.
         $cofry_promotions    = CofryIntegration::getPromotions();
@@ -245,12 +208,12 @@ class CofryController extends Controller
         // If no promotions are found, log the event and return early.
         if ( !$cofry_promotions )
         {
-            $this->printAndLog( "info", "Promotions", "No found..." );
+            log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "No found..." ], print: true );
             return;
         }
 
         // Get a reference to the Firebase database for promotions.
-        $firebase            = Firebase::database()->getReference( "/Store" );
+        $firebase            = Firebase::database()->getReference( path: "/Store" );
         $firebase_promotions = $firebase->getValue();
 
         // Loop through the promotions in Firebase.
@@ -265,7 +228,7 @@ class CofryController extends Controller
                     $firebase_promo[ "isPublished" ] = false;
                     $firebase_promo[ "active"      ] = false;
                     // Update the promotion in Firebase.
-                    $firebase->update( [ $push => $firebase_promo ] );
+                    $firebase->update( values: [ $push => $firebase_promo ] );
 
                     // Log the deactivation of the promotion.
                     echo "Promotions : Disab. Promo. ID = {$push}\n";
@@ -274,7 +237,7 @@ class CofryController extends Controller
         }
 
         // Log the start of the promotion sending process to Firebase.
-        $this->printAndLog( "info", "Promotions", "Sending to Firebase..." );
+        log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Sending to Firebase..." ], print: true );
 
         // Loop through the promotions retrieved from Cofry.
         foreach ( $cofry_promotions as $id => $promotion )
@@ -286,10 +249,10 @@ class CofryController extends Controller
             if ( isset( $firebase_promotions[ $id ] ) )
             {
                 // Merge the existing description with the new one.
-                $promotion         = $this->mergeDescriptions( $promotion, $firebase_promotions[ $id ], "description" );
+                $promotion         = $this->mergeDescriptions( new_data: $promotion, existing_data: $firebase_promotions[ $id ], key: "description" );
 
                 // Merge other promotion data fields.
-                $promotion         = $this->mergePromotionData( $promotion, $firebase_promotions[ $id ] );
+                $promotion         = $this->mergePromotionData( promotion: $promotion, firebase_promo: $firebase_promotions[ $id ] );
 
                 $promotion[ "id" ] = $firebase_promotions[ $id ][ "id" ] ?? $id;
 
@@ -301,7 +264,7 @@ class CofryController extends Controller
             $promotion[ "id" ] = $promotion[ "id" ] ?? $id;
 
             // Update or create the promotion in Firebase.
-            $firebase->update( [ $id => $promotion ] );
+            $firebase->update( values: [ $id => $promotion ] );
 
             // Log the creation or update of the promotion.
             echo "Promotions : {$status} Promo. ID = {$id}\n";
@@ -319,15 +282,15 @@ class CofryController extends Controller
     private function mergeDescriptions( array $new_data, array $existing_data, string $key ): array
     {
         // Split the existing description by the delimiter.
-        $parts = explode( "\n\n#", $existing_data[ $key ] ?? "" );
+        $parts = explode( separator: "\n\n#", string: $existing_data[ $key ] ?? "" );
 
         // If there are additional parts, merge them with the new description.
-        if ( count( $parts ) > 1 )
+        if ( count( value: $parts ) > 1 )
         {
             // Remove the first part, which is the main description.
-            array_shift( $parts );
+            array_shift( array: $parts );
 
-            $new_data[ $key ] .= implode( "\n\n#", $parts );
+            $new_data[ $key ] .= implode( separator: "\n\n#", array: $parts );
         }
 
         return $new_data;
@@ -348,7 +311,7 @@ class CofryController extends Controller
             // "isPublished"
         ];
 
-        return $this->mergeData( $establishment, $firebase_establishment, $fields );
+        return merge_data( new_data: $establishment, existing_data: $firebase_establishment, fields: $fields );
     }
 
     /**
@@ -369,24 +332,7 @@ class CofryController extends Controller
             //"isPublished"
         ];
 
-        return $this->mergeData( $promotion, $firebase_promo, $fields );
-    }
-
-    /**
-     * Merge data fields from an existing array into a new array.
-     *
-     * @param   array   $new_data       The new data array.
-     * @param   array   $existing_data  The existing data array from Firebase.
-     * @param   array   $fields         The fields to merge.
-     * @return  array                   The merged data array.
-     */
-    private function mergeData( array $new_data, array $existing_data, array $fields ) : array
-    {
-        foreach ( $fields as $field )
-            if ( isset( $existing_data[ $field ] ) )
-                $new_data[ $field ] = $existing_data[ $field ];
-
-        return $new_data;
+        return merge_data( new_data: $promotion, existing_data: $firebase_promo, fields: $fields );
     }
 
     /**
@@ -398,10 +344,10 @@ class CofryController extends Controller
     public function uploadImages() : void
     {
         // Upload images for establishments by providing the local and Firebase storage paths.
-        $this->processImageUpload( self::LC_STORE_PATH, self::FB_STORE_PATH, "establishment" );
+        $this->processImageUpload( local_path: self::LC_STORE_PATH, firebase_path: self::FB_STORE_PATH, type: "establishment" );
 
         // Upload images for promotions by providing the local and Firebase storage paths.
-        $this->processImageUpload( self::LC_PROMO_PATH, self::FB_PROMO_PATH, "promotion"     );
+        $this->processImageUpload( local_path: self::LC_PROMO_PATH, firebase_path: self::FB_PROMO_PATH, type: "promotion"     );
     }
 
     /**
@@ -416,52 +362,32 @@ class CofryController extends Controller
     private function processImageUpload( string $local_path, string $firebase_path, string $type ): void
     {
         // Get the full path to the local directory where images are stored.
-        $path  = public_path( $local_path );
+        $path  = public_path( path: $local_path );
 
         // Retrieve all files from the local directory.
-        $files = File::allFiles( $path );
+        $files = File::allFiles( directory: $path );
 
         // Check if there are no files found in the local directory.
         if ( empty( $files ) )
         {
             // Log the information that image generation is starting for the given type.
-            $this->printAndLog( "info", "Images", "Generating for {$type}..." );
+            log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Generating for {$type}..." ], print: true );
 
             // Call a method to generate images if none are found.
             CofryIntegration::getImages();
 
             // Retrieve all files again after generation.
-            $files = File::allFiles( $path );
+            $files = File::allFiles( directory: $path );
         }
 
         // Log the information that the system is capturing file names for the given type.
-        $this->printAndLog( "info", "Images", "Capturing names of {$type}..." );
+        log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Capturing names of {$type}..." ], print: true );
 
         // Get the file names from the list of files.
-        $file_names = $this->getFileNames( $files );
+        $file_names = get_files_names( files: $files );
 
         // Execute the upload of images to Firebase using the file names and paths.
-        $this->execUploadImages( $file_names, $local_path, $firebase_path, $type );
-    }
-
-    /**
-     * Extracts the file names from an array of file paths.
-     *
-     * @param   array   $files  An array of file paths.
-     * @return  array           An array of file names extracted from the file paths.
-     */
-    private function getFileNames( array $files ) : array
-    {
-        // Initialize an array to hold the file names.
-        $files_name = [];
-
-        // Loop through each file path in the provided array.
-        // Extract the file name using pathinfo() and add it to the $files_name array.
-        foreach( $files as $file )
-            $files_name[] = pathinfo( $file )[ "basename" ];
-
-        // Return the array of file names.
-        return $files_name;
+        $this->execUploadImages( images: $file_names, local_folder: $local_path, firebase_folder: $firebase_path, type: $type );
     }
 
     /**
@@ -484,91 +410,47 @@ class CofryController extends Controller
         $bucket = $st->getBucket();
 
         // Get the full local path to the images.
-        $path   = public_path( $local_folder );
+        $path   = public_path( path: $local_folder );
 
         // Log the start of the upload process.
-        $this->printAndLog( "info", "Images", "Sending to Firebase - {$type}..." );
+        log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Sending to Firebase - {$type}..." ], print: true );
 
         // Iterate over each image and upload it to Firebase.
         foreach ( $images as $img )
         {
             // Create a resumable uploader instance for the current image.
-            $uploader = $bucket->getResumableUploader( fopen( "{$path}{$img}", "r" ), [ "name" => "{$firebase_folder}{$img}" ] );
+            $uploader = $bucket->getResumableUploader( data: fopen( "{$path}{$img}", "r" ), options: [ "name" => "{$firebase_folder}{$img}" ] );
 
             try
             {
                 // Log the image ID being uploaded.
-                $this->printAndLog( "info", "Images", "ID {$img}" );
+                log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "ID {$img}" ], print: true );
                 // Perform the upload.
                 $uploader->upload();
             }
             catch ( FirebaseException $e )
             {
-                // Handle any Firebase-specific exceptions during upload.
-                $this->handleUploadException( $uploader, $e, $img, "FirebaseException" );
+                $message = "Images : An error has occurred while working with the SDK";
+
+                // Handle Firebase-specific exceptions.
+                log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
             }
             catch ( Throwable $e )
             {
-                // Handle any other exceptions during upload.
-                $this->handleUploadException( $uploader, $e, $img, "Throwable" );
+                $message = "Images : An error has occurred while working with the SDK";
+
+                // Handle general exceptions.
+                log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+            }
+            finally
+            {
+                // Attempt to retrieve the resume URI from the uploader and resume the upload.
+                $resumeUri = $uploader->getResumeUri();
+                $uploader->resume( resumeUri: $resumeUri );
             }
         }
 
         // Log the completion of the upload process.
-        $this->printAndLog( "info", "Images", "Sending finished - {$type}..." );
-    }
-
-    /**
-     * Handles exceptions during the image upload process.
-     *
-     * This function is responsible for managing exceptions that occur while using
-     * a ResumableUploader to upload images. It attempts to resume the upload if possible,
-     * logs the critical error with details, and sends a mail notification about the exception.
-     *
-     * @param   ResumableUploader   $uploader           The uploader instance used for resumable uploads.
-     * @param   Throwable           $e                  The exception that was thrown during the upload process.
-     * @param   string              $img                The image identifier or path that was being uploaded when the exception occurred.
-     * @param   string              $exception_type     A string representing the type of exception for logging purposes.
-     * @return  void
-     */
-    private function handleUploadException( ResumableUploader $uploader, Throwable $e, string $img, string $exception_type ) : void
-    {
-        // Attempt to retrieve the resume URI from the uploader and resume the upload.
-        $resumeUri = $uploader->getResumeUri();
-        $uploader->resume( $resumeUri );
-
-        // Log the critical error with relevant details such as the error code, image information, and the exception message.
-        $this->log->critical( "Images", [
-            "code"    => $e->getCode(),
-            "info"    => $img,
-            "error"   => "An error has occurred while working with the SDK",
-            "message" => $e
-        ] );
-
-        // Send a mail notification with the exception details using a helper function.
-        Helper::sendMailNotification( "cofry", "execUploadImages()", $exception_type, $e );
-    }
-
-    /**
-     * Outputs a message to the console and logs it using the logger service.
-     *
-     * This function is a utility to reduce duplication of code when both printing
-     * a message to the console and logging it using the application's logging service.
-     * It ensures that the message is consistently formatted and logged across different
-     * parts of the application.
-     *
-     * @param   string  $type       The log level (e.g., 'info', 'error', 'critical').
-     * @param   string  $message    The message to be printed and logged.
-     * @param   string  $context    Additional context to be included with the message.
-     * @return  void
-     */
-    private function printAndLog( string $type, string $message, string $context ) : void
-    {
-        // Print the message and context to the console.
-        echo "{$message} : {$context}\n";
-
-        // Log the message and context using the specified log level.
-        // The log service is accessed via $this->log, assuming it has been set up elsewhere in the class.
-        $this->log->$type( $message, [ $context ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Sending finished - {$type}..." ], print: true );
     }
 }
