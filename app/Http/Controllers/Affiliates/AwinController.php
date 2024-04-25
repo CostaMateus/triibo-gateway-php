@@ -307,55 +307,55 @@ class AwinController extends Controller
         // Delete the existing establishments directory.
         File::deleteDirectory( $this->establishments_path, true );
 
-        $localData           = [];
+        $local_data              = [];
 
         // Initialize Firebase database references
-        $db                  = Firebase::database();
-        $referenceEstab      = $db->getReference( "/Estabelecimento-v2"            );
-        $referenceApproval   = $db->getReference( "/Estabelecimento-Aprovacoes"    );
-        $referenceChanges    = $db->getReference( "/Establishment-changes-request" );
+        $db                      = Firebase::database();
+        $establishment_reference = $db->getReference( "/Estabelecimento-v2"            );
+        $approval_reference      = $db->getReference( "/Estabelecimento-Aprovacoes"    );
+        $changes_reference       = $db->getReference( "/Establishment-changes-request" );
 
         // Retrieve establishments from Firebase and local sources.
-        $fireEstablishments  = $this->filterEstablishments( $referenceEstab );
-        $awinEstablishments  = $this->integration->getEstablishments();
-        $localEstablishments = \DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
-        $localEstablishments = json_decode( json_encode( $localEstablishments ), true );
+        $firebase_establishments = $this->filterEstablishments( $establishment_reference );
+        $awin_establishments     = $this->integration->getEstablishments();
+        $local_establishments    = \DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $local_establishments    = json_decode( json_encode( $local_establishments ), true );
 
         log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Validating ..." ], print: true );
 
         // Disable Firebase establishments not present in Awin establishments.
-        foreach ( $fireEstablishments as $push => $fireEstablishment )
+        foreach ( $firebase_establishments as $push => $firebase_stablishment )
         {
-            if ( !isset( $awinEstablishments[ $fireEstablishment[ "partnerEstablishmentId" ] ] ) )
+            if ( !isset( $awin_establishments[ $firebase_stablishment[ "partnerEstablishmentId" ] ] ) )
             {
-                if ( $fireEstablishment[ "isPublished" ] )
+                if ( $firebase_stablishment[ "isPublished" ] )
                 {
                     // Disable the establishment.
-                    $fireEstablishment[ "isPublished" ] = false;
-                    $referenceEstab->update( [ $push => $fireEstablishment ] );
+                    $firebase_stablishment[ "isPublished" ] = false;
+                    $establishment_reference->update( [ $push => $firebase_stablishment ] );
 
                     log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Disabled ID {$push}" ], print: true );
 
                     // Remove the establishment from the list.
-                    unset( $fireEstablishments[ $push ] );
+                    unset( $firebase_establishments[ $push ] );
                 }
             }
         }
 
         // Process Awin establishments for addition or update.
-        foreach ( $awinEstablishments as $id => $awinEstablishment )
+        foreach ( $awin_establishments as $id => $awin_establishment )
         {
-            if ( !isset( $localEstablishments[ $id ] ) )
+            if ( !isset( $local_establishments[ $id ] ) )
             {
                 // Add new establishment to local data array.
-                $affiliate_id = $awinEstablishment[ "origin" ] . $id;
-                $localData[]  = [
-                    "origin"       => $awinEstablishment[ "origin" ],
+                $affiliate_id = $awin_establishment[ "origin" ] . $id;
+                $local_data[] = [
+                    "origin"       => $awin_establishment[ "origin" ],
                     "origin_id"    => $id,
                     "affiliate_id" => $affiliate_id,
                     "push_id"      => null,
-                    "name"         => $awinEstablishment[ "nome"   ],
-                    "data"         => json_encode( $awinEstablishment ),
+                    "name"         => $awin_establishment[ "nome"   ],
+                    "data"         => json_encode( $awin_establishment ),
                     "created_at"   => now(),
                     "updated_at"   => now(),
                 ];
@@ -364,10 +364,10 @@ class AwinController extends Controller
             }
 
             // Compare Awin and local establishments
-            $dataEstablishment  = $localEstablishments[ $id ];
-            $localEstablishment = json_decode( $dataEstablishment[ "data" ], true );
+            $data_establishment  = $local_establishments[ $id ];
+            $local_establishment = json_decode( $data_establishment[ "data" ], true );
             // And get differences.
-            $diff               = Helper::arrayDiffAssocRecursive( $awinEstablishment, $localEstablishment );
+            $diff                = Helper::arrayDiffAssocRecursive( $awin_establishment, $local_establishment );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_ESTAB_FIELDS as $field )
@@ -376,13 +376,13 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            $date               = Helper::getDateTimeUnix();
+            $date                = Helper::getDateTimeUnix();
 
             // Add edit approval request in Firebase.
-            $newPushApproval    = $referenceApproval->push()->getKey();
-            $referenceApproval->update( [ $newPushApproval => [
+            $new_push_approval   = $approval_reference->push()->getKey();
+            $approval_reference->update( [ $new_push_approval => [
                 "requesterId"  => self::REQUESTER_ID,
-                "id"           => $dataEstablishment[ "push_id" ],
+                "id"           => $data_establishment[ "push_id" ],
                 "lastModified" => $date,
                 "requestDate"  => $date,
                 "status"       => "aberto",
@@ -390,14 +390,14 @@ class AwinController extends Controller
             ] ] );
 
             // Add edit change request in Firebase.
-            $newPushChanges     = $referenceChanges->push()->getKey();
-            $referenceChanges->update( [ $newPushChanges => [
-                "id"                => $newPushChanges,
+            $new_push_changes    = $changes_reference->push()->getKey();
+            $changes_reference->update( [ $new_push_changes => [
+                "id"                => $new_push_changes,
                 "createDate"        => $date,
                 // "updateDate"        => "",
                 // "reviewDate"        => "",
-                "establishmentId"   => $dataEstablishment[ "push_id" ],
-                "establishmentName" => $dataEstablishment[ "name"    ],
+                "establishmentId"   => $data_establishment[ "push_id" ],
+                "establishmentName" => $data_establishment[ "name"    ],
                 "requesterUid"      => self::REQUESTER_ID,
                 // "validatorUid"      => "",
                 // "comment"           => "",
@@ -407,32 +407,33 @@ class AwinController extends Controller
 
             // Update the local establishment with the new data.
             \DB::table( "affiliates_establishments" )
-                ->where( "affiliate_id", $dataEstablishment[ "affiliate_id" ] )
-                ->update( [ "data" => json_encode( $awinEstablishment ) ] );
+                ->where( "affiliate_id", $data_establishment[ "affiliate_id" ] )
+                ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
             $context = "Edited ID = {$data_establishment[ "push_id" ]} | Need approval ID = {$new_push_approval} | Change Request ID = {$new_push_changes}\n";
             log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ $context ], print: true );
         }
 
         // Insert new establishments into the local database if any.
-        if ( !empty( $localData ) )
+        if ( !empty( $local_data ) )
         {
-            \DB::table( "affiliates_establishments" )->insert( $localData );
+            \DB::table( "affiliates_establishments" )->insert( $local_data );
 
             log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Added " . count( $local_data ) . " new establishments in the local table" ], print: true );
 
             // Add new establishments to Firebase and update local database with push IDs.
-            foreach ( $localData as $data )
+            foreach ( $local_data as $establishment )
             {
-                $aux                  = $awinEstablishments[ $data[ "origin_id" ] ];
+                $aux                  = $awin_establishments[ $establishment[ "origin_id" ] ];
                 $aux[ "isPublished" ] = false;
 
-                $newPushEstab         = $referenceEstab->push()->getKey();
-                $referenceEstab->update( [ $newPushEstab => $aux ] );
+                $newPushEstab         = $establishment_reference->push()->getKey();
+                $establishment_reference->update( [ $newPushEstab => $aux ] );
 
                 $date                 = Helper::getDateTimeUnix();
-                $newPushApproval      = $referenceApproval->push()->getKey();
-                $referenceApproval->update( [ $newPushApproval => [
+
+                $new_push_approval    = $approval_reference->push()->getKey();
+                $approval_reference->update( [ $new_push_approval => [
                     "requesterId"  => self::REQUESTER_ID,
                     "id"           => $newPushEstab,
                     "lastModified" => $date,
@@ -458,57 +459,57 @@ class AwinController extends Controller
     {
         log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Searching ..." ], print: true );
 
-        //
+        // Delete the existing promotions directory.
         File::deleteDirectory( $this->promotions_path, true );
 
-        $localData         = [];
+        $local_data           = [];
 
-        //
-        $db                = Firebase::database();
-        $referencePromo    = $db->getReference( "/Store"                 );
-        $referenceApproval = $db->getReference( "/Store-Aprovacoes"      );
-        $referenceChanges  = $db->getReference( "/Store-changes-request" );
+        // Initialize Firebase database references
+        $db                   = Firebase::database();
+        $promotions_reference = $db->getReference( "/Store"                 );
+        $approval_reference   = $db->getReference( "/Store-Aprovacoes"      );
+        $changes_reference    = $db->getReference( "/Store-changes-request" );
 
-        //
-        $firePromotions    = $this->filterPromotions( $referencePromo );
-        $awinPromotions    = $this->integration->getPromotions();
-        $localPromotions   = \DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
-        $localPromotions   = json_decode( json_encode( $localPromotions ), true );
+        // Retrieve promotions from Firebase and local sources.
+        $firebase_promotions  = $this->filterPromotions( $promotions_reference );
+        $awin_promotions      = $this->integration->getPromotions();
+        $local_promotions     = \DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $local_promotions     = json_decode( json_encode( $local_promotions ), true );
 
         log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Validating ..." ], print: true );
 
-        //
-        foreach ( $firePromotions as $push => $firePromotion )
+        // Disable Firebase promotions not present in Awin promotions.
+        foreach ( $firebase_promotions as $push => $firebase_promotion )
         {
-            if ( !isset( $awinPromotions[ $firePromotion[ "partnerPromotionId" ] ] ) )
+            if ( !isset( $awin_promotions[ $firebase_promotion[ "partnerPromotionId" ] ] ) )
             {
-                if ( $firePromotion[ "isPublished" ] )
+                if ( $firebase_promotion[ "isPublished" ] )
                 {
-                    //
-                    $firePromotion[ "isPublished" ] = false;
-                    $referencePromo->update( [ $push => $firePromotion ] );
+                    // Disable the promotion.
+                    $firebase_promotion[ "isPublished" ] = false;
+                    $promotions_reference->update( [ $push => $firebase_promotion ] );
 
                     log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Disabled ID {$push}" ], print: true );
 
-                    //
-                    unset( $firePromotions[ $push ] );
+                    // Remove the promotion from the list.
+                    unset( $firebase_promotions[ $push ] );
                 }
             }
         }
 
-        //
-        foreach ( $awinPromotions as $id => $awinPromotion )
+        // Process Awin promotions for addition or update.
+        foreach ( $awin_promotions as $id => $awin_promotion )
         {
-            //
-            if ( !isset( $localPromotions[ $id ] ) )
+            if ( !isset( $local_promotions[ $id ] ) )
             {
-                $affiliate_id = $awinPromotion[ "origin" ] . $id;
-                $localData[]  = [
-                    "origin"       => $awinPromotion[ "origin" ],
+                // Add new promotion to local data array.
+                $affiliate_id = $awin_promotion[ "origin" ] . $id;
+                $local_data[] = [
+                    "origin"       => $awin_promotion[ "origin" ],
                     "origin_id"    => $id,
                     "affiliate_id" => $affiliate_id,
                     "push_id"      => null,
-                    "data"         => json_encode( $awinPromotion ),
+                    "data"         => json_encode( $awin_promotion ),
                     "created_at"   => now(),
                     "updated_at"   => now(),
                 ];
@@ -516,26 +517,26 @@ class AwinController extends Controller
                 continue;
             }
 
-            //
-            $dataPromotion  = $localPromotions[ $id ];
-            $localPromotion = json_decode( $dataPromotion[ "data" ], true );
-            //
-            $diff           = Helper::arrayDiffAssocRecursive( $awinPromotion, $localPromotion );
+            // Compare Awin and local insertPromotionsFirebase
+            $data_promotion    = $local_promotions[ $id ];
+            $local_promotion   = json_decode( $data_promotion[ "data" ], true );
+            // And get differences.
+            $diff              = Helper::arrayDiffAssocRecursive( $awin_promotion, $local_promotion );
 
-            //
+            // Remove ignored fields from the differences.
             foreach ( self::IGNORE_PROMO_FIELDS as $field )
                 unset( $diff[ $field ] );
 
-            //
+            // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            $date               = Helper::getDateTimeUnix();
+            $date              = Helper::getDateTimeUnix();
 
-            //
-            $newPushApproval    = $referenceApproval->push()->getKey();
-            $referenceApproval->update( [ $newPushApproval => [
+            // Add edit approval request in Firebase.
+            $new_push_approval = $approval_reference->push()->getKey();
+            $approval_reference->update( [ $new_push_approval => [
                 "requesterId"  => self::REQUESTER_ID,
-                "id"           => $dataPromotion[ "push_id" ],
+                "id"           => $data_promotion[ "push_id" ],
                 "lastModified" => $date,
                 "requestDate"  => $date,
                 "status"       => "aberto",
@@ -543,16 +544,16 @@ class AwinController extends Controller
                 "type"         => "promotion",
             ] ] );
 
-            //
-            $newPushChanges     = $referenceChanges->push()->getKey();
-            $referenceChanges->update( [ $newPushChanges => [
-                "id"                => $newPushChanges,
+            // Add edit change request in Firebase.
+            $new_push_changes  = $changes_reference->push()->getKey();
+            $changes_reference->update( [ $new_push_changes => [
+                "id"                => $new_push_changes,
                 "createDate"        => $date,
                 // "updateDate"        => "",
                 // "reviewDate"        => "",
-                "storeId"           => $dataPromotion[ "push_id" ],
-                "establishmentId"   => $localPromotion[ "establishmentId"   ],
-                "establishmentName" => $localPromotion[ "establishmentName" ],
+                "storeId"           => $data_promotion[ "push_id" ],
+                "establishmentId"   => $local_promotion[ "establishmentId"   ],
+                "establishmentName" => $local_promotion[ "establishmentName" ],
                 "requesterUid"      => self::REQUESTER_ID,
                 // "validatorUid"      => "",
                 // "comment"           => "",
@@ -560,38 +561,37 @@ class AwinController extends Controller
                 "changedFields"     => $diff,
             ] ] );
 
-            //
+            // Update the local promotion with the new data.
             \DB::table( "affiliates_promotions" )
-                ->where( "affiliate_id", $dataPromotion[ "affiliate_id" ] )
-                ->update( [ "data" => json_encode( $awinPromotion ) ] );
+                ->where( "affiliate_id", $data_promotion[ "affiliate_id" ] )
+                ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
             $context = "Edited ID {$data_promotion[ "push_id" ]} | Need approval ID = {$new_push_approval} | Change Request ID = {$new_push_changes}\n";
             log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ $context ], print: true );
         }
 
-        //
-        if ( !empty( $localData ) )
+        // Insert new promotions into the local database if any.
+        if ( !empty( $local_data ) )
         {
-            //
-            \DB::table( "affiliates_promotions" )->insert( $localData );
+            \DB::table( "affiliates_promotions" )->insert( $local_data );
 
             log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Added " . count( $local_data ) . " new promotions in the local table" ], print: true );
 
-            //
-            foreach ( $localData as $data )
+            // Add new promotion to Firebase and update local database with push IDs.
+            foreach ( $local_data as $promotion )
             {
-                $aux                  = $awinPromotions[ $data[ "origin_id" ] ];
+                $aux                  = $awin_promotions[ $promotion[ "origin_id" ] ];
                 $aux[ "isPublished" ] = false;
 
-                $newPushPromo         = $referencePromo->push()->getKey();
-                $referencePromo->update( [ $newPushPromo => $aux ] );
+                $new_push_promotion   = $promotions_reference->push()->getKey();
+                $promotions_reference->update( [ $new_push_promotion => $aux ] );
 
                 $date                 = Helper::getDateTimeUnix();
 
-                $newPushApproval      = $referenceApproval->push()->getKey();
-                $referenceApproval->update( [ $newPushApproval => [
+                $new_push_approval    = $approval_reference->push()->getKey();
+                $approval_reference->update( [ $new_push_approval => [
                     "requesterId"  => self::REQUESTER_ID,
-                    "id"           => $newPushPromo,
+                    "id"           => $new_push_promotion,
                     "lastModified" => $date,
                     "requestDate"  => $date,
                     "status"       => "aberto",
@@ -602,13 +602,16 @@ class AwinController extends Controller
                 log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Created ID = {$new_push_promotion} | Need approval ID = {$new_push_approval}" ], print: true );
 
                 $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerPromotionId" ];
-                \DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $newPushPromo ] );
+                \DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_promotion ] );
             }
         }
     }
 
     /**
-     * Send and update reports to Firebase
+     * Send and update reports to Firebase.
+     *
+     * Handles the insertion and updating of reports in Firebase.
+     * It sends new reports to Firebase and updates existing reports with the latest data.
      *
      * @return  void
      */
@@ -616,30 +619,33 @@ class AwinController extends Controller
     {
         log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "Searching for new..." ], print: true );
 
-        // instance of purchases-awin
-        $fbAwin  = Firebase::database()->getReference( "/Triibo-Purchases-Awin"     );
+        // Get a reference to the "Triibo-Purchases-Awin" node in Firebase.
+        $firebase_awin     = Firebase::database()->getReference( "/Triibo-Purchases-Awin"     );
 
-        // instance of purchases-cashback
-        $fbCash  = Firebase::database()->getReference( "/Triibo-Purchases-Cashback" );
+        // Get a reference to the "Triibo-Purchases-Cashback" node in Firebase.
+        $firebase_cashback = Firebase::database()->getReference( "/Triibo-Purchases-Cashback" );
 
-        // new transactions awin
-        $reports = $this->integration->getReports();
+        // Retrieve new reports from the integration.
+        $new_reports       = $this->integration->getReports();
 
-        if ( $reports[ "success" ] && !empty( $reports[ "data" ] ) )
+        // If new reports are available and not empty.
+        if ( $new_reports[ "success" ] && !empty( $new_reports[ "data" ] ) )
         {
             log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "Sending new transactions to Firebase ..." ], print: true );
 
-            foreach ( $reports[ "data" ] as $report )
+            // Loop through each new report.
+            foreach ( $new_reports[ "data" ] as $report )
             {
-                $report   = Helper::setEmptyString( $report );
+                // Set empty strings in the report to an empty string.
+                $report    = Helper::setEmptyString( $report );
 
-                // create in purchases-awin
-                $pushAwin = $fbAwin->push()->getKey();
-                $fbAwin->update( [ $pushAwin => $report ] );
+                // Push the report to the "Triibo-Purchases-Awin" node and get the generated key.
+                $push_awin = $firebase_awin->push()->getKey();
+                $firebase_awin->update( [ $push_awin => $report ] );
 
-                // create in purchases-cashback
-                $pushCash = $fbCash->push()->getKey();
-                $fbCash->update( [ $pushCash => $report[ "metaData" ] ] );
+                // Push the report's metadata to the "Triibo-Purchases-Cashback" node and get the generated key.
+                $push_cash = $firebase_cashback->push()->getKey();
+                $firebase_cashback->update( [ $push_cash => $report[ "metaData" ] ] );
 
                 log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "New transaction ID = {$push_awin} | {$push_cash}" ], print: true );
             }
@@ -649,69 +655,79 @@ class AwinController extends Controller
             log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "No new transactions ..." ], print: true );
         }
 
-        echo "Reports : Searching for updated transactions\n";
-        Log::channel( "awin" )->info( "Reports", [ "Searching for updated transactions" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "Searching for updated .." ], print: true );
 
-        // update transaction
-        $updReports = $this->integration->getReports( true );
+        // Retrieve updated reports from the integration.
+        $updated_reports = $this->integration->getReports( true );
 
-        if ( $updReports[ "success" ] && !empty( $updReports[ "data" ] ) )
+        // If updated reports are available and not empty.
+        if ( $updated_reports[ "success" ] && !empty( $updated_reports[ "data" ] ) )
         {
-            // reports purchases-awin
-            $fbReportsAwin = $fbAwin->getValue();
-
-            // reports purchases-cashback
-            $fbReportsCash = $fbCash->getValue();
+            // Get the current values of the "Triibo-Purchases-Awin" and "Triibo-Purchases-Cashback" nodes.
+            $firebase_reports_awin = $firebase_awin->getValue();
+            $firebase_reports_cash = $firebase_cashback->getValue();
 
             log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "Sending updated transactions for updated ..." ], print: true );
 
-            // purchases-awin
-            foreach ( $fbReportsAwin as $pushAwin => $fbReportAwin )
+            // Loop through each report in the "Triibo-Purchases-Awin" node.
+            foreach ( $firebase_reports_awin as $push_awin => $firebase_report_awin )
             {
-                foreach ( $updReports[ "data" ] as $uReport )
+                // Loop through each updated report.
+                foreach ( $updated_reports[ "data" ] as $updated_report )
                 {
-                    if ( !isset( $fbReportAwin[ "id" ] ) || !isset( $fbReportAwin[ "advertiserId" ] ) ) continue;
+                    // Skip if the report doesn't have an id or advertiserId.
+                    if ( !isset( $firebase_report_awin[ "id" ] ) || !isset( $firebase_report_awin[ "advertiserId" ] ) ) continue;
 
-                    $uReport    = Helper::setEmptyString( $uReport );
+                    // Set empty strings in the updated report to an empty string.
+                    $updated_report = Helper::setEmptyString( $updated_report );
 
-                    $id         = $fbReportAwin[ "id"           ] == $uReport[ "id"           ];
-                    $advertiser = $fbReportAwin[ "advertiserId" ] == $uReport[ "advertiserId" ];
+                    // Check if the id and advertiserId match the current report.
+                    $id             = $firebase_report_awin[ "id"           ] == $updated_report[ "id"           ];
+                    $advertiser     = $firebase_report_awin[ "advertiserId" ] == $updated_report[ "advertiserId" ];
 
+                    // If the id and advertiserId don't match, continue to the next report.
                     if ( !$id || !$advertiser ) continue;
 
-                    foreach ( $fbReportAwin as $key => $value )
-                        if ( !isset( $uReport[ $key ] ) )
-                            $uReport[ $key ] = $value;
+                    // Add any missing keys from the updated report to the current report.
+                    foreach ( $firebase_report_awin as $key => $value )
+                        if ( !isset( $updated_report[ $key ] ) )
+                            $updated_report[ $key ] = $value;
 
-                    $fbReportAwin = $uReport;
+                    // Update the current report with the updated report data.
+                    $firebase_report_awin = $updated_report;
                     break;
                 }
 
-                $fbAwin->update( [ $pushAwin => $fbReportAwin ] );
+                // Update the report in the "Triibo-Purchases-Awin" node.
+                $firebase_awin->update( [ $push_awin => $firebase_report_awin ] );
 
-                echo "Reports : Updated Awin transaction ID = {$pushAwin}\n";
+                log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "Updated Awin transactions ID {$push_awin}" ], print: true );
             }
 
-            // purchases-cashback
-            foreach ( $fbReportsCash as $pushCash => $fbReportCash )
+            // Loop through each report in the "Triibo-Purchases-Cashback" node.
+            foreach ( $firebase_reports_cash as $push_cash => $firebase_report_cash )
             {
-                foreach ( $updReports[ "data" ] as $uReport )
+                // Loop through each updated report.
+                foreach ( $updated_reports[ "data" ] as $updated_report )
                 {
-                    $transaction = $fbReportCash[ "transactionId" ] == $uReport[ "metaData" ][ "transactionId" ];
-                    $advertiser  = $fbReportCash[ "advertiserId"  ] == $uReport[ "metaData" ][ "advertiserId"  ];
-                    $uid         = isset( $fbReportCash[ "uid" ] ) && ( $fbReportCash[ "uid"  ] == $uReport[ "metaData" ][ "uid" ] );
+                    // Check if the transactionId, advertiserId, and uid match the current report.
+                    $transaction = $firebase_report_cash[ "transactionId" ] == $updated_report[ "metaData" ][ "transactionId" ];
+                    $advertiser  = $firebase_report_cash[ "advertiserId"  ] == $updated_report[ "metaData" ][ "advertiserId"  ];
+                    $uid         = isset( $firebase_report_cash[ "uid" ] ) && ( $firebase_report_cash[ "uid"  ] == $updated_report[ "metaData" ][ "uid" ] );
 
+                    // If the transactionId, advertiserId, and uid match.
                     if ( $transaction && $advertiser && $uid )
                     {
-                        foreach ( $fbReportCash as $key => $value )
+                        foreach ( $firebase_report_cash as $key => $value )
                             if ( in_array( $key, [ "status", "updateDate" ] ) )
-                                $fbReportCash[ $key ] = $uReport[ "metaData"][ $key ];
+                                $firebase_report_cash[ $key ] = $updated_report[ "metaData"][ $key ];
 
                         break;
                     }
                 }
 
-                $fbCash->update( [ $pushCash => $fbReportCash ] );
+                // Update the report in the "Triibo-Purchases-Cashback" node.
+                $firebase_cashback->update( [ $push_cash => $firebase_report_cash ] );
 
                 log_message( channel: self::LOG_CHANNEL, message: "Reports", context: [ "Updated Cash transactions ID {$push_cash}" ], print: true );
             }
