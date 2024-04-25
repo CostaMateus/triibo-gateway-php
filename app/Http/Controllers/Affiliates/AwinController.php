@@ -15,6 +15,13 @@ use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
 class AwinController extends Controller
 {
     /**
+     * Timestamp for when establishments should be enabled.
+     *
+     * @var     integer
+     */
+    private static $date;
+
+    /**
      * Undocumented variable
      *
      * @var     AwinIntegration
@@ -94,8 +101,29 @@ class AwinController extends Controller
     {
         $this->integration = new AwinIntegration( $loadEstablishments );
 
+        self::initDate();
+
         foreach ( self::TYPES as $type )
             File::ensureDirectoryExists( path: public_path ( path: self::LC_BASE_PATH . "/{$type}" ) );
+    }
+
+    /**
+     * Initialize static date variables for enable and disable timestamps.
+     * This method sets up the timestamps only once to avoid redundant calculations.
+     *
+     * @return  void
+     */
+    private static function initDate() : void
+    {
+        // Check if the enable date has not been set yet.
+        if ( !isset( self::$date ) )
+        {
+            // Create a new DateTime object for the current time.
+            $date       = new DateTime();
+
+            // Set the enable date as a Unix timestamp in milliseconds.
+            self::$date = ( int ) $date->format( "U" ) * 1000;
+        }
     }
 
     /**
@@ -376,15 +404,13 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            $date                = Helper::getDateTimeUnix();
-
             // Add edit approval request in Firebase.
             $new_push_approval   = $approval_reference->push()->getKey();
             $approval_reference->update( [ $new_push_approval => [
                 "requesterId"  => self::REQUESTER_ID,
                 "id"           => $data_establishment[ "push_id" ],
-                "lastModified" => $date,
-                "requestDate"  => $date,
+                "lastModified" => self::$date,
+                "requestDate"  => self::$date,
                 "status"       => "aberto",
                 "action"       => "edit"
             ] ] );
@@ -393,7 +419,7 @@ class AwinController extends Controller
             $new_push_changes    = $changes_reference->push()->getKey();
             $changes_reference->update( [ $new_push_changes => [
                 "id"                => $new_push_changes,
-                "createDate"        => $date,
+                "createDate"        => self::$date,
                 // "updateDate"        => "",
                 // "reviewDate"        => "",
                 "establishmentId"   => $data_establishment[ "push_id" ],
@@ -430,14 +456,12 @@ class AwinController extends Controller
                 $newPushEstab         = $establishment_reference->push()->getKey();
                 $establishment_reference->update( [ $newPushEstab => $aux ] );
 
-                $date                 = Helper::getDateTimeUnix();
-
                 $new_push_approval    = $approval_reference->push()->getKey();
                 $approval_reference->update( [ $new_push_approval => [
                     "requesterId"  => self::REQUESTER_ID,
                     "id"           => $newPushEstab,
-                    "lastModified" => $date,
-                    "requestDate"  => $date,
+                    "lastModified" => self::$date,
+                    "requestDate"  => self::$date,
                     "status"       => "aberto",
                     "action"       => "create"
                 ] ] );
@@ -530,15 +554,13 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            $date              = Helper::getDateTimeUnix();
-
             // Add edit approval request in Firebase.
             $new_push_approval = $approval_reference->push()->getKey();
             $approval_reference->update( [ $new_push_approval => [
                 "requesterId"  => self::REQUESTER_ID,
                 "id"           => $data_promotion[ "push_id" ],
-                "lastModified" => $date,
-                "requestDate"  => $date,
+                "lastModified" => self::$date,
+                "requestDate"  => self::$date,
                 "status"       => "aberto",
                 "action"       => "edit",
                 "type"         => "promotion",
@@ -548,7 +570,7 @@ class AwinController extends Controller
             $new_push_changes  = $changes_reference->push()->getKey();
             $changes_reference->update( [ $new_push_changes => [
                 "id"                => $new_push_changes,
-                "createDate"        => $date,
+                "createDate"        => self::$date,
                 // "updateDate"        => "",
                 // "reviewDate"        => "",
                 "storeId"           => $data_promotion[ "push_id" ],
@@ -586,14 +608,12 @@ class AwinController extends Controller
                 $new_push_promotion   = $promotions_reference->push()->getKey();
                 $promotions_reference->update( [ $new_push_promotion => $aux ] );
 
-                $date                 = Helper::getDateTimeUnix();
-
                 $new_push_approval    = $approval_reference->push()->getKey();
                 $approval_reference->update( [ $new_push_approval => [
                     "requesterId"  => self::REQUESTER_ID,
                     "id"           => $new_push_promotion,
-                    "lastModified" => $date,
-                    "requestDate"  => $date,
+                    "lastModified" => self::$date,
+                    "requestDate"  => self::$date,
                     "status"       => "aberto",
                     "action"       => "create",
                     "type"         => "promotion",
@@ -637,7 +657,7 @@ class AwinController extends Controller
             foreach ( $new_reports[ "data" ] as $report )
             {
                 // Set empty strings in the report to an empty string.
-                $report    = Helper::setEmptyString( $report );
+                $report    = set_empty_string( $report );
 
                 // Push the report to the "Triibo-Purchases-Awin" node and get the generated key.
                 $push_awin = $firebase_awin->push()->getKey();
@@ -679,7 +699,7 @@ class AwinController extends Controller
                     if ( !isset( $firebase_report_awin[ "id" ] ) || !isset( $firebase_report_awin[ "advertiserId" ] ) ) continue;
 
                     // Set empty strings in the updated report to an empty string.
-                    $updated_report = Helper::setEmptyString( $updated_report );
+                    $updated_report = set_empty_string( $updated_report );
 
                     // Check if the id and advertiserId match the current report.
                     $id             = $firebase_report_awin[ "id"           ] == $updated_report[ "id"           ];
@@ -720,7 +740,7 @@ class AwinController extends Controller
                     {
                         foreach ( $firebase_report_cash as $key => $value )
                             if ( in_array( $key, [ "status", "updateDate" ] ) )
-                                $firebase_report_cash[ $key ] = $updated_report[ "metaData"][ $key ];
+                                $firebase_report_cash[ $key ] = $updated_report[ "metaData" ][ $key ];
 
                         break;
                     }
