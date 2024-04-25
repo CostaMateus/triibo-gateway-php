@@ -140,37 +140,49 @@ if ( !function_exists( "set_empty_string" ) )
 if ( !function_exists( "filter_data" ) )
 {
     /**
+     * Filters a multidimensional array based on a list of required fields and a specific origin.
      *
-     * @param   array   $data
-     * @return  array
+     * @param   array   $data       The multidimensional array to be filtered.
+     * @param   array   $blacklist  A list of values to be ignored.
+     * @param   array   $fields     A list of required fields.
+     * @param   string  $origin     The desired origin for the values.
+     * @return  array               An array containing the values from $data where all fields in $fields are set and the origin matches $origin.
      */
     function filter_data( array $data, array $blacklist, array $fields, string $origin ) : array
     {
+        // Initialize an empty array to store the filtered values.
         $result = [];
 
         foreach ( $data as $key => $value )
         {
+            // Check if the key is in the blacklist and skip the value if it is.
             if ( str_contains( $key, $blacklist ) )
                 continue;
 
+            // Check if the origin of the value is different from the desired origin and skip the value if it is.
             if( isset( $value[ "origin" ] ) && $value[ "origin" ] !== $origin )
                 continue;
 
+            // Initialize a variable to control if the value is valid.
             $valid = true;
 
+            // Check if all required fields are set in the value.
             foreach ( $fields as $field )
             {
                 if ( !isset( $value[ $field ] ) )
                 {
+                    // Set $valid to false if any field is not set.
                     $valid = false;
                     break;
                 }
             }
 
+            // If the value is valid (all required fields are set), add it to the result array.
             if ( $valid )
                 $result[ $key ] = $value;
         }
 
+        // Return the result array containing the filtered values.
         return $result;
     }
 }
