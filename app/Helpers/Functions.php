@@ -109,3 +109,30 @@ if ( !function_exists( "merge_data" ) )
         return $new_data;
     }
 }
+
+if ( !function_exists( "set_empty_string" ) )
+{
+    /**
+     * Function to replace null values with empty strings in an array.
+     *
+     * This function iterates through an array and replaces any null values with empty strings.
+     * If the value is another array, it recursively calls the function to process that sub-array.
+     *
+     * @param   array   $data
+     * @return  array
+     */
+    function set_empty_string( array $data )
+    {
+        // Auxiliary array to store the processed values.
+        $result = [];
+
+        // Loop through each element of the array.
+        // If the value it's an array, recursively call the function.
+        // Else keep the original value, or replace null with an empty string .
+        foreach ( $data as $key => $value )
+            $result[ $key ] = is_array( $value ) ? set_empty_string( $value ) : ( $value ?? "" );
+
+        // Return the processed array.
+        return $result;
+    }
+}

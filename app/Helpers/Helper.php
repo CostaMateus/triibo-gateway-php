@@ -624,21 +624,6 @@ class Helper
         return $status;
     }
 
-    public static function setEmptyString( array $data )
-    {
-        $aux = [];
-
-        foreach ( $data as $key => $value )
-        {
-            if ( !is_array( $value ) )
-                $aux[ $key ] = ( $value == null ) ? "" : $value;
-            else
-                $aux[ $key ] = self::setEmptyString( $value );
-        }
-
-        return $aux;
-    }
-
     /**
      * Get datetime ms
      *
