@@ -136,3 +136,41 @@ if ( !function_exists( "set_empty_string" ) )
         return $result;
     }
 }
+
+if ( !function_exists( "filter_data" ) )
+{
+    /**
+     *
+     * @param   array   $data
+     * @return  array
+     */
+    function filter_data( array $data, array $blacklist, array $fields, string $origin ) : array
+    {
+        $result = [];
+
+        foreach ( $data as $key => $value )
+        {
+            if ( str_contains( $key, $blacklist ) )
+                continue;
+
+            if( isset( $value[ "origin" ] ) && $value[ "origin" ] !== $origin )
+                continue;
+
+            $valid = true;
+
+            foreach ( $fields as $field )
+            {
+                if ( !isset( $value[ $field ] ) )
+                {
+                    $valid = false;
+                    break;
+                }
+            }
+
+            if ( $valid )
+                $result[ $key ] = $value;
+        }
+
+        return $result;
+    }
+}
