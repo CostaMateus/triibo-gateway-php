@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Affiliates;
 
 use Throwable;
 use App\Helpers\Helper;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Kreait\Firebase\Database\Reference;
@@ -764,53 +763,26 @@ class AwinController extends Controller
      * @param   Reference   $ref
      * @return  array       $establishments
      */
-    private function filterEstablishments( Reference $ref )
+    private function filterEstablishments( Reference $reference )
     {
-        $establishments = [];
+        $blacklist = [ "-awin", "-cofry", "-socialsoul"   ];
+        $fields    = [ "partnerEstablishmentId", "origin" ];
 
-        foreach ( $ref->getValue() as $push => $establishment )
-        {
-            if ( strpos( $push, "-awin"       ) !== false ) continue;
-            if ( strpos( $push, "-cofry"      ) !== false ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
-
-            if ( !isset( $establishment[ "partnerEstablishmentId" ] ) ) continue;
-            if ( !isset( $establishment[ "origin"                 ] ) ) continue;
-
-            if ( $establishment[ "origin" ] != "awin"                 ) continue;
-
-            $establishments[ $push ] = $establishment;
-        }
-
-        return $establishments;
+        return filter_data( data: $reference->getValue(), blacklist: $blacklist, fields: $fields, origin: "awin" );
     }
 
     /**
      * Filter Promotions Awin
      *
-     * @param   Reference   $ref
+     * @param   Reference   $reference
      * @return  array       $promotions
      */
-    private function filterPromotions( Reference $ref )
+    private function filterPromotions( Reference $reference )
     {
-        $promotions = [];
+        $blacklist = [ "-awin", "-cofry", "-socialsoul"                  ];
+        $fields    = [ "establishmentId", "partnerPromotionId", "origin" ];
 
-        foreach ( $ref->getValue() as $push => $promo )
-        {
-            if ( strpos( $push, "-awin"       ) !== false ) continue;
-            if ( strpos( $push, "-cofry"      ) !== false ) continue;
-            if ( strpos( $push, "-socialsoul" ) !== false ) continue;
-
-            if ( !isset( $promo[ "establishmentId"    ] ) ) continue;
-            if ( !isset( $promo[ "partnerPromotionId" ] ) ) continue;
-            if ( !isset( $promo[ "origin"             ] ) ) continue;
-
-            if ( $promo[ "origin" ] != "awin"             ) continue;
-
-            $promotions[ $push ] = $promo;
-        }
-
-        return $promotions;
+        return filter_data( data: $reference->getValue(), blacklist: $blacklist, fields: $fields, origin: "awin" );
     }
 
     /**
