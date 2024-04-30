@@ -37,10 +37,10 @@ class AwinIntegration
     /**
      * Constructor
      *
-     * @param   boolean $loadEstabs     Load establishments on init, default true
+     * @param   boolean $loadEstablishments     Load establishments on init, default true
      * @return  void
      */
-    public function __construct( bool $loadEstabs = true )
+    public function __construct( bool $loadEstablishments = true )
     {
         $env       = config( "awin.env"                 );
         $url       = config( "awin.{$env}.url"          );
@@ -61,7 +61,7 @@ class AwinIntegration
         // Url Tracking
         $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
 
-        if ( $loadEstabs )
+        if ( $loadEstablishments )
         {
             $this->establishments = $this->getEstablishments();
             // $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
