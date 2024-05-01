@@ -42,6 +42,7 @@ return [
         ],
 
         'single' => [
+            "permission" => 0777,
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
@@ -106,21 +107,31 @@ return [
 
         // programa de afiliados
         "affiliate"  => [
+            "permission" => 0777,
             "driver" => "single",
             "path"   => storage_path( "logs/affiliate.log"    ),
             "level"  => "debug"
         ],
         "awin"       => [
+            "permission" => 0777,
             "driver" => "single",
             "path"   => storage_path( "logs/awin.log"         ),
             "level"  => "debug"
         ],
+        "awin_promotions" => [
+            "permission" => 0777,
+            "driver" => "single",
+            "path"   => storage_path( "logs/awin_promo.log"   ),
+            "level"  => "debug"
+        ],
         "cofry"      => [
+            "permission" => 0777,
             "driver" => "single",
             "path"   => storage_path( "logs/cofry.log"        ),
             "level"  => "debug"
         ],
         "socialsoul" => [
+            "permission" => 0777,
             "driver" => "single",
             "path"   => storage_path( "logs/socialsoul.log"   ),
             "level"  => "debug"
@@ -128,6 +139,7 @@ return [
 
         // marketplace
         "marketplace"  => [
+            "permission" => 0777,
             "driver" => "single",
             "path"   => storage_path( "logs/marketplace.log"  ),
             "level"  => "debug"
@@ -135,6 +147,7 @@ return [
 
         // triibo
         "triibo"       => [
+            "permission" => 0777,
             "driver" => "single",
             "path"   => storage_path( "logs/triibo.log"       ),
             "level"  => "debug"
@@ -142,19 +155,10 @@ return [
 
         // fastshop
         "fastshop"     => [
-            "driver" => "single",
-            "path"   => storage_path( "logs/fastshop.log"     ),
-            "level"  => "debug"
-        ],
-        "fastshop-img" => [
-            "driver" => "single",
-            "path"   => storage_path( "logs/fastshop-img.log" ),
-            "level"  => "debug"
-        ],
-        "fastshop-upd" => [
-            "driver" => "single",
-            "path"   => storage_path( "logs/fastshop-upd.log" ),
-            "level"  => "debug"
+            "permission" => 0777,
+            "driver"     => "single",
+            "path"       => storage_path( "logs/fastshop.log"     ),
+            "level"      => "debug"
         ],
     ],
 

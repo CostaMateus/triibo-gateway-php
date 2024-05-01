@@ -110,7 +110,7 @@ class PipedriveWebhookController extends Controller
                     if (isset($params["previous"]) && $params["event"] != self::DEAL_DELETED_EVENT)
                     {
                         $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+                        $changes = Helper::arrayDiffAssocRecursive($params["current"],$params["previous"]);
                         foreach (self::DEAL_MONITORING as $m)
                         {
                             if (array_key_exists($m, $changes))
@@ -242,7 +242,7 @@ class PipedriveWebhookController extends Controller
                     if (isset($params["previous"]) && $params["event"] != self::ORG_DELETED_EVENT)
                     {
                         $result  = FALSE;
-                        $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+                        $changes = Helper::arrayDiffAssocRecursive($params["current"],$params["previous"]);
                         foreach (self::ORG_MONITORING as $m)
                         {
                             if (array_key_exists($m, $changes))
@@ -391,7 +391,7 @@ class PipedriveWebhookController extends Controller
         //             if (isset($params["previous"]))
         //             {
         //                 $result  = FALSE;
-        //                 $changes = Helper::array_diff_assoc_recursive($params["current"],$params["previous"]);
+        //                 $changes = Helper::arrayDiffAssocRecursive($params["current"],$params["previous"]);
         //                 foreach (self::PERSON_MONITORING as $m)
         //                 {
         //                     if (array_key_exists($m, $changes))

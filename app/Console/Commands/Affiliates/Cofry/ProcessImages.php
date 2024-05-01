@@ -43,7 +43,7 @@ class ProcessImages extends Command
         Log::channel( "cofry" )->info( "Images", [ "Start processing of images" ] );
 
         $cofry = new CofryController();
-        $cofry->uploadImages();
+        $cofry->images();
 
         echo "IMG : End images processing\n";
         Log::channel( "cofry" )->info( "Images", [ "End images processing" ] );

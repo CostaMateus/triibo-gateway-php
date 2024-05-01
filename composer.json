@@ -8,31 +8,30 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^7.3|^8.0",
-        "bensontrent/firestore-php": "^3.1",
+        "php": "^8.0.2",
         "codexshaper/laravel-woocommerce": "^3.0",
-        "costamateus/laravel-mautic-api": "^2.0",
+        "costamateus/laravel-mautic-api": "^3.0.1",
         "davidhsianturi/blade-bootstrap-icons": "^1.1",
         "devio/pipedrive": "^2.10",
         "fideloper/proxy": "^4.4",
         "fruitcake/laravel-cors": "^2.0",
         "gregwar/image": "^2.1",
-        "guzzlehttp/guzzle": "^7.0.1",
-        "kreait/laravel-firebase": "^3.1",
-        "laravel/framework": "^8.12",
-        "laravel/socialite": "^5.2",
+        "guzzlehttp/guzzle": "^7.3",
+        "kreait/laravel-firebase": "^5.0",
+        "laravel/framework": "^9.0",
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.4",
-        "lucascudo/laravel-pt-br-localization": "^1.1"
+        "lucascudo/laravel-pt-br-localization": "^1.1",
+        "opcodesio/log-viewer": "^2.5"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.9",
         "lucascudo/laravel-pt-br-localization": "^1.1",
-        "facade/ignition": "^2.5",
+        "spatie/laravel-ignition": "^1.0",
         "fakerphp/faker": "^1.9.1",
         "laravel/sail": "^1.0.1",
         "mockery/mockery": "^1.4.2",
-        "nunomaduro/collision": "^5.0",
+        "nunomaduro/collision": "^6.1",
         "phpunit/phpunit": "^9.3.3"
     },
     "config": {
@@ -47,6 +46,7 @@
     },
     "autoload": {
         "files": [
+            "app/Helpers/Functions.php",
             "app/Helpers/Helper.php"
         ],
         "psr-4": {

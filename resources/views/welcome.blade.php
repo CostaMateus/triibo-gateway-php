@@ -17,8 +17,9 @@
         </style>
     </head>
     <body>
-        <div class="flex justify-center bg-triibo items-center h-100" >
+        <div class="d-flex flex-column justify-content-center align-items-center bg-triibo h-100" >
             <img class="triibo-logo" src="{{ asset('images/logo/logo-triibo.png')}}" alt="Triibo" >
+            <a class="btn btn-default text-triibo" href="{{ route( "login" ) }}" >HOME</a>
         </div>
 
         @if ( $showToast )

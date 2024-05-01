@@ -4,13 +4,10 @@ namespace App\Http\Integrations\AffiliatesIntegration;
 
 use DateTime;
 use Exception;
-use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
 
 class AwinIntegration
 {
@@ -21,7 +18,7 @@ class AwinIntegration
     // protected $env;
     protected $tkn;
 
-    protected $url_offers;
+    protected $url_promotions;
 
     protected $url_programmes;
     protected $url_programmedetails;
@@ -32,25 +29,31 @@ class AwinIntegration
     protected $url_transactions;
     protected $url_linkbuilder;
 
-    protected $stores      = [];
-    protected $storesLocal = [];
+    protected $establishments = [];
+    // protected $storesLocal    = [];
 
-    protected $base        = 100; // base de calculo, ex 100 reais gastos
-    protected $rate        = 10;  // taxa de conversão, 10 pontos a cada 1 real
+    protected $base           = 100; // base de calculo, ex 100 reais gastos
+    protected $rate           = 10;  // taxa de conversão, 10 pontos a cada 1 real
 
-    public function __construct( bool $loadStores = true )
+    /**
+     * Constructor
+     *
+     * @param   boolean $loadEstablishments     Load establishments on init, default true
+     * @return  void
+     */
+    public function __construct( bool $loadEstablishments = true )
     {
         $env       = config( "awin.env"                 );
         $url       = config( "awin.{$env}.url"          );
         $p_id      = config( "awin.{$env}.publisher_id" );
         $this->tkn = config( "awin.{$env}.token"        );
 
-        // Stores
+        // Establishments
         $this->url_programmes             = "{$url}/publishers/{$p_id}/programmes";             // countryCode
         $this->url_programmedetails       = "{$url}/publishers/{$p_id}/programmedetails";       // advertiserId
 
         // Promotions
-        $this->url_offers                 = "{$url}/publisher/{$p_id}/promotions";              //
+        $this->url_promotions             = "{$url}/publisher/{$p_id}/promotions";              //
 
         $this->url_commissiongroups       = "{$url}/publishers/{$p_id}/commissiongroups";       // advertiserId
         $this->url_commissionsharingrules = "{$url}/publishers/{$p_id}/commissionsharingrules"; //
@@ -59,80 +62,88 @@ class AwinIntegration
         // Url Tracking
         $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
 
-        if ( $loadStores )
+        if ( $loadEstablishments )
         {
-            $this->stores      = $this->getStores();
-            $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
+            $this->establishments = $this->getEstablishments();
+            // $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
         }
     }
 
     /**
-     * Awin programmes == Triibo Establishments (FB)
+     * Get and translate, Awin establishments (programmes)
      *
-     * @return array
+     * Awin programmes == Triibo Establishments (firebase)
+     *
+     * @param   boolean $withoutTranslate   Get establishments without translate, default false
+     * @return  array
      */
-    public function getStores( $withoutTranslate = false )
+    public function getEstablishments( bool $withoutTranslate = false )
     {
-        if ( empty( $this->stores ) )
+        if ( empty( $this->establishments ) )
         {
-            $stores  = $this->searchStores();
+            $establishments = $this->searchEstablishments();
 
-            if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
+            if ( !$establishments[ "success" ] && empty( $establishments[ "data" ] ) ) return []; // falha
 
-            Helper::usort( "id", $stores[ "data" ] );
+            Helper::usort( "id", $establishments[ "data" ] );
 
             // $auxStores = [];
 
-            foreach ( $stores[ "data" ] as $key => &$store )
+            foreach ( $establishments[ "data" ] as $key => &$estab )
             {
                 $key  += 1;
-                $count = count( $stores[ "data" ] );
-                echo "Stores : Loading establishments {$key} of {$count}\n";
+                $count = count( $establishments[ "data" ] );
+                echo "Establishments : Loading establishments {$key} of {$count}\n";
 
-                $store[ "commissionRange" ] = $this->searchStoresDetails( $store[ "id" ] );
+                $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
 
                 // $auxStores[] = $store;
                 // if ( $key == 5 ) break;
             }
 
-            return $stores[ "data" ];
+            return $establishments[ "data" ];
             // return $auxStores;
         }
 
-        if ( $withoutTranslate ) return $this->stores;
+        if ( $withoutTranslate ) return $this->establishments;
 
-        return $this->translateStores( $this->stores );
+        return $this->translateEstablishments( $this->establishments );
     }
 
     /**
-     * Awin offer == Triibo Store (FB) / Promotion
+     * Get and translate, Awin promotions
+     *
+     * Awin promotion == Triibo Store (firebase) / Promotion
+     *
+     * @return  array
      */
-    public function getOffers()
+    public function getPromotions()
     {
-        $storesOrig = $this->getStores( true );
-        $promotions = $this->translatePromotionDefault( $storesOrig );
+        $establishmentsOrig = $this->getEstablishments( true );
+        $promotions         = $this->translatePromotionDefault( $establishmentsOrig );
 
-        $stores     = $this->getStores();
+        $establishments     = $this->getEstablishments();
 
-        foreach ( $stores as $store )
+        foreach ( $establishments as $estab )
         {
-            $id         = $store[ "partnerEstablishmentId" ];
-            echo "Promotions : Loading promotions for store: {$id}\n";
-            $offers     = $this->searchOffers( $id );
+            $id         = $estab[ "partnerEstablishmentId" ];
+            echo "Promotions : Loading promotions for establishment: {$id}\n";
+            $promos     = $this->searchPromotions( $id );
 
-            if ( empty( $offers[ "data" ] ) ) continue;
+            if ( empty( $promos[ "data" ] ) ) continue;
 
-            $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
-            $promotions = $promotions + $offers;
+            $promos     = $this->translatePromotions( $promos[ "data" ], $estab[ "cashbackDefault" ] );
+            $promotions = $promotions + $promos;
         }
 
         return $promotions;
     }
 
     /**
+     * Get Awin reports
      *
-     * @param boolean $isUpdate
-     * @return array
+     * @param   boolean $isUpdate   Get only reports has dateType == 'validation', default false
+     * @return  array
      */
     public function getReports( bool $isUpdate = false )
     {
@@ -140,14 +151,24 @@ class AwinIntegration
     }
 
     /**
-     * Get stores Awin
+     * Get Awin establishments
      *
-     * @return array
+     * @return  array
      */
-    private function searchStores()
+    private function searchEstablishments()
     {
         $url      = "{$this->url_programmes}?relationship=joined"; //&countryCode=" . self::RG;
-        $response = Http::withToken( $this->tkn )->get( $url );
+
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( $url );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+
+            return $this->searchEstablishments();
+        }
 
         if ( !$response->successful() )
         {
@@ -166,15 +187,26 @@ class AwinIntegration
     }
 
     /**
-     * Get stores details Awin
+     * Get Awin establishments details
      *
-     * @return array
+     * @param   integer     $id        Establishment id
+     * @param   boolean     $allInfo   Get complete establishment details, default false
+     * @return  array
      */
-    public function searchStoresDetails( int $id )
+    public function searchEstablishmentsDetails( int $id, bool $allInfo = false )
     {
         $url      = "{$this->url_programmedetails}?advertiserId={$id}";
 
-        $response = Http::withToken( $this->tkn )->get( $url );
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( $url );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishmentsDetails(). Retry. " . $e->getMessage() ] );
+
+            return $this->searchEstablishmentsDetails( $id, $allInfo );
+        }
 
         if ( !$response->successful() )
         {
@@ -182,26 +214,36 @@ class AwinIntegration
 
             if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
             {
+                echo "Establishments : Retry in 5 seconds\n";
                 sleep( 5 );
-                return $this->searchStoresDetails( $id );
+                return $this->searchEstablishmentsDetails( $id, $allInfo );
             }
 
-            return [ [ "min" => 0, "max" => 0 ] ];
+            $data = [
+                "commissionRange" => [ [ "min" => 0, "max" => 0 ] ],
+                "programmeInfo"   => [
+                    "name" => "Não encontrado"
+                ]
+            ];
+
+            return ( $allInfo ) ? $data : $data[ "commissionRange" ][ 0 ];
         }
 
         $data     = $response->json();
         $key      = array_search( "percentage", array_column( $data[ "commissionRange" ], "type" ) );
 
-        return $data[ "commissionRange" ][ $key ];
+        return ( $allInfo ) ? $data : $data[ "commissionRange" ][ $key ];
     }
 
     /**
-     * Awin offer == Triibo Store (FB) / Default promotion
+     * Get Awin promotions (promotions)
      *
-     * @param [type] $id
-     * @return array
+     * Awin promotion == Triibo Store (firebase) / Default promotion
+     *
+     * @param   integer     $id        Establishment id
+     * @return  array
      */
-    private function searchOffers( string $id )
+    private function searchPromotions( int $id )
     {
         $data  = [];
 
@@ -219,63 +261,74 @@ class AwinIntegration
             ]
         ];
 
-        do
+        try
         {
-            $body[ "pagination" ] = [ "page" => $page ];
-
-            $response = Http::withToken( $this->tkn )
-                            ->withBody( json_encode( $body ), "application/json" )
-                            ->post( $this->url_offers );
-
-            if ( !$response->successful() )
+            do
             {
-                $err = json_decode( $response->body(), true );
+                $body[ "pagination" ] = [ "page" => $page ];
 
-                if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+                $response = Http::withToken( $this->tkn )
+                                ->withBody( json_encode( $body ), "application/json" )
+                                ->post( $this->url_promotions );
+
+                if ( !$response->successful() )
                 {
-                    sleep( 10 );
+                    $err = json_decode( $response->body(), true );
+
+                    if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+                    {
+                        echo "Promotions : Retry in 10 seconds\n";
+                        sleep( 10 );
+                    }
+                    else
+                    {
+                        return [
+                            "success" => false,
+                            "code"    => 4001,
+                            "data"    => $data
+                        ];
+                    }
                 }
                 else
                 {
-                    return [
-                        "success" => false,
-                        "code"    => 4001,
-                        "data"    => $data
-                    ];
+                    $page++;
+
+                    $resp = $response->json();
+
+                    if ( !empty( $resp[ "data" ] ) )
+                    {
+                        $data = array_merge( $data, $resp[ "data" ] );
+                    }
+
+                    $pagination = $resp[ "pagination" ];
+
+                    if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
+                        $ended = true;
                 }
             }
-            else
-            {
-                $page++;
+            while ( !$ended );
 
-                $resp = $response->json();
-
-                if ( !empty( $resp[ "data" ] ) )
-                {
-                    $data = array_merge( $data, $resp[ "data" ] );
-                }
-
-                $pagination = $resp[ "pagination" ];
-
-                if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
-                    $ended = true;
-            }
+            return [
+                "success" => true,
+                "code"    => 0,
+                "data"    => $data,
+            ];
         }
-        while ( !$ended );
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Promotions", [ "Fail searchPromotions(). Retry. " . $e->getMessage() ] );
 
-        return [
-            "success" => true,
-            "code"    => 0,
-            "data"    => $data,
-        ];
+            return $this->searchPromotions( $id );
+        }
     }
 
     /**
+     * Get Awin reports
      *
-     * @param boolean $isUpdate
-     * @return array
+     * @param   boolean     $isUpdate   Get only reports has dateType == 'validation', default false
+     * @return  array
      */
-    private function searchReports( bool $isUpdate )
+    private function searchReports( bool $isUpdate = false )
     {
         // $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
         // $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
@@ -284,16 +337,16 @@ class AwinIntegration
 
         // if ( $isUpdate )
         // {
-        //     $date     = "2023-01-01";
+        //     $date     = "2023-07-01";
         //     $start    = "{$date}T00:00:00";
-        //     $date     = "2023-01-31";
+        //     $date     = "2023-07-31";
         //     $end      = "{$date}T23:59:59";
         // }
         // else
         // {
-        //     $date     = "2022-12-01";
+        //     $date     = "2023-08-01";
         //     $start    = "{$date}T00:00:00";
-        //     $date     = "2022-12-31";
+        //     $date     = "2023-08-31";
         //     $end      = "{$date}T23:59:59";
         // }
 
@@ -306,7 +359,16 @@ class AwinIntegration
         $query   .= "&timezone=" . self::TZ;
         $query   .= ( $isUpdate ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
-        $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Reports", [ "Fail searchReports(). Retry. " . $e->getMessage() ] );
+
+            return $this->searchReports( $isUpdate );
+        }
 
         if ( !$response->successful() )
         {
@@ -336,120 +398,117 @@ class AwinIntegration
             ];
         }
 
-        // $stores = $this->getStores();
-        //
-        // // if ( $isUpdate )
-        // //     $data[ "data" ] = json_decode( Storage::get( "reports.update.json" ), true );
-        // // else
-        // //     $data[ "data" ] = json_decode( Storage::get( "reports.json" ), true );
-        //
-        // foreach( $stores as $id => $store )
-        // {
-        //     foreach ( $data[ "data" ] as &$report )
-        //     {
-        //         if ( $id == $report[ "advertiserId" ] ) continue;
-        //
-        //         $aux = [];
-        //
-        //         $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
-        //                                       ? $report[ "clickRefs" ][ "clickRef" ]
-        //                                       : null;
-        //
-        //         $aux[ "partner"           ] = "awin";
-        //         $aux[ "transactionId"     ] = $report[ "id" ];
-        //
-        //         $aux[ "transactionDate"   ] = strtotime( $report[ "transactionDate" ] );
-        //         $aux[ "processingDate"    ] = null;
-        //         $aux[ "updateDate"        ] = ( !$isUpdate ) ? $report[ "transactionDate" ] : $report[ "validationDate" ];
-        //         $aux[ "updateDate"        ] = strtotime( $aux[ "updateDate" ] );
-        //
-        //         $aux[ "advertiserId"      ] = $id;
-        //         $aux[ "advertiserName"    ] = $store[ "nome" ];
-        //
-        //         $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
-        //
-        //         $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
-        //         $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
-        //
-        //         $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
-        //         $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
-        //
-        //         $commissionClient           = ( float ) str_replace( ",", ".", $store[ "cashbackDefault" ] ); //   2% |   0,8%
-        //
-        //         $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
-        //         $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
-        //
-        //         $amountClient               = ( $totalOrder * $commissionClient ) / 100;                      //  10  |   4
-        //         $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;                      //  15  |  -4
-        //
-        //         $aux[ "amount"            ] = $totalOrder;                                                    // 500  | 500
-        //         $aux[ "amountCommission"  ] = $commission;                                                    // 500  | 500
-        //         $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
-        //         $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
-        //         $aux[ "amountPartner"     ] = null;
-        //
-        //         $aux[ "commissionClient"  ] = $commissionClient;
-        //         $aux[ "commissionTriibo"  ] = $commissionTriibo;
-        //         $aux[ "commissionPartner" ] = null;
-        //
-        //         $report[ "metaData" ]       = $aux;
-        //     }
-        // }
+        if ( !empty( $data[ "data" ] ) )
+        {
+            foreach ( $data[ "data" ] as &$report )
+            {
+                $aux                        = [];
+
+                $establishmentId            = $report[ "advertiserId" ];
+                $establishmentInfo          = $this->searchEstablishmentsDetails( $establishmentId, true );
+                $cashback                   = Helper::getCashback( $establishmentInfo[ "commissionRange" ] );
+                $establishmentName          = explode( " BR", $establishmentInfo[ "programmeInfo" ][ "name" ] )[ 0 ];
+
+                $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
+                                                ? $report[ "clickRefs" ][ "clickRef" ]
+                                                : null;
+
+                $aux[ "partner"           ] = "awin";
+                $aux[ "transactionId"     ] = $report[ "id" ];
+                $aux[ "transactionDate"   ] = Helper::getDateTimeUnix( $report[ "transactionDate" ], true );
+                $aux[ "processingDate"    ] = null;
+                $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
+
+                $aux[ "updateDate"        ] = ( !$isUpdate && $aux[ "status" ] == "pending" )
+                                                ? $report[ "transactionDate" ]
+                                                : $report[ "validationDate"  ];
+
+                $aux[ "updateDate"        ] = Helper::getDateTimeUnix( $aux[ "updateDate" ], true );
+
+                $aux[ "advertiserId"      ] = $establishmentId;
+                $aux[ "advertiserName"    ] = $establishmentName;
+
+
+                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
+                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
+
+                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
+                $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
+
+                $commissionClient           = ( float ) str_replace( ",", ".", $cashback ); //   2% |   0,8%
+
+                $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
+                $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
+
+                $amountClient               = ( $totalOrder * $commissionClient ) / 100;                      //  10  |   4
+                $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;                      //  15  |  -4
+
+                $aux[ "amount"            ] = $totalOrder;                                                    // 500  | 500
+                $aux[ "amountCommission"  ] = $commission;                                                    // 500  | 500
+                $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
+                $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
+                $aux[ "amountPartner"     ] = null;
+
+                $aux[ "commissionClient"  ] = $commissionClient;
+                $aux[ "commissionTriibo"  ] = $commissionTriibo;
+                $aux[ "commissionPartner" ] = null;
+
+                $report[ "metaData" ]       = $aux;
+            }
+        }
 
         return $data;
     }
 
     /**
-     * Translates Awin stores into Triibo Establishments
+     * Translates Awin establishments into Triibo Establishments
      *
-     * @param array $data
-     * @return array
+     * @param   array   $data     Establishments data
+     * @return  array
      */
-    private function translateStores( array $data )
+    private function translateEstablishments( array $data )
     {
-        $newStores = [];
-        $stores    = [];
-        $date      = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $dateEn    = ( int ) $date->format( "U" ) * 1000;
-        $date      = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis   = ( int ) $date->format( "U" ) * 1000;
+        // $newStores = [];
+        $establishments = [];
+        $dateEn         = Helper::getDateTimeUnix();
+        $dateDis        = Helper::getDateTimeUnixInterval( "P7Y" );
 
-        foreach ( $data as $store )
+        foreach ( $data as $estab )
         {
-            $id            = $store[ "id" ];
+            $id            = $estab[ "id" ];
             $cashback      = "";
-            $url           = Helper::parseUrl( $store[ "displayUrl" ] );
-            $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
+            // $url           = Helper::parseUrl( $store[ "displayUrl" ] );
+            // $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
 
-            if ( $store[ "commissionRange" ] )
-                $cashback = Helper::getCashback( $store[ "commissionRange" ] );
+            if ( $estab[ "commissionRange" ] )
+                $cashback = Helper::getCashback( $estab[ "commissionRange" ] );
 
-            if ( $key !== false )
-            {
-                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "awin" )
-                    continue;
-            }
-            else
-            {
-                $newStores[] = [
-                    "affiliate_id"   => $id,
-                    "affiliate_name" => "awin",
-                    "domain"         => $url,
-                    "commission"     => $cashback,
-                    "created_at"     => now(),
-                    "updated_at"     => now()
-                ];
-            }
+            // if ( $key !== false )
+            // {
+            //     if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "awin" )
+            //         continue;
+            // }
+            // else
+            // {
+            //     $newStores[] = [
+            //         "affiliate_id"   => $id,
+            //         "affiliate_name" => "awin",
+            //         "domain"         => $url,
+            //         "commission"     => $cashback,
+            //         "created_at"     => now(),
+            //         "updated_at"     => now()
+            //     ];
+            // }
 
-            $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
+            $auxName       = Helper::hyphenize( strtolower( $estab[ "name" ] ) );
             $imageName     = "awin_{$id}_{$auxName}.png";
-            $imageName     = ( $store[ "logoUrl" ] )
-                                ? ( ( self::saveImage( "establishments", $imageName, $store[ "logoUrl" ] ) )
+            $imageName     = ( $estab[ "logoUrl" ] )
+                                ? ( ( self::saveImage( "establishments", $imageName, $estab[ "logoUrl" ] ) )
                                     ? $imageName
                                     : "awin_standard.png" )
                                 : "awin_standard.png";
 
-            $stores[ $id ] = [
+            $establishments[ $id ] = [
                 "partnerEstablishmentId" => $id,
                 "cashbackDefault"        => $cashback,
 
@@ -465,8 +524,8 @@ class AwinIntegration
                 "lat"                    => -15.52047783763576,
                 "long"                   => -48.015408891158984,
 
-                "nome"                   => explode( " BR", $store[ "name" ] )[ 0 ],
-                "descricao"              => $store[ "description" ],
+                "nome"                   => explode( " BR", $estab[ "name" ] )[ 0 ],
+                "descricao"              => $estab[ "description" ],
                 "email"                  => "contato@triibo.com.br",
                 "contatoTriibo"          => [ [
                     "type"  => "telefone",
@@ -487,39 +546,36 @@ class AwinIntegration
             ];
         }
 
-        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insertOrIgnore( $newStores );
+        // if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insertOrIgnore( $newStores );
 
-        return $stores;
+        return $establishments;
     }
 
     /**
-     * Translates Awin stores into Triibo promotions default
+     * Translates Awin establishments into Triibo promotions default
      *
-     * @param array $data
-     * @return array
+     * @param   array   $data     Establishments data
+     * @return  array
      */
     private function translatePromotionDefault( array $data )
     {
         $promotions = [];
+        $dateEn     = Helper::getDateTimeUnix();
+        $dateDis    = Helper::getDateTimeUnixInterval( "P7Y" );
 
-        $date       = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $dateEn     = ( int ) $date->format( "U" ) * 1000;
-        $date       = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis    = ( int ) $date->format( "U" ) * 1000;
-
-        foreach ( $data as $store )
+        foreach ( $data as $estab )
         {
-            $establishmentName = $store[ "name" ];
+            $establishmentName = $estab[ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            $idStore           = $store[ "id" ];
+            $idEstab           = $estab[ "id" ];
             $idPromo           = strtolower( str_replace( " ", "", Helper::slugify( $establishmentName, "" ) ) );
-            $id                = $idStore . $idPromo;
+            $id                = $idEstab . $idPromo;
 
             $cashback          = "";
 
-            if ( $store[ "commissionRange" ] )
-                $cashback = Helper::getCashback( $store[ "commissionRange" ] );
+            if ( $estab[ "commissionRange" ] )
+                $cashback = Helper::getCashback( $estab[ "commissionRange" ] );
 
             $title             = "Ganhe {$cashback}% de volta!";
 
@@ -531,12 +587,12 @@ class AwinIntegration
 
             $imageNamePromo    = "awin_common_promotion.webp";
 
-            $url               = $this->urlTracking( $store[ "id" ], $store[ "displayUrl" ] );
+            $url               = $this->urlTracking( $estab[ "id" ], $estab[ "displayUrl" ] );
 
             $promotions[ $id ] = [
                 "partnerPromotionId" => $id,
 
-                "establishmentId"    => $idStore,
+                "establishmentId"    => $idEstab,
                 "establishmentName"  => $establishmentName,
 
                 "title"              => $title,
@@ -569,6 +625,8 @@ class AwinIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "awin",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 
@@ -576,57 +634,60 @@ class AwinIntegration
     }
 
     /**
-     * Translates Awin offer into Triibo promotions
+     * Translates Awin promotions into Triibo promotions
      *
-     * @param array $data
-     * @return array
+     * @param   array   $data       Promotions data
+     * @param   string  $cashback   Cashback value
+     * @return  array
      */
-    private function translateOffers( array $data, string $cashback )
+    private function translatePromotions( array $data, string $cashback )
     {
         $promotions = [];
 
-        foreach ( $data as $offer )
+        foreach ( $data as $promotion )
         {
-            $idStore           = $offer[ "advertiser" ][ "id" ];
-            $id                = $idStore . $offer[ "promotionId" ];
+            $idEstab           = $promotion[ "advertiser" ][ "id" ];
+            $id                = $idEstab . $promotion[ "promotionId" ];
 
-            $establishmentName = $offer[ "advertiser" ][ "name" ];
+            $establishmentName = $promotion[ "advertiser" ][ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            $date              = $offer[ "startDate" ] . " 00:00:00";
+            // $date              = $promotion[ "startDate" ] . " 00:00:00";
+            $date              = str_replace( "T", " ", $promotion[ "startDate" ] );
             $date              = new DateTime( date( $date ) );
             $dateEn            = ( int ) $date->format( "U" ) * 1000;
 
-            $date              = $offer[ "endDate"   ] . "23:59:00";
+            // $date              = $promotion[ "endDate"   ] . "23:59:00";
+            $date              = str_replace( "T", " ", $promotion[ "endDate" ] );
             $date              = new DateTime( date( $date ) );
             $dateDis           = ( int ) $date->format( "U" ) * 1000;
 
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
 
-            $description       = $offer[ "description" ];
+            $description       = $promotion[ "description" ];
             $description      .= "\n\nGanhe {$points} pontos a cada R\${$this->base} em compras.";
 
-            $detailsDescrip    = $offer[ "description" ];
+            $detailsDescrip    = $promotion[ "description" ];
 
-            if ( $offer[ "type" ] == "voucher" )
-                $detailsDescrip .= "\n\nUtilize o código de desconto " . $offer[ "voucher" ][ "code" ] . " no fechamento da compra.";
+            if ( $promotion[ "type" ] == "voucher" )
+                $detailsDescrip .= "\n\nUtilize o código de desconto " . $promotion[ "voucher" ][ "code" ] . " no fechamento da compra.";
 
-            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $offer[ "endDate" ], true );
+            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $promotion[ "endDate" ], true );
 
             $imageNamePromo    = "awin_common_promotion.webp";
             $imageNameVoucher  = "awin_common_coupon.webp";
 
-            $url               = $this->urlTracking( $offer[ "advertiser" ][ "id" ], $offer[ "url" ] );
+            $url               = $this->urlTracking( $promotion[ "advertiser" ][ "id" ], $promotion[ "url" ] );
 
             $promotions[ $id ] = [
                 "partnerPromotionId" => $id,
 
-                "establishmentId"    => $idStore,
+                "establishmentId"    => $idEstab,
                 "establishmentName"  => $establishmentName,
 
-                "title"              => $offer[ "description" ],
-                "detailsTitle"       => $offer[ "description" ],
+                "title"              => $promotion[ "description" ],
+                "detailsTitle"       => $promotion[ "description" ],
 
                 "description"        => $description,
                 "detailsDescription" => $detailsDescrip,
@@ -655,11 +716,13 @@ class AwinIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "awin",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
 
-            if ( $offer[ "type" ] == "voucher" )
+            if ( $promotion[ "type" ] == "voucher" )
             {
-                $promotions[ $id ][ "checkoutCode" ] = $offer[ "voucher" ][ "code" ];
+                $promotions[ $id ][ "checkoutCode" ] = $promotion[ "voucher" ][ "code" ];
                 $promotions[ $id ][ "tags"         ] = [ "Cashback", "Cupom" ];
                 $promotions[ $id ][ "photo"        ] = $imageNameVoucher;
                 $promotions[ $id ][ "thumbnail"    ] = $imageNameVoucher;
@@ -670,11 +733,12 @@ class AwinIntegration
     }
 
     /**
+     * Saves images from Awin
      *
-     * @param string $logo
-     * @param string $path
-     * @param string $prefix
-     * @return void
+     * @param   string  $path       Folder to save image
+     * @param   string  $imageName  Name of image
+     * @param   string  $url        Url of image to download and save
+     * @return  boolean
      */
     private static function saveImage( string $path, string $imageName, string $url )
     {
@@ -683,46 +747,55 @@ class AwinIntegration
         try
         {
             $response = Http::get( $url );
-
-            if ( $response->successful() )
-            {
-                file_put_contents( $fullPath, $response->body() );
-
-                $handle = Image::open( $fullPath );
-                $handle->resize( 200, 150, "#FFF" );
-                $handle->save( $fullPath );
-
-                return true;
-            }
         }
         catch ( Exception $e )
         {
-            return false;
+            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+
+            return self::saveImage( $path, $imageName, $url );
         }
 
-        return false;
+        if ( !$response->successful() ) return false;
+
+        file_put_contents( $fullPath, $response->body() );
+
+        $handle = Image::open( $fullPath );
+        $handle->resize( 200, 150, "#FFF" );
+        $handle->save( $fullPath );
+
+        return true;
     }
 
     /**
+     * Generates url to track clicks
      *
-     * @param integer $storeId
-     * @param string $url
-     * @return string
+     * @param   integer     $establishmentId    Establishment id
+     * @param   string      $url                Destination url
+     * @return  string
      */
-    private function urlTracking( int $storeId, string $url )
+    private function urlTracking( int $establishmentId, string $url )
     {
         $body     = [
             "shorten"        => false,
-            "advertiserId"   => $storeId,
+            "advertiserId"   => $establishmentId,
             "destinationUrl" => $url,
             "parameters"     => [
                 "clickref" => "{uid}",
             ],
         ];
 
-        $response = Http::withToken( $this->tkn )
-                        ->withBody( json_encode( $body ), "application/json" )
-                        ->post( $this->url_linkbuilder );
+        try
+        {
+            $response = Http::withToken( $this->tkn )
+                            ->withBody( json_encode( $body ), "application/json" )
+                            ->post( $this->url_linkbuilder );
+        }
+        catch ( Exception $e )
+        {
+            Log::channel( "awin" )->info( "Promotions", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+
+            return $this->urlTracking( $establishmentId, $url );
+        }
 
         if ( !$response->successful() )
         {
@@ -731,22 +804,24 @@ class AwinIntegration
             if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
             {
                 sleep( 10 );
-                return $this->urlTracking( $storeId, $url );
+                return $this->urlTracking( $establishmentId, $url );
             }
 
             return $url;
         }
 
         $response = $response->json();
+
         return Helper::treatUrlAwin( $response[ "url" ] );
     }
 
     /**
+     * Get Awin establishments
      *
-     * @return array
+     * @return  array
      */
-    public function schGetStores()
+    public function schGetEstablishments()
     {
-        return $this->stores;
+        return $this->establishments;
     }
 }

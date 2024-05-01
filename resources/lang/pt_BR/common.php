@@ -12,6 +12,8 @@ return [
     'edit'    => 'Editar',
     'delete'  => 'Excluir',
 
+    'logs'    => 'Logs',
+
     'user'    => [
         'users'          => 'Usuários',
         'management'     => 'Gestão de Usuários',
