@@ -2,6 +2,7 @@
 
 namespace App\Http\Integrations\AffiliatesIntegration;
 
+use DateTime;
 use Exception;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
