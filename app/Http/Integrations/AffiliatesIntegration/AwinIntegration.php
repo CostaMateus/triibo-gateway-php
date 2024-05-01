@@ -37,10 +37,10 @@ class AwinIntegration
     /**
      * Constructor
      *
-     * @param   boolean $loadEstabs     Load establishments on init, default true
+     * @param   boolean $loadEstablishments     Load establishments on init, default true
      * @return  void
      */
-    public function __construct( bool $loadEstabs = true )
+    public function __construct( bool $loadEstablishments = true )
     {
         $env       = config( "awin.env"                 );
         $url       = config( "awin.{$env}.url"          );
@@ -61,7 +61,7 @@ class AwinIntegration
         // Url Tracking
         $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
 
-        if ( $loadEstabs )
+        if ( $loadEstablishments )
         {
             $this->establishments = $this->getEstablishments();
             // $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
@@ -624,6 +624,8 @@ class AwinIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "awin",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
         }
 
@@ -649,8 +651,15 @@ class AwinIntegration
             $establishmentName = $promotion[ "advertiser" ][ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            $dateEn            = Helper::getDateTimeUnix( $promotion[ "startDate" ] . " 00:00:00" );
-            $dateDis           = Helper::getDateTimeUnix( $promotion[ "endDate"   ] . " 23:59:00" );
+            // $date              = $offer[ "startDate" ] . " 00:00:00";
+            $date              = str_replace( "T", " ", $offer[ "startDate" ] );
+            $date              = new DateTime( date( $date ) );
+            $dateEn            = ( int ) $date->format( "U" ) * 1000;
+
+            // $date              = $offer[ "endDate"   ] . "23:59:00";
+            $date              = str_replace( "T", " ", $offer[ "endDate" ] );
+            $date              = new DateTime( date( $date ) );
+            $dateDis           = ( int ) $date->format( "U" ) * 1000;
 
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
@@ -706,6 +715,8 @@ class AwinIntegration
                 "keyWordsSet"        => [],
 
                 "origin"             => "awin",
+                "buttonLabel"        => "Conferir",
+                "id"                 => "",
             ];
 
             if ( $promotion[ "type" ] == "voucher" )

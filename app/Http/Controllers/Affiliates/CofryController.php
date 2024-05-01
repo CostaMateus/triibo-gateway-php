@@ -4,8 +4,6 @@ namespace App\Http\Controllers\Affiliates;
 
 use File;
 use Throwable;
-use App\Helpers\Helper;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
@@ -13,355 +11,454 @@ use App\Http\Integrations\AffiliatesIntegration\CofryIntegration;
 
 class CofryController extends Controller
 {
-    protected $log;
-
-    public function __construct()
-    {
-        $this->log = Log::channel( "cofry" );
-    }
+    /**
+     * Define a class constant for the log channel.
+     *
+     * @var     string
+     */
+    private const LOG_CHANNEL   = "cofry";
 
     /**
-     * Process stores and promotions
+     * Define LOCAL path for establishments.
      *
-     * @return void
+     * @var     string
      */
-    public function all()
+    private const LC_ESTAB_PATH = "images/estabelecimentos/";
+
+    /**
+     * Define LOCAL path for promotions.
+     *
+     * @var     string
+     */
+    private const LC_PROMO_PATH = "images/promos/";
+
+    /**
+     * Define FIREBASE path for establishments.
+     *
+     * @var     string
+     */
+    private const FB_ESTAB_PATH = "estabelecimento";
+
+    /**
+     * Define FIREBASE path for promotions.
+     *
+     * @var     string
+     */
+    private const FB_PROMO_PATH = "promocao";
+
+    /**
+     * Process establishments and promotions
+     *
+     * @return  void
+     */
+    public function all() : void
     {
-        $this->stores();
+        $this->establishments();
         $this->promotions();
     }
 
     /**
-     * Process stores
+     * Process establishments by invoking the Firebase operation for establishments.
      *
-     * @return void
+     * @return  void
      */
-    public function stores()
+    public function establishments() : void
+    {
+        $this->processFirebaseOperation( operation_method: "insertEstablishmentsFirebase", operation_name: "Establishments" );
+    }
+
+    /**
+     * Process promotions by invoking the Firebase operation for promotions.
+     *
+     * @return  void
+     */
+    public function promotions() : void
+    {
+        $this->processFirebaseOperation( operation_method: "insertPromotionsFirebase", operation_name: "Promotions" );
+    }
+
+    /**
+     * Execute a Firebase operation and handle the success or failure of the operation.
+     * On success, log the success message. On failure, handle the exception.
+     *
+     * @param   string  $operation_method   The method name to call for the operation.
+     * @param   string  $operation_name     The name of the operation for logging purposes.
+     * @return  void
+     */
+    private function processFirebaseOperation( string $operation_method, string $operation_name ) : void
     {
         try
         {
-            $this->insertStoresFirebase();
-            echo "Stores : Establishments sent successfully\n";
-            Log::channel( "cofry" )->info( "Stores", [
-                "code"    => 0,
-                "info"    => "Establishments sent successfully",
-                "error"   => NULL,
-                "message" => NULL
-            ] );
+            // Attempt to call the Firebase operation method.
+            $this->{$operation_method}();
+
+            // Log the success message if the operation is successful.
+            log_message( channel: self::LOG_CHANNEL, message: "{$operation_name} : Sent successfully", print: true );
         }
         catch ( FirebaseException $e )
         {
-            echo "Stores : Establishment, Firebase process error - aborted\n";
-            Log::channel( "cofry" )->critical( "Stores", [
-                "code"    => "C-401",
-                "info"    => "Establishment, Firebase process error - aborted",
-                "error"   => "An error has occurred while working with the SDK",
-                "message" => $e
-            ] );
+            $message = "{$operation_name} : Firebase process error - aborted";
 
-            Helper::sendMailNotification( "cofry", "insertStoresFirebase()", "FirebaseException", $e );
+            // Handle Firebase-specific exceptions.
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
         }
         catch ( Throwable $e )
         {
-            echo "Stores : Unexpected error - aborted\n";
-            Log::channel( "cofry" )->critical( "Stores", [
-                "code"    => "C-501",
-                "info"    => "Unexpected error - aborted",
-                "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e
-            ] );
+            $message = "{$operation_name} : Unexpected error - aborted";
 
-            Helper::sendMailNotification( "cofry", "insertStoresFirebase()", "Throwable", $e );
+            // Handle general exceptions.
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
         }
     }
 
     /**
-     * Process promotions
+     * Update and create establishments data on Firebase.
      *
-     * @return void
-     */
-    public function promotions()
-    {
-        try
-        {
-            $this->insertPromosFirebase();
-            echo "Promotions : Promotions sent successfully\n";
-            Log::channel( "cofry" )->info( "Promotions", [
-                "code"    => 0,
-                "info"    => "Promotions sent successfully",
-                "error"   => NULL,
-                "message" => NULL
-            ] );
-        }
-        catch ( FirebaseException $e )
-        {
-            echo "Promotions : Promotions, Firebase process error - aborted\n";
-            Log::channel( "cofry" )->critical( "Promotions", [
-                "code"    => "C-402",
-                "info"    => "Promotions, Firebase process error - aborted",
-                "error"   => "An error has occurred while working with the SDK",
-                "message" => $e
-            ] );
-
-            Helper::sendMailNotification( "cofry", "insertPromosFirebase()", "FirebaseException", $e );
-        }
-        catch ( Throwable $e )
-        {
-            echo "Promotions : Unexpected error - aborted\n";
-            Log::channel( "cofry" )->critical( "Promotions", [
-                "code"    => "C-502",
-                "info"    => "Unexpected error - aborted",
-                "error"   => "A not-Firebase specific error has occurred",
-                "message" => $e
-            ] );
-
-            Helper::sendMailNotification( "cofry", "insertPromosFirebase()", "Throwable", $e );
-        }
-    }
-
-    /**
-     * Update and create store on Firebase
+     * Responsible for updating and creating establishments data in Firebase.
+     * It fetches establishments data from Cofry, compares it with existing data in Firebase,
+     * and performs updates or inserts as necessary.
      *
-     * @return void
+     * @return  void
      */
-    public function insertStoresFirebase()
+    private function insertEstablishmentsFirebase() : void
     {
-        echo "Stores : Searching establishments\n";
-        $this->log->info( "Stores", [ "Searching establishments" ] );
+        // Log the start of the establishment search process.
+        log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Searching..." ], print: true );
 
-        $cofryStores = CofryIntegration::getEstabelecimentos();
-        $fbRef       = Firebase::database()->getReference( "/Estabelecimento-v2" );
-        $fbStores    = $fbRef->getValue();
+        // Retrieve establishments from the Cofry integration.
+        $cofry_establishments    = CofryIntegration::getEstablishments();
 
-        foreach ( $fbStores as $push => $fbStore )
+        // If no establishments are found, log the event and return early.
+        if ( !$cofry_establishments )
         {
+            log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "No found..." ], print: true );
+            return;
+        }
+
+        // Get a reference to the Firebase database for establishments.
+        $firebase                = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
+        $firebase_establishments = $firebase->getValue();
+
+        // Loop through the establishments in Firebase.
+        foreach ( $firebase_establishments as $push => $firebase_estab )
+        {
+            // Check if the establishment is from Cofry and not found in the new data set.
             if ( strpos( $push, "-cofry" ) !== false )
             {
-                // Desativa só as lojas que não forem encontradas na nova carga
-                if ( !isset( $cofryStores[ $push ] ) )
+                // Mark the establishment as unpublished.
+                if ( !isset( $cofry_establishments[ $push ] ) )
                 {
-                    $fbStore[ "isPublished" ] = false;
-                    $fbRef->update( [ $push => $fbStore ] );
+                    // Mark the establishment as unpublished.
+                    $firebase_estab[ "isPublished" ] = false;
+                    // Update the establishment in Firebase.
+                    $firebase->update( values: [ $push => $firebase_estab ] );
 
-                    echo "Stores : Disab. Estab. ID = {$push}\n";
+                    // Log the deactivation of the establishment.
+                    echo "Establishments : Disab. Estab. ID = {$push}\n";
                 }
             }
         }
 
-        echo "Stores : Sending establishments to Firebase\n";
-        $this->log->info( "Stores", [ "Sending establishments to Firebase" ] );
+        // Log the start of the establishment sending process to Firebase.
+        log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Sending to Firebase..." ], print: true );
 
-        foreach ( $cofryStores as $id => $store )
+        // Loop through the establishments retrieved from Cofry.
+        foreach ( $cofry_establishments as $id => $establishment )
         {
+            // Assume the establishment is new and set the status to 'Created'.
             $status = "Created";
 
-            // Trata a descrição da loja que já está cadastrada
-            if ( isset( $fbStores[ $id ] ) )
+            // If the establishment already exists in Firebase, merge the descriptions and update the status.
+            if ( isset( $firebase_establishments[ $id ] ) )
             {
-                $desc = $fbStores[ $id ][ "descricao" ];
-                $desc = explode( "\n\n#", $desc );
+                // Merge the existing description with the new one.
+                $establishment = $this->mergeDescriptions( new_data: $establishment, existing_data: $firebase_establishments[ $id ], key: "descricao" );
 
-                if ( count( $desc ) > 1 )
-                {
-                    $aux = "";
-                    array_shift( $desc );
+                // Merge other establishment data fields.
+                $establishment = $this->mergeEstablishmentData( establishment: $establishment, firebase_establishment: $firebase_establishments[ $id ] );
 
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
-
-                    $store[ "descricao" ] .= $aux;
-                }
-
-                if ( isset( $fbStores[ $id ][ "hasPromo"     ] ) ) $store[ "hasPromo"     ] = $fbStores[ $id ][ "hasPromo"     ];
-
-                if ( isset( $fbStores[ $id ][ "enableDate"   ] ) ) $store[ "enableDate"   ] = $fbStores[ $id ][ "enableDate"   ];
-                if ( isset( $fbStores[ $id ][ "disableDate"  ] ) ) $store[ "disableDate"  ] = $fbStores[ $id ][ "disableDate"  ];
-                if ( isset( $fbStores[ $id ][ "dataInclusao" ] ) ) $store[ "dataInclusao" ] = $fbStores[ $id ][ "dataInclusao" ];
-
-                $status = "Updated";
+                // Update the status to 'Updated'.
+                $status        = "Updated";
             }
 
-            // Atualiza ou cria a loja
-            $fbRef->update([ $id => $store ] );
+            // Update or create the establishment in Firebase.
+            $firebase->update( values: [ $id => $establishment ] );
 
-            echo "Stores : {$status} Estab. ID = {$id}\n";
+            // Log the creation or update of the establishment.
+            echo "Establishments : {$status} Estab. ID = {$id}\n";
         }
     }
 
     /**
-     * Process promotions and send to Firebase
+     * Process promotions and send to Firebase.
      *
-     * @return void
+     * Responsible for processing and synchronizing promotion data with Firebase.
+     * It retrieves promotions from Cofry and updates or creates entries in Firebase accordingly.
+     *
+     * @return  void
      */
-    public function insertPromosFirebase()
+    private function insertPromotionsFirebase() : void
     {
-        echo "Promotions : Searching for promotions\n";
-        $this->log->info( "Promotions", [ "Searching for promotions" ] );
+        // Log the start of the promotion search process.
+        log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Searching..." ], print: true );
 
-        $cofryPromos = CofryIntegration::getPromocoes();
-        $fbRef       = Firebase::database()->getReference( "/Store" );
-        $fbPromos    = $fbRef->getValue();
+        // Retrieve promotions from the Cofry integration.
+        $cofry_promotions    = CofryIntegration::getPromotions();
 
-        foreach ( $fbPromos as $push => $fbPromo )
+        // If no promotions are found, log the event and return early.
+        if ( !$cofry_promotions )
         {
+            log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "No found..." ], print: true );
+            return;
+        }
+
+        // Get a reference to the Firebase database for promotions.
+        $firebase            = Firebase::database()->getReference( path: "/Store" );
+        $firebase_promotions = $firebase->getValue();
+
+        // Loop through the promotions in Firebase.
+        foreach ( $firebase_promotions as $push => $firebase_promo )
+        {
+            // Check if the promotion is from Cofry and not found in the new data set.
             if ( strpos( $push, "-cofry" ) !== false )
             {
-                // Desativa só as promoções que não forem encontradas na nova carga
+                // Mark the promotion as unpublished and inactive.
                 if ( !isset( $promos[ $push ] ) )
                 {
-                    $fbPromo[ "isPublished" ] = false;
-                    $fbPromo[ "active"      ] = false;
-                    $fbRef->update( [ $push => $fbPromo ] );
+                    $firebase_promo[ "isPublished" ] = false;
+                    $firebase_promo[ "active"      ] = false;
+                    // Update the promotion in Firebase.
+                    $firebase->update( values: [ $push => $firebase_promo ] );
 
+                    // Log the deactivation of the promotion.
                     echo "Promotions : Disab. Promo. ID = {$push}\n";
                 }
             }
         }
 
-        echo "Promotions : Sending promotions to Firebase\n";
-        $this->log->info( "Promotions", [ "Sending promotions to Firebase" ] );
+        // Log the start of the promotion sending process to Firebase.
+        log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Sending to Firebase..." ], print: true );
 
-        foreach ( $cofryPromos as $id => $promo )
+        // Loop through the promotions retrieved from Cofry.
+        foreach ( $cofry_promotions as $id => $promotion )
         {
+            // Assume the promotion is new and set the status to 'Created'.
             $status = "Created";
 
-            // Trata a descrição da promoção que já está cadastrada
-            if ( isset( $fbPromos[ $id ] ) )
+            // If the promotion already exists in Firebase, merge the descriptions and update the status.
+            if ( isset( $firebase_promotions[ $id ] ) )
             {
-                $desc = $fbPromos[ $id ][ "description" ];
-                $desc = explode( "\n\n#", $desc );
+                // Merge the existing description with the new one.
+                $promotion         = $this->mergeDescriptions( new_data: $promotion, existing_data: $firebase_promotions[ $id ], key: "description" );
 
-                if ( count( $desc ) > 1 )
-                {
-                    $aux = "";
-                    array_shift( $desc );
+                // Merge other promotion data fields.
+                $promotion         = $this->mergePromotionData( promotion: $promotion, firebase_promo: $firebase_promotions[ $id ] );
 
-                    foreach ( $desc as $value ) $aux .= "\n\n#" . $value;
+                $promotion[ "id" ] = $firebase_promotions[ $id ][ "id" ] ?? $id;
 
-                    $promo[ "description" ] .= $aux;
-                }
-
-                $status = "Updated";
+                // Update the status to 'Updated'.
+                $status            = "Updated";
             }
 
-            // Atualiza ou cria a promoção
-            $fbRef->update( [ $id => $promo ] );
+            // Ensure the promotion has an ID.
+            $promotion[ "id" ] = $promotion[ "id" ] ?? $id;
 
+            // Update or create the promotion in Firebase.
+            $firebase->update( values: [ $id => $promotion ] );
+
+            // Log the creation or update of the promotion.
             echo "Promotions : {$status} Promo. ID = {$id}\n";
         }
     }
 
     /**
-     * Process images of stores and promotions
+     * Merge the descriptions of the existing and new data entries.
      *
-     * @return void
+     * @param   array   $new_data       The new data entry.
+     * @param   array   $existing_data  The existing data entry from Firebase.
+     * @param   string  $key            The key for the description field.
+     * @return  array                   The merged data entry.
      */
-    public function uploadImages()
+    private function mergeDescriptions( array $new_data, array $existing_data, string $key ): array
     {
-        // Local
-        $lcStore     = "images/estabelecimentos/";
-        $lcPromo     = "images/promos/";
+        // Split the existing description by the delimiter.
+        $parts = explode( separator: "\n\n#", string: $existing_data[ $key ] ?? "" );
 
-        // Firebase
-        $fbStore     = "estabelecimento/";
-        $fbPromo     = "promocao/";
-
-        $filesStores = File::allFiles( public_path( $lcStore ) );
-        $filesPromos = File::allFiles( public_path( $lcPromo ) );
-
-        if ( empty( $filesStores ) || empty( $filesPromos ) )
+        // If there are additional parts, merge them with the new description.
+        if ( count( value: $parts ) > 1 )
         {
-            echo "IMG : Generating images\n";
-            $this->log->info( "Images", [ "Generating images" ] );
-            CofryIntegration::getImagens();
+            // Remove the first part, which is the main description.
+            array_shift( array: $parts );
 
-            $filesStores = File::allFiles(public_path( $lcStore ) );
-            $filesPromos = File::allFiles(public_path( $lcPromo ) );
+            $new_data[ $key ] .= implode( separator: "\n\n#", array: $parts );
         }
 
-        echo "IMG : Capturing names - $lcStore\n";
-        $this->log->info( "Images", [ "Capturing names - $lcStore" ] );
-        $fileNameStores = $this->getFileNames( $filesStores );
-
-        echo "IMG : Capturing names - $lcPromo\n";
-        $this->log->info( "Images", [ "Capturing names - $lcPromo" ] );
-        $fileNamePromos = $this->getFileNames( $filesPromos );
-
-        $this->execUploadImages( $fileNameStores, $lcStore, $fbStore );
-        $this->execUploadImages( $fileNamePromos, $lcPromo, $fbPromo );
+        return $new_data;
     }
 
     /**
-     * Get the file names from list of files
+     * Merge other establishment data fields from the existing establishment into the new establishment.
      *
-     * @param array $files
-     * @return array $fileNames
+     * @param   array   $establishment              The new establishment data.
+     * @param   array   $firebase_establishment     The existing establishment data from Firebase.
+     * @return  array                               The merged establishment data.
      */
-    private function getFileNames( array $files )
+    private function mergeEstablishmentData( array $establishment, array $firebase_establishment ): array
     {
-        $fileNames = [];
+        // Define the fields to merge from the existing establishment.
+        $fields = [
+            "hasPromo", "enableDate", "disableDate", "dataInclusao",
+            // "isPublished"
+        ];
 
-        foreach( $files as $file )
-            array_push( $fileNames, pathinfo( $file )[ "basename" ] );
+        return merge_data( new_data: $establishment, existing_data: $firebase_establishment, fields: $fields );
+    }
 
-        return $fileNames;
+    /**
+     * Merge other promotion data fields from the existing promotion into the new promotion.
+     *
+     * @param   array   $promotion          The new promotion data.
+     * @param   array   $firebase_promo     The existing promotion data from Firebase.
+     * @return  array                       The merged promotion data.
+     */
+    private function mergePromotionData( array $promotion, array $firebase_promo ) : array
+    {
+        // Define the fields to merge from the existing promotion.
+         $fields = [
+            "enableDate",    "disableDate",           "dueDate",
+            "buttonLabel",   "campanhaTriibo",        "droidWebView",
+            "iOSWebView",    "showButtonDescription", "buttonDescription",
+            "showGoToPlace", "goToPlaceLabel",
+            //"isPublished"
+        ];
+
+        return merge_data( new_data: $promotion, existing_data: $firebase_promo, fields: $fields );
+    }
+
+    /**
+     * This method is responsible for uploading images related to establishments and promotions.
+     * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
+     *
+     * @return  void
+     */
+    public function images() : void
+    {
+        $types = [ "establishments", "promotions" ];
+
+        foreach ( $types as $type )
+        {
+            $local_path    = $type == "establishments" ? self::LC_ESTAB_PATH : self::LC_PROMO_PATH;
+            $firebase_path = $type == "establishments" ? self::FB_ESTAB_PATH : self::FB_PROMO_PATH;
+
+            // Upload images for {$type} by providing the local and Firebase storage paths.
+            $this->processImages( local_path: $local_path, firebase_path: $firebase_path, type: $type );
+        }
+    }
+
+    /**
+     * This method handles the uploading process of images by first checking for existing files,
+     * generating them if necessary, and then executing the upload to Firebase.
+     *
+     * @param   string  $local_path     Local file path where images are stored.
+     * @param   string  $firebase_path  Firebase storage path where images will be uploaded.
+     * @param   string  $type           The type of images being processed (e.g., 'establishment', 'promotion').
+     * @return  void
+     */
+    private function processImages( string $local_path, string $firebase_path, string $type ): void
+    {
+        // Get the full path to the local directory where images are stored.
+        $path  = public_path( path: $local_path );
+
+        // Retrieve all files from the local directory.
+        $files = File::allFiles( directory: $path );
+
+        // Check if there are no files found in the local directory.
+        if ( empty( $files ) )
+        {
+            // Log the information that image generation is starting for the given type.
+            log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Generating for {$type}..." ], print: true );
+
+            // Call a method to generate images if none are found.
+            CofryIntegration::getImages();
+
+            // Retrieve all files again after generation.
+            $files = File::allFiles( directory: $path );
+        }
+
+        // Log the information that the system is capturing file names for the given type.
+        log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Capturing names of {$type}..." ], print: true );
+
+        // Get the file names from the list of files.
+        $file_names = get_files_names( files: $files );
+
+        // Execute the upload of images to Firebase using the file names and paths.
+        $this->insertImagesFirebase( images: $file_names, local_path: $local_path, firebase_path: $firebase_path, type: $type );
     }
 
     /**
      * Send images to Firebase Storage
      *
-     * @param array $images
-     * @param string $lcFolder
-     * @param string $fbFolder
-     * @return void
+     * This function uploads a set of images to Firebase Storage.
+     * It takes an array of image file names, the local directory path where the images are stored,
+     * the target directory path in Firebase Storage, and a string indicating the type of upload.
+     *
+     * @param   array   $images         Array of image file names to upload.
+     * @param   string  $local_path     The local directory path where the images are stored.
+     * @param   string  $firebase_path  The target directory path in Firebase Storage.
+     * @param   string  $type           A string indicating the type of upload.
+     * @return  void
      */
-    private function execUploadImages( array $images, string $lcFolder, string $fbFolder )
+    private function insertImagesFirebase( array $images, string $local_path, string $firebase_path, string $type )
     {
-        $st     = Firebase::storage();
-        $bucket = $st->getBucket();
+        // Initialize Firebase storage and get the storage bucket.
+        $storage = Firebase::storage();
+        $bucket  = $storage->getBucket();
 
-        echo "IMG : Start sending images to Firebase - $lcFolder\n";
-        $this->log->info( "Images", [ "Start sending images to Firebase - $lcFolder" ] );
+        // Get the full local path to the images.
+        $path    = public_path( path: $local_path );
 
+        // Log the start of the upload process.
+        log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Sending to Firebase - {$type}..." ], print: true );
+
+        // Iterate over each image and upload it to Firebase.
         foreach ( $images as $img )
         {
+            // Create a resumable uploader instance for the current image.
             $uploader = $bucket->getResumableUploader(
-                fopen( public_path( $lcFolder . $img ), "r" ),
-                [ "name" => $fbFolder . $img ]
+                data: fopen( "{$path}/{$img}", "r" ),
+                options: [ "name" => "{$firebase_path}/{$img}" ]
             );
 
             try
             {
-                echo "IMG : Image ID = $img\n";
+                // Log the image ID being uploaded.
+                log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "ID {$img}" ], print: true );
+                // Perform the upload.
                 $uploader->upload();
             }
             catch ( FirebaseException $e )
             {
-                $resumeUri = $uploader->getResumeUri();
-                $object    = $uploader->resume( $resumeUri );
+                $message = "Images : An error has occurred while working with the Firebase SDK";
 
-                $this->log->critical( "Images", [
-                    "code"    => "C-403",
-                    "info"    => $img,
-                    "error"   => "An error has occurred while working with the SDK",
-                    "message" => $e
-                ] );
-
-                Helper::sendMailNotification( "cofry", "execUploadImages()", "FirebaseException", $e );
+                // Handle Firebase-specific exceptions.
+                log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
             }
             catch ( Throwable $e )
             {
-                $this->log->critical( "Images", [
-                    "code"    => "C-503",
-                    "info"    => $img,
-                    "error"   => "A not-Firebase specific error has occurred",
-                    "message" => $e
-                ] );
+                $message = "Images : Unexpected error";
 
-                Helper::sendMailNotification( "cofry", "execUploadImages()", "Throwable", $e );
+                // Handle general exceptions.
+                log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+            }
+            finally
+            {
+                // Attempt to retrieve the resume URI from the uploader and resume the upload.
+                $resumeUri = $uploader->getResumeUri();
+                $uploader->resume( resumeUri: $resumeUri );
             }
         }
 
-        echo "IMG : End uploading images to Firebase - $lcFolder\n";
-        $this->log->info("Images", [ "End uploading images to Firebase - $lcFolder" ]);
+        // Log the completion of the upload process.
+        log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Sending finished - {$type}..." ], print: true );
     }
 }

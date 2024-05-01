@@ -6,31 +6,35 @@
 // use Mautic\Auth\ApiAuth;
 // use Devio\Pipedrive\Pipedrive;
 // use Triibo\Mautic\Facades\Mautic;
-use App\Helpers\Helper;
-use Gregwar\Image\Image;
+// use App\Helpers\Helper;
+// use Gregwar\Image\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 // use Triibo\Mautic\Models\MauticConsumer;
 // use App\Notifications\WebhookMarketplace;
 use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\UserController;
-use Codexshaper\WooCommerce\Facades\Note;
-use Codexshaper\WooCommerce\Facades\Term;
+// use Codexshaper\WooCommerce\Facades\Note;
+// use Codexshaper\WooCommerce\Facades\Term;
 use Codexshaper\WooCommerce\Facades\Order;
-use Doctrine\Inflector\Rules\Substitution;
+// use Doctrine\Inflector\Rules\Substitution;
+// use Codexshaper\WooCommerce\Facades\Coupon;
+// use App\Http\Controllers\ChatGuruController;
 use Codexshaper\WooCommerce\Facades\Coupon;
-use App\Http\Controllers\ChatGuruController;
 use App\Http\Integrations\MauticIntegration;
-use Codexshaper\WooCommerce\Facades\Product;
-use Codexshaper\WooCommerce\Facades\Category;
-use Kreait\Laravel\Firebase\Facades\Firebase;
-use Codexshaper\WooCommerce\Facades\Attribute;
-use Codexshaper\WooCommerce\Facades\Subscription;
-use App\Http\Controllers\Affiliates\AwinController;
-use Codexshaper\WooCommerce\Facades\PaymentGateway;
-use App\Http\Integrations\FastshopIntegration\DataTranslator;
-use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
-use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
+use Codexshaper\WooCommerce\Facades\Customer;
+// use App\Http\Controllers\FastshopController;
+// use App\Http\Integrations\FastshopIntegration\DataTranslator;
+// use Codexshaper\WooCommerce\Facades\Product;
+// use Codexshaper\WooCommerce\Facades\Category;
+// use Kreait\Laravel\Firebase\Facades\Firebase;
+// use Codexshaper\WooCommerce\Facades\Attribute;
+// use Codexshaper\WooCommerce\Facades\Subscription;
+// use App\Http\Controllers\Affiliates\AwinController;
+// use Codexshaper\WooCommerce\Facades\PaymentGateway;
+// use App\Http\Integrations\FastshopIntegration\DataTranslator;
+// use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
+// use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 
 /*
 |--------------------------------------------------------------------------
@@ -43,148 +47,197 @@ use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
 |
 */
 
-Auth::routes([
-    "register" => false
-]);
+Auth::routes( [ "register" => false ] );
 
-Route::get("/", function () {
-    return view("welcome", [
+Route::get( "/", function ()
+{
+    return view( "welcome", [
         "showToast" => false,
         "message"   => ""
-    ]);
-})->name("welcome");
+    ] );
+} )->name( "welcome" );
 
-Route::group(["middleware" => "auth"], function() {
+Route::group( ["middleware" => "auth" ], function() {
 
-    Route::get("/home", function () {
-        return view("home");
-    })->name("home");
+    Route::get( "/home", function ()
+    {
+        return view( "home" );
+    } )->name( "home" );
 
-    Route::get("/clear-caches", function() {
-        Artisan::call("optimize:clear");
-        return view("welcome", [ "showToast" => true, "message" => __("marketplace.cache") ]);
-    })->name("clear.caches");
+    Route::get( "/clear-caches", function()
+    {
+        Artisan::call( "optimize:clear" );
+        return view( "welcome", [
+            "showToast" => true,
+            "message"   => __( "marketplace.cache" )
+        ] );
+    } )->name( "clear.caches" );
 
-    Route::get("/update-stages", function() {
+    Route::get( "/update-stages", function()
+    {
         MauticIntegration::updateStages();
-        return view("welcome", [ "showToast" => true, "message" => __("marketplace.update.all.stages") ]);
-    })->name("update.stages");
 
-    Route::get("/sync-ids", function() {
+        return view( "welcome", [
+            "showToast" => true,
+            "message"   => __( "marketplace.update.all.stages" )
+        ] );
+    } )->name( "update.stages" );
+
+    Route::get( "/sync-ids", function()
+    {
         MauticIntegration::syncIdsMauticPipe();
-        return view("welcome", [ "showToast" => true, "message" => __("marketplace.sync.id") ]);
-    })->name("sync.ids");
 
-    Route::resource("users", UserController::class);
+        return view( "welcome", [
+            "showToast" => true,
+            "message"   => __( "marketplace.sync.id" )
+        ] );
+    } )->name( "sync.ids" );
 
-});
+    Route::resource( "users", UserController::class );
+
+} );
 
 
 
-Route::get( "/test", function () {
+// =========================================
+// ============ ROTAS DE TESTE =============
+// =========================================
+Route::prefix( "mkt" )->group( function () {
 
-    // $awin = Storage::get( "awin_establishments.json" );
-    // $fire = Storage::get( "firebase_awin_establishments.json" );
-    //
-    // $awin = json_decode( $awin, true );
-    // $fire = json_decode( $fire, true );
-    //
-    // $arr  = [];
-    //
-    // foreach ( $fire as $key => $estab )
+    Route::get( "/get-customer/{id}", function( $id )
+    {
+        $customer = Customer::find( $id );
+
+        dd( $customer );
+    } );
+
+    Route::get( "/get-order/{id}", function( $id )
+    {
+        $order = Order::find( $id );
+
+        dd( $order );
+    } );
+
+    Route::get( "/update-order", function()
+    {
+        $order_id = "972533";
+        $data     = [
+            "customer_id" => 4591,
+        ];
+
+        $order    = Order::update( $order_id, $data );
+
+        dd( $data, $order );
+    } );
+
+    Route::get( "/create-order", function()
+    {
+        $data = [
+            // "customer_id"          => 1717,
+            "payment_method"       => "triibo_assinaturas",
+            "payment_method_title" => "Triibo Assinaturas",
+            "status"               => "on-hold", // pedido entra como aguardando
+            "set_paid"             => false,     // e nao pago
+            "billing"              => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Al Eduardo Prado",
+                "address_2"  => "170",
+                "city"       => "Sao Paulo",
+                "state"      => "SP",
+                "postcode"   => "01218011",
+                "country"    => "Brasil",
+                "email"      => "mateus.costa@triibo.com.br",
+                "phone"      => "11949289507",
+            ],
+            "shipping"             => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Al Eduardo Prado",
+                "address_2"  => "170",
+                "city"       => "Sao Paulo",
+                "state"      => "SP",
+                "postcode"   => "01218011",
+                "country"    => "Brasil",
+            ],
+            "line_items"           => [ [
+                "product_id" => 972529,
+                "quantity"   => 1,
+            ] ],
+        ];
+
+        $order = Order::create( $data );
+
+        dd( $data, $order );
+    } );
+
+} );
+
+Route::get( "/fs", function () {
+
+    // $parent = null;
+    // $data   = Order::all( [ "parent" => 968447 ] );
+
+    // if ( $data->count() != 0 )
     // {
-    //     $id = $estab[ "partnerEstablishmentId" ];
-    //
-    //     if ( isset( $awin[ $id ] ) )
+    //     $parent = Order::find( 968447 );
+    // }
+    // else
+    // {
+    //     $data   = [ Order::find( 968447 ) ];
+
+    //     if ( ( $id = $data[ 0 ][ "parent_id" ] ) != 0 )
     //     {
-    //         $estab[ "push_id" ] = $key;
-    //         $arr[ $id ] = [
-    //             "fire" => $estab,
-    //             "awin" => $awin[ $id ]
-    //         ];
+    //         $parent = Order::find( $id );
+
+    //         do
+    //         {
+    //             $has_parent = $parent[ "parent_id" ] != 0;
+
+    //             if ( $has_parent )
+    //             {
+    //                 $parent = Order::find( $parent[ "parent_id" ] );
+    //             }
+    //         }
+    //         while ( $has_parent );
     //     }
     // }
-    //
-    // $arr2 = [];
-    //
-    // foreach ( $arr as $id => $data )
+
+    // $data = [
+    //     "order"  => json_decode( json_encode( $data   ), true ),
+    //     "parent" => json_decode( json_encode( $parent ), true )
+    // ];
+
+    // // retira os pedidos que não são da FastShop
+    // foreach ( $data[ "order" ] as $key => $order )
     // {
-    //     $r      = \DB::table( "affiliates_establishments" )->where( "origin_id", $id )->first();
-    //     $arr2[ $id ] = $r;
+    //     // id da FS no dev-marketplace
+    //     $id = config( "fastshop.production.wc.storeId" );
+
+    //     if ( $order[ "store" ][ "id" ] != $id )
+    //         unset( $data[ "order" ][ $key ] );
     // }
-    //
-    // dd( $arr2 );
 
+    // $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
 
+    // $c = new FastshopController();
 
-    // ============================================================
+    // // 960724
+    // // 954047
+    // // 950362
+    // // 955957
+    // // 949305
 
+    // // 968493
+    // // 968496
 
-    $fbRef            = Firebase::database()->getReference( "/Estabelecimento-v2" );
-    $fbEstablishments = $fbRef->getValue();
+    // $data = $c->getFsOrder( "968496" );
 
-    $awinEstabs       = [];
+    // $data[ "order" ] = $c->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
 
-    foreach ( $fbEstablishments as $push => $fbEstab )
-    {
-        if ( strpos( $push, "-awin"       ) !== false       ) continue;
-        if ( strpos( $push, "-cofry"      ) !== false       ) continue;
-        if ( strpos( $push, "-socialsoul" ) !== false       ) continue;
-        if ( !isset( $fbEstab[ "partnerEstablishmentId" ] ) ) continue;
-        if ( !isset( $fbEstab[ "origin"                 ] ) ) continue;
-        if ( $fbEstab[ "origin" ] !== "awin"                ) continue;
+    // $body = DataTranslator::translate( "newOrderFs", $data );
 
-        $awinEstabs[ $push ] = $fbEstab;
-    }
-
-    // Storage::put( "firebase_awin_establishments.json", json_encode( $awinEstabs ) );
-
-    \DB::table( "affiliates_establishments" )->truncate();
-
-    $now   = now();
-    $data  = [];
-
-    foreach ( $awinEstabs as $push => $store )
-    {
-        $data[] = [
-            "origin"       => $store[ "origin"                 ],
-            "origin_id"    => $store[ "partnerEstablishmentId" ],
-            "affiliate_id" => $store[ "origin" ] . $store[ "partnerEstablishmentId" ],
-            "push_id"      => $push,
-            // "data"         => json_encode( $store ),
-            "data"         => null,
-            "created_at"   => $now,
-            "updated_at"   => $now,
-        ];
-    }
-
-    // Storage::put( "awin_establishments.json", json_encode( $data ) );
-
-    \DB::table( "affiliates_establishments" )->insert( $data );
-
-    $integration = new AwinIntegration( true );
-    $awinEstabs  = $integration->getEstablishments();
-
-    foreach ( $awinEstabs as $id => $estab )
-    {
-        $search_id  = $estab[ "origin" ] . $id;
-        $found      = \DB::table( "affiliates_establishments" )->where( "affiliate_id", $search_id )->first();
-
-        if ( $found )
-        {
-            \DB::table( "affiliates_establishments" )
-                ->where( "affiliate_id", $search_id )
-                ->update( [ "data" => $estab ] );
-        }
-    }
-
-    dd( $data );
-
-
-
-
-    // ============================================================
-
+    // dd( $data, $body  );
 
 
     // $db          = Firebase::database();
@@ -352,5 +405,18 @@ Route::get( "/test", function () {
     // }
 
     // dd( "ok" );
+
+    // ==================
+
+    // $order = Order::find( 959232 );
+
+    // $control         = new FastshopController();
+    // $data            = $control->getFsOrder( 959232 );
+
+    // $data[ "order" ] = $control->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
+
+    // $body            = DataTranslator::translate( "newOrderFs", $data );
+
+    // dd( $body );
 
 } );

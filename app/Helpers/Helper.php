@@ -7,6 +7,7 @@ use Exception;
 use DateInterval;
 use App\Models\User;
 use DateTimeImmutable;
+use Illuminate\Support\Str;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
@@ -623,21 +624,6 @@ class Helper
         return $status;
     }
 
-    public static function setEmptyString( array $data )
-    {
-        $aux = [];
-
-        foreach ( $data as $key => $value )
-        {
-            if ( !is_array( $value ) )
-                $aux[ $key ] = ( $value == null ) ? "" : $value;
-            else
-                $aux[ $key ] = self::setEmptyString( $value );
-        }
-
-        return $aux;
-    }
-
     /**
      * Get datetime ms
      *
@@ -669,5 +655,178 @@ class Helper
         $date = ( int ) $date->format( "Uv" );
 
         return $date;
+    }
+
+    /**
+     * Generates a short description for a product based on its full description, name, and attributes.
+     *
+     * It includes the voltage attribute if present and formats the description to a maximum length.
+     *
+     * @param   string  $description    The full description of the product.
+     * @param   string  $product_name   The name of the product.
+     * @param   array   $attributes     An array of product attributes.
+     * @return  string                  The generated short description.
+     */
+    public static function getFsProductShortDescription( string $description, string $product_name, array $attributes )
+    {
+        // Extract the first line of the full description.
+        $short     = explode( "\r\n", $description )[ 0 ];
+
+        // Use the product name if the first line is too short.
+        $short     = ( strlen( $short ) <= 50 ) ? $product_name : $short;
+
+        // Limit the description to 140 characters.
+        $short     = Str::limit( $short, 140, " (...)" );
+
+        // Find the voltage attribute, if it exists.
+        $volt_attr = current( array_filter( $attributes, function ( $att )
+        {
+            return Str::lower( $att[ "name" ] ) === "voltagem";
+        } ) );
+
+        // Append voltage information to the short description.
+        if ( $volt_attr )
+        {
+            $val = reset( $volt_attr[ "options" ] );
+            $val = in_array( $val, [ "110", "220" ] ) ? $val . "V" : $val;
+
+            if ( $val !== "NA" )
+                $short .= "\r\n\r\n" . Str::ucfirst( "voltagem" ) . " : $val";
+        }
+
+        return $short;
+    }
+
+    /**
+     * Converts product specifications into an array of WooCommerce-compatible attributes.
+     *
+     * @param   array   $specifications     An array of product specifications.
+     * @return  array                       An array of formatted attributes for WooCommerce.
+     */
+    public static function getFsProductAttributes( array $specifications )
+    {
+        $attributes = [];
+
+        // Iterate through each specification.
+        foreach ( $specifications as $key => $attr )
+        {
+            // Skip the ProductLineId field.
+            if ( $attr[ "fieldName" ] === "ProductLineId" )
+                continue;
+
+            // Convert boolean 'true' to 'SIM'.
+            $field_value  = $attr[ "fieldValue" ] === "true" ? "SIM" : $attr[ "fieldValue" ];
+
+            // Add the attribute to the array.
+            $attributes[] = [
+                "name"      => $attr[ "fieldName" ],
+                "position"  => $key,
+                "visible"   => true,
+                "variation" => true,
+                "options"   => [ $field_value ],
+            ];
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * Formats an array of data into a structured string for display.
+     *
+     * This function is used to create a textual representation of the information
+     * contained in an array, with a title and a set of attributes and their labels.
+     *
+     * @param   array   $data           The input data array.
+     * @param   string  $title          The title for the section of formatted information.
+     * @param   array   $attributes     An associative array mapping data keys to their display labels.
+     * @return  string                  A formatted string containing the information.
+     */
+    public static function formatInfo( array $data, string $title, array $attributes )
+    {
+        $info = "$title\n";
+
+        foreach ( $attributes as $key => $label )
+            if ( isset( $data[ $key ] ) )
+                $info .= " $label: {$data[$key]}\n";
+
+        return $info;
+    }
+
+    /**
+     * Maps the logistics information from WooCommerce to the format required by Fast Shop (FS).
+     *
+     * @param   array   $data   The logistics information from a WooCommerce order.
+     * @return  array           The logistics information formatted for FS.
+     */
+    public static function mapFsLogisticsInfo( array $data )
+    {
+        // Map logistics information to the FS format.
+        return array_map( function ( $item )
+        {
+            // Search for the index of the SLA that corresponds to the "delivery" delivery channel.
+            $sla_id       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
+
+            // Select the SLA based on the found index.
+            $selected_sla = $item[ "slas" ][ $sla_id ];
+
+            // Return an array with the logistics information mapped to the FS format.
+            return [
+                "itemIndex"        => $item[ "itemIndex" ],
+                "selectedSla"      => $selected_sla[ "id" ],
+                "lockTTL"          => "3d",
+                "shippingEstimate" => $selected_sla[ "shippingEstimate" ],
+                "price"            => $selected_sla[ "price"            ],
+                "deliveryWindow"   => [],
+            ];
+
+        }, $data );
+    }
+
+    /**
+     * Maps order items from a given logistics array to the format required by Fast Shop (FS).
+     *
+     * @param   array   $logistics  The logistics information related to the order items.
+     * @param   array   $items      The actual items from the order.
+     * @return  array               The order items formatted for FS.
+     */
+    public static function mapFsOrderItems( array $logistics, array $items )
+    {
+        // Use array_map to transform each item to the FS format using the logistics array.
+        return array_map( function ( $item ) use ( $items )
+        {
+            // Retrieve the corresponding item from the items array using the itemIndex.
+            $item_id  = $item[ "itemIndex" ];
+            $aux_item = $items[ $item_id ];
+
+            // Return an array with the item data mapped to the FS format.
+            return [
+                "id"                => $aux_item[ "id"             ],
+                "quantity"          => $aux_item[ "quantity"       ],
+                "price"             => $aux_item[ "price"          ],
+                "unitMultiplier"    => $aux_item[ "unitMultiplier" ],
+                "Seller"            => $aux_item[ "seller"         ],
+                "priceTags"         => $aux_item[ "priceTags"      ],
+                "isGift"            => false,
+                "commission"        => 10,
+                "freightCommission" => 0,
+            ];
+
+        }, $logistics );
+    }
+
+    /**
+     * Retrieves stock and price information for a given product.
+     *
+     * @param   object  $product    The product object from which data will be extracted.
+     * @return  array               An associative product array.
+     */
+    public static function getProductStockPrice( object $product )
+    {
+        return [
+            "regular_price"  => $product->regular_price,
+            "sale_price"     => $product->sale_price,
+            "stock_quantity" => $product->stock_quantity,
+            "stock_status"   => $product->stock_status,
+        ];
     }
 }
