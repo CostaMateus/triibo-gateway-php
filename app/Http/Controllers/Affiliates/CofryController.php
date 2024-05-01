@@ -389,7 +389,7 @@ class CofryController extends Controller
         log_message( channel: self::LOG_CHANNEL, message: "Images", context: [ "Capturing names of {$type}..." ], print: true );
 
         // Get the file names from the list of files.
-        $file_names = get_files_names( files: $files );
+        $file_names = get_files_name( files: $files );
 
         // Execute the upload of images to Firebase using the file names and paths.
         $this->insertImagesFirebase( images: $file_names, local_path: $local_path, firebase_path: $firebase_path, type: $type );

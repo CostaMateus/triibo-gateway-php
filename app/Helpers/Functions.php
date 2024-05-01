@@ -67,7 +67,7 @@ if ( !function_exists( "log_exception" ) )
     }
 }
 
-if ( !function_exists( "get_files_names" ) )
+if ( !function_exists( "get_files_name" ) )
 {
     /**
      * Extracts the file names from an array of file paths.
@@ -75,7 +75,7 @@ if ( !function_exists( "get_files_names" ) )
      * @param   array   $files  An array of file paths.
      * @return  array           An array of file names extracted from the file paths.
      */
-    function get_file_names( array $files ) : array
+    function get_files_name( array $files ) : array
     {
         // Initialize an array to hold the file names.
         $files_name = [];
