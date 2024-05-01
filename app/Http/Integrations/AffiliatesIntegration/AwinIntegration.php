@@ -93,11 +93,11 @@ class AwinIntegration
             {
                 $key  += 1;
                 $count = count( $establishments[ "data" ] );
-                echo "Establishments : Loading establishments {$key} of {$count}\n";
+                echo "Establishments: Loading establishments {$key} of {$count}\n";
 
                 $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
 
-                // $auxStores[] = $store;
+                // $auxStores[] = $estab;
                 // if ( $key == 5 ) break;
             }
 
@@ -127,7 +127,7 @@ class AwinIntegration
         foreach ( $establishments as $estab )
         {
             $id         = $estab[ "partnerEstablishmentId" ];
-            echo "Promotions : Loading promotions for establishment: {$id}\n";
+            echo "Promotions: Loading promotions for establishment: {$id}\n";
             $promos     = $this->searchPromotions( $id );
 
             if ( empty( $promos[ "data" ] ) ) continue;
@@ -214,8 +214,8 @@ class AwinIntegration
 
             if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
             {
-                echo "Establishments : Retry in 5 seconds\n";
-                sleep( 5 );
+                echo "Establishments: Retry in 10 seconds\n";
+                sleep( 10 );
                 return $this->searchEstablishmentsDetails( $id, $allInfo );
             }
 
@@ -277,7 +277,7 @@ class AwinIntegration
 
                     if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
                     {
-                        echo "Promotions : Retry in 10 seconds\n";
+                        echo "Promotions: Retry in 10 seconds\n";
                         sleep( 10 );
                     }
                     else

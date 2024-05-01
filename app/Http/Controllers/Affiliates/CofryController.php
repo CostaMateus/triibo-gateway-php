@@ -154,7 +154,7 @@ class CofryController extends Controller
                     $firebase->update( values: [ $push => $firebase_estab ] );
 
                     // Log the deactivation of the establishment.
-                    echo "Establishments : Disab. Estab. ID = {$push}\n";
+                    echo "Establishments: Disab. Estab. ID = {$push}\n";
                 }
             }
         }
@@ -185,7 +185,7 @@ class CofryController extends Controller
             $firebase->update( values: [ $id => $establishment ] );
 
             // Log the creation or update of the establishment.
-            echo "Establishments : {$status} Estab. ID = {$id}\n";
+            echo "Establishments: {$status} Estab. ID = {$id}\n";
         }
     }
 
@@ -231,7 +231,7 @@ class CofryController extends Controller
                     $firebase->update( values: [ $push => $firebase_promo ] );
 
                     // Log the deactivation of the promotion.
-                    echo "Promotions : Disab. Promo. ID = {$push}\n";
+                    echo "Promotions: Disab. Promo. ID = {$push}\n";
                 }
             }
         }
@@ -267,7 +267,7 @@ class CofryController extends Controller
             $firebase->update( values: [ $id => $promotion ] );
 
             // Log the creation or update of the promotion.
-            echo "Promotions : {$status} Promo. ID = {$id}\n";
+            echo "Promotions: {$status} Promo. ID = {$id}\n";
         }
     }
 
