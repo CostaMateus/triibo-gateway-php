@@ -129,8 +129,8 @@ class ProcessDataAwin extends Command
         // Check if the type is "establishments"
         $__is_establishments = ( $type == "establishments" );
 
-        // Check if the affiliates_establishments table is already populated
-        if ( 0 != DB::table( "affiliates_establishments" )->count() )
+        // Check if the affiliates_{$type} table is already populated
+        if ( 0 != DB::table( "affiliates_{$type}" )->count() )
         {
             $this->printMessage( message: "Populate: DB already populated, terminating process!" );
             return;
