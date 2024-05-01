@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Affiliates;
 
+use DB;
+use DateTime;
 use Throwable;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
@@ -246,7 +248,7 @@ class AwinController extends Controller
         // Retrieve establishments from Firebase and local sources.
         $firebase_establishments = $this->filterEstablishments( $establishment_reference );
         $awin_establishments     = $this->integration->getEstablishments();
-        $local_establishments    = \DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $local_establishments    = DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_establishments    = json_decode( json_encode( $local_establishments ), true );
 
         log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Validating ..." ], print: true );
@@ -332,7 +334,7 @@ class AwinController extends Controller
             ] ] );
 
             // Update the local establishment with the new data.
-            \DB::table( "affiliates_establishments" )
+            DB::table( "affiliates_establishments" )
                 ->where( "affiliate_id", $data_establishment[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
@@ -343,7 +345,7 @@ class AwinController extends Controller
         // Insert new establishments into the local database if any.
         if ( !empty( $local_data ) )
         {
-            \DB::table( "affiliates_establishments" )->insert( $local_data );
+            DB::table( "affiliates_establishments" )->insert( $local_data );
 
             log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Added " . count( $local_data ) . " new establishments in the local table" ], print: true );
 
@@ -369,7 +371,7 @@ class AwinController extends Controller
                 log_message( channel: self::LOG_CHANNEL, message: "Establishments", context: [ "Created ID = {$newPushEstab} | Need approval ID = {$new_push_approval}" ], print: true );
 
                 $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerEstablishmentId" ];
-                \DB::table( "affiliates_establishments" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $newPushEstab ] );
+                DB::table( "affiliates_establishments" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $newPushEstab ] );
             }
         }
     }
@@ -397,7 +399,7 @@ class AwinController extends Controller
         // Retrieve promotions from Firebase and local sources.
         $firebase_promotions  = $this->filterPromotions( $promotions_reference );
         $awin_promotions      = $this->integration->getPromotions();
-        $local_promotions     = \DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $local_promotions     = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_promotions     = json_decode( json_encode( $local_promotions ), true );
 
         log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Validating ..." ], print: true );
@@ -484,7 +486,7 @@ class AwinController extends Controller
             ] ] );
 
             // Update the local promotion with the new data.
-            \DB::table( "affiliates_promotions" )
+            DB::table( "affiliates_promotions" )
                 ->where( "affiliate_id", $data_promotion[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
@@ -495,7 +497,7 @@ class AwinController extends Controller
         // Insert new promotions into the local database if any.
         if ( !empty( $local_data ) )
         {
-            \DB::table( "affiliates_promotions" )->insert( $local_data );
+            DB::table( "affiliates_promotions" )->insert( $local_data );
 
             log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Added " . count( $local_data ) . " new promotions in the local table" ], print: true );
 
@@ -522,7 +524,7 @@ class AwinController extends Controller
                 log_message( channel: self::LOG_CHANNEL, message: "Promotions", context: [ "Created ID = {$new_push_promotion} | Need approval ID = {$new_push_approval}" ], print: true );
 
                 $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerPromotionId" ];
-                \DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_promotion ] );
+                DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_promotion ] );
             }
         }
     }
