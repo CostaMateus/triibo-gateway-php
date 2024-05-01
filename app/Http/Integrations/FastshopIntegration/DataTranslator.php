@@ -264,7 +264,7 @@ class DataTranslator
             "KAIVEHUB_Normal_05", "KAIVEHUB_Normal_14", "KAIVEHUB_Normal_33",
             "KAIVEHUB_Normal_4E", "KAIVEHUB_Normal_25", "KAIVEHUB_Normal_60",
             "KAIVEHUB_Normal_61", "KAIVEHUB_Normal_19", "KAIVEHUB_Normal_74",
-            "KAIVEHUB_Normal_3E", "KAIVEHUB_Normal_97",
+            "KAIVEHUB_Normal_3E", "KAIVEHUB_Normal_97", "KAIVEHUB_Normal_83",
         ];
 
         // Check if logistics information and items are present in the data.
