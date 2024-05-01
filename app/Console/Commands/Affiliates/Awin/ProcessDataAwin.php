@@ -200,9 +200,9 @@ class ProcessDataAwin extends Command
         DB::table( table: "affiliates_{$type}" )->insert( values: $local_data );
 
         // Store the data in JSON files
-        Storage::put( path: "{$type}_awin.json",     content: json_encode( $awin_data     ) );
-        Storage::put( path: "{$type}_firebase.json", content: json_encode( $firebase_data ) );
-        Storage::put( path: "{$type}_local.json",    content: json_encode( $local_data    ) );
+        Storage::put( path: "{$type}_awin.json",     contents: json_encode( $awin_data     ) );
+        Storage::put( path: "{$type}_firebase.json", contents: json_encode( $firebase_data ) );
+        Storage::put( path: "{$type}_local.json",    contents: json_encode( $local_data    ) );
 
         $this->printMessage( message: "Populate: End {$type} processing" );
 
