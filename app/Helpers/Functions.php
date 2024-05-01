@@ -155,9 +155,21 @@ if ( !function_exists( "filter_data" ) )
 
         foreach ( $data as $key => $value )
         {
-            // Check if the key is in the blacklist and skip the value if it is.
-            if ( in_array( $key, $blacklist, true ) )
-                continue;
+            $blacklisted = false;
+
+            // Check if the key is in the blacklist.
+            foreach ( $blacklist as $prefix )
+            {
+                if ( str_starts_with( $key, $prefix ) )
+                {
+                    $blacklisted = true;
+                    break;;
+                }
+            }
+
+            // Skip the value if it is
+            if ( $blacklisted ) continue;
+
 
             // Check if the origin of the value is different from the desired origin and skip the value if it is.
             if( isset( $value[ "origin" ] ) && $value[ "origin" ] !== $origin )
