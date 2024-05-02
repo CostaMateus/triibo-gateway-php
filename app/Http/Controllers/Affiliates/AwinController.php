@@ -462,13 +462,15 @@ class AwinController extends Controller
             // Add edit approval request in Firebase.
             $new_push_approval = $approval_reference->push()->getKey();
             $approval_reference->update( [ $new_push_approval => [
-                "requesterId"  => self::REQUESTER_ID,
-                "id"           => $data_promotion[ "push_id" ],
-                "lastModified" => self::$date,
-                "requestDate"  => self::$date,
-                "status"       => "aberto",
-                "action"       => "edit",
-                "type"         => "promotion",
+                "requesterId"       => self::REQUESTER_ID,
+                "id"                => $data_promotion[ "push_id" ],
+                "establishmentId"   => $local_promotion[ "establishmentId"   ],
+                "establishmentName" => $local_promotion[ "establishmentName" ],
+                "lastModified"      => self::$date,
+                "requestDate"       => self::$date,
+                "status"            => "aberto",
+                "action"            => "edit",
+                "type"              => "promotion",
             ] ] );
 
             // Add edit change request in Firebase.
