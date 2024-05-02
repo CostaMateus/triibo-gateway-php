@@ -762,7 +762,7 @@ class CofryIntegration
         $promotion_path = public_path( "images/promos" ) . "/common_promotion.png";
 
         // Copy the common promotion image to the promotions directory if it doesn't exist.
-        if ( !file_exists( $promotionPath ) )
+        if ( !file_exists( $promotion_path ) )
             File::copy( $cupom_path, $promotion_path );
 
         // Return the sorted and unique list of promotions.
