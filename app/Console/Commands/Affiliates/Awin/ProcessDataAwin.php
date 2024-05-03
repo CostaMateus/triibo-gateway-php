@@ -59,6 +59,38 @@ class ProcessDataAwin extends Command
      */
     public function handle()
     {
+        // $db                   = Firebase::database();
+        // $promotions_reference = $db->getReference( "/Store"            );
+        // $approval_reference   = $db->getReference( "/Store-Aprovacoes" );
+
+        // $promotions           = $promotions_reference->getValue();
+        // $approvals            = $approval_reference->getValue();
+
+        // foreach ( $approvals as $push => $approval )
+        // {
+        //     if ( $approval[ "status" ] != "aberto"          ) continue;
+        //     if (  isset( $approval[ "establishmentName" ] ) ) continue;
+        //     if (  isset( $approval[ "establishmentId"   ] ) ) continue;
+        //     if ( !isset( $approval[ "id"                ] ) ) continue;
+        //     if ( !isset( $promotions[ $approval[ "id" ] ] ) ) continue;
+
+        //     $promotion = $promotions[ $approval[ "id" ] ];
+
+        //     if ( !isset( $promotion[ "origin" ]           ) ) continue;
+        //     if ( $promotion[ "origin" ] != "awin"           ) continue;
+
+        //     $approval[ "establishmentId"   ] = $promotion[ "establishmentId"   ];
+        //     $approval[ "establishmentName" ] = $promotion[ "establishmentName" ];
+
+        //     $approval_reference->update( [ $push => $approval ] );
+
+        //     echo "{$push} | {$approval[ "id" ]} | {$promotion[ "establishmentName" ]}\n";
+        // }
+
+        // dd( "ok" );
+        // =============================================
+        // =============================================
+
         // Get the option from the command line argument
         $option = $this->option( key: "option" );
 
