@@ -316,7 +316,8 @@ class AwinController extends Controller
                 "lastModified"      => self::$date,
                 "requestDate"       => self::$date,
                 "status"            => "aberto",
-                "action"            => "edit"
+                "action"            => "edit",
+                "origin"            => "awin"
             ] ] );
 
             // Add edit change request in Firebase.
@@ -471,6 +472,7 @@ class AwinController extends Controller
                 "status"            => "aberto",
                 "action"            => "edit",
                 "type"              => "promotion",
+                "origin"            => "awin"
             ] ] );
 
             // Add edit change request in Firebase.
