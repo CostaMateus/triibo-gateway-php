@@ -63,10 +63,7 @@ class AwinIntegration
         $this->url_linkbuilder            = "{$url}/publishers/{$p_id}/linkbuilder/generate";   //
 
         if ( $loadEstablishments )
-        {
             $this->establishments = $this->getEstablishments();
-            // $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
-        }
     }
 
     /**
@@ -330,34 +327,14 @@ class AwinIntegration
      */
     private function searchReports( bool $isUpdate = false )
     {
-        // $sunday   = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 7 );
-        // $saturday = mktime( 0, 0, 0, date( "m" ), date( "d" ) - date( "w" ) - 1 );
-        // $start    = date( "Y-m-d", $sunday   ) . "T00:00:00";
-        // $end      = date( "Y-m-d", $saturday ) . "T23:59:59";
+        $date   = date( "Y-m-d", strtotime( "yesterday" ) );
+        $start  = "{$date}T00:00:00";
+        $end    = "{$date}T23:59:59";
 
-        // if ( $isUpdate )
-        // {
-        //     $date     = "2023-07-01";
-        //     $start    = "{$date}T00:00:00";
-        //     $date     = "2023-07-31";
-        //     $end      = "{$date}T23:59:59";
-        // }
-        // else
-        // {
-        //     $date     = "2023-08-01";
-        //     $start    = "{$date}T00:00:00";
-        //     $date     = "2023-08-31";
-        //     $end      = "{$date}T23:59:59";
-        // }
-
-        $date     = date( "Y-m-d", strtotime( "yesterday" ) );
-        $start    = "{$date}T00:00:00";
-        $end      = "{$date}T23:59:59";
-
-        $query    = "?startDate={$start}";
-        $query   .= "&endDate={$end}";
-        $query   .= "&timezone=" . self::TZ;
-        $query   .= ( $isUpdate ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
+        $query  = "?startDate={$start}";
+        $query .= "&endDate={$end}";
+        $query .= "&timezone=" . self::TZ;
+        $query .= ( $isUpdate ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
         try
         {
@@ -429,22 +406,22 @@ class AwinIntegration
                 $aux[ "advertiserName"    ] = $establishmentName;
 
 
-                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];            // 500  | 500
-                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];            //  25  |   0
+                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];
+                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];
 
-                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;  //   5% |   0
+                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;
                 $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
 
-                $commissionClient           = ( float ) str_replace( ",", ".", $cashback ); //   2% |   0,8%
+                $commissionClient           = ( float ) str_replace( ",", ".", $cashback );
 
-                $commissionTriibo           = $totalCommission - $commissionClient;                           //   3% |  -0,8%
+                $commissionTriibo           = $totalCommission - $commissionClient;
                 $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
 
-                $amountClient               = ( $totalOrder * $commissionClient ) / 100;                      //  10  |   4
-                $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;                      //  15  |  -4
+                $amountClient               = ( $totalOrder * $commissionClient ) / 100;
+                $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;
 
-                $aux[ "amount"            ] = $totalOrder;                                                    // 500  | 500
-                $aux[ "amountCommission"  ] = $commission;                                                    // 500  | 500
+                $aux[ "amount"            ] = $totalOrder;
+                $aux[ "amountCommission"  ] = $commission;
                 $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
                 $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
                 $aux[ "amountPartner"     ] = null;
@@ -477,28 +454,9 @@ class AwinIntegration
         {
             $id            = $estab[ "id" ];
             $cashback      = "";
-            // $url           = Helper::parseUrl( $store[ "displayUrl" ] );
-            // $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
 
             if ( $estab[ "commissionRange" ] )
                 $cashback = Helper::getCashback( $estab[ "commissionRange" ] );
-
-            // if ( $key !== false )
-            // {
-            //     if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "awin" )
-            //         continue;
-            // }
-            // else
-            // {
-            //     $newStores[] = [
-            //         "affiliate_id"   => $id,
-            //         "affiliate_name" => "awin",
-            //         "domain"         => $url,
-            //         "commission"     => $cashback,
-            //         "created_at"     => now(),
-            //         "updated_at"     => now()
-            //     ];
-            // }
 
             $auxName       = Helper::hyphenize( strtolower( $estab[ "name" ] ) );
             $imageName     = "awin_{$id}_{$auxName}.png";
@@ -545,8 +503,6 @@ class AwinIntegration
                 "origin"                 => "awin",
             ];
         }
-
-        // if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insertOrIgnore( $newStores );
 
         return $establishments;
     }
@@ -652,12 +608,10 @@ class AwinIntegration
             $establishmentName = $promotion[ "advertiser" ][ "name" ];
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
-            // $date              = $promotion[ "startDate" ] . " 00:00:00";
             $date              = str_replace( "T", " ", $promotion[ "startDate" ] );
             $date              = new DateTime( date( $date ) );
             $dateEn            = ( int ) $date->format( "U" ) * 1000;
 
-            // $date              = $promotion[ "endDate"   ] . "23:59:00";
             $date              = str_replace( "T", " ", $promotion[ "endDate" ] );
             $date              = new DateTime( date( $date ) );
             $dateDis           = ( int ) $date->format( "U" ) * 1000;

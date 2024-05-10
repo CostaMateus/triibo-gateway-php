@@ -363,12 +363,14 @@ class AwinController extends Controller
 
                 $new_push_approval    = $approval_reference->push()->getKey();
                 $approval_reference->update( [ $new_push_approval => [
-                    "requesterId"  => self::REQUESTER_ID,
-                    "id"           => $newPushEstab,
-                    "lastModified" => self::$date,
-                    "requestDate"  => self::$date,
-                    "status"       => "aberto",
-                    "action"       => "create"
+                    "requesterId"       => self::REQUESTER_ID,
+                    "id"                => $newPushEstab,
+                    "establishmentName" => $establishment[ "name" ],
+                    "lastModified"      => self::$date,
+                    "requestDate"       => self::$date,
+                    "status"            => "aberto",
+                    "action"            => "create",
+                    "origin"            => "awin",
                 ] ] );
 
                 log_message( channel: self::LOG_CHANNEL, message: "Establishments: Created ID = {$newPushEstab} | Need approval ID = {$new_push_approval}", print: true );
