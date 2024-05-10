@@ -243,7 +243,6 @@ class AwinController extends Controller
         // Initialize Firebase database references
         $db                      = Firebase::database();
         $establishment_reference = $db->getReference( "/Estabelecimento-v2"            );
-        $approval_reference      = $db->getReference( "/Estabelecimento-Aprovacoes"    );
         $changes_reference       = $db->getReference( "/Establishment-changes-request" );
 
         // Retrieve establishments from Firebase and local sources.
@@ -308,8 +307,8 @@ class AwinController extends Controller
             if ( empty( $diff ) ) continue;
 
             // Add edit approval request in Firebase.
-            $new_push_approval   = $approval_reference->push()->getKey();
-            $approval_reference->update( [ $new_push_approval => [
+            $db->getReference( "/Estabelecimento-Aprovacoes/{$data_establishment[ "push_id" ]}" )
+               ->set( [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $data_establishment[ "push_id" ],
                 "establishmentName" => $data_establishment[ "name"    ],
@@ -318,10 +317,10 @@ class AwinController extends Controller
                 "status"            => "aberto",
                 "action"            => "edit",
                 "origin"            => "awin"
-            ] ] );
+            ] );
 
             // Add edit change request in Firebase.
-            $new_push_changes    = $changes_reference->push()->getKey();
+            $new_push_changes = $changes_reference->push()->getKey();
             $changes_reference->update( [ $new_push_changes => [
                 "id"                => $new_push_changes,
                 "createDate"        => self::$date,
@@ -341,7 +340,7 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $data_establishment[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
-            $context = "Edited ID = {$data_establishment[ "push_id" ]} | Need approval ID = {$new_push_approval} | Change Request ID = {$new_push_changes}\n";
+            $context = "Edited ID = {$data_establishment[ "push_id" ]} | Need approval ID = {$data_establishment[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
             log_message( channel: self::LOG_CHANNEL, message: "Establishments: {$context}", print: true );
         }
 
@@ -355,28 +354,30 @@ class AwinController extends Controller
             // Add new establishments to Firebase and update local database with push IDs.
             foreach ( $local_data as $establishment )
             {
-                $aux                  = $awin_establishments[ $establishment[ "origin_id" ] ];
-                $aux[ "isPublished" ] = false;
+                $aux                    = $awin_establishments[ $establishment[ "origin_id" ] ];
+                $aux[ "isPublished" ]   = false;
 
-                $newPushEstab         = $establishment_reference->push()->getKey();
-                $establishment_reference->update( [ $newPushEstab => $aux ] );
+                // Add new establishment in Firebase.
+                $new_push_establishment = $establishment_reference->push()->getKey();
+                $establishment_reference->update( [ $new_push_establishment => $aux ] );
 
-                $new_push_approval    = $approval_reference->push()->getKey();
-                $approval_reference->update( [ $new_push_approval => [
+                // Add create approval request in Firebase.
+                $db->getReference( "/Estabelecimento-Aprovacoes/{$new_push_establishment}" )
+                   ->set( [
                     "requesterId"       => self::REQUESTER_ID,
-                    "id"                => $newPushEstab,
+                    "id"                => $new_push_establishment,
                     "establishmentName" => $establishment[ "name" ],
                     "lastModified"      => self::$date,
                     "requestDate"       => self::$date,
                     "status"            => "aberto",
                     "action"            => "create",
                     "origin"            => "awin",
-                ] ] );
+                ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Establishments: Created ID = {$newPushEstab} | Need approval ID = {$new_push_approval}", print: true );
+                log_message( channel: self::LOG_CHANNEL, message: "Establishments: Created ID = {$new_push_establishment} | Need approval ID = {$new_push_establishment}", print: true );
 
-                $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerEstablishmentId" ];
-                DB::table( "affiliates_establishments" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $newPushEstab ] );
+                $affiliate_id           = $aux[ "origin" ] . $aux[ "partnerEstablishmentId" ];
+                DB::table( "affiliates_establishments" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_establishment ] );
             }
         }
     }
@@ -399,7 +400,6 @@ class AwinController extends Controller
         // Initialize Firebase database references
         $db                   = Firebase::database();
         $promotions_reference = $db->getReference( "/Store"                 );
-        $approval_reference   = $db->getReference( "/Store-Aprovacoes"      );
         $changes_reference    = $db->getReference( "/Store-changes-request" );
 
         // Retrieve promotions from Firebase and local sources.
@@ -450,10 +450,10 @@ class AwinController extends Controller
             }
 
             // Compare Awin and local insertPromotionsFirebase
-            $data_promotion    = $local_promotions[ $id ];
-            $local_promotion   = json_decode( $data_promotion[ "data" ], true );
+            $data_promotion  = $local_promotions[ $id ];
+            $local_promotion = json_decode( $data_promotion[ "data" ], true );
             // And get differences.
-            $diff              = Helper::arrayDiffAssocRecursive( $awin_promotion, $local_promotion );
+            $diff            = Helper::arrayDiffAssocRecursive( $awin_promotion, $local_promotion );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_PROMO_FIELDS as $field )
@@ -463,8 +463,8 @@ class AwinController extends Controller
             if ( empty( $diff ) ) continue;
 
             // Add edit approval request in Firebase.
-            $new_push_approval = $approval_reference->push()->getKey();
-            $approval_reference->update( [ $new_push_approval => [
+            $db->getReference( "/Store-Aprovacoes/{$data_promotion[ "push_id" ]}" )
+               ->set( [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $data_promotion[ "push_id" ],
                 "establishmentId"   => $local_promotion[ "establishmentId"   ],
@@ -475,10 +475,10 @@ class AwinController extends Controller
                 "action"            => "edit",
                 "type"              => "promotion",
                 "origin"            => "awin"
-            ] ] );
+            ] );
 
             // Add edit change request in Firebase.
-            $new_push_changes  = $changes_reference->push()->getKey();
+            $new_push_changes = $changes_reference->push()->getKey();
             $changes_reference->update( [ $new_push_changes => [
                 "id"                => $new_push_changes,
                 "createDate"        => self::$date,
@@ -499,7 +499,7 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $data_promotion[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
-            $context = "Edited ID {$data_promotion[ "push_id" ]} | Need approval ID = {$new_push_approval} | Change Request ID = {$new_push_changes}\n";
+            $context = "Edited ID {$data_promotion[ "push_id" ]} | Need approval ID = {$data_promotion[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
             log_message( channel: self::LOG_CHANNEL, message: "Promotions: {$context}", print: true );
         }
 
@@ -516,21 +516,26 @@ class AwinController extends Controller
                 $aux                  = $awin_promotions[ $promotion[ "origin_id" ] ];
                 $aux[ "isPublished" ] = false;
 
+                // Add new promotion in Firebase.
                 $new_push_promotion   = $promotions_reference->push()->getKey();
                 $promotions_reference->update( [ $new_push_promotion => $aux ] );
 
-                $new_push_approval    = $approval_reference->push()->getKey();
-                $approval_reference->update( [ $new_push_approval => [
-                    "requesterId"  => self::REQUESTER_ID,
-                    "id"           => $new_push_promotion,
-                    "lastModified" => self::$date,
-                    "requestDate"  => self::$date,
-                    "status"       => "aberto",
-                    "action"       => "create",
-                    "type"         => "promotion",
-                ] ] );
+                // Add create approval request in Firebase.
+                $db->getReference( "/Store-Aprovacoes/{$new_push_promotion}" )
+                   ->set( [
+                    "requesterId"       => self::REQUESTER_ID,
+                    "id"                => $new_push_promotion,
+                    "establishmentId"   => $aux[ "establishmentId"   ],
+                    "establishmentName" => $aux[ "establishmentName" ],
+                    "lastModified"      => self::$date,
+                    "requestDate"       => self::$date,
+                    "status"            => "aberto",
+                    "action"            => "create",
+                    "type"              => "promotion",
+                    "origin"            => "awin"
+                ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_approval}", print: true );
+                log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}", print: true );
 
                 $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerPromotionId" ];
                 DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_promotion ] );
