@@ -281,7 +281,9 @@ class AwinController extends Controller
         // Process Awin establishments for addition or update.
         foreach ( $awin_establishments as $id => $awin_establishment )
         {
-            if ( !isset( $local_establishments[ $id ] ) )
+            $data_establishment = $local_establishments[ $id ];
+
+            if ( !isset( $local_establishments[ $id ] ) || !$data_establishment[ "push_id" ] )
             {
                 // Add new establishment to local data array.
                 $affiliate_id = $awin_establishment[ "origin" ] . $id;
@@ -299,10 +301,9 @@ class AwinController extends Controller
                 continue;
             }
 
-            // Compare Awin and local establishments
-            $data_establishment  = $local_establishments[ $id ];
             $local_establishment = json_decode( $data_establishment[ "data" ], true );
-            // And get differences.
+
+            // Compare Awin and local establishments and get differences.
             $diff                = Helper::arrayDiffAssocRecursive( $awin_establishment, $local_establishment );
 
             // Remove ignored fields from the differences.
@@ -440,7 +441,9 @@ class AwinController extends Controller
         // Process Awin promotions for addition or update.
         foreach ( $awin_promotions as $id => $awin_promotion )
         {
-            if ( !isset( $local_promotions[ $id ] ) )
+            $local_promotion = $local_promotions[ $id ];
+
+            if ( !isset( $local_promotions[ $id ] ) || !$local_promotion[ "push_id" ] )
             {
                 // Add new promotion to local data array.
                 $affiliate_id = $awin_promotion[ "origin" ] . $id;
@@ -457,8 +460,6 @@ class AwinController extends Controller
                 continue;
             }
 
-            // Compare Awin and local insertPromotionsFirebase
-            $local_promotion  = $local_promotions[ $id ];
             $data_promotion   = json_decode( $local_promotion[ "data" ], true );
             $establishment_id = $data_promotion[ "establishmentId" ];
 
@@ -474,7 +475,7 @@ class AwinController extends Controller
 
             unset( $awin_promotion[ "partnerEstablishmentId" ] );
 
-            // And get differences.
+            // Compare Awin and local promotions and get differences.
             $diff             = Helper::arrayDiffAssocRecursive( $awin_promotion, $data_promotion );
 
             // Remove ignored fields from the differences.
@@ -534,7 +535,7 @@ class AwinController extends Controller
                 // Add new promotion in Firebase.
                 $new_push_promotion       = $promotions_reference->push()->getKey();
 
-                $aux                      = json_decode( $promotion[ "data" ] );
+                $aux                      = json_decode( $promotion[ "data" ], true );
                 $partner_establishment_id = $aux[ "partnerEstablishmentId" ];
 
                 $index                    = array_search( $partner_establishment_id, array_column( $firebase_establishments, "partnerEstablishmentId" ) );
