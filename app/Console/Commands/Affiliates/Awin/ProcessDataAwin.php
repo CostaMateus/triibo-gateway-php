@@ -59,27 +59,122 @@ class ProcessDataAwin extends Command
      */
     public function handle()
     {
-        // $db                   = Firebase::database();
-        // $promotions_reference = $db->getReference( "/Store"         );
-        // $approval_reference   = $db->getReference( "/Store-Aprovacoes" );
+        // echo "Establishments ============================================================\n";
+        // // Establishments
+        // $db                       = Firebase::database();
+        // $establishments_reference = $db->getReference( "/Estabelecimento-v2"            );
+        // $e_approvals_reference    = $db->getReference( "/Estabelecimento-Aprovacoes"    );
+        // $e_changes_reference      = $db->getReference( "/Establishment-changes-request" );
 
-        // $promotions           = $promotions_reference->getValue();
-        // $approvals            = $approval_reference->getValue();
+        // $establishments           = $establishments_reference->getValue();
+        // $e_approvals              = $e_approvals_reference->getValue();
+        // $e_changes                = $e_changes_reference->getValue();
 
-        // foreach ( $approvals as $push => $approval )
+        // echo "Approvals =================================================================\n";
+
+        // foreach ( $e_approvals as $ea_push => $e_approval )
         // {
-        //     if ( !isset( $approval[ "id" ]                ) ) continue;
-        //     if ( !isset( $promotions[ $approval[ "id" ] ] ) ) continue;
+        //     if ( !isset( $e_approval[ "id"          ] ) ) continue;
+        //     if ( !isset( $e_approval[ "status"      ] ) ) continue;
+        //     if ( !isset( $e_approval[ "origin"      ] ) ) continue;
+        //     if ( !isset( $e_approval[ "requesterId" ] ) ) continue;
 
-        //     if ( !isset( $approval[ "status" ]            ) ) continue;
-        //     if ( $approval[ "status" ] != "aberto"          ) continue;
+        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $e_approval[ "requesterId" ] ) continue;
 
-        //     if ( !isset( $approval[ "origin" ]            ) ) continue;
-        //     if ( $approval[ "origin" ] != "awin"            ) continue;
+        //     if ( !isset( $establishments[ $e_approval[ "id" ] ]             ) ) continue;
+        //     if ( !isset( $establishments[ $e_approval[ "id" ] ][ "origin" ] ) ) continue;
 
-        //     $promotion = $promotions[ $approval[ "id" ] ];
+        //     if ( "awin" != $e_approval[ "origin" ] ) continue;
 
-        //     echo "{$push} | {$approval[ "id" ]} | {$promotion[ "establishmentName" ]}\n";
+        //     if ( "awin" != $establishments[ $e_approval[ "id" ] ][ "origin" ] ) continue;
+
+        //     echo "{$ea_push} | {$e_approval[ "id" ]} | {$establishments[ $e_approval[ "id" ] ][ "nome" ]}\n";
+
+        //     $e_approvals_reference->update( [ $ea_push => null ] );
+        // }
+
+        // echo "Changes ===================================================================\n";
+
+        // foreach ( $e_changes as $ec_push => $e_change )
+        // {
+        //     if ( !isset( $e_change[ "id"              ] ) ) continue;
+        //     if ( !isset( $e_change[ "type"            ] ) ) continue;
+        //     if ( !isset( $e_change[ "requesterUid"    ] ) ) continue;
+        //     if ( !isset( $e_change[ "establishmentId" ] ) ) continue;
+
+        //     if ( !isset( $establishments[ $e_change[ "establishmentId" ] ] ) ) continue;
+
+        //     if ( !isset( $establishments[ $e_change[ "establishmentId" ] ][ "origin" ] ) ) continue;
+
+        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $e_change[ "requesterUid" ] ) continue;
+
+        //     if ( "awin" != $establishments[ $e_change[ "establishmentId" ] ][ "origin" ] ) continue;
+
+        //     echo "{$ec_push} | {$e_change[ "establishmentId" ]} | {$establishments[ $e_change[ "establishmentId" ] ][ "nome" ]}\n";
+
+        //     $e_changes_reference->update( [ $ec_push => null ] );
+        // }
+
+        // echo "===========================================================================\n";
+        // echo "===========================================================================\n";
+        // echo "Promotions ================================================================\n";
+        // // Promotions
+        // $db                    = Firebase::database();
+        // $promotions_reference  = $db->getReference( "/Store"                 );
+        // $p_approvals_reference = $db->getReference( "/Store-Aprovacoes"      );
+        // $p_changes_reference   = $db->getReference( "/Store-changes-request" );
+
+        // $promotions            = $promotions_reference->getValue();
+        // $p_approvals           = $p_approvals_reference->getValue();
+        // $p_changes             = $p_changes_reference->getValue();
+
+        // echo "Approvals =================================================================\n";
+
+        // foreach ( $p_approvals as $pa_push => $p_approval )
+        // {
+        //     if ( !isset( $p_approval[ "id"                ] ) ) continue;
+        //     if ( !isset( $p_approval[ "status"            ] ) ) continue;
+        //     if ( !isset( $p_approval[ "origin"            ] ) ) continue;
+        //     if ( !isset( $p_approval[ "requesterId"       ] ) ) continue;
+        //     if ( !isset( $p_approval[ "establishmentId"   ] ) ) continue;
+        //     if ( !isset( $p_approval[ "establishmentName" ] ) ) continue;
+
+        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $p_approval[ "requesterId" ] ) continue;
+
+        //     if ( !isset( $promotions[ $p_approval[ "id" ] ]             ) ) continue;
+        //     if ( !isset( $promotions[ $p_approval[ "id" ] ][ "origin" ] ) ) continue;
+
+        //     if ( "awin" != $p_approval[ "origin" ] ) continue;
+
+        //     if ( "awin" != $promotions[ $p_approval[ "id" ] ][ "origin" ] ) continue;
+
+        //     echo "{$pa_push} | {$p_approval[ "id" ]} | {$p_approval[ "establishmentName" ]}\n";
+
+        //     $p_approvals_reference->update( [ $pa_push => null ] );
+        // }
+
+        // echo "Changes ===================================================================\n";
+
+        // foreach ( $p_changes as $pc_push => $p_change )
+        // {
+        //     if ( !isset( $p_change[ "id"                ] ) ) continue;
+        //     if ( !isset( $p_change[ "type"              ] ) ) continue;
+        //     if ( !isset( $p_change[ "requesterUid"      ] ) ) continue;
+        //     if ( !isset( $p_change[ "storeId"           ] ) ) continue;
+        //     if ( !isset( $p_change[ "establishmentId"   ] ) ) continue;
+        //     if ( !isset( $p_change[ "establishmentName" ] ) ) continue;
+
+        //     if ( !isset( $promotions[ $p_change[ "storeId" ] ] ) ) continue;
+
+        //     if ( !isset( $promotions[ $p_change[ "storeId" ] ][ "origin" ] ) ) continue;
+
+        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $p_change[ "requesterUid" ] ) continue;
+
+        //     if ( "awin" != $promotions[ $p_change[ "storeId" ] ][ "origin" ] ) continue;
+
+        //     echo "{$pc_push} | {$p_change[ "storeId" ]} | {$p_change[ "establishmentName" ]}\n";
+
+        //     $p_changes_reference->update( [ $pc_push => null ] );
         // }
 
         // dd( "ok" );
