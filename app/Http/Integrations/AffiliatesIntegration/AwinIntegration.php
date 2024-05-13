@@ -546,9 +546,10 @@ class AwinIntegration
             $url               = $this->urlTracking( $estab[ "id" ], $estab[ "displayUrl" ] );
 
             $promotions[ $id ] = [
+                "partnerEstablishmentId" => $idEstab,
                 "partnerPromotionId" => $id,
 
-                "establishmentId"    => $idEstab,
+                "establishmentId"    => "",
                 "establishmentName"  => $establishmentName,
 
                 "title"              => $title,
@@ -635,9 +636,10 @@ class AwinIntegration
             $url               = $this->urlTracking( $promotion[ "advertiser" ][ "id" ], $promotion[ "url" ] );
 
             $promotions[ $id ] = [
+                "partnerEstablishmentId" => $idEstab,
                 "partnerPromotionId" => $id,
 
-                "establishmentId"    => $idEstab,
+                "establishmentId"    => "",
                 "establishmentName"  => $establishmentName,
 
                 "title"              => $promotion[ "description" ],
