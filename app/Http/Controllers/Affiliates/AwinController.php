@@ -90,7 +90,13 @@ class AwinController extends Controller
      *
      * @var     array
      */
-    private const IGNORE_PROMO_FIELDS = [];
+    private const IGNORE_PROMO_FIELDS = [
+        "disableDate",
+        "dueDate",
+        "enableDate",
+        "id",
+        "establishmentId",
+    ];
 
     /**
      * Constructor
@@ -392,21 +398,23 @@ class AwinController extends Controller
         log_message( channel: self::LOG_CHANNEL, message: "Promotions: Searching ...", print: true );
 
         // Delete the existing promotions directory.
-        $local_path           = public_path( path: self::LC_BASE_PATH . "/promotions" );
+        $local_path              = public_path( path: self::LC_BASE_PATH . "/promotions" );
         File::deleteDirectory( directory: $local_path, preserve: true );
 
-        $local_data           = [];
+        $local_data              = [];
 
         // Initialize Firebase database references
-        $db                   = Firebase::database();
-        $promotions_reference = $db->getReference( "/Store"                 );
-        $changes_reference    = $db->getReference( "/Store-changes-request" );
+        $db                      = Firebase::database();
+        $establishment_reference = $db->getReference( "/Estabelecimento-v2"    );
+        $promotions_reference    = $db->getReference( "/Store"                 );
+        $changes_reference       = $db->getReference( "/Store-changes-request" );
 
         // Retrieve promotions from Firebase and local sources.
-        $firebase_promotions  = $this->filterPromotions( $promotions_reference );
-        $awin_promotions      = $this->integration->getPromotions();
-        $local_promotions     = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
-        $local_promotions     = json_decode( json_encode( $local_promotions ), true );
+        $firebase_establishments = $this->filterEstablishments( $establishment_reference );
+        $firebase_promotions     = $this->filterPromotions( $promotions_reference );
+        $awin_promotions         = $this->integration->getPromotions();
+        $local_promotions        = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+        $local_promotions        = json_decode( json_encode( $local_promotions ), true );
 
         log_message( channel: self::LOG_CHANNEL, message: "Promotions: Validating ...", print: true );
 
@@ -450,10 +458,24 @@ class AwinController extends Controller
             }
 
             // Compare Awin and local insertPromotionsFirebase
-            $data_promotion  = $local_promotions[ $id ];
-            $local_promotion = json_decode( $data_promotion[ "data" ], true );
+            $local_promotion  = $local_promotions[ $id ];
+            $data_promotion   = json_decode( $local_promotion[ "data" ], true );
+            $establishment_id = $data_promotion[ "establishmentId" ];
+
+            if ( empty( $establishment_id ) )
+            {
+                $partner_establishment_id = $awin_promotion[ "partnerEstablishmentId" ];
+                $index                    = array_search( $partner_establishment_id, array_column( $firebase_establishments, "partnerEstablishmentId" ) );
+                $pushes                   = array_keys( $firebase_establishments );
+                $establishment_id         = $pushes[ $index ];
+            }
+
+            $awin_promotion[ "establishmentId" ] = $establishment_id;
+
+            unset( $awin_promotion[ "partnerEstablishmentId" ] );
+
             // And get differences.
-            $diff            = Helper::arrayDiffAssocRecursive( $awin_promotion, $local_promotion );
+            $diff             = Helper::arrayDiffAssocRecursive( $awin_promotion, $data_promotion );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_PROMO_FIELDS as $field )
@@ -463,12 +485,12 @@ class AwinController extends Controller
             if ( empty( $diff ) ) continue;
 
             // Add edit approval request in Firebase.
-            $db->getReference( "/Store-Aprovacoes/{$data_promotion[ "push_id" ]}" )
+            $db->getReference( "/Store-Aprovacoes/{$local_promotion[ "push_id" ]}" )
                ->set( [
                 "requesterId"       => self::REQUESTER_ID,
-                "id"                => $data_promotion[ "push_id" ],
-                "establishmentId"   => $local_promotion[ "establishmentId"   ],
-                "establishmentName" => $local_promotion[ "establishmentName" ],
+                "id"                => $local_promotion[ "push_id" ],
+                "establishmentId"   => $establishment_id,
+                "establishmentName" => $data_promotion[ "establishmentName" ],
                 "lastModified"      => self::$date,
                 "requestDate"       => self::$date,
                 "status"            => "aberto",
@@ -484,9 +506,9 @@ class AwinController extends Controller
                 "createDate"        => self::$date,
                 // "updateDate"        => "",
                 // "reviewDate"        => "",
-                "storeId"           => $data_promotion[ "push_id" ],
-                "establishmentId"   => $local_promotion[ "establishmentId"   ],
-                "establishmentName" => $local_promotion[ "establishmentName" ],
+                "storeId"           => $local_promotion[ "push_id" ],
+                "establishmentId"   => $establishment_id,
+                "establishmentName" => $data_promotion[ "establishmentName" ],
                 "requesterUid"      => self::REQUESTER_ID,
                 // "validatorUid"      => "",
                 // "comment"           => "",
@@ -496,29 +518,33 @@ class AwinController extends Controller
 
             // Update the local promotion with the new data.
             DB::table( "affiliates_promotions" )
-                ->where( "affiliate_id", $data_promotion[ "affiliate_id" ] )
+                ->where( "affiliate_id", $local_promotion[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
-            $context = "Edited ID {$data_promotion[ "push_id" ]} | Need approval ID = {$data_promotion[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
+            $context = "Edited ID {$local_promotion[ "push_id" ]} | Need approval ID = {$local_promotion[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
             log_message( channel: self::LOG_CHANNEL, message: "Promotions: {$context}", print: true );
         }
 
         // Insert new promotions into the local database if any.
         if ( !empty( $local_data ) )
         {
-            DB::table( "affiliates_promotions" )->insert( $local_data );
-
-            log_message( channel: self::LOG_CHANNEL, message: "Promotions: Added " . count( $local_data ) . " new promotions in the local table", print: true );
-
             // Add new promotion to Firebase and update local database with push IDs.
-            foreach ( $local_data as $promotion )
+            foreach ( $local_data as &$promotion )
             {
                 // Add new promotion in Firebase.
-                $new_push_promotion   = $promotions_reference->push()->getKey();
+                $new_push_promotion       = $promotions_reference->push()->getKey();
 
-                $aux                  = $awin_promotions[ $promotion[ "origin_id" ] ];
-                $aux[ "id"          ] = $new_push_promotion;
-                $aux[ "isPublished" ] = false;
+                $aux                      = json_decode( $promotion[ "data" ] );
+                $partner_establishment_id = $aux[ "partnerEstablishmentId" ];
+
+                $index                    = array_search( $partner_establishment_id, array_column( $firebase_establishments, "partnerEstablishmentId" ) );
+                $pushes                   = array_keys( $firebase_establishments );
+
+                $aux[ "establishmentId" ] = $pushes[ $index ];
+                $aux[ "id"              ] = $new_push_promotion;
+                $aux[ "isPublished"     ] = false;
+
+                unset( $aux[ "partnerEstablishmentId" ] );
 
                 $promotions_reference->update( [ $new_push_promotion => $aux ] );
 
@@ -539,9 +565,13 @@ class AwinController extends Controller
 
                 log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}", print: true );
 
-                $affiliate_id         = $aux[ "origin" ] . $aux[ "partnerPromotionId" ];
-                DB::table( "affiliates_promotions" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_promotion ] );
+                $promotion[ "push_id"   ] = $new_push_promotion;
+                $promotion[ "data"      ] = json_encode( $aux );
             }
+
+            DB::table( "affiliates_promotions" )->insert( $local_data );
+
+            log_message( channel: self::LOG_CHANNEL, message: "Promotions: Added " . count( $local_data ) . " new promotions in the local table", print: true );
         }
     }
 
