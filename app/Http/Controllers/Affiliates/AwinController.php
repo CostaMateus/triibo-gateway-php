@@ -513,11 +513,13 @@ class AwinController extends Controller
             // Add new promotion to Firebase and update local database with push IDs.
             foreach ( $local_data as $promotion )
             {
-                $aux                  = $awin_promotions[ $promotion[ "origin_id" ] ];
-                $aux[ "isPublished" ] = false;
-
                 // Add new promotion in Firebase.
                 $new_push_promotion   = $promotions_reference->push()->getKey();
+
+                $aux                  = $awin_promotions[ $promotion[ "origin_id" ] ];
+                $aux[ "id"          ] = $new_push_promotion;
+                $aux[ "isPublished" ] = false;
+
                 $promotions_reference->update( [ $new_push_promotion => $aux ] );
 
                 // Add create approval request in Firebase.
