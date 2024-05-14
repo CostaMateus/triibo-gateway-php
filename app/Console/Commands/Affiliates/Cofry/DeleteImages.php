@@ -41,7 +41,7 @@ class DeleteImages extends Command
         log_message( channel: "cofry", message: "Images: Deleting images...", print: true );
 
         File::deleteDirectory( public_path( "images/estabelecimentos/" ), true );
-        File::deleteDirectory( public_path( "images/promos/" ),           true );
+        File::deleteDirectory( public_path( "images/promos/"           ), true );
 
         log_message( channel: "cofry", message: "Images: Successfully deleted...", print: true );
     }

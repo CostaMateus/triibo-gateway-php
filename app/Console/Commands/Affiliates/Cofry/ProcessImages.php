@@ -40,8 +40,7 @@ class ProcessImages extends Command
     {
         log_message( channel: "cofry", message: "Images: Start processing...", print: true );
 
-        $cofry = new CofryController();
-        $cofry->images();
+        ( new CofryController() )->images();
 
         log_message( channel: "cofry", message: "Images: End processing...", print: true );
     }

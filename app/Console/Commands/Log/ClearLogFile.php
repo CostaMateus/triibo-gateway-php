@@ -37,16 +37,16 @@ class ClearLogFile extends Command
      */
     public function handle()
     {
-        exec('echo "" > ' . storage_path("logs/cofry.log"));
+        exec( 'echo "" > ' . storage_path( "logs/cofry.log"       ) );
 
-        exec('echo "" > ' . storage_path("logs/fastshop.log"));
+        exec( 'echo "" > ' . storage_path( "logs/fastshop.log"    ) );
 
-        exec('echo "" > ' . storage_path("logs/laravel.log"));
+        exec( 'echo "" > ' . storage_path( "logs/laravel.log"     ) );
 
-        exec('echo "" > ' . storage_path("logs/marketplace.log"));
+        exec( 'echo "" > ' . storage_path( "logs/marketplace.log" ) );
 
-        exec('echo "" > ' . storage_path("logs/triibo.log"));
+        exec( 'echo "" > ' . storage_path( "logs/triibo.log"      ) );
 
-        $this->info("Logs have been cleared");
+        $this->info( "Logs have been cleared" );
     }
 }

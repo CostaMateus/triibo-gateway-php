@@ -39,11 +39,10 @@ class UnsetUpdateDate extends Command
      */
     public function handle()
     {
-        Log::channel("triibo")->info("unset-updateDate", [ "Start processing of unset-updateDate" ]);
+        log_message( channel: "triibo", message: "Unset updateDate: Start processing...", print: true );
 
-        $triibo = new TriiboController();
-        $triibo->unsetUpdateDate();
+        ( new TriiboController() )->unsetUpdateDate();
 
-        Log::channel("triibo")->info("unset-updateDate", [ "End unset-updateDate processing" ]);
+        log_message( channel: "triibo", message: "Unset updateDate: End processing...", print: true );
     }
 }
