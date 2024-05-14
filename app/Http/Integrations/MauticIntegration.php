@@ -336,7 +336,8 @@ class MauticIntegration
         // If there are errors in the response, log them and exit the function.
         if ( isset( $response[ "errors" ] ) )
         {
-            Helper::log( "Persons", json_encode( $response, true ), $entity_id, ( $data[ "pd_org_id" ] ?? 0 ) );
+            $message_ids   = "| mautic_id: {$entity_id} | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: Create or Update failed {$message_ids}", context: $response );
             return;
         }
 
