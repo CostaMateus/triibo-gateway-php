@@ -40,40 +40,27 @@ class ProcessStoresPromos extends Command
      */
     public function handle()
     {
-        $opts   = [
+        $channel = "cofry";
+
+        $option  = $this->option( "option" );
+        $opts    = [
             "promotions",
             "establishments",
             "all",
         ];
 
-        $option = $this->option( "option" );
-
         if ( !in_array( $option, $opts ) )
         {
-            echo "Invalid option, terminating process!\n";
+            log_message( channel: $channel, message: "Invalid option, terminating process...", print: true );
             return;
         }
 
-        if ( $option != "all" )
-        {
-            $logTitle = ucfirst( $option );
-            $logStart = "{$logTitle} : Start processing of {$option}\n";
-            $logEnd   = "{$logTitle} : End {$option} processing\n";
-        }
-        else
-        {
-            $logTitle = "Stores|Promotions";
-            $logStart = "S|P : Start processing of stores|promotions\n";
-            $logEnd   = "S|P : End stores|promotions processing\n";
-        }
+        $title   = ( $option != "all" ) ? ucfirst( $option ) : "Stores|Promotions";
 
-        echo $logStart;
-        Log::channel( "cofry" )->info( $logTitle, [ $logStart ] );
+        log_message( channel: $channel, message: "{$title}: Start processing...", print: true );
 
-        $cofry = new CofryController();
-        $cofry->$option();
+        ( new CofryController() )->$option();
 
-        echo $logEnd;
-        Log::channel( "cofry" )->info( $logTitle, [ $logEnd ] );
+        log_message( channel: $channel, message: "{$title}: End processing...", print: true );
     }
 }
