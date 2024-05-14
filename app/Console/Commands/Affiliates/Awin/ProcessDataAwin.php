@@ -443,7 +443,5 @@ class ProcessDataAwin extends Command
     private function printMessage( string $message )
     {
         echo "{$message}\n";
-
-        Log::channel( "awin" )->info( $message );
     }
 }

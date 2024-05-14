@@ -109,24 +109,6 @@ class Helper
     }
 
     /**
-     * Registra log
-     *
-     * @param string  $class  Classe do objeto
-     * @param string  $msg    Mensegame principal
-     * @param integer $mautic ID do objeto no Mautic
-     * @param integer $pipe   ID do objeto no Pipedrive
-     * @return void
-     */
-    public static function log(string $class, string $msg, int $mautic, int $pipe)
-    {
-        Log::channel("marketplace")->info($class, [
-            "message"   => $msg,
-            "mautic_id" => $mautic??NULL,
-            "pd_id"     => $pipe??NULL
-        ]);
-    }
-
-    /**
      * Traduz o status/label do Deal
      *
      * @param [type]  $label Valor do campo
