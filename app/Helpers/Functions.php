@@ -5,10 +5,10 @@
 
 use Throwable;
 use App\Models\User;
-use App\Helpers\Helper;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Notifications\ScheduleFailure;
+use Kreait\Firebase\Database\Reference;
 
 if ( !function_exists( "log_message" ) )
 {
@@ -150,10 +150,11 @@ if ( !function_exists( "filter_data" ) )
      * @param   array   $data       The multidimensional array to be filtered.
      * @param   array   $blacklist  A list of values to be ignored.
      * @param   array   $fields     A list of required fields.
+     * @param   string  $type       The type of operation.
      * @param   string  $origin     The desired origin for the values.
      * @return  array               An array containing the values from $data where all fields in $fields are set and the origin matches $origin.
      */
-    function filter_data( array $data, array $blacklist, array $fields, string $origin ) : array
+    function filter_data( array $data, array $blacklist = [], array $fields = [], string $type = "isset" , string $origin = "" ) : array
     {
         // Initialize an empty array to store the filtered values.
         $result = [];
@@ -162,35 +163,57 @@ if ( !function_exists( "filter_data" ) )
         {
             $blacklisted = false;
 
-            // Check if the key is in the blacklist.
-            foreach ( $blacklist as $prefix )
+            if ( !empty( $blacklist ) )
             {
-                if ( str_starts_with( $key, $prefix ) )
+                // Check if the key is in the blacklist.
+                foreach ( $blacklist as $prefix )
                 {
-                    $blacklisted = true;
-                    break;;
+                    if ( str_starts_with( $key, $prefix ) )
+                    {
+                        $blacklisted = true;
+                        break;;
+                    }
                 }
             }
 
             // Skip the value if it is
             if ( $blacklisted ) continue;
 
-
-            // Check if the origin of the value is different from the desired origin and skip the value if it is.
-            if( isset( $value[ "origin" ] ) && $value[ "origin" ] !== $origin )
-                continue;
+            if ( !empty( $origin ) )
+            {
+                // Check if the origin of the value is different from the desired origin and skip the value if it is.
+                if( isset( $value[ "origin" ] ) && $value[ "origin" ] !== $origin )
+                    continue;
+            }
 
             // Initialize a variable to control if the value is valid.
             $valid = true;
 
-            // Check if all required fields are set in the value.
-            foreach ( $fields as $field )
+            if ( $type == "isset" )
             {
-                if ( !isset( $value[ $field ] ) )
+                // Check if all required fields are set in the value.
+                foreach ( $fields as $field )
                 {
-                    // Set $valid to false if any field is not set.
-                    $valid = false;
-                    break;
+                    if ( !isset( $value[ $field ] ) )
+                    {
+                        // Set $valid to false if any field is not set.
+                        $valid = false;
+                        break;
+                    }
+                }
+            }
+
+            if ( $type == "compare" )
+            {
+                // Check if all required fields are set in or equal to the value.
+                foreach ( $fields as $field => $f_value )
+                {
+                    if ( !isset( $value[ $field ] ) || $value[ $field ] != $f_value )
+                    {
+                        // Set $valid to false if any field is not set or different from the $f_value.
+                        $valid = false;
+                        break;
+                    }
                 }
             }
 
@@ -201,6 +224,73 @@ if ( !function_exists( "filter_data" ) )
 
         // Return the result array containing the filtered values.
         return $result;
+    }
+}
+
+if ( !function_exists( "invalidate_past_changes" ) )
+{
+    /**
+     * Invalidates past changes in a data set.
+     *
+     * @param   Reference   $reference  Reference to the data set to be processed.
+     * @param   array       $fields     Fields to be considered during processing.
+     * @return  array                   Differences found during processing.
+     */
+    function invalidate_past_changes( Reference $reference, array $fields )
+    {
+        $diffs   = [];
+        $changes = filter_data( data: $reference->getValue(), fields: $fields, type: "compare" );
+
+        foreach ( $changes as $change )
+        {
+            $diffs            = array_merge( $diffs, $change[ "changedFields" ] );
+
+            $change[ "type" ] = "outdated";
+
+            $reference->update( [ $change[ "id" ] => $change ] );
+        }
+
+        return $diffs;
+    }
+}
+
+if ( !function_exists( "invalidate_past_promotion_changes" ) )
+{
+    /**
+     * Invalidates past promotion changes.
+     *
+     * @param   Reference   $reference  Reference to the data set to be processed.
+     * @param   string      $push_id    The ID of the promotion for which changes should be invalidated.
+     * @return  array                   Differences found during processing.
+     */
+    function invalidate_past_promotion_changes( Reference $reference, string $push_id )
+    {
+        $fields  = [
+            "storeId" => $push_id,
+            "type"    => "validation",
+        ];
+
+        return invalidate_past_changes( reference: $reference, fields: $fields );
+    }
+}
+
+if ( !function_exists( "invalidate_past_establishment_changes" ) )
+{
+    /**
+     * Invalidates past establishment changes.
+     *
+     * @param   Reference   $reference  Reference to the data set to be processed.
+     * @param   string      $push_id    The ID of the establishment for which changes should be invalidated.
+     * @return  array                   Differences found during processing.
+     */
+    function invalidate_past_establishment_changes( Reference $reference, string $push_id )
+    {
+        $fields  = [
+            "establishmentId" => $push_id,
+            "type"            => "validation",
+        ];
+
+        return invalidate_past_changes( reference: $reference, fields: $fields );
     }
 }
 
