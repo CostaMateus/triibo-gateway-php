@@ -145,7 +145,7 @@ class FastshopController extends Controller
         catch ( Exception $e )
         {
             $error = true;
-            $ex    = Helper::treatExceptionMsgFS( $e->getMessage() );
+            $ex    = treat_exception_message_fs( $e->getMessage() );
 
             if ( $ex )
             {

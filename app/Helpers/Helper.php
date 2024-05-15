@@ -128,24 +128,6 @@ class Helper
         return " ";
     }
 
-    public static function validateImageUrl(string $url)
-    {
-        if (isset(explode(".jpg", $url)[1]))
-            return true;
-        else if (isset(explode(".jpeg", $url)[1]))
-            return true;
-        else if (isset(explode(".png", $url)[1]))
-            return true;
-        else
-            return false;
-    }
-
-    public static function treatExceptionMsgFS( string $message )
-    {
-        preg_match("/\[.*?\]/", $message, $matches);
-        return ( empty( $matches ) ) ? null : $matches[ 0 ];
-    }
-
     public static function convertDateSS( string $date )
     {
         // 18/11/2022 23:59:00
@@ -158,27 +140,9 @@ class Helper
         return $date;
     }
 
-    /**
-     * Converte data de 01/01/2021 para 2021-01-01
-     * Ou converte data de 2021-01-01 para 01/01/2021
-     *
-     * @param string $date
-     * @param boolean $r
-     *
-     * @return string $date
-     */
-    public static function convertDate( string $date, bool $reverse = false )
-    {
-        $e = ( !$reverse ) ? "/" : "-";
-        $i = ( !$reverse ) ? "-" : "/";
 
-        $date = explode( $e, $date );
 
-        $date = array_reverse( $date );
-        $date = implode( $i, $date );
 
-        return $date;
-    }
 
     public static function usort( string $key, array &$data )
     {

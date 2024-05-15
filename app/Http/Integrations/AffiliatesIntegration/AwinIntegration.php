@@ -88,7 +88,7 @@ class AwinIntegration
 
             if ( !$establishments[ "success" ] && empty( $establishments[ "data" ] ) ) return []; // falha
 
-            Helper::usort( "id", $establishments[ "data" ] );
+            u_sort( "id", $establishments[ "data" ] );
 
             // $auxStores = [];
 
@@ -642,7 +642,7 @@ class AwinIntegration
             if ( $promotion[ "type" ] == "voucher" )
                 $detailsDescrip .= "\n\nUtilize o código de desconto " . $promotion[ "voucher" ][ "code" ] . " no fechamento da compra.";
 
-            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $promotion[ "endDate" ], true );
+            $detailsDescrip   .= "\n\nVálido até " . convert_date( $promotion[ "endDate" ], true );
 
             $imageNamePromo    = "awin_common_promotion.webp";
             $imageNameVoucher  = "awin_common_coupon.webp";

@@ -245,7 +245,7 @@ class GetProductInfosFastShop extends Command
 
         foreach ( $data[ "Images" ] as $img )
         {
-            if ( !Helper::validateImageUrl( $img[ "imageUrl" ] ) ) continue;
+            if ( !validate_image_url( $img[ "imageUrl" ] ) ) continue;
 
             $images[] = [
                 "src"  => $img[ "imageUrl"  ],

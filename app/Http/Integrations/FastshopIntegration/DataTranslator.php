@@ -164,18 +164,24 @@ class DataTranslator
         }, $data[ "CategoryFullPath" ] ?? [] );
 
         // Filter and map Fast Shop images to WooCommerce image format.
-        $images     = array_map( function ( $img )
-        {
-            return [
-                "src"  => $img[ "imageUrl"  ],
-                "name" => $img[ "imageName" ],
-                "alt"  => $img[ "imageName" ]
-            ];
+        $images     = array_map(
+            function ( $img )
+            {
+                return [
+                    "src"  => $img[ "imageUrl"  ],
+                    "name" => $img[ "imageName" ],
+                    "alt"  => $img[ "imageName" ]
+                ];
 
-        }, array_filter( $data[ "Images" ], function ( $img )
-        {
-            return Helper::validateImageUrl( $img[ "imageUrl" ] );
-        } ) );
+            },
+            array_filter(
+                $data[ "Images" ],
+                function ( $img )
+                {
+                    return validate_image_url( $img[ "imageUrl" ] );
+                }
+            )
+        );
 
         // Determine the SKU based on Fast Shop product and seller SKU.
         $sku        = $data[ "ProductId" ] == $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];

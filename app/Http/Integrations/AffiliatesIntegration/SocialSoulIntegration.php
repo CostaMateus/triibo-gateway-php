@@ -63,7 +63,7 @@ class SocialSoulIntegration
 
             if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
 
-            Helper::usort( "id", $stores[ "data" ] );
+            u_sort( "id", $stores[ "data" ] );
 
             return $stores[ "data" ];
         }
@@ -82,7 +82,7 @@ class SocialSoulIntegration
 
         if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
 
-        Helper::usort( "id", $coupons[ "data" ] );
+        u_sort( "id", $coupons[ "data" ] );
 
         $stores     = $this->translateStores( $this->stores );
         $promotions = $this->translateCoupons( $coupons[ "data" ], $stores );
@@ -109,7 +109,7 @@ class SocialSoulIntegration
 
             if ( !$offers[ "success" ] && empty( $offers[ "data" ] ) ) continue;
 
-            Helper::usort( "id", $offers[ "data" ] );
+            u_sort( "id", $offers[ "data" ] );
 
             $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
             $promotions = array_merge( $promotions, $offers );
@@ -687,7 +687,7 @@ class SocialSoulIntegration
 
         if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
 
-        Helper::usort( "id", $coupons[ "data" ] );
+        u_sort( "id", $coupons[ "data" ] );
 
         foreach ( $coupons[ "data" ] as $coupon )
         {

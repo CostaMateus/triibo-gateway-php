@@ -293,7 +293,7 @@ if ( !function_exists( "hyphenize" ) )
 if ( !function_exists( "insert_decimal" ) )
 {
     /**
-     * Inserts a decimal point
+     * Inserts a decimal point.
      * Ex: 100 = 1.00, 150 = 1.50
      *
      * @param   string  $number   The number to be formatted.
@@ -359,7 +359,7 @@ if ( !function_exists( "convert_delivery_date" ) )
      * @param   string  $time   The delivery date in FS format.
      * @return  string          The delivery date in WC format.
      */
-    function convert_delivery_date( string $time )
+    function convert_delivery_date( string $time ) : string
     {
         $time = Str::of( $time )->explode( "T" );
 
@@ -369,5 +369,87 @@ if ( !function_exists( "convert_delivery_date" ) )
         $date = Arr::join( $date->reverse()->toArray(), "/" );
 
         return "{$date} às {$hour}";
+    }
+}
+
+if ( !function_exists( "validate_image_url" ) )
+{
+    /**
+     * Validates if the provided URL corresponds to an image file.
+     *
+     * @param   string  $url    The URL to be validated.
+     * @return  bool            Returns true if the URL corresponds to an image file, false otherwise.
+     */
+    function validate_image_url( string $url ) : bool
+    {
+        $extensions     = [ ".jpg", ".jpeg", ".png" ];
+        $file_extension = strtolower( pathinfo( $url, PATHINFO_EXTENSION ) );
+
+        return in_array( $file_extension, $extensions );
+    }
+}
+
+if ( !function_exists( "treat_exception_message_fs" ) )
+{
+    /**
+     * Extracts the text enclosed within square brackets from a given string.
+     *
+     * This function uses a regular expression to search for the first occurrence of text
+     * enclosed within square brackets `[ ]` in the provided `$message` string. If a match
+     * is found, it returns the matched text (including the square brackets). If no match
+     * is found, it returns `null`.
+     *
+     * @param   string  $message  The input string to search for text within square brackets.
+     * @return  string|null       The matched text within square brackets, or `null` if no match is found.
+     */
+    function treat_exception_message_fs( string $message ) : ?string
+    {
+        if ( preg_match('/\[.*?\]/', $message, $matches ) )
+            return $matches[ 0 ];
+
+        return null;
+    }
+}
+
+if ( !function_exists( "convert_date" ) )
+{
+
+    /**
+     * Converts a date between the 'dd/mm/yyyy' and 'yyyy-mm-dd' formats.
+     *
+     * @param   string  $date   The date to be converted.
+     * @return  string          The converted date in the desired format.
+     */
+    function convert_date( string $date ) : string
+    {
+        $patterns = [
+            '/^(\d{4})-(\d{2})-(\d{2})$/'   => '$3/$2/$1',
+            '/^(\d{2})\/(\d{2})\/(\d{4})$/' => '$3-$2-$1',
+        ];
+
+        foreach ( $patterns as $pattern => $replacement )
+            if ( preg_match( $pattern, $date, $matches ) )
+                return preg_replace( $pattern, $replacement, $date );
+
+        return $date;
+    }
+}
+
+if ( !function_exists( "u_sort" ) )
+{
+    /**
+     * Sorts an associative array by a specific key.
+     *
+     * @param string $key The key by which the array will be sorted.
+     * @param array $data The associative array to be sorted.
+     *
+     * @return void
+     */
+    function u_sort( string $key, array &$data )
+    {
+        usort( $data, function( $a, $b ) use ( $key )
+        {
+            return $a[ $key ] <=> $b[ $key ];
+        } );
     }
 }
