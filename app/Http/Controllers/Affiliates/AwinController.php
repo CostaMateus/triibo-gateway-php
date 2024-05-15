@@ -281,16 +281,13 @@ class AwinController extends Controller
         // Process Awin establishments for addition or update.
         foreach ( $awin_establishments as $id => $awin_establishment )
         {
-            $data_establishment = $local_establishments[ $id ];
-
-            if ( !isset( $local_establishments[ $id ] ) || !$data_establishment[ "push_id" ] )
+            if ( !isset( $local_establishments[ $id ] ) )
             {
                 // Add new establishment to local data array.
-                $affiliate_id = $awin_establishment[ "origin" ] . $id;
                 $local_data[] = [
                     "origin"       => $awin_establishment[ "origin" ],
                     "origin_id"    => $id,
-                    "affiliate_id" => $affiliate_id,
+                    "affiliate_id" => $awin_establishment[ "origin" ] . $id,
                     "push_id"      => null,
                     "name"         => $awin_establishment[ "nome"   ],
                     "data"         => json_encode( $awin_establishment ),
@@ -301,10 +298,22 @@ class AwinController extends Controller
                 continue;
             }
 
-            $local_establishment = json_decode( $data_establishment[ "data" ], true );
+            if ( !$local_establishments[ $id ][ "push_id" ] )
+            {
+                $local_data[] = [
+                    "id"        => $local_establishments[ $id ][ "id" ],
+                    "name"      => $awin_establishment[ "nome" ],
+                    "origin_id" => $id,
+                ];
+
+                continue;
+            }
+
+            $local_establishment = $local_establishments[ $id ];
+            $data_establishment  = json_decode( $local_establishment[ "data" ], true );
 
             // Compare Awin and local establishments and get differences.
-            $diff                = array_diff_assoc_recursive( $awin_establishment, $local_establishment );
+            $diff                = array_diff_assoc_recursive( $awin_establishment, $data_establishment );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_ESTAB_FIELDS as $field )
@@ -314,11 +323,11 @@ class AwinController extends Controller
             if ( empty( $diff ) ) continue;
 
             // Add edit approval request in Firebase.
-            $db->getReference( "/Estabelecimento-Aprovacoes/{$data_establishment[ "push_id" ]}" )
+            $db->getReference( "/Estabelecimento-Aprovacoes/{$local_establishment[ "push_id" ]}" )
                ->set( [
                 "requesterId"       => self::REQUESTER_ID,
-                "id"                => $data_establishment[ "push_id" ],
-                "establishmentName" => $data_establishment[ "name"    ],
+                "id"                => $local_establishment[ "push_id" ],
+                "establishmentName" => $local_establishment[ "name"    ],
                 "lastModified"      => self::$date,
                 "requestDate"       => self::$date,
                 "status"            => "aberto",
@@ -333,8 +342,8 @@ class AwinController extends Controller
                 "createDate"        => self::$date,
                 // "updateDate"        => "",
                 // "reviewDate"        => "",
-                "establishmentId"   => $data_establishment[ "push_id" ],
-                "establishmentName" => $data_establishment[ "name"    ],
+                "establishmentId"   => $local_establishment[ "push_id" ],
+                "establishmentName" => $local_establishment[ "name"    ],
                 "requesterUid"      => self::REQUESTER_ID,
                 // "validatorUid"      => "",
                 // "comment"           => "",
@@ -344,28 +353,25 @@ class AwinController extends Controller
 
             // Update the local establishment with the new data.
             DB::table( "affiliates_establishments" )
-                ->where( "affiliate_id", $data_establishment[ "affiliate_id" ] )
+                ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
-            $context = "Edited ID = {$data_establishment[ "push_id" ]} | Need approval ID = {$data_establishment[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
+            $context = "Edited ID = {$local_establishment[ "push_id" ]} | Need approval ID = {$local_establishment[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
             log_message( channel: self::LOG_CHANNEL, message: "Establishments: {$context}", print: true );
         }
 
         // Insert new establishments into the local database if any.
         if ( !empty( $local_data ) )
         {
-            DB::table( "affiliates_establishments" )->insert( $local_data );
-
-            log_message( channel: self::LOG_CHANNEL, message: "Establishments: Added " . count( $local_data ) . " new establishments in the local table", print: true );
-
             // Add new establishments to Firebase and update local database with push IDs.
-            foreach ( $local_data as $establishment )
+            foreach ( $local_data as $index => &$establishment )
             {
+                // Add new establishment in Firebase.
+                $new_push_establishment = $establishment_reference->push()->getKey();
+
                 $aux                    = $awin_establishments[ $establishment[ "origin_id" ] ];
                 $aux[ "isPublished" ]   = false;
 
-                // Add new establishment in Firebase.
-                $new_push_establishment = $establishment_reference->push()->getKey();
                 $establishment_reference->update( [ $new_push_establishment => $aux ] );
 
                 // Add create approval request in Firebase.
@@ -383,9 +389,20 @@ class AwinController extends Controller
 
                 log_message( channel: self::LOG_CHANNEL, message: "Establishments: Created ID = {$new_push_establishment} | Need approval ID = {$new_push_establishment}", print: true );
 
-                $affiliate_id           = $aux[ "origin" ] . $aux[ "partnerEstablishmentId" ];
-                DB::table( "affiliates_establishments" )->where( "affiliate_id", $affiliate_id )->update( [ "push_id" => $new_push_establishment ] );
+                if ( isset( $establishment[ "id" ] ) )
+                {
+                    DB::table( "affiliates_establishments" )->where( "id", $establishment[ "id" ] )->update( [ "push_id" => $new_push_establishment ] );
+                    unset( $local_data[ $index ] );
+                    continue;
+                }
+
+                $establishment[ "push_id" ] = $new_push_establishment;
+                $establishment[ "data"    ] = json_encode( $aux );
             }
+
+            DB::table( "affiliates_establishments" )->insert( $local_data );
+
+            log_message( channel: self::LOG_CHANNEL, message: "Establishments: Added " . count( $local_data ) . " new establishments in the local table", print: true );
         }
     }
 
@@ -441,18 +458,27 @@ class AwinController extends Controller
         // Process Awin promotions for addition or update.
         foreach ( $awin_promotions as $id => $awin_promotion )
         {
-            if ( !isset( $local_promotions[ $id ] ) || !$local_promotions[ $id ][ "push_id" ] )
+            if ( !isset( $local_promotions[ $id ] ) )
             {
                 // Add new promotion to local data array.
-                $affiliate_id = $awin_promotion[ "origin" ] . $id;
                 $local_data[] = [
                     "origin"       => $awin_promotion[ "origin" ],
                     "origin_id"    => $id,
-                    "affiliate_id" => $affiliate_id,
+                    "affiliate_id" => $awin_promotion[ "origin" ] . $id,
                     "push_id"      => null,
                     "data"         => json_encode( $awin_promotion ),
                     "created_at"   => now(),
                     "updated_at"   => now(),
+                ];
+
+                continue;
+            }
+
+            if ( !$local_promotions[ $id ][ "push_id" ] )
+            {
+                $local_data[] = [
+                    "id"   => $local_promotions[ $id ][ "id" ],
+                    "data" => json_encode( $awin_promotion ),
                 ];
 
                 continue;
@@ -529,7 +555,7 @@ class AwinController extends Controller
         if ( !empty( $local_data ) )
         {
             // Add new promotion to Firebase and update local database with push IDs.
-            foreach ( $local_data as &$promotion )
+            foreach ( $local_data as $index => &$promotion )
             {
                 // Add new promotion in Firebase.
                 $new_push_promotion       = $promotions_reference->push()->getKey();
@@ -565,8 +591,15 @@ class AwinController extends Controller
 
                 log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}", print: true );
 
-                $promotion[ "push_id"   ] = $new_push_promotion;
-                $promotion[ "data"      ] = json_encode( $aux );
+                if ( isset( $promotion[ "id" ] ) )
+                {
+                    DB::table( "affiliates_promotions" )->where( "id", $promotion[ "id" ] )->update( [ "push_id" => $new_push_promotion ] );
+                    unset( $local_data[ $index ] );
+                    continue;
+                }
+
+                $promotion[ "push_id" ] = $new_push_promotion;
+                $promotion[ "data"    ] = json_encode( $aux );
             }
 
             DB::table( "affiliates_promotions" )->insert( $local_data );
