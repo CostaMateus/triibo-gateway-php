@@ -441,9 +441,7 @@ class AwinController extends Controller
         // Process Awin promotions for addition or update.
         foreach ( $awin_promotions as $id => $awin_promotion )
         {
-            $local_promotion = $local_promotions[ $id ];
-
-            if ( !isset( $local_promotions[ $id ] ) || !$local_promotion[ "push_id" ] )
+            if ( !isset( $local_promotions[ $id ] ) || !$local_promotions[ $id ][ "push_id" ] )
             {
                 // Add new promotion to local data array.
                 $affiliate_id = $awin_promotion[ "origin" ] . $id;
@@ -460,6 +458,7 @@ class AwinController extends Controller
                 continue;
             }
 
+            $local_promotion  = $local_promotions[ $id ];
             $data_promotion   = json_decode( $local_promotion[ "data" ], true );
             $establishment_id = $data_promotion[ "establishmentId" ];
 
