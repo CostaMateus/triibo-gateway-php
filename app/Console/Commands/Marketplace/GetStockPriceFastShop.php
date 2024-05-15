@@ -58,7 +58,9 @@ class GetStockPriceFastShop extends Command
         $start = now();
 
         $skus  = $this->updateFastShopStockPrice();
-        $this->updateMarketplaceStockPrice( $skus );
+
+        if ( $skus );
+            $this->updateMarketplaceStockPrice( $skus );
 
         $end   = now();
         $diff  = $start->diffInMinutes( $end );
@@ -76,7 +78,8 @@ class GetStockPriceFastShop extends Command
         $skus = DB::table( "marketplace_product_skus" )->get()->toArray();
         $skus = json_decode( json_encode( $skus ), true );
 
-        if ( empty( $skus ) ) return null;
+        if ( empty( $skus ) )
+            return null;
 
         log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: SKUs loaded from local table...", print: true );
 
@@ -115,11 +118,15 @@ class GetStockPriceFastShop extends Command
         if ( empty( $aux ) )
         {
             log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: No data to process...", print: true );
-            return;
+            return null;
         }
 
         $fsData   = Helper::prepareDataFs( $aux, "product_sku" );
         $response = Helper::getStockPriceFS( $fsData );
+
+        if ( empty( $response ) )
+            return null;
+
         $data     = $this->translateFsData( $response );
 
         log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Updating the local table...", print: true );
