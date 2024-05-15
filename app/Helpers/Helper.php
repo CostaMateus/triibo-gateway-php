@@ -200,6 +200,8 @@ class Helper
             $message = "Stock|Price: SKUs query failed";
 
             log_exception( channel: "fastshop", message: $message, method: "getStockPriceFS", type: "Throwable", e: $e );
+
+            return [];
         }
     }
 
