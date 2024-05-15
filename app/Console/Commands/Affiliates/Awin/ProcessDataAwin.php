@@ -192,8 +192,11 @@ class ProcessDataAwin extends Command
         // If the option is "populate", populate the database with establishments and promotions
         if ( $option == "populate" )
         {
-            $this->populate( type: "establishments" );
-            $this->populate( type: "promotions"     );
+            // Create a new AwinIntegration instance
+            $integration = new AwinIntegration( loadEstablishments: true );
+
+            $this->populate( type: "establishments", integration: $integration );
+            $this->populate( type: "promotions",     integration: $integration );
             return 1;
         }
 
@@ -241,10 +244,11 @@ class ProcessDataAwin extends Command
     /**
      * One time execution, when migrating the DB
      *
-     * @param   string  $type   Establishments or Promotions
+     * @param   string              $type           Establishments or Promotions
+     * @param   AwinIntegration     $integration
      * @return  void
      */
-    private function populate( string $type )
+    private function populate( string $type, AwinIntegration $integration )
     {
         // Check if the type is "establishments"
         $__is_establishments = ( $type == "establishments" );
@@ -257,9 +261,6 @@ class ProcessDataAwin extends Command
         }
 
         $this->printMessage( message: "Populate: Start processing of {$type}" );
-
-        // Create a new AwinIntegration instance
-        $integration   = new AwinIntegration( loadEstablishments: true );
 
         $now           = now();
 
@@ -283,12 +284,10 @@ class ProcessDataAwin extends Command
         // Prepare the data for insertion into the database
         foreach ( $awin_data as $origin_id => $data )
         {
-            $affiliate_id = $data[ "origin" ] . $origin_id;
-
             $new_data     = [
                 "origin"       => $data[ "origin" ],
                 "origin_id"    => $origin_id,
-                "affiliate_id" => $affiliate_id,
+                "affiliate_id" => $data[ "origin" ] . $origin_id,
                 "push_id"      => null,
                 "data"         => json_encode( $empty_data ),
                 "created_at"   => $now,
@@ -304,15 +303,20 @@ class ProcessDataAwin extends Command
         // Update the push_id for existing data in Firebase
         foreach ( $firebase_data as $push => $data )
         {
-            $partner = ( $__is_establishments ) ? "partnerEstablishmentId" : "partnerPromotionId";
+            $partner   = ( $__is_establishments ) ? "partnerEstablishmentId" : "partnerPromotionId";
 
             $search_id = $data[ "origin" ] . $data[ $partner ];
             $index     = array_search_by_key( needle: $search_id, column: "affiliate_id", array: $local_data );
 
             if ( $index !== false )
+            {
                 $local_data[ $index ][ "push_id" ] = $push;
+                $this->printMessage( message: "Populate: {$search_id} : {$index} : {$push}" );
+            }
             else
+            {
                 $this->printMessage( message: "Populate: {$search_id} : false : {$push}" );
+            }
         }
 
         // Truncate and insert the data into the database
