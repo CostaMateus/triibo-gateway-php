@@ -4,16 +4,22 @@ namespace App\Http\Integrations\AffiliatesIntegration;
 
 use DateTime;
 use Exception;
+use Throwable;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 
 class AwinIntegration
 {
-    const RG = "BR";
-    const ID = "-awin";
-    const TZ = "America/Sao_Paulo";
+    /**
+     * Define a class constant for the log channel.
+     *
+     * @var     string
+     */
+    private const LOG_CHANNEL = "awin";
+
+    private const RG          = "BR";
+    private const TZ          = "America/Sao_Paulo";
 
     // protected $env;
     protected $tkn;
@@ -160,9 +166,11 @@ class AwinIntegration
         {
             $response = Http::withToken( $this->tkn )->get( $url );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+            $message = "Establishments: Fail searchEstablishments(). Retry.";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "searchEstablishments", type: "Throwable", e: $e );
 
             return $this->searchEstablishments();
         }
@@ -198,9 +206,11 @@ class AwinIntegration
         {
             $response = Http::withToken( $this->tkn )->get( $url );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishmentsDetails(). Retry. " . $e->getMessage() ] );
+            $message = "Establishments: Fail searchEstablishmentsDetails(). Retry.";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "searchEstablishmentsDetails", type: "Throwable", e: $e );
 
             return $this->searchEstablishmentsDetails( $id, $allInfo );
         }
@@ -311,9 +321,11 @@ class AwinIntegration
                 "data"    => $data,
             ];
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::channel( "awin" )->info( "Promotions", [ "Fail searchPromotions(). Retry. " . $e->getMessage() ] );
+            $message = "Promotions: Fail searchPromotions(). Retry.";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "searchPromotions", type: "Throwable", e: $e );
 
             return $this->searchPromotions( $id );
         }
@@ -342,7 +354,9 @@ class AwinIntegration
         }
         catch ( Exception $e )
         {
-            Log::channel( "awin" )->info( "Reports", [ "Fail searchReports(). Retry. " . $e->getMessage() ] );
+            $message = "Reports: Fail searchReports(). Retry.";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "searchReports", type: "Throwable", e: $e );
 
             return $this->searchReports( $isUpdate );
         }
@@ -704,9 +718,11 @@ class AwinIntegration
         {
             $response = Http::get( $url );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::channel( "awin" )->info( "Establishments", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+            $message = "Establishments: Fail saveImage(). Retry.";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "saveImage", type: "Throwable", e: $e );
 
             return self::saveImage( $path, $imageName, $url );
         }
@@ -746,9 +762,11 @@ class AwinIntegration
                             ->withBody( json_encode( $body ), "application/json" )
                             ->post( $this->url_linkbuilder );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::channel( "awin" )->info( "Promotions", [ "Fail searchEstablishments(). Retry. " . $e->getMessage() ] );
+            $message = "Promotions: Fail urlTracking(). Retry.";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "urlTracking", type: "Throwable", e: $e );
 
             return $this->urlTracking( $establishmentId, $url );
         }

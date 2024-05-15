@@ -207,11 +207,11 @@ class CofryIntegration
         }
 
         // If the response is not successful or contains an error code, log the error details.
-        Log::channel( "cofry" )->info( "CofryAPI", [
-            "method"  => $type,
-            "code"    => $response[ "errorCode"    ] ?? "Unknow",
-            "message" => $response[ "errorMessage" ] ?? "No error message provided"
-        ] );
+        $code    = $response[ "errorCode"    ] ?? "Unknow";
+        $error   = $response[ "errorMessage" ] ?? "No error message provided";
+        $message = "{$type} | Code: {$code} | Message: {$error}";
+
+        log_message( channel: "marketplace", level: "error", message: "API: {$message}", print: true );
 
         // Return null if the request was not successful or if an error code was present.
         return null;
@@ -714,11 +714,10 @@ class CofryIntegration
             catch ( \Throwable $e )
             {
                 // Log the exception details to the 'cofry' channel.
-                Log::channel( "cofry" )->info( "Get Establishments Image", [
-                    "method"  => "saveImage",
-                    "code"    => $e->getCode()    ?? "Unknown",
-                    "message" => $e->getMessage() ?? "No error message provided",
-                ] );
+
+                $message = "Images: Failure to get establishments images";
+
+                log_exception( channel: "cofry", message: $message, method: "saveImage", type: "Throwable", e: $e );
             }
         }
     }

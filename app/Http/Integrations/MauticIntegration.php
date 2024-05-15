@@ -363,11 +363,9 @@ class MauticIntegration
     private static function updateMauticId( string $entity_type, int $mautic_id, int $pipedrive_id, bool $has_id )
     {
         // Log the creation or update action in the 'marketplace' channel.
-        Log::channel( "marketplace" )->info( ucfirst( $entity_type ), [
-            "data"      => "created/updated",
-            "mautic_id" => $mautic_id,
-            "pd_org_id" => $pipedrive_id
-        ] );
+        $message = ucfirst( $entity_type ) . ": created/updated | mautic_id: {$mautic_id} | pipedrive_id: {$pipedrive_id}";
+
+        log_message( channel: "marketplace", message: $message, print: true );
 
         // If the entity already has an ID, update the Mautic ID in Pipedrive.
         if ( $has_id )

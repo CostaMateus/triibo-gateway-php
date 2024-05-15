@@ -7,22 +7,30 @@ use App\Models\User;
 use App\Helpers\Helper;
 use Illuminate\Http\Request;
 use Devio\Pipedrive\Pipedrive;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\JsonResponse;
 use App\Notifications\WebhookMarketplace;
 use App\Http\Integrations\MauticIntegration;
 
 class PipedriveWebhookController extends Controller
 {
+    /**
+     * Define a class constant for the log channel.
+     *
+     * @var     string
+     */
+    private const LOG_CHANNEL           = "marketplace";
+
+    private const MSG_CHANGE_BY_API     = "Changed by api ignored";
+    private const MSG_UNSUPPORTED_EVENT = "Unsupported event";
 
     /**
      * Deal to Contact->Funil
      */
-    const DEAL_ADDED_EVENT     = "added.deal";
-    const DEAL_UPDATED_EVENT   = "updated.deal";
-    const DEAL_DELETED_EVENT   = "deleted.deal";
-    const DEAL_CODE            = 1;
-    const DEAL_MONITORING      = [
+    private const DEAL_ADDED_EVENT     = "added.deal";
+    private const DEAL_UPDATED_EVENT   = "updated.deal";
+    private const DEAL_DELETED_EVENT   = "deleted.deal";
+    private const DEAL_CODE            = 1;
+    private const DEAL_MONITORING      = [
         "stage_id", // Etapa    / id interno: 12462
         "label",    // Etiqueta / id interno: 12463
         "status",   // Status   / id interno: 12464
@@ -33,11 +41,11 @@ class PipedriveWebhookController extends Controller
     /**
      * Organization to Company
      */
-    const ORG_ADDED_EVENT      = "added.organization";
-    const ORG_UPDATED_EVENT    = "updated.organization";
-    const ORG_DELETED_EVENT    = "deleted.organization";
-    const ORG_CODE             = 2;
-    const ORG_MONITORING       = [
+    private const ORG_ADDED_EVENT      = "added.organization";
+    private const ORG_UPDATED_EVENT    = "updated.organization";
+    private const ORG_DELETED_EVENT    = "deleted.organization";
+    private const ORG_CODE             = 2;
+    private const ORG_MONITORING       = [
         // "name",
         // "address_formatted_address",
         "a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd", // Telefone      / id interno: 4022
@@ -50,20 +58,20 @@ class PipedriveWebhookController extends Controller
     /**
      * Stage to Funil/pipeline
      */
-    const STAGE_ADDED_EVENT    = "added.stage";
-    const STAGE_UPDATED_EVENT  = "updated.stage";
-    const STAGE_DELETED_EVENT  = "deleted.stage";
-    const STAGE_CODE           = 4;
-    const STAGE_MONITORING     = "name";
+    private const STAGE_ADDED_EVENT    = "added.stage";
+    private const STAGE_UPDATED_EVENT  = "updated.stage";
+    private const STAGE_DELETED_EVENT  = "deleted.stage";
+    private const STAGE_CODE           = 4;
+    private const STAGE_MONITORING     = "name";
 
     /**
      * Person to Contact
      */
-    // const PERSON_ADDED_EVENT   = "added.person";
-    // const PERSON_UPDATED_EVENT = "updated.person";
-    // const PERSON_DELETED_EVENT = "deleted.person";
-    // const PERSON_CODE          = 3;
-    // const PERSON_MONITORING    = [
+    // private const PERSON_ADDED_EVENT   = "added.person";
+    // private const PERSON_UPDATED_EVENT = "updated.person";
+    // private const PERSON_DELETED_EVENT = "deleted.person";
+    // private const PERSON_CODE          = 3;
+    // private const PERSON_MONITORING    = [
     //     // "first_name", "last_name", "email", "phone", "org_name",
     //     "name",                                     // Nome      / id interno: 9039
     //     "bd7287f0a9a02de60a8aff83b5905c489b7cf007", // Mautic Id / id interno: 9067
@@ -72,247 +80,242 @@ class PipedriveWebhookController extends Controller
     /**
      * Pipedrive - deal
      *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param   Request     $request
+     * @return  JsonResponse
      */
-    public function deal(Request $request)
+    public function deal( Request $request )
     {
-        // Storage::put("deal-" . date("Ymd-his") . ".json", json_encode($request->all(), JSON_UNESCAPED_SLASHES));
+        // Storage::put( "deal-" . date( "Ymd-his" ) . ".json", json_encode( $request->all(), JSON_UNESCAPED_SLASHES ) );
 
         $params = $request->all();
 
-        if ($params["meta"]["change_source"] == "api")
+        if ( $params[ "meta" ][ "change_source" ] == "api" )
         {
-            Log::channel("marketplace")->info("Deals", [ "0" => "Changed by api ignored" ]);
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
 
-            return response()->json([
+            return response()->json( [
                 "status"  => "Ok",
-                "message" => "Deal - changed by api ignored",
+                "message" => "Deal - " . self::MSG_CHANGE_BY_API,
                 "code"    => -1,
-            ], 200);
+            ], 200 );
         }
 
         try
         {
-            switch ($params["event"])
+            switch ( $params[ "event" ] )
             {
                 case self::DEAL_ADDED_EVENT:
                 case self::DEAL_UPDATED_EVENT:
                 case self::DEAL_DELETED_EVENT:
-                    $index = ($params["event"] == self::DEAL_DELETED_EVENT) ? "previous" : "current";
+                    $index = ( $params[ "event" ] == self::DEAL_DELETED_EVENT ) ? "previous" : "current";
 
-                    if (!$params[$index]["org_id"])
+                    if ( !$params[ $index ][ "org_id" ] )
                     {
-                        Log::channel("marketplace")->info("Deals", [ "404" => "Not found: org_id" ]);
+                        log_message( channel: self::LOG_CHANNEL, message: "Deals: code 404 | Not found: org_id", print: true );
                         break;
                     }
 
-                    if (isset($params["previous"]) && $params["event"] != self::DEAL_DELETED_EVENT)
+                    if ( isset( $params[ "previous" ] ) && $params[ "event" ] != self::DEAL_DELETED_EVENT )
                     {
                         $result  = FALSE;
-                        $changes = Helper::arrayDiffAssocRecursive($params["current"],$params["previous"]);
-                        foreach (self::DEAL_MONITORING as $m)
+                        $changes = Helper::arrayDiffAssocRecursive( $params[ "current" ], $params[ "previous" ] );
+
+                        foreach ( self::DEAL_MONITORING as $m )
                         {
-                            if (array_key_exists($m, $changes))
+                            if ( array_key_exists( $m, $changes ) )
                             {
                                 $result = TRUE;
                                 break;
                             }
                         }
 
-                        if (!$result) break;
+                        if ( !$result ) break;
                     }
 
-                    $api = new Pipedrive(config("pipedrive.token"));
-                    $org = $api->organizations->find($params[$index]["org_id"])->getData();
+                    $api = new Pipedrive( config( "pipedrive.token" ) );
+                    $org = $api->organizations->find( $params[ $index ][ "org_id" ] )->getData();
 
-                    // $params[$index]["email"]     = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
-                    // $params[$index]["mautic_id"] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
+                    // $params[ $index ][ "email"     ] = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
+                    // $params[ $index ][ "mautic_id" ] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
 
-                    $data["mautic_id"] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
-                    $data["email"]     = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
-                    $data["org_id"]    = $params[$index]["org_id"];
-                    $data["org_name"]  = $params[$index]["org_name"];
-                    $data["active"]    = $params[$index]["active"];
-                    $data["deleted"]   = $params[$index]["deleted"];
+                    $data[ "mautic_id" ] = $org->{"918dace587a4707755926d7c02c3bb46ed53d539"};
+                    $data[ "email"     ] = $org->{"a007cb7cef80c909678503cbcfe49def03cad573"};
+                    $data[ "org_id"    ] = $params[ $index ][ "org_id"   ];
+                    $data[ "org_name"  ] = $params[ $index ][ "org_name" ];
+                    $data[ "active"    ] = $params[ $index ][ "active"   ];
+                    $data[ "deleted"   ] = $params[ $index ][ "deleted"  ];
 
-                    if ($index == "current")
+                    if ( $index == "current" )
                     {
-                        $data["new_stage_id"] = $params[$index]["stage_id"];
-                        $data["new_status"]   = $params[$index]["status"];
-                        $data["new_label"]    = $params[$index]["label"];
+                        $data[ "new_stage_id" ] = $params[ $index ][ "stage_id" ];
+                        $data[ "new_status"   ] = $params[ $index ][ "status"   ];
+                        $data[ "new_label"    ] = $params[ $index ][ "label"    ];
 
-                        if (isset($params["previous"]))
+                        if ( isset( $params[ "previous" ] ) )
                         {
-                            $data["old_stage_id"] = $params["previous"]["stage_id"];
-                            $data["old_status"]   = $params["previous"]["status"];
-                            $data["old_label"]    = $params["previous"]["label"];
+                            $data[ "old_stage_id" ] = $params[ "previous" ][ "stage_id" ];
+                            $data[ "old_status"   ] = $params[ "previous" ][ "status"   ];
+                            $data[ "old_label"    ] = $params[ "previous" ][ "label"    ];
                         }
                         else
                         {
-                            $data["old_stage_id"] = 0;
-                            $data["old_status"]   = 0;
-                            $data["old_label"]    = 0;
+                            $data[ "old_stage_id" ] = 0;
+                            $data[ "old_status"   ] = 0;
+                            $data[ "old_label"    ] = 0;
                         }
                     }
                     else
                     {
-                        $data["new_stage_id"] = 0;
-                        $data["new_status"]   = 0;
-                        $data["new_label"]    = 0;
+                        $data[ "new_stage_id" ] = 0;
+                        $data[ "new_status"   ] = 0;
+                        $data[ "new_label"    ] = 0;
 
-                        $data["old_stage_id"] = $params[$index]["stage_id"];
-                        $data["old_status"]   = $params[$index]["status"];
-                        $data["old_label"]    = $params[$index]["label"];
+                        $data[ "old_stage_id" ] = $params[ $index ][ "stage_id" ];
+                        $data[ "old_status"   ] = $params[ $index ][ "status"   ];
+                        $data[ "old_label"    ] = $params[ $index ][ "label"    ];
                     }
 
-                    MauticIntegration::dealUpdate("deals", $data);
+                    MauticIntegration::dealUpdate( "deals", $data );
                 break;
 
                 default:
-                    Log::channel("marketplace")->info("Deals", [ "400" => "Unsupported event" ]);
+                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
 
-                    return response()->json([
+                    return response()->json( [
                         "status"  => "Error",
-                        "message" => "Unsupported event",
+                        "message" => "Deals - " . self::MSG_UNSUPPORTED_EVENT,
                         "code"    => 0,
-                    ], 400);
+                    ], 400 );
                 break;
             }
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::channel("marketplace")->info("Deals", [ "500" => $e ]);
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | " . $e->getMessage(), print: true );
 
-            self::sendMailNotification($params, $e);
+            self::sendMailNotification( $params, $e );
 
-            return response()->json([
+            return response()->json( [
                 "status"  => "Error",
-                "message" => $e,
+                "message" => $e->getMessage(),
                 "code"    => self::DEAL_CODE,
-            ], 500);
+            ], 500 );
         }
 
-        return response()->json([
+        return response()->json( [
             "status"  => "Ok",
             "message" => "Success",
-        ], 200);
+        ], 200 );
     }
 
     /**
      * Pipedrive - organization
      *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param   Request     $request
+     * @return  JsonResponse
      */
-    public function organization(Request $request)
+    public function organization( Request $request )
     {
         $params = $request->all();
 
-        if ($params["meta"]["change_source"] == "api")
+        if ( $params[ "meta" ][ "change_source" ] == "api" )
         {
-            Log::channel("marketplace")->info("Organizations", [ "0" => "changed by api ignored" ]);
+            $message = "";
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
 
-            return response()->json([
+            return response()->json( [
                 "status"  => "Ok",
-                "message" => "Organizations - changed by api ignored",
+                "message" => "Organizations - " . self::MSG_CHANGE_BY_API,
                 "code"    => -1,
-            ], 200);
+            ], 200 );
         }
 
         try
         {
-            switch ($params["event"])
+            switch ( $params[ "event" ] )
             {
                 case self::ORG_ADDED_EVENT:
                 case self::ORG_UPDATED_EVENT:
                 case self::ORG_DELETED_EVENT:
 
-                    if ($params["event"] == self::ORG_DELETED_EVENT)
-                    {
-                        $index = "previous";
-                        $del   = TRUE;
-                    }
-                    else
-                    {
-                        $index = "current";
-                        $del   = FALSE;
-                    }
+                    $index = ( $params[ "event" ] == self::ORG_DELETED_EVENT ) ? "previous" : "current";
+                    $del   = ( $params[ "event" ] == self::ORG_DELETED_EVENT ) ? true       : false;
 
-                    if (isset($params["previous"]) && $params["event"] != self::ORG_DELETED_EVENT)
+                    if ( isset( $params[ "previous" ] ) && $params[ "event" ] != self::ORG_DELETED_EVENT )
                     {
                         $result  = FALSE;
-                        $changes = Helper::arrayDiffAssocRecursive($params["current"],$params["previous"]);
-                        foreach (self::ORG_MONITORING as $m)
+                        $changes = Helper::arrayDiffAssocRecursive( $params[ "current" ], $params[ "previous" ] );
+
+                        foreach ( self::ORG_MONITORING as $m )
                         {
-                            if (array_key_exists($m, $changes))
+                            if ( array_key_exists( $m, $changes ) )
                             {
                                 $result = TRUE;
                                 break;
                             }
                         }
 
-                        if (!$result) break;
+                        if ( !$result ) break;
                     }
 
-                    MauticIntegration::updateOrCreate("contacts", $params[$index], $del);
+                    MauticIntegration::updateOrCreate( "contacts", $params[ $index ], $del );
                 break;
 
                 default:
-                    Log::channel("marketplace")->info("Organizations", [ "400" => "Unsupported event" ]);
+                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
 
-                    return response()->json([
+                    return response()->json( [
                         "status"  => "Error",
-                        "message" => "Unsupported event",
+                        "message" => "Organizations - " . self::MSG_UNSUPPORTED_EVENT,
                         "code"    => 0,
-                    ], 400);
+                    ], 400 );
                 break;
             }
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::channel("marketplace")->info("Organizations", [ "500" => $e ]);
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | " . $e->getMessage(), print: true );
 
-            self::sendMailNotification($params, $e);
+            self::sendMailNotification( $params, $e );
 
-            return response()->json([
+            return response()->json( [
                 "status"  => "Error",
-                "message" => $e,
+                "message" => "Organizations - " . $e->getMessage(),
                 "code"    => self::ORG_CODE,
-            ], 500);
+            ], 500 );
         }
 
-        return response()->json([
+        return response()->json( [
             "status"  => "Ok",
             "message" => "Success",
-        ], 200);
+        ], 200 );
     }
 
     /**
      * Pipedrive - stage
      * Recebe o webhook dos estágios dentro dos funis do Pipedrive
      *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param   Request     $request
+     * @return  JsonResponse
      */
-    public function stage(Request $request)
+    public function stage( Request $request )
     {
         $params = $request->all();
 
-        if ($params["meta"]["change_source"] == "api")
+        if ( $params[ "meta" ][ "change_source" ] == "api" )
         {
-            Log::channel("marketplace")->info("Stages", [ "0" => "Changed by api ignored" ]);
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
 
-            return response()->json([
+            return response()->json( [
                 "status"  => "Ok",
-                "message" => "Stages - changed by api ignored",
+                "message" => "Stages - " . self::MSG_CHANGE_BY_API,
                 "code"    => -1,
-            ], 200);
+            ], 200 );
         }
 
         try
         {
-            switch ($params["event"])
+            switch ( $params[ "event" ] )
             {
                 case self::STAGE_ADDED_EVENT:
                 case self::STAGE_UPDATED_EVENT:
@@ -321,153 +324,156 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    Log::channel("marketplace")->info("Stages", [ "400" => "Unsupported event" ]);
+                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
 
-                    return response()->json([
+                    return response()->json( [
                         "status"  => "Error",
-                        "message" => "Unsupported event",
+                        "message" => "Stages - " . self::MSG_UNSUPPORTED_EVENT,
                         "code"    => 0,
-                    ], 400);
+                    ], 400 );
                 break;
             }
         }
-        catch (Exception $e)
+        catch ( Exception $e )
         {
-            Log::channel("marketplace")->info("Stages", [ "500" => $e ]);
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | " . $e->getMessage(), print: true );
 
-            self::sendMailNotification($params, $e);
+            self::sendMailNotification( $params, $e );
 
-            return response()->json([
+            return response()->json( [
                 "status"  => "Error",
-                "message" => $e,
+                "message" => "Stages - " . $e->getMessage(),
                 "code"    => self::STAGE_CODE,
-            ], 500);
+            ], 500 );
         }
 
-        return response()->json([
+        return response()->json( [
             "status"  => "Ok",
             "message" => "Success",
-        ], 200);
+        ], 200 );
     }
 
     /**
      * Pipedrive - person
      *
-     * @param  \Illuminate\Http\Request $request
-     * @return \Illuminate\Http\Response
+     * @param   Request     $request
+     * @return  JsonResponse
      */
-    public function person(Request $request)
+    public function person( Request $request )
     {
-        if (env("APP_ENV") == "production" || env("APP_ENV") == "local")
+        if ( env( "APP_ENV" ) == "production" || env( "APP_ENV" ) == "local" )
         {
-            Log::channel("marketplace")->info("Persons", [ "0" => "deactivated" ]);
-            return response()->json([
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: code -1 | Deactivated", print: true );
+
+            return response()->json( [
                 "status"  => "Ok",
-                "message" => "Deactivated",
-            ], 200);
+                "message" => "Persons - Deactivated",
+            ], 200 );
         }
 
         // $params = $request->all();
-        //
-        // if ($params["meta"]["change_source"] == "api")
+
+        // if ( $params[ "meta" ][ "change_source" ] == "api" )
         // {
-        //     Log::channel("marketplace")->info("Persons", [
-        //         "0" => "Changed by api ignored"
-        //     ]);
-        //
-        //     return response()->json([
+        //     log_message( channel: self::LOG_CHANNEL, message: "Persons: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
+
+        //     return response()->json( [
         //         "status"  => "Ok",
-        //         "message" => "Persons - changed by api ignored",
+        //         "message" => "Persons - " . self::MSG_CHANGE_BY_API,
         //         "code"    => -1,
-        //     ], 200);
+        //     ], 200 );
         // }
         //
         // try
         // {
-        //     switch ($params["event"])
+        //     switch ( $params[ "event" ] )
         //     {
         //         case self::PERSON_ADDED_EVENT:
         //         case self::PERSON_UPDATED_EVENT:
-        //             if (isset($params["previous"]))
+        //             if ( isset( $params[ "previous" ] ) )
         //             {
         //                 $result  = FALSE;
-        //                 $changes = Helper::arrayDiffAssocRecursive($params["current"],$params["previous"]);
-        //                 foreach (self::PERSON_MONITORING as $m)
+        //                 $changes = Helper::arrayDiffAssocRecursive( $params[ "current" ],$params[ "previous" ] );
+        //                 foreach ( self::PERSON_MONITORING as $m )
         //                 {
-        //                     if (array_key_exists($m, $changes))
+        //                     if ( array_key_exists( $m, $changes ) )
         //                     {
         //                         $result = TRUE;
         //                         break;
         //                     }
         //                 }
         //
-        //                 if (!$result)
-        //                 {
-        //                     Log::channel("marketplace")->info("Persons", ["0" => "Discarded changes"]);
-        //                     break;
-        //                 }
-        //             }
+        //                if ( !$result )
+        //                {
+        //                    log_message( channel: self::LOG_CHANNEL, message: "Persons: code 0 | Discarded changes", print: true );
+        //                    break;
+        //                }
+        //            }
         //
-        //             MauticIntegration::updateOrCreate("contacts", $params["current"]);
+        //             MauticIntegration::updateOrCreate( "contacts", $params[ "current" ] );
         //         break;
         //
         //         case self::PERSON_DELETED_EVENT:
-        //             MauticIntegration::delete("contacts", $params["previous"]);
+        //             MauticIntegration::delete( "contacts", $params[ "previous" ] );
         //         break;
         //
-        //         default:
-        //             Log::channel("marketplace")->info("Persons", ["400" => "Unsupported event"]);
+        //        default:
+        //            log_message( channel: self::LOG_CHANNEL, message: "Persons: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
         //
-        //             return response()->json([
-        //                 "status"  => "Error",
-        //                 "message" => "Unsupported event",
-        //                 "code"    => 0,
-        //             ], 400);
-        //         break;
+        //            return response()->json( [
+        //                "status"  => "Error",
+        //                "message" => "Persons - " . self::MSG_UNSUPPORTED_EVENT,
+        //                "code"    => 0,
+        //            ], 400 );
+        //        break;
         //     }
         // }
-        // catch (Exception $e)
+        // catch ( Exception $e )
         // {
-        //     Log::channel("marketplace")->info("Persons", ["500" => $e]);
-        //
-        //     self::sendMailNotification($params, $e);
-        //
-        //     return response()->json([
+        //     log_message( channel: self::LOG_CHANNEL, message: "Persons: code 500 | " . $e->getMessage(), print: true );
+
+        //     self::sendMailNotification( $params, $e );
+
+        //     return response()->json( [
         //         "status"  => "Error",
         //         "message" => $e,
         //         "code"    => self::PERSON_CODE,
-        //     ], 500);
+        //     ], 500 );
         // }
-        //
-        // Log::channel("marketplace")->info("Persons", ["200" => "Success"]);
-        //
-        // return response()->json([
+
+        // log_message( channel: self::LOG_CHANNEL, message: "Persons: code 200 | Success", print: true );
+
+        // return response()->json( [
         //     "status"  => "Ok",
         //     "message" => "Success",
-        // ], 200);
+        // ], 200 );
     }
 
     /**
      * Undocumented function
      *
-     * @param Array $params
-     * @param Exception $e
-     * @return void
+     * @param   array       $params
+     * @param   Exception   $e
+     * @return  void
      */
-    private static function sendMailNotification(Array $params, Exception $e)
+    private static function sendMailNotification( array $params, Exception $e )
     {
-        if ($params["retry"] == 3)
+        if ( $params[ "retry" ] == 3 )
         {
             $mail = [
                 "subject"    => "Dev - Integração Triibo Pipedrive-Mautic",
-                "title"      => "Erro no webhook: " . $params["meta"]["object"],
-                "class"      => $params["meta"]["object"],
+                "title"      => "Erro no webhook: " . $params[ "meta" ][ "object" ],
+                "class"      => $params[ "meta" ][ "object" ],
                 "params"     => $params,
                 "stacktrace" => $e,
             ];
-            $users = User::where("email", "equipemarketplace@triibo.com.br")->orWhere("email", "mateus.costa@triibo.com.br")->get();
-            $users[0]->notify(new WebhookMarketplace($mail));
-            $users[1]->notify(new WebhookMarketplace($mail));
+
+            $users = User::where(   "email", "equipemarketplace@triibo.com.br" )
+                         ->orWhere( "email", "mateus.costa@triibo.com.br" )
+                         ->get();
+
+            $users[ 0 ]->notify( new WebhookMarketplace( $mail ) );
+            $users[ 1 ]->notify( new WebhookMarketplace( $mail ) );
         }
     }
 }
