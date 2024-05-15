@@ -144,126 +144,10 @@ class Helper
 
 
 
-    public static function usort( string $key, array &$data )
-    {
-        usort( $data, function( $a, $b ) use ( $key ) {
-            return $a[ $key ] <=> $b[ $key ];
-        } );
-    }
 
-    public static function slugify( string $text, string $divider = "-" )
-    {
-        // replace non letter or digits by divider
-        $text = preg_replace( "~[^\pL\d]+~u", $divider, $text );
 
-        // transliterate
-        $text = iconv( "utf-8", "us-ascii//TRANSLIT", $text );
 
-        // remove unwanted characters
-        $text = preg_replace( "~[^-\w]+~", "", $text );
 
-        // trim
-        $text = trim( $text, $divider );
-
-        // remove duplicate divider
-        $text = preg_replace( "~-+~", $divider, $text );
-
-        // lowercase
-        $text = strtolower( $text );
-
-        return $text;
-    }
-
-    public static function getSchedulesOperation( bool $operation = true )
-    {
-        $response = [];
-
-        if ( $operation )
-        {
-            // funcionamento
-            foreach ( range( 1, 7 ) as $key )
-            {
-                $response[] = [
-                    "ativo"         => true,
-                    "horarioFim"    => "23:59",
-                    "horarioInicio" => "00:00"
-                ];
-            }
-        }
-        else
-        {
-            // horarios
-            foreach ( range( 1, 7 ) as $key )
-            {
-                $response[] = [
-                    "tipo"   => "aberto",
-                    "turnos" => [ [
-                        "fim"    => "23:59",
-                        "inicio" => "00:00"
-                    ] ]
-                ];
-            }
-        }
-
-        return $response;
-    }
-
-    public static function sendMailNotification( $blade, $method, $catch, $e )
-    {
-        $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
-        $subjects = [
-            "awin"        => "{$env} - Integração Awin",
-            "cofry"       => "{$env} - Integração Cofry",
-            "socialsoul"  => "{$env} - Integração SocialSoul",
-            "marketplace" => "{$env} - Integração Marketplace",
-        ];
-
-        $mail     = [
-            "subject"    => $subjects[ $blade ],
-            "title"      => "Erro no schedule: ",
-            "method"     => $method,
-            "catch"      => $catch,
-            "stacktrace" => $e,
-        ];
-
-        $user     = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
-
-        $user->notify( new ScheduleFailure( $blade, $mail ) );
-    }
-
-    public static function parseUrl( string $url )
-    {
-        $parse  = parse_url( $url, PHP_URL_HOST );
-        preg_match( "/[a-z0-9\-]{1,63}\.[a-z\.]{2,6}$/", $parse, $domain );
-
-        $domain = reset( $domain );
-        $domain = str_replace( "www.", "", $domain );
-
-        return $domain;
-    }
-
-    public static function getCashback( $data )
-    {
-        $min      = ( isset( $data[ "min" ] ) ) ? ( float ) $data[ "min" ] : 0;
-        $max      = ( isset( $data[ "max" ] ) ) ? ( float ) $data[ "max" ] : 0;
-
-        $media    = ( $max + $min ) / 2;
-        $half     = $media / 2;
-
-        if ( $half >= $min )
-        {
-            $cashback = ( float ) $min * 0.8;
-            $cashback = ( $cashback < 1 ) ? 1.0 : $cashback;
-        }
-        else
-        {
-            $cashback = ( float ) $half;
-        }
-
-        $cashback = number_format( $cashback, 1, ",", "" );
-
-        return $cashback;
-    }
 
     public static function prepareDataFs( $array, $field )
     {
@@ -319,26 +203,13 @@ class Helper
         }
     }
 
-    public static function treatUrlAwin( string $url )
-    {
-        $url = str_replace( "&campaign=",  "", $url );
-        $url = str_replace( "&clickref2=", "", $url );
-        $url = str_replace( "&clickref3=", "", $url );
-        $url = str_replace( "&clickref4=", "", $url );
-        $url = str_replace( "&clickref5=", "", $url );
-        $url = str_replace( "&clickref6=", "", $url );
-        $url = str_replace( "%7Buid%7D", "{uid}", $url );
-
-        return $url;
-    }
-
     public static function addTagsToDescriptionCofry( string $desc, array $tags )
     {
         foreach ( $tags as $tag )
         {
             if ( $tag == "Cofry" ) continue;
 
-            $tag   = "\n#cofry_" . self::slugify( $tag, "_" );
+            $tag   = "\n#cofry_" . Str::slug( $tag, "_" );
             $desc .= $tag;
         }
 

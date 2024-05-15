@@ -3,9 +3,12 @@
  * Helper functions for various tasks in the application.
  */
 
+use Throwable;
+use App\Models\User;
 use App\Helpers\Helper;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use App\Notifications\ScheduleFailure;
 
 if ( !function_exists( "log_message" ) )
 {
@@ -37,7 +40,7 @@ if ( !function_exists( "log_message" ) )
             $type      = $context[ "type"      ];
 
             // Send an email notification about the exception.
-            Helper::sendMailNotification( blade: $channel, method: $method, catch: $type, e: $exception );
+            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
         }
     }
 }
@@ -435,21 +438,190 @@ if ( !function_exists( "convert_date" ) )
     }
 }
 
-if ( !function_exists( "u_sort" ) )
+if ( !function_exists( "triibo_usort" ) )
 {
     /**
      * Sorts an associative array by a specific key.
      *
-     * @param string $key The key by which the array will be sorted.
-     * @param array $data The associative array to be sorted.
-     *
-     * @return void
+     * @param   string  $key    The key by which the array will be sorted.
+     * @param   array   $data   The associative array to be sorted.
+     * @return  void
      */
-    function u_sort( string $key, array &$data )
+    function triibo_usort( string $key, array &$data ) : void
     {
         usort( $data, function( $a, $b ) use ( $key )
         {
             return $a[ $key ] <=> $b[ $key ];
         } );
+    }
+}
+
+if ( !function_exists( "slugify" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param string $text
+     * @param string $divider
+     * @return string
+     */
+    function slugify( string $text, string $divider = "-" ) : string
+    {
+        return Str::slug( $text, $divider );
+    }
+}
+
+if ( !function_exists( "get_schedules_operation" ) )
+{
+    /**
+     * Returns an array of operation schedules or opening hours for each day of the week.
+     *
+     * @param   bool    $operation  Determines whether the returned array will contain operation schedules (true) or opening hours (false).
+     * @return  array               An array containing the operation schedules or opening hours for each day of the week.
+     */
+    function get_schedules_operation( bool $operation = true ) : array
+    {
+        $template = $operation
+                    ? [ "ativo" => true, "horarioFim" => "23:59", "horarioInicio" => "00:00" ]
+                    : [ "tipo" => "aberto", "turnos" => [ [ "fim" => "23:59", "inicio" => "00:00" ] ] ];
+
+        return array_fill( 0, 7, $template );
+    }
+}
+
+if ( !function_exists( "send_mail_notification" ) )
+{
+    /**
+     * Send an email notification when a schedule fails.
+     *
+     * This function sends an email notification to a specific user when a schedule fails.
+     * It takes the following parameters:
+     *
+     * @param   string      $blade      The name of the blade (view) associated with the schedule.
+     * @param   string      $method     The name of the method that failed.
+     * @param   string      $catch      The catch block where the error occurred.
+     * @param   Throwable   $e          The exception object containing the error details.
+     * @return  void
+     */
+    function send_mail_notification( string $blade, string $method, string $catch, Throwable $e ) : void
+    {
+        // Determine the environment (HML or PRD) based on the app.env configuration.
+        $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
+
+        // Define the email subjects for different blades.
+        $subjects = [
+            "awin"        => "{$env} - Integração Awin",
+            "cofry"       => "{$env} - Integração Cofry",
+            "socialsoul"  => "{$env} - Integração SocialSoul",
+            "marketplace" => "{$env} - Integração Marketplace",
+        ];
+
+        // Prepare the email data.
+        $mail     = [
+            "subject"    => $subjects[ $blade ],
+            "title"      => "Erro no schedule: ",
+            "method"     => $method,
+            "catch"      => $catch,
+            "stacktrace" => $e,
+        ];
+
+        // Get the user to be notified.
+        $user     = User::firstWhere( "email", "mateus.costa@triibo.com.br" );
+
+        // Send the notification to the user.
+        $user->notify( new ScheduleFailure( $blade, $mail ) );
+    }
+}
+
+if ( !function_exists( "triibo_parse_url" ) )
+{
+    /**
+     * Extracts the domain from a given URL.
+     *
+     * This function takes a URL as input and returns only the domain part, removing the "www." prefix if present.
+     *
+     * @param   string  $url    The URL from which the domain will be extracted.
+     * @return  string          The extracted domain from the URL.
+     */
+    function triibo_parse_url( string $url ) : string
+    {
+        // Parse the URL and extract only the host (domain) part.
+        $parsed = parse_url( $url, PHP_URL_HOST );
+
+        // Remove the "www." prefix from the domain, if present.
+        $domain = preg_replace( "/^www\./", "", $parsed );
+
+        return $domain;
+    }
+}
+
+if ( !function_exists( "parse_url_awin" ) )
+{
+    /**
+     * Removes campaign parameters and replaces %7Buid%7D with {uid} in a URL.
+     *
+     * @param   string  $url    The URL to be processed.
+     * @return  string          The processed URL.
+     */
+    function parse_url_awin( string $url ) : string
+    {
+        $patterns = [
+            "/&campaign=/",
+            "/&clickref2=/",
+            "/&clickref3=/",
+            "/&clickref4=/",
+            "/&clickref5=/",
+            "/&clickref6=/",
+        ];
+
+        $url      = preg_replace( $patterns, "", $url );
+
+        $url      = str_replace( "%7Buid%7D", "{uid}", $url );
+
+        return $url;
+    }
+}
+
+if ( !function_exists( "get_cashback" ) )
+{
+    /**
+     * Calculates the cashback value based on the provided minimum and maximum values.
+     *
+     * @param   array   $data   An associative array containing the "min" and "max" values.
+     * @return  float           The calculated cashback value.
+     */
+    function get_cashback( array $data ) : float
+    {
+        // Retrieve the "min" and "max" values from the input data, defaulting to 0 if not present.
+        $min = $data[ "min" ] ?? 0;
+        $max = $data[ "max" ] ?? 0;
+
+        // Check if the "min" and "max" values are numeric, return 0.0 if not.
+        if ( !is_numeric( $min ) || !is_numeric( $max ) )
+            return 0.0;
+
+        // Convert the "min" and "max" values to float.
+        $min   = ( float ) $min;
+        $max   = ( float ) $max;
+
+        // Calculate the average and half of the average.
+        $media = ( $max + $min ) / 2;
+        $half  = $media / 2;
+
+        // Determine the cashback value based on the conditions.
+        if ( $half >= $min )
+        {
+            $cashback = $min * 0.8;
+
+            // Ensure the cashback value is at least 1.0.
+            $cashback = max( $cashback, 1.0 );
+        }
+        else
+        {
+            $cashback = $half;
+        }
+
+        // Format the cashback value with one decimal place and return as a float.
+        return ( float ) number_format( $cashback, 1, ".", "" );
     }
 }

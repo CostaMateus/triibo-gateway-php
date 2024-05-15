@@ -410,8 +410,8 @@ class CofryIntegration
                 "descricao"              => $description,
                 "fotoThumb"              => $logo,
                 "listaFotos"             => [ $logo ],
-                "funcionamento"          => [ ...self::getSchedulesOperation()        ],
-                "horarios"               => [ ...self::getSchedulesOperation( false ) ],
+                "funcionamento"          => [ ...get_schedules_operation()        ],
+                "horarios"               => [ ...get_schedules_operation( false ) ],
                 "tags"                   => [ ...$establishment[ "Segment" ] ],
                 "keyWordsSet"            => [],
                 "origin"                 => "cofry",
@@ -613,53 +613,6 @@ class CofryIntegration
 
         // Construct the promotion array with the formatted details and add it to the result array.
         return $result;
-    }
-
-    /**
-     * Generates a list of default schedules for either operational status or specific time slots.
-     * This function is used to create a uniform set of schedules for each day of the week.
-     *
-     * @param   bool    $operation  If true, generates operational status schedules; if false, generates time slot schedules.
-     * @return  array               An array of schedules for each day of the week.
-     */
-    private static function getSchedulesOperation( bool $operation = true ) : array
-    {
-        // Initialize an array to hold the schedules.
-        $schedules = [];
-
-        // Define a default schedule with start and end times.
-        $default   = [
-            "horarioFim"    => "23:59",
-            "horarioInicio" => "00:00"
-        ];
-
-        // Loop through each day of the week (1 to 7).
-        foreach ( range( 1, 7 ) as $key )
-        {
-            if ( $operation )
-            {
-                // If operation is true, create operational status schedules.
-                // Merge the default schedule with the active status.
-                $schedules[] = array_merge( $default, [ "ativo" => true ] );
-            }
-            else
-            {
-                // If operation is false, create time slot schedules.
-                // Define the schedule type as 'open' and provide the default time slots.
-                $schedules[] = [
-                    "tipo"   => "aberto",
-                    "turnos" => [
-                        array_merge( $default, [
-                            "fim"    => $default[ "horarioFim"    ],
-                            "inicio" => $default[ "horarioInicio" ]
-                        ] )
-                    ]
-                ];
-            }
-        }
-
-        // Return the array of schedules.
-        return $schedules;
     }
 
     /**

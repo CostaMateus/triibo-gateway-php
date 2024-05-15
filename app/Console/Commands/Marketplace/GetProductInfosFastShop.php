@@ -147,7 +147,7 @@ class GetProductInfosFastShop extends Command
 
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
-                    Helper::sendMailNotification( "marketplace", "process()", "Exception", $e );
+                    send_mail_notification( "marketplace", "process()", "Exception", $e );
                     $fail = array_merge( $fail, $skus );
                 }
             }
@@ -178,7 +178,7 @@ class GetProductInfosFastShop extends Command
         {
             try
             {
-                $slug = Helper::slugify( $catName, "-" );
+                $slug = Str::slug( $catName );
 
                 $cat  = DB::table( "marketplace_product_categories" )
                            ->where( "cat_slug", $slug )

@@ -63,7 +63,7 @@ class SocialSoulIntegration
 
             if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
 
-            u_sort( "id", $stores[ "data" ] );
+            triibo_usort( "id", $stores[ "data" ] );
 
             return $stores[ "data" ];
         }
@@ -82,7 +82,7 @@ class SocialSoulIntegration
 
         if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
 
-        u_sort( "id", $coupons[ "data" ] );
+        triibo_usort( "id", $coupons[ "data" ] );
 
         $stores     = $this->translateStores( $this->stores );
         $promotions = $this->translateCoupons( $coupons[ "data" ], $stores );
@@ -109,7 +109,7 @@ class SocialSoulIntegration
 
             if ( !$offers[ "success" ] && empty( $offers[ "data" ] ) ) continue;
 
-            u_sort( "id", $offers[ "data" ] );
+            triibo_usort( "id", $offers[ "data" ] );
 
             $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
             $promotions = array_merge( $promotions, $offers );
@@ -369,7 +369,7 @@ class SocialSoulIntegration
             $cashback      = ( float ) $store[ "maxCommission" ] / 2;
             $cashback      = number_format( $cashback, 1, ",", "" );
 
-            $url           = Helper::parseUrl( $store[ "link" ] );
+            $url           = triibo_parse_url( $store[ "link" ] );
             $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
 
             if ( $key !== false )
@@ -420,8 +420,8 @@ class SocialSoulIntegration
                 "fotoThumb"              => $imageName,
                 "listaFotos"             => [ $imageName ],
 
-                "funcionamento"          => [ ...Helper::getSchedulesOperation()        ],
-                "horarios"               => [ ...Helper::getSchedulesOperation( false ) ],
+                "funcionamento"          => [ ...get_schedules_operation()        ],
+                "horarios"               => [ ...get_schedules_operation( false ) ],
 
                 "tags"                   => [ "socialsoul" ],
 
@@ -687,7 +687,7 @@ class SocialSoulIntegration
 
         if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
 
-        u_sort( "id", $coupons[ "data" ] );
+        triibo_usort( "id", $coupons[ "data" ] );
 
         foreach ( $coupons[ "data" ] as $coupon )
         {

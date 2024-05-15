@@ -103,7 +103,7 @@ class ProcessData extends Command
                 $cashback = ( float ) number_format( $cashback, 1, ".", "" );
             }
 
-            $url          = Helper::parseUrl( $store[ "displayUrl" ] );
+            $url          = triibo_parse_url( $store[ "displayUrl" ] );
             $awinStores[] = [
                 "id"         => $store[ "id" ],
                 "name"       => "awin",
@@ -134,7 +134,7 @@ class ProcessData extends Command
             $cashback   = ( float ) $store[ "commission" ] / 2;
             $cashback   = ( float ) number_format( $cashback, 1, ".", "" );
 
-            $url        = Helper::parseUrl( $store[ "link" ] );
+            $url        = triibo_parse_url( $store[ "link" ] );
             $ssStores[] = [
                 "id"         => $store[ "id" ],
                 "name"       => "socialsoul",
