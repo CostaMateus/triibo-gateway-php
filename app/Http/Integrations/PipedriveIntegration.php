@@ -23,7 +23,7 @@ class PipedriveIntegration
      */
     public static function updateMauticId( string $class, array $ids )
     {
-        // Log::channel("marketplace")->info(ucfirst($class), [ "data" => "selecionando API class: $class" ]);
+        log_message( channel: "marketplace", message: ucfirst( $class ) . ": selecionando API...", print: true );
 
         // Initialize Pipedrive API with the provided token from configuration.
         $pipedrive = new Pipedrive( config( "pipedrive.token" ) );
@@ -34,6 +34,6 @@ class PipedriveIntegration
         // Update the entity in Pipedrive with the new Mautic ID.
         $pipedrive->{$class}->update( $ids[ "pd_id" ], [ $field_key => $ids[ "mautic_id" ] ] );
 
-        // Log::channel("marketplace")->info(ucfirst($class), [ "data" => "chamada API finalizada" ]);
+        log_message( channel: "marketplace", message: ucfirst( $class ) . ": chamada API finalizada...", print: true );
     }
 }

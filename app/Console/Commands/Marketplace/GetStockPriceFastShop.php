@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Marketplace;
 
 use Exception;
+use Throwable;
 use App\Helpers\Helper;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
@@ -12,6 +13,13 @@ use Codexshaper\WooCommerce\Facades\Product;
 
 class GetStockPriceFastShop extends Command
 {
+    /**
+     * Define a class constant for the log channel.
+     *
+     * @var     string
+     */
+    private const LOG_CHANNEL = "fastshop";
+
     /**
      * The name and signature of the console command.
      *
@@ -55,8 +63,7 @@ class GetStockPriceFastShop extends Command
         $end   = now();
         $diff  = $start->diffInMinutes( $end );
 
-        echo "Runtime {$diff} minutes\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Runtime {$diff} minutes" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Runtime {$diff} minutes", print: true );
     }
 
 
@@ -64,16 +71,14 @@ class GetStockPriceFastShop extends Command
 
     private function updateFastShopStockPrice()
     {
-        echo "Starting FS stock/price update process\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Starting FS stock/price update process" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Starting update process...", print: true );
 
         $skus = DB::table( "marketplace_product_skus" )->get()->toArray();
         $skus = json_decode( json_encode( $skus ), true );
 
         if ( empty( $skus ) ) return null;
 
-        echo "SKUs loaded from local table\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "SKUs loaded from local table" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: SKUs loaded from local table...", print: true );
 
         $aux  = [];
         $now  = Carbon::now();
@@ -109,8 +114,7 @@ class GetStockPriceFastShop extends Command
 
         if ( empty( $aux ) )
         {
-            echo "Starting FS stock/price - no data to process\n";
-            Log::channel( "fastshop" )->info( "FS stock-price", [ "Starting FS stock/price - no data to process" ] );
+            log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: No data to process...", print: true );
             return;
         }
 
@@ -118,8 +122,7 @@ class GetStockPriceFastShop extends Command
         $response = Helper::getStockPriceFS( $fsData );
         $data     = $this->translateFsData( $response );
 
-        echo "Updating the local table\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Updating the local table" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Updating the local table...", print: true );
 
         foreach ( $aux as &$sku )
         {
@@ -157,11 +160,7 @@ class GetStockPriceFastShop extends Command
 
                 $ok = DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
 
-                if ( !$ok )
-                {
-                    echo "{$sku[ "product_sku" ]} fails to save SKU\n";
-                    Log::channel( "fastshop" )->info( "FS stock-price", [ "{$sku[ "product_sku" ]} fails to save SKU" ] );
-                }
+                if ( !$ok ) log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: {$sku[ "product_sku" ]} fails to save SKU...", print: true );
             }
             else
             {
@@ -172,26 +171,20 @@ class GetStockPriceFastShop extends Command
 
                 $ok = DB::table( "marketplace_product_skus" )->where( "id", $sku[ "id" ] )->update( $sku );
 
-                if ( !$ok )
-                {
-                    echo "{$sku[ "product_sku" ]} fails to save SKU\n";
-                    Log::channel( "fastshop" )->info( "FS stock-price", [ "{$sku[ "product_sku" ]} fails to save SKU" ] );
-                }
+                if ( !$ok ) log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: {$sku[ "product_sku" ]} fails to save SKU...", print: true );
             }
 
-            if ( $ok ) echo "{$sku[ "product_sku" ]} successfully saved\n";
+            if ( $ok ) log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: {$sku[ "product_sku" ]} successfully saved...", print: true );
         }
 
-        echo "Finished FS stock/price update process\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Finished FS stock/price update process" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Finished update process...", print: true );
 
         return $aux;
     }
 
     private function translateFsData( $array )
     {
-        echo "Converting FS response data\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Converting FS response data" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Converting FS response data...", print: true );
 
         try
         {
@@ -217,18 +210,18 @@ class GetStockPriceFastShop extends Command
                     "stock"         => $stock,
                 ];
 
-                echo "{$sku} processed\n";
+                log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: {$sku} processed...", print: true );
             }
 
-            echo "Conversion finished\n";
+            log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Conversion finished...", print: true );
 
             return $data;
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            echo "FS response data conversion failed\n";
-            Log::channel( "fastshop" )->info( "FS stock-price", [ "FS response data conversion failed" ] );
-            Helper::sendMailNotification( "marketplace", "translateFsData()", "Exception", $e );
+            $message = "Stock|Price: Failure on conversion FS response data";
+
+            log_exception( channel: self::LOG_CHANNEL, message: $message, method: "translateFsData", type: "Throwable", e: $e );
         }
     }
 
@@ -239,8 +232,7 @@ class GetStockPriceFastShop extends Command
     {
         if ( empty( $array ) ) return;
 
-        echo "Starting MKT stock/price update process\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Starting MKT stock/price update process" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Starting MKT update process...", print: true );
 
         $data = $this->translateWcData( $array );
         $data = array_chunk( $data, 100 );
@@ -249,34 +241,29 @@ class GetStockPriceFastShop extends Command
         foreach ( $data as $i => $skus )
         {
             ++$i;
-            echo "Sending SKUs to MKT - pack {$i} of {$y}\n";
-            Log::channel( "fastshop" )->info( "FS stock-price", [ "Sending SKUs to MKT - pack {$i} of {$y}" ] );
+            log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Sending SKUs to MKT - pack {$i} of {$y}", print: true );
 
             try
             {
                 Product::batch( [ "update" => $skus ] );
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
-                echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
-
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
-                    echo $e->getMessage() . "\n";
-                    Log::channel( "fastshop" )->info( "FS stock-price", [ "Failure to send SKUs to MKT - pack {$i} of {$y}" ] );
-                    Helper::sendMailNotification( "marketplace", "updateMarketplaceStockPrice()", "Exception", $e );
+                    $message = "Stock|Price: Failure to send SKUs to MKT - pack {$i} of {$y}";
+
+                    log_exception( channel: self::LOG_CHANNEL, message: $message, method: "updateMarketplaceStockPrice", type: "Throwable", e: $e );
                 }
             }
         }
 
-        echo "Finished MKT stock/price update process\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Finished MKT stock/price update process" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Finished MKT update process...", print: true );
     }
 
     private function translateWcData( $array )
     {
-        echo "Converting data WC format\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Converting data WC format" ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stock|Price: Converting data WC format...", print: true );
 
         $data = [];
 

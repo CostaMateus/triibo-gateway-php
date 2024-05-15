@@ -224,7 +224,7 @@ class ProcessDataAwin extends Command
         {
             $name = ucfirst( $option );
 
-            $this->printMessage( message: "{$name}: Start processing" );
+            log_message( channel: "awin", message: "{$name}: Start processing...", print: true );
 
             // If the AwinController instance is not created yet, create it
             if ( !$awin )
@@ -236,7 +236,7 @@ class ProcessDataAwin extends Command
             // Call the corresponding method on the AwinController instance
             $awin->{$option}();
 
-            $this->printMessage( message: "{$name}: End processing" );
+            log_message( channel: "awin", message: "{$name}: End processing...", print: true );
         }
     }
 
@@ -443,7 +443,5 @@ class ProcessDataAwin extends Command
     private function printMessage( string $message )
     {
         echo "{$message}\n";
-
-        Log::channel( "awin" )->info( $message );
     }
 }

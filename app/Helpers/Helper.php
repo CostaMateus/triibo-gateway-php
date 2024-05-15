@@ -4,12 +4,12 @@ namespace App\Helpers;
 
 use DateTime;
 use Exception;
+use Throwable;
 use DateInterval;
 use App\Models\User;
 use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Devio\Pipedrive\Pipedrive;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
 use App\Notifications\ScheduleFailure;
 
@@ -106,24 +106,6 @@ class Helper
     public static function arraySearchByKey( mixed $needle, string $column, array $arr )
     {
         return array_search( $needle, array_column( $arr, $column ) );
-    }
-
-    /**
-     * Registra log
-     *
-     * @param string  $class  Classe do objeto
-     * @param string  $msg    Mensegame principal
-     * @param integer $mautic ID do objeto no Mautic
-     * @param integer $pipe   ID do objeto no Pipedrive
-     * @return void
-     */
-    public static function log(string $class, string $msg, int $mautic, int $pipe)
-    {
-        Log::channel("marketplace")->info($class, [
-            "message"   => $msg,
-            "mautic_id" => $mautic??NULL,
-            "pd_id"     => $pipe??NULL
-        ]);
     }
 
     /**
@@ -569,8 +551,8 @@ class Helper
         $fsHeaders = config( "fastshop.$env.fs.headers" );
 
         $count     = count( $body[ "items" ] );
-        echo "Querying {$count} SKUs at once\n";
-        Log::channel( "fastshop" )->info( "FS stock-price", [ "Querying {$count} SKUs at once" ] );
+
+        log_message( channel: "fastshop", message: "Stock|Price: Querying {$count} SKUs at once...", print: true );
 
         try
         {
@@ -581,11 +563,11 @@ class Helper
 
             throw new Exception( "Unable to query FastShop products data" );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            echo "FS SKUs query failed\n";
-            Log::channel( "fastshop" )->info( "FS stock-price", [ "FS SKUs query failed" ] );
-            Helper::sendMailNotification( "marketplace", "getStockPriceFS()", "Exception", $e );
+            $message = "Stock|Price: SKUs query failed";
+
+            log_exception( channel: "fastshop", message: $message, method: "getStockPriceFS", type: "Throwable", e: $e );
         }
     }
 

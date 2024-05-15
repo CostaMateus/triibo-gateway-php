@@ -37,7 +37,7 @@ class TriiboController extends Controller
             }
         }
 
-        Log::channel("triibo")->info("unset-updateDate", [ "unset-updateDate: $i wallets fixed" ]);
+        log_message( channel: "triibo", message: "Unset updateDate: {$i} wallets fixed", print: true );
     }
 
     public function unsetVouchers()
@@ -76,6 +76,6 @@ class TriiboController extends Controller
             }
         }
 
-        Log::channel("triibo")->info("unset-vouchers", [ "unset-vouchers: $i wallets fixed" ]);
+        log_message( channel: "triibo", message: "Unset vouchers: {$i} wallets fixed", print: true );
     }
 }

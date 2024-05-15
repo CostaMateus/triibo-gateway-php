@@ -14,6 +14,13 @@ use App\Http\Integrations\PipedriveIntegration;
 
 class MauticIntegration
 {
+    /**
+     * Define a class constant for the log channel.
+     *
+     * @var     string
+     */
+    private const LOG_CHANNEL    = "marketplace";
+
     // Static property to hold API instances to prevent multiple initializations.
     private static $apiInstances = [];
 
@@ -74,20 +81,18 @@ class MauticIntegration
         $mautic_api  = self::getApi( $class );
         // Translate the data according to the class-specific requirements.
         $data        = self::dataTranslator( $class, $data );
-        // Initialize an array to store log messages.
-        $log_message = [];
 
         // Check if an ID is provided and search for the entity by ID.
         if ( !empty( $data[ "id" ] ) )
         {
-            $log_message[] = "Searching by id";
             $response      = self::searchMauticByField( $mautic_api, "ids", $data[ "id" ] );
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: Searching by id" );
         }
         // If no ID, check if an email is provided and search by email.
         elseif ( !empty( $data[ "email" ] ) )
         {
-            $log_message[] = "Searching by email";
             $response      = self::searchMauticByField( $mautic_api, "email", $data[ "email" ] );
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: Searching by email" );
 
             // If an entity is found, update the Mautic ID in the organizations.
             if ( !empty( $response[ "total" ] ) )
@@ -96,9 +101,10 @@ class MauticIntegration
         // If no ID or email is provided, log the absence of searchable data and return early.
         else
         {
-            $log_message[] = "No data to search";
+            $message_ids   = "| mautic_id: 0 | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
-            Helper::log( "Persons", implode( ". ", $log_message), 0, ( $data[ "pd_org_id" ] ?? 0 ) );
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: No data to search {$message_ids}" );
+
             return;
         }
 
@@ -115,20 +121,23 @@ class MauticIntegration
 
             // Set the ID for the entity to be updated.
             $data[ "id" ]  = key( $response[ "object" ] );
-            $log_message[] = "Contact updated";
+
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: Contact updated" );
         }
         else
         {
             // Set the ID to 0 for creating a new entity.
             $data[ "id" ]  = 0;
-            $log_message[] = "Contact created";
+
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: Contact created" );
         }
 
         // Save the changes or create the new entity using the Mautic API.
         self::saveCreateOrUpdateMautic( $mautic_api, "persons", $data, "pd_org_id" );
 
         // Log the final outcome of the operation.
-        Helper::log( "Persons", implode( ". ", $log_message ), ( $data[ "id" ] ?? 0 ), ( $data[ "pd_org_id" ] ?? 0 ) );
+        $message_ids = "mautic_id: " . ( $data[ "id" ] ?? 0 ) . " | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
+        log_message( channel: self::LOG_CHANNEL, message: "Persons: {$message_ids}" );
     }
 
     /**
@@ -146,12 +155,10 @@ class MauticIntegration
         $mautic_api  = self::getApi( "contacts" );
         // Translate the data according to the class-specific requirements.
         $data        = self::dataTranslator( $class, $data );
-        // Initialize an array to store log messages.
-        $log_message = [];
 
         // Check if the deal is marked as deleted and log it.
         if ( !$data[ "aux_active" ] && $data[ "aux_deleted" ] )
-            $log_message[] = "Deleted deal";
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: Deleted deal" );
 
         // Remove auxiliary fields that are not needed for the update.
         unset( $data[ "aux_active" ], $data[ "aux_deleted" ] );
@@ -159,13 +166,15 @@ class MauticIntegration
         // Check if an ID is provided and search for the contact by ID.
         if ( !empty( $data[ "id" ] ) )
         {
-            $log_message[] = "Searching by id";
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: Searching by id" );
+
             $response      = self::searchMauticByField( $mautic_api, "ids", $data[ "id" ] );
         }
         // If no ID, check if an email is provided and search by email.
         elseif ( !empty( $data[ "email" ] ) )
         {
-            $log_message[] = "Searching by email";
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: Searching by email" );
+
             $response      = self::searchMauticByField( $mautic_api, "email", $data[ "email" ] );
 
             // If a contact is found, update the Mautic ID in the organizations.
@@ -175,18 +184,16 @@ class MauticIntegration
         // If no ID or email is provided, log the absence of searchable data and return early.
         else
         {
-            $log_message[] = "No data to search";
-
-            Helper::log( "Deals", implode( ". ", $log_message ), 0, ( $data[ "pd_org_id" ] ?? 0 ) );
+            $message_ids   = "| mautic_id: 0 | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: No data to search {$message_ids}" );
             return;
         }
 
         // If no matching contact is found in Mautic, log the event and return.
         if ( empty( $response[ "total" ] ) )
         {
-            $log_message[] = "Contact not found";
-
-            Helper::log( "Deals", implode( ". ", $log_message ), ( $data[ "id" ] ?? 0 ), ( $data[ "pd_org_id" ] ?? 0 ) );
+            $message_ids   = "| mautic_id: " . ( $data[ "id" ] ?? 0 ) . " | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: Contact not found {$message_ids}" );
             return;
         }
 
@@ -199,12 +206,12 @@ class MauticIntegration
         self::treatFieldsDeal( $data, ( $old_data[ "pd_pipeline_status" ] ?? "" ), "pd_pipeline_status", "new_status",   "old_status"   );
         self::treatFieldsDeal( $data, ( $old_data[ "pd_pipeline_label"  ] ?? "" ), "pd_pipeline_label",  "new_label",    "old_label"    );
 
-        // Log the update and perform the edit operation on the contact.
-        $log_message[] = "Contact deal updated";
+        // Perform the edit operation on the contact.
         $mautic_api->edit( $data[ "id" ], $data );
 
         // Log the final outcome of the operation.
-        Helper::log( "Deals", implode( ". ", $log_message ), ( $data[ "id" ] ?? 0 ), ( $data[ "pd_org_id" ] ?? 0 ) );
+        $message_ids   = "| mautic_id: " . ( $data[ "id" ] ?? 0 ) . " | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
+        log_message( channel: self::LOG_CHANNEL, message: "Deals: Contact deal updated {$message_ids}" );
     }
 
     /**
@@ -329,7 +336,8 @@ class MauticIntegration
         // If there are errors in the response, log them and exit the function.
         if ( isset( $response[ "errors" ] ) )
         {
-            Helper::log( "Persons", json_encode( $response, true ), $entity_id, ( $data[ "pd_org_id" ] ?? 0 ) );
+            $message_ids   = "| mautic_id: {$entity_id} | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: Create or Update failed {$message_ids}", context: $response );
             return;
         }
 
@@ -355,11 +363,9 @@ class MauticIntegration
     private static function updateMauticId( string $entity_type, int $mautic_id, int $pipedrive_id, bool $has_id )
     {
         // Log the creation or update action in the 'marketplace' channel.
-        Log::channel( "marketplace" )->info( ucfirst( $entity_type ), [
-            "data"      => "created/updated",
-            "mautic_id" => $mautic_id,
-            "pd_org_id" => $pipedrive_id
-        ] );
+        $message = ucfirst( $entity_type ) . ": created/updated | mautic_id: {$mautic_id} | pipedrive_id: {$pipedrive_id}";
+
+        log_message( channel: "marketplace", message: $message, print: true );
 
         // If the entity already has an ID, update the Mautic ID in Pipedrive.
         if ( $has_id )
@@ -456,11 +462,12 @@ class MauticIntegration
         $response_3          = $mautic_api->edit( 218, $data_labels );
 
         // Determine the log message based on the presence of errors in the responses
-        $log_message         = ( !isset( $response_1[ "errors" ] ) && !isset( $response_2[ "errors" ] ) && !isset( $response_3[ "errors" ] ) )
-                                ? "Successfully imported" : "Import failed";
+        $message             = ( !isset( $response_1[ "errors" ] ) && !isset( $response_2[ "errors" ] ) && !isset( $response_3[ "errors" ] ) )
+                                ? "Successfully imported"
+                                : "Import failed";
 
         // Log the outcome of the import process
-        Log::channel( "marketplace" )->info( "update-stages", [ $log_message ] );
+        log_message( channel: self::LOG_CHANNEL, message: "Stages: $message" );
     }
 
     /**

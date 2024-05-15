@@ -4,7 +4,6 @@ namespace App\Console\Commands\Affiliates\Cofry;
 
 use File;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class DeleteImages extends Command
 {
@@ -39,13 +38,11 @@ class DeleteImages extends Command
      */
     public function handle()
     {
-        echo "DEL : Deleting images\n";
-        Log::channel( "cofry" )->info( "Images", [ "Deleting images" ] );
+        log_message( channel: "cofry", message: "Images: Deleting images...", print: true );
 
         File::deleteDirectory( public_path( "images/estabelecimentos/" ), true );
-        File::deleteDirectory( public_path( "images/promos/" ),           true );
+        File::deleteDirectory( public_path( "images/promos/"           ), true );
 
-        echo "DEL : Successfully deleted\n";
-        Log::channel( "cofry" )->info( "Images", [ "Successfully deleted" ] );
+        log_message( channel: "cofry", message: "Images: Successfully deleted...", print: true );
     }
 }

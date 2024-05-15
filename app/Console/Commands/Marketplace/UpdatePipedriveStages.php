@@ -39,10 +39,10 @@ class UpdatePipedriveStages extends Command
      */
     public function handle()
     {
-        Log::channel( "marketplace" )->info( "update-stages", [ "Start processing of update Stages/Status/Labels" ] );
+        log_message( channel: "marketplace", message: "Stages|Status|Labels: Start processing of update...", print: true );
 
         MauticIntegration::updateStages();
 
-        Log::channel( "marketplace" )->info( "update-stages", [ "End Stages/Status/Labels processing" ] );
+        log_message( channel: "marketplace", message: "Stages|Status|Labels: End processing...", print: true );
     }
 }

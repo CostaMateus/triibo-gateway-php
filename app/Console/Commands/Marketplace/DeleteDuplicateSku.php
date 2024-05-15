@@ -86,13 +86,12 @@ class DeleteDuplicateSku extends Command
                     }
                 }
 
-                $result_metas = $conn->delete( $del_metas );
-                $result_posts = $conn->delete( $del_posts );
+                $data      = [
+                    "posts" => $conn->delete( $del_posts ),
+                    "metas" => $conn->delete( $del_metas )
+                ];
 
-                Log::channel( "fastshop" )->info( "Deleting duplicate SKUs", [
-                    "posts" => $result_posts,
-                    "metas" => $result_metas
-                ] );
+                log_message( channel: "fastshop", message: "Marketplace: Deleting duplicate SKUs...", context: $data );
             }
         }
         while( count( $posts ) > 0 );

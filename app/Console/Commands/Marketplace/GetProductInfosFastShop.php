@@ -2,20 +2,24 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Artisan;
 use Exception;
+use Throwable;
 use App\Helpers\Helper;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
-use App\Http\Integrations\FastshopIntegration\DataTranslator;
 
 class GetProductInfosFastShop extends Command
 {
+    /**
+     * Define a class constant for the log channel.
+     *
+     * @var     string
+     */
+    private const LOG_CHANNEL = "fastshop";
+
     /**
      * The name and signature of the console command.
      *
@@ -56,21 +60,21 @@ class GetProductInfosFastShop extends Command
 
         $this->action = $this->option( "action" );
 
-        echo "Command : Starting process FS data - {$this->action}\n";
+        log_message( channel: self::LOG_CHANNEL, message: "Products: Starting process FS data - {$this->action}...", print: true );
 
         $this->process();
 
-        echo "Command : Finished FS data process - {$this->action}\n";
+        log_message( channel: self::LOG_CHANNEL, message: "Products: Finished FS data process - {$this->action}...", print: true );
 
         $end   = now();
         $diff  = $start->diffInMinutes( $end );
 
-        echo "Runtime {$diff} minutes\n";
+        log_message( channel: self::LOG_CHANNEL, message: "Products: Runtime {$diff} minutes...", print: true );
     }
 
     private function process()
     {
-        echo "Command : Get products of local table\n";
+        log_message( channel: self::LOG_CHANNEL, message: "Products: Get products of local table...", print: true );
 
         $products = DB::table( "fastshop_products" )
                         ->where( "action", $this->action )
@@ -82,8 +86,7 @@ class GetProductInfosFastShop extends Command
         // no products to process
         if ( empty( $products ) )
         {
-            echo "Command : No products to process\n";
-            Log::channel( "fastshop" )->info( "Product processing", [ "No products to process" ] );
+            log_message( channel: self::LOG_CHANNEL, message: "Products: No products to process...", print: true );
             return;
         }
 
@@ -92,7 +95,7 @@ class GetProductInfosFastShop extends Command
 
         foreach ( $products as $data )
         {
-            echo "Processing local product_id: " . $data[ "id" ] . "\n";
+            log_message( channel: self::LOG_CHANNEL, message: "Products: Processing local product_id: " . $data[ "id" ], print: true );
 
             $product  = json_decode( $data[ "data" ], true );
             $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
@@ -132,7 +135,7 @@ class GetProductInfosFastShop extends Command
         foreach ( $wcData as $i => $skus )
         {
             ++$i;
-            echo "Sending SKUs to MKT - pack {$i} of {$y}\n";
+            log_message( channel: self::LOG_CHANNEL, message: "Products: Sending SKUs to MKT - pack {$i} of {$y}", print: true );
 
             try
             {
@@ -140,7 +143,7 @@ class GetProductInfosFastShop extends Command
             }
             catch ( Exception $e )
             {
-                echo "Failure to send SKUs to MKT - pack {$i} of {$y}\n";
+                log_message( channel: self::LOG_CHANNEL, message: "Products: Failure to send SKUs to MKT - pack {$i} of {$y}", print: true );
 
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
@@ -216,8 +219,11 @@ class GetProductInfosFastShop extends Command
                     DB::table( "marketplace_product_categories" )->insert( $insert );
                 }
             }
-            catch( Exception $e )
+            catch( Throwable $e )
             {
+                $message = "Products: Failure to get mkt product category";
+
+                log_exception( channel: self::LOG_CHANNEL, message: $message, method: "getCategoriesId", type: "Throwable", e: $e );
             }
         }
 
@@ -355,10 +361,10 @@ class GetProductInfosFastShop extends Command
                     "stock"         => 0,
                 ];
 
-                echo "{$item[ "id" ]} processed\n";
+                log_message( channel: self::LOG_CHANNEL, message: "Products: {$item[ "id" ]} processed", print: true );
             }
 
-            echo "Conversion finished\n";
+            log_message( channel: self::LOG_CHANNEL, message: "Products: Conversion finished", print: true );
 
             return $data;
         }
@@ -381,10 +387,10 @@ class GetProductInfosFastShop extends Command
                 "stock"         => $stock,
             ];
 
-            echo "{$sku} processed\n";
+            log_message( channel: self::LOG_CHANNEL, message: "Products: {$sku} processed", print: true );
         }
 
-        echo "Conversion finished\n";
+        log_message( channel: self::LOG_CHANNEL, message: "Products: Conversion finished", print: true );
 
         return $data;
     }
