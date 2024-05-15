@@ -205,8 +205,8 @@ class GetStockPriceFastShop extends Command
 
                 $data[]  = [
                     "product_sku"   => $sku,
-                    "regular_price" => Helper::insertDecimal( $regular ),
-                    "sale_price"    => Helper::insertDecimal( $sale    ),
+                    "regular_price" => insert_decimal( $regular ),
+                    "sale_price"    => insert_decimal( $sale    ),
                     "stock"         => $stock,
                 ];
 

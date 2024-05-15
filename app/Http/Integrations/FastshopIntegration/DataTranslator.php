@@ -112,8 +112,8 @@ class DataTranslator
         if ( !empty( $data[ "items" ] ) )
         {
             $item                      = $data[ "items" ][ 0 ];
-            $regularPrice              = Helper::insertDecimal( $item[ "listPrice" ] );
-            $salePrice                 = Helper::insertDecimal( $item[ "price"     ] );
+            $regularPrice              = insert_decimal( $item[ "listPrice" ] );
+            $salePrice                 = insert_decimal( $item[ "price"     ] );
 
             $wcData[ "regular_price" ] = $regularPrice;
             $wcData[ "sale_price"    ] = $salePrice;
@@ -164,18 +164,24 @@ class DataTranslator
         }, $data[ "CategoryFullPath" ] ?? [] );
 
         // Filter and map Fast Shop images to WooCommerce image format.
-        $images     = array_map( function ( $img )
-        {
-            return [
-                "src"  => $img[ "imageUrl"  ],
-                "name" => $img[ "imageName" ],
-                "alt"  => $img[ "imageName" ]
-            ];
+        $images     = array_map(
+            function ( $img )
+            {
+                return [
+                    "src"  => $img[ "imageUrl"  ],
+                    "name" => $img[ "imageName" ],
+                    "alt"  => $img[ "imageName" ]
+                ];
 
-        }, array_filter( $data[ "Images" ], function ( $img )
-        {
-            return Helper::validateImageUrl( $img[ "imageUrl" ] );
-        } ) );
+            },
+            array_filter(
+                $data[ "Images" ],
+                function ( $img )
+                {
+                    return validate_image_url( $img[ "imageUrl" ] );
+                }
+            )
+        );
 
         // Determine the SKU based on Fast Shop product and seller SKU.
         $sku        = $data[ "ProductId" ] == $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];
@@ -193,14 +199,14 @@ class DataTranslator
             "description"       => $data[ "ProductDescription" ],
             "short_description" => $shortDescr,
             "sku"               => "FS-{$sku}",
-            "regular_price"     => Helper::insertDecimal( $data[ "Pricing" ][ "ListPrice" ] ),
-            "sale_price"        => Helper::insertDecimal( $data[ "Pricing" ][ "SalePrice" ] ),
+            "regular_price"     => insert_decimal( $data[ "Pricing" ][ "ListPrice" ] ),
+            "sale_price"        => insert_decimal( $data[ "Pricing" ][ "SalePrice" ] ),
             "manage_stock"      => true,
             "stock_quantity"    => $data[ "AvailableQuantity" ],
             "stock_status"      => $data[ "AvailableQuantity" ] > 0 ? "instock" : "outofstock",
             "backorders"        => "no",
             "sold_individually" => false,
-            "weight"            => Helper::convertWeight( $data[ "WeightKg" ] ),
+            "weight"            => convert_weight( $data[ "WeightKg" ] ),
             "dimensions"        => [
                 "length" => ( string ) $data[ "Length" ],
                 "width"  => ( string ) $data[ "Width"  ],
@@ -328,11 +334,11 @@ class DataTranslator
                         "sku"               => "FS-" . $item[ "id" ],
                         "quantity"          => $lg[ "quantity" ],
                         "stock"             => $stock,
-                        "deliveryPrice"     => Helper::convertPrice( $price ),
-                        "deliveryTime"      => Helper::convertDeliveryTime( $deliveryTime ),
+                        "deliveryPrice"     => convert_price( $price ),
+                        "deliveryTime"      => convert_delivery_time( $deliveryTime ),
                         "availableQuantity" => ( $lg[ "quantity" ] <= $stock ),
-                        "regular_price"     => Helper::convertPrice( $item[ "listPrice" ] ),
-                        "sale_price"        => Helper::convertPrice( $item[ "price"     ] ),
+                        "regular_price"     => convert_price( $item[ "listPrice" ] ),
+                        "sale_price"        => convert_price( $item[ "price"     ] ),
                         "hub"               => $hub,
                         "code"              => $code,
                         "message"           => $message,
@@ -385,8 +391,8 @@ class DataTranslator
                     "deliveryPrice"     => "0.00",
                     "deliveryTime"      => "0",
                     "availableQuantity" => false,
-                    "regular_price"     => Helper::convertPrice( $product[ "listPrice" ] ),
-                    "sale_price"        => Helper::convertPrice( $product[ "price"     ] ),
+                    "regular_price"     => convert_price( $product[ "listPrice" ] ),
+                    "sale_price"        => convert_price( $product[ "price"     ] ),
                     "hub"               => "",
                     "code"              => 4001,
                     "message"           => "SKU currently out-of-stock",
@@ -569,7 +575,7 @@ class DataTranslator
 
         // Define an associative array to map keys to their respective formats.
         $formats = [
-            "date"               => fn( $value ) => Helper::convertDeliveryDate($value),
+            "date"               => fn( $value ) => convert_delivery_date( $value ),
             "marketPlaceOrderId" => fn( $value ) => "Order: #{$value}",
             "orderId"            => fn( $value ) => "FS Order: #{$value}",
             "receipt"            => fn( $value ) => "Protocol: {$value}",

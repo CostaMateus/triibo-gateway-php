@@ -147,7 +147,7 @@ class GetProductInfosFastShop extends Command
 
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
-                    Helper::sendMailNotification( "marketplace", "process()", "Exception", $e );
+                    send_mail_notification( "marketplace", "process()", "Exception", $e );
                     $fail = array_merge( $fail, $skus );
                 }
             }
@@ -178,7 +178,7 @@ class GetProductInfosFastShop extends Command
         {
             try
             {
-                $slug = Helper::slugify( $catName, "-" );
+                $slug = Str::slug( $catName );
 
                 $cat  = DB::table( "marketplace_product_categories" )
                            ->where( "cat_slug", $slug )
@@ -245,7 +245,7 @@ class GetProductInfosFastShop extends Command
 
         foreach ( $data[ "Images" ] as $img )
         {
-            if ( !Helper::validateImageUrl( $img[ "imageUrl" ] ) ) continue;
+            if ( !validate_image_url( $img[ "imageUrl" ] ) ) continue;
 
             $images[] = [
                 "src"  => $img[ "imageUrl"  ],
@@ -317,7 +317,7 @@ class GetProductInfosFastShop extends Command
             "backorders"        => "no",
             "sold_individually" => false,
 
-            "weight"            => Helper::convertWeight( $data[ "WeightKg" ] ),
+            "weight"            => convert_weight( $data[ "WeightKg" ] ),
             "dimensions"        => [
                 "length" => ( string ) $data[ "Length" ],
                 "width"  => ( string ) $data[ "Width"  ],
@@ -356,8 +356,8 @@ class GetProductInfosFastShop extends Command
             {
                 $data[] = [
                     "product_sku"   => $item[ "id" ],
-                    "regular_price" => Helper::insertDecimal( $item[ "listPrice" ] ),
-                    "sale_price"    => Helper::insertDecimal( $item[ "price"     ] ),
+                    "regular_price" => insert_decimal( $item[ "listPrice" ] ),
+                    "sale_price"    => insert_decimal( $item[ "price"     ] ),
                     "stock"         => 0,
                 ];
 
@@ -382,8 +382,8 @@ class GetProductInfosFastShop extends Command
 
             $data[]  = [
                 "product_sku"   => $sku,
-                "regular_price" => Helper::insertDecimal( $regular ),
-                "sale_price"    => Helper::insertDecimal( $sale    ),
+                "regular_price" => insert_decimal( $regular ),
+                "sale_price"    => insert_decimal( $sale    ),
                 "stock"         => $stock,
             ];
 

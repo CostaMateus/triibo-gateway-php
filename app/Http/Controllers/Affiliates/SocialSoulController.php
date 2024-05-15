@@ -55,7 +55,7 @@ class SocialSoulController extends Controller
                 "message" => $e->getMessage()
             ] );
 
-            Helper::sendMailNotification( "socialsoul", "insertStoresFirebase()", "FirebaseException", $e );
+            send_mail_notification( "socialsoul", "insertStoresFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
@@ -67,7 +67,7 @@ class SocialSoulController extends Controller
                 "message" => $e->getMessage(),
             ] );
 
-            Helper::sendMailNotification( "socialsoul", "insertStoresFirebase()", "Throwable", $e );
+            send_mail_notification( "socialsoul", "insertStoresFirebase()", "Throwable", $e );
         }
     }
 
@@ -99,7 +99,7 @@ class SocialSoulController extends Controller
                 "message" => $e->getMessage(),
             ] );
 
-            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase()", "FirebaseException", $e );
+            send_mail_notification( "socialsoul", "insertCouponsOffersFirebase()", "FirebaseException", $e );
         }
         catch ( Throwable $e )
         {
@@ -111,7 +111,7 @@ class SocialSoulController extends Controller
                 "message" => $e->getMessage(),
             ] );
 
-            Helper::sendMailNotification( "socialsoul", "insertCouponsOffersFirebase()", "Throwable", $e );
+            send_mail_notification( "socialsoul", "insertCouponsOffersFirebase()", "Throwable", $e );
         }
     }
 
@@ -467,7 +467,7 @@ class SocialSoulController extends Controller
                         "message" => $e->getMessage(),
                     ] );
 
-                    Helper::sendMailNotification( "socialsoul", "insertImagesFirebase()", "FirebaseException", $e );
+                    send_mail_notification( "socialsoul", "insertImagesFirebase()", "FirebaseException", $e );
                 }
                 catch (Throwable $e)
                 {
@@ -479,7 +479,7 @@ class SocialSoulController extends Controller
                         "message" => $e->getMessage(),
                     ] );
 
-                    Helper::sendMailNotification( "socialsoul", "insertImagesFirebase()", "Throwable", $e );
+                    send_mail_notification( "socialsoul", "insertImagesFirebase()", "Throwable", $e );
                 }
             }
 

@@ -145,7 +145,7 @@ class FastshopController extends Controller
         catch ( Exception $e )
         {
             $error = true;
-            $ex    = Helper::treatExceptionMsgFS( $e->getMessage() );
+            $ex    = treat_exception_message_fs( $e->getMessage() );
 
             if ( $ex )
             {
@@ -319,7 +319,7 @@ class FastshopController extends Controller
         try
         {
             $deliveredDate = $request->all()[ "deliveredDate" ];
-            $deliveredDate = Helper::convertDeliveryDate( $deliveredDate );
+            $deliveredDate = convert_delivery_date( $deliveredDate );
 
             $dataToUpdate  = [ "status" => "completed" ];
             $noteToCreate  = "ENTREGA REALIZADA\n $deliveredDate";

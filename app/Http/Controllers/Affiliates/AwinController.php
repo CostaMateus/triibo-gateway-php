@@ -304,7 +304,7 @@ class AwinController extends Controller
             $local_establishment = json_decode( $data_establishment[ "data" ], true );
 
             // Compare Awin and local establishments and get differences.
-            $diff                = Helper::arrayDiffAssocRecursive( $awin_establishment, $local_establishment );
+            $diff                = array_diff_assoc_recursive( $awin_establishment, $local_establishment );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_ESTAB_FIELDS as $field )
@@ -476,7 +476,7 @@ class AwinController extends Controller
             unset( $awin_promotion[ "partnerEstablishmentId" ] );
 
             // Compare Awin and local promotions and get differences.
-            $diff             = Helper::arrayDiffAssocRecursive( $awin_promotion, $data_promotion );
+            $diff             = array_diff_assoc_recursive( $awin_promotion, $data_promotion );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_PROMO_FIELDS as $field )

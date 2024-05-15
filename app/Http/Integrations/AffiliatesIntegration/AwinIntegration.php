@@ -7,6 +7,7 @@ use Exception;
 use Throwable;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
 
 class AwinIntegration
@@ -88,7 +89,7 @@ class AwinIntegration
 
             if ( !$establishments[ "success" ] && empty( $establishments[ "data" ] ) ) return []; // falha
 
-            Helper::usort( "id", $establishments[ "data" ] );
+            triibo_usort( "id", $establishments[ "data" ] );
 
             // $auxStores = [];
 
@@ -397,7 +398,7 @@ class AwinIntegration
 
                 $establishmentId            = $report[ "advertiserId" ];
                 $establishmentInfo          = $this->searchEstablishmentsDetails( $establishmentId, true );
-                $cashback                   = Helper::getCashback( $establishmentInfo[ "commissionRange" ] );
+                $cashback                   = get_cashback( $establishmentInfo[ "commissionRange" ] );
                 $establishmentName          = explode( " BR", $establishmentInfo[ "programmeInfo" ][ "name" ] )[ 0 ];
 
                 $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
@@ -470,9 +471,9 @@ class AwinIntegration
             $cashback      = "";
 
             if ( $estab[ "commissionRange" ] )
-                $cashback = Helper::getCashback( $estab[ "commissionRange" ] );
+                $cashback = get_cashback( $estab[ "commissionRange" ] );
 
-            $auxName       = Helper::hyphenize( strtolower( $estab[ "name" ] ) );
+            $auxName       = hyphenize( strtolower( $estab[ "name" ] ) );
             $imageName     = "awin_{$id}_{$auxName}.png";
             $imageName     = ( $estab[ "logoUrl" ] )
                                 ? ( ( self::saveImage( "establishments", $imageName, $estab[ "logoUrl" ] ) )
@@ -507,8 +508,8 @@ class AwinIntegration
                 "fotoThumb"              => $imageName,
                 "listaFotos"             => [ $imageName ],
 
-                "funcionamento"          => [ ...Helper::getSchedulesOperation()        ],
-                "horarios"               => [ ...Helper::getSchedulesOperation( false ) ],
+                "funcionamento"          => [ ...get_schedules_operation()        ],
+                "horarios"               => [ ...get_schedules_operation( false ) ],
 
                 "tags"                   => [ "awin" ],
 
@@ -539,13 +540,13 @@ class AwinIntegration
             $establishmentName = explode( " BR", $establishmentName )[ 0 ];
 
             $idEstab           = $estab[ "id" ];
-            $idPromo           = strtolower( str_replace( " ", "", Helper::slugify( $establishmentName, "" ) ) );
+            $idPromo           = strtolower( str_replace( " ", "", Str::slug( $establishmentName, "" ) ) );
             $id                = $idEstab . $idPromo;
 
             $cashback          = "";
 
             if ( $estab[ "commissionRange" ] )
-                $cashback = Helper::getCashback( $estab[ "commissionRange" ] );
+                $cashback = get_cashback( $estab[ "commissionRange" ] );
 
             $title             = "Ganhe {$cashback}% de volta!";
 
@@ -642,7 +643,7 @@ class AwinIntegration
             if ( $promotion[ "type" ] == "voucher" )
                 $detailsDescrip .= "\n\nUtilize o código de desconto " . $promotion[ "voucher" ][ "code" ] . " no fechamento da compra.";
 
-            $detailsDescrip   .= "\n\nVálido até " . Helper::convertDate( $promotion[ "endDate" ], true );
+            $detailsDescrip   .= "\n\nVálido até " . convert_date( $promotion[ "endDate" ], true );
 
             $imageNamePromo    = "awin_common_promotion.webp";
             $imageNameVoucher  = "awin_common_coupon.webp";
@@ -786,7 +787,7 @@ class AwinIntegration
 
         $response = $response->json();
 
-        return Helper::treatUrlAwin( $response[ "url" ] );
+        return parse_url_awin( $response[ "url" ] );
     }
 
     /**
