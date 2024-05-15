@@ -335,6 +335,9 @@ class AwinController extends Controller
                 "origin"            => "awin"
             ] );
 
+            // Get pending changes
+            $past_diffs       = invalidate_past_establishment_changes( $changes_reference, $local_establishment[ "push_id" ] );
+
             // Add edit change request in Firebase.
             $new_push_changes = $changes_reference->push()->getKey();
             $changes_reference->update( [ $new_push_changes => [
@@ -348,7 +351,7 @@ class AwinController extends Controller
                 // "validatorUid"      => "",
                 // "comment"           => "",
                 "type"              => "validation",
-                "changedFields"     => $diff,
+                "changedFields"     => array_merge( $past_diffs, $diff ),
             ] ] );
 
             // Update the local establishment with the new data.
@@ -525,6 +528,9 @@ class AwinController extends Controller
                 "origin"            => "awin"
             ] );
 
+            // Get pending changes
+            $past_diffs       = invalidate_past_promotion_changes( $changes_reference, $local_promotion[ "push_id" ] );
+
             // Add edit change request in Firebase.
             $new_push_changes = $changes_reference->push()->getKey();
             $changes_reference->update( [ $new_push_changes => [
@@ -539,7 +545,7 @@ class AwinController extends Controller
                 // "validatorUid"      => "",
                 // "comment"           => "",
                 "type"              => "validation",
-                "changedFields"     => $diff,
+                "changedFields"     => array_merge( $past_diffs, $diff ),
             ] ] );
 
             // Update the local promotion with the new data.
