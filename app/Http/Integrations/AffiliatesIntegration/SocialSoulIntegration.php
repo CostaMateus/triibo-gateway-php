@@ -389,7 +389,7 @@ class SocialSoulIntegration
                 ];
             }
 
-            $auxName       = Helper::hyphenize( strtolower( $store[ "name" ] ) );
+            $auxName       = hyphenize( strtolower( $store[ "name" ] ) );
             $imageName     = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
             $imageName     = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
 

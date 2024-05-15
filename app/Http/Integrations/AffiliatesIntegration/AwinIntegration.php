@@ -472,7 +472,7 @@ class AwinIntegration
             if ( $estab[ "commissionRange" ] )
                 $cashback = Helper::getCashback( $estab[ "commissionRange" ] );
 
-            $auxName       = Helper::hyphenize( strtolower( $estab[ "name" ] ) );
+            $auxName       = hyphenize( strtolower( $estab[ "name" ] ) );
             $imageName     = "awin_{$id}_{$auxName}.png";
             $imageName     = ( $estab[ "logoUrl" ] )
                                 ? ( ( self::saveImage( "establishments", $imageName, $estab[ "logoUrl" ] ) )

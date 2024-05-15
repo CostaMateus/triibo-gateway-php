@@ -18,7 +18,7 @@ if ( !function_exists( "log_message" ) )
      * @param   bool    $notify     Whether to send a notification email or not.
      * @return  void
      */
-    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $print = false, bool $notify = false )
+    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $print = false, bool $notify = false ) : void
     {
         // Log the message using the specified log channel and level.
         Log::channel( $channel )->$level( message: $message, context: $context );
@@ -53,7 +53,7 @@ if ( !function_exists( "log_exception" ) )
      * @param   Throwable   $e          The exception object.
      * @return  void
      */
-    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null )
+    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null ) : void
     {
         $context = [
             "error_code" => $e->getCode(),
@@ -121,7 +121,7 @@ if ( !function_exists( "set_empty_string" ) )
      * @param   array   $data
      * @return  array
      */
-    function set_empty_string( array $data )
+    function set_empty_string( array $data ) : array
     {
         // Auxiliary array to store the processed values.
         $result = [];
@@ -196,5 +196,94 @@ if ( !function_exists( "filter_data" ) )
 
         // Return the result array containing the filtered values.
         return $result;
+    }
+}
+
+if ( !function_exists( "array_diff_assoc_recursive" ) )
+{
+    /**
+     * For recursive diff of multiple arrays
+     *
+     * @param   array $array
+     * @param   array ...$arrays
+     * @return  array
+     */
+    function array_diff_assoc_recursive( array $array, array ...$arrays ) : array
+    {
+        $func = function ( $array1, $array2 ) use ( &$func )
+        {
+            $difference = [];
+
+            foreach ( $array1 as $key => $value )
+            {
+                if ( is_array( $value ) )
+                {
+                    if ( !isset( $array2[ $key ] ) || !is_array( $array2[ $key ] ) )
+                    {
+                        $difference[$key] = $value;
+                    }
+                    else
+                    {
+                        $new_diff = $func($value, $array2[ $key ] );
+                        if ( !empty( $new_diff ) )
+                        {
+                            $difference[ $key ] = $new_diff;
+                        }
+                    }
+                }
+                else
+                {
+                    if ( !array_key_exists( $key, $array2 ) || $array2[ $key ] !== $value )
+                    {
+                        $difference[$key] = $value;
+                    }
+                }
+            }
+
+            return $difference;
+        };
+
+        $diffs = $array;
+
+        foreach ( $arrays as $_array )
+        {
+            $diffs = $func( $diffs, $_array );
+        }
+
+        return $diffs;
+    }
+}
+
+if ( !function_exists( "array_search_by_key" ) )
+{
+    /**
+     * Search for a value in a specific column of an associative array.
+     *
+     * @param   string  $needle     The value to search for.
+     * @param   string  $column     The column in which the value will be searched.
+     * @param   array   $array      The associative array containing the data.
+     * @return  int|string|false    The key for the searched value if it is found in the array, false otherwise.
+     */
+    function array_search_by_key( string $needle, string $column, array $array ) : int|string|false
+    {
+        // Create a new array containing only the values of the specified column
+        $column_values = array_column( $array, $column );
+
+        // Search for the $needle value in the new array
+        return array_search( $needle, $column_values );
+    }
+}
+
+if ( !function_exists( "hyphenize" ) )
+{
+    /**
+     * Replace spaces and multiple hyphens with a single hyphen.
+     *
+     * @param   string  $text   The text to be processed.
+     * @return  string          The text with spaces and multiple hyphens replaced by a single hyphen.
+     */
+    function hyphenize( string $text ) : string
+    {
+        return Str::slug( $text, "-" );
     }
 }

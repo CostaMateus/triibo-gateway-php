@@ -4,9 +4,7 @@ namespace App\Console\Commands\Affiliates\Awin;
 
 use DB;
 use Storage;
-use App\Helpers\Helper;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Kreait\Firebase\Database\Reference;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use App\Http\Controllers\Affiliates\AwinController;
@@ -309,7 +307,7 @@ class ProcessDataAwin extends Command
             $partner = ( $__is_establishments ) ? "partnerEstablishmentId" : "partnerPromotionId";
 
             $search_id = $data[ "origin" ] . $data[ $partner ];
-            $index     = Helper::arraySearchByKey( needle: $search_id, column: "affiliate_id", arr: $local_data );
+            $index     = array_search_by_key( needle: $search_id, column: "affiliate_id", array: $local_data );
 
             if ( $index !== false )
                 $local_data[ $index ][ "push_id" ] = $push;
