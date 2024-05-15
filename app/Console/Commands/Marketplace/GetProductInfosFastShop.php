@@ -317,7 +317,7 @@ class GetProductInfosFastShop extends Command
             "backorders"        => "no",
             "sold_individually" => false,
 
-            "weight"            => Helper::convertWeight( $data[ "WeightKg" ] ),
+            "weight"            => convert_weight( $data[ "WeightKg" ] ),
             "dimensions"        => [
                 "length" => ( string ) $data[ "Length" ],
                 "width"  => ( string ) $data[ "Width"  ],
@@ -356,8 +356,8 @@ class GetProductInfosFastShop extends Command
             {
                 $data[] = [
                     "product_sku"   => $item[ "id" ],
-                    "regular_price" => Helper::insertDecimal( $item[ "listPrice" ] ),
-                    "sale_price"    => Helper::insertDecimal( $item[ "price"     ] ),
+                    "regular_price" => insert_decimal( $item[ "listPrice" ] ),
+                    "sale_price"    => insert_decimal( $item[ "price"     ] ),
                     "stock"         => 0,
                 ];
 
@@ -382,8 +382,8 @@ class GetProductInfosFastShop extends Command
 
             $data[]  = [
                 "product_sku"   => $sku,
-                "regular_price" => Helper::insertDecimal( $regular ),
-                "sale_price"    => Helper::insertDecimal( $sale    ),
+                "regular_price" => insert_decimal( $regular ),
+                "sale_price"    => insert_decimal( $sale    ),
                 "stock"         => $stock,
             ];
 

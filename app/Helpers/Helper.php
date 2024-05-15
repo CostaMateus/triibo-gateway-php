@@ -129,44 +129,6 @@ class Helper
     }
 
     /**
-     * Insere o ponto decimal
-     * Ex: 100 = 1.00, 150 = 1.50
-     *
-     * @param string $number
-     * @return string
-     */
-    public static function insertDecimal(string $number)
-    {
-        return substr_replace($number, ".", -2, 0);
-    }
-
-    /**
-     * Formata o valor com duas casas decimais
-     * Ex: 1 = 0.01, 15 = 0.15
-     *
-     * @param integer $weight
-     * @return string
-     */
-    public static function convertWeight(int $weight)
-    {
-        $weight = (strlen($weight) == 2) ? "0" . $weight : ((strlen($weight) == 1) ? "00" . $weight : $weight);
-
-        return self::insertDecimal($weight);
-    }
-
-    /**
-     * Formata o valor com duas casas decimais
-     * Ex: 1 = 0.01, 15 = 0.15
-     *
-     * @param integer $price
-     * @return string
-     */
-    public static function convertPrice(int $price)
-    {
-        return self::convertWeight($price);
-    }
-
-    /**
      * Converte o tempo de entrega da FS para o WC
      *
      * @param string $time

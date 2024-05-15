@@ -112,8 +112,8 @@ class DataTranslator
         if ( !empty( $data[ "items" ] ) )
         {
             $item                      = $data[ "items" ][ 0 ];
-            $regularPrice              = Helper::insertDecimal( $item[ "listPrice" ] );
-            $salePrice                 = Helper::insertDecimal( $item[ "price"     ] );
+            $regularPrice              = insert_decimal( $item[ "listPrice" ] );
+            $salePrice                 = insert_decimal( $item[ "price"     ] );
 
             $wcData[ "regular_price" ] = $regularPrice;
             $wcData[ "sale_price"    ] = $salePrice;
@@ -193,14 +193,14 @@ class DataTranslator
             "description"       => $data[ "ProductDescription" ],
             "short_description" => $shortDescr,
             "sku"               => "FS-{$sku}",
-            "regular_price"     => Helper::insertDecimal( $data[ "Pricing" ][ "ListPrice" ] ),
-            "sale_price"        => Helper::insertDecimal( $data[ "Pricing" ][ "SalePrice" ] ),
+            "regular_price"     => insert_decimal( $data[ "Pricing" ][ "ListPrice" ] ),
+            "sale_price"        => insert_decimal( $data[ "Pricing" ][ "SalePrice" ] ),
             "manage_stock"      => true,
             "stock_quantity"    => $data[ "AvailableQuantity" ],
             "stock_status"      => $data[ "AvailableQuantity" ] > 0 ? "instock" : "outofstock",
             "backorders"        => "no",
             "sold_individually" => false,
-            "weight"            => Helper::convertWeight( $data[ "WeightKg" ] ),
+            "weight"            => convert_weight( $data[ "WeightKg" ] ),
             "dimensions"        => [
                 "length" => ( string ) $data[ "Length" ],
                 "width"  => ( string ) $data[ "Width"  ],
@@ -328,11 +328,11 @@ class DataTranslator
                         "sku"               => "FS-" . $item[ "id" ],
                         "quantity"          => $lg[ "quantity" ],
                         "stock"             => $stock,
-                        "deliveryPrice"     => Helper::convertPrice( $price ),
+                        "deliveryPrice"     => convert_price( $price ),
                         "deliveryTime"      => Helper::convertDeliveryTime( $deliveryTime ),
                         "availableQuantity" => ( $lg[ "quantity" ] <= $stock ),
-                        "regular_price"     => Helper::convertPrice( $item[ "listPrice" ] ),
-                        "sale_price"        => Helper::convertPrice( $item[ "price"     ] ),
+                        "regular_price"     => convert_price( $item[ "listPrice" ] ),
+                        "sale_price"        => convert_price( $item[ "price"     ] ),
                         "hub"               => $hub,
                         "code"              => $code,
                         "message"           => $message,
@@ -385,8 +385,8 @@ class DataTranslator
                     "deliveryPrice"     => "0.00",
                     "deliveryTime"      => "0",
                     "availableQuantity" => false,
-                    "regular_price"     => Helper::convertPrice( $product[ "listPrice" ] ),
-                    "sale_price"        => Helper::convertPrice( $product[ "price"     ] ),
+                    "regular_price"     => convert_price( $product[ "listPrice" ] ),
+                    "sale_price"        => convert_price( $product[ "price"     ] ),
                     "hub"               => "",
                     "code"              => 4001,
                     "message"           => "SKU currently out-of-stock",

@@ -287,3 +287,50 @@ if ( !function_exists( "hyphenize" ) )
         return Str::slug( $text, "-" );
     }
 }
+
+if ( !function_exists( "insert_decimal" ) )
+{
+    /**
+     * Inserts a decimal point
+     * Ex: 100 = 1.00, 150 = 1.50
+     *
+     * @param   string  $number   The number to be formatted.
+     * @return  string            The number with the decimal point inserted.
+     */
+    function insert_decimal( string $number ) : string
+    {
+        return substr_replace( $number, ".", -2, 0 );
+    }
+}
+
+if ( !function_exists( "convert_weight" ) )
+{
+    /**
+     * Formats the value with two decimal places
+     * Ex: 1 = 0.01, 15 = 0.15
+     *
+     * @param   int     $weight   The weight value to be formatted.
+     * @return  string            The formatted weight value with two decimal places.
+     */
+    function convert_weight( int $weight ) : string
+    {
+        $weight = Str::padLeft( $weight, 3, "0" );
+
+        return insert_decimal( $weight );
+    }
+}
+
+if ( !function_exists( "convert_price" ) )
+{
+    /**
+     * Formats the value with two decimal places
+     * Ex: 1 = 0.01, 15 = 0.15
+     *
+     * @param   int     $price   The price value to be formatted.
+     * @return  string           The formatted price value with two decimal places.
+     */
+    function convert_price( int $price ) : string
+    {
+        return convert_weight( $price );
+    }
+}
