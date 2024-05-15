@@ -4,6 +4,8 @@
  */
 
 use App\Helpers\Helper;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 if ( !function_exists( "log_message" ) )
 {
@@ -299,7 +301,7 @@ if ( !function_exists( "insert_decimal" ) )
      */
     function insert_decimal( string $number ) : string
     {
-        return substr_replace( $number, ".", -2, 0 );
+        return Str::substrReplace( $number, ".", -2, 0 );
     }
 }
 
@@ -332,5 +334,40 @@ if ( !function_exists( "convert_price" ) )
     function convert_price( int $price ) : string
     {
         return convert_weight( $price );
+    }
+}
+
+if ( !function_exists( "convert_delivery_time" ) )
+{
+    /**
+     * Converts the delivery time from FS to WC format
+     *
+     * @param   string  $time   The delivery time in FS format.
+     * @return  string          The delivery time in WC format.
+     */
+    function convert_delivery_time( string $time ) : string
+    {
+        return Str::trim( $time, "bd" ) ?: "1";
+    }
+}
+
+if ( !function_exists( "convert_delivery_date" ) )
+{
+    /**
+     * Converts the order delivery date from FS format to WC format.
+     *
+     * @param   string  $time   The delivery date in FS format.
+     * @return  string          The delivery date in WC format.
+     */
+    function convert_delivery_date( string $time )
+    {
+        $time = Str::of( $time )->explode( "T" );
+
+        $hour = $time->last();
+
+        $date = Str::of( $time->first() )->explode( "-" );
+        $date = Arr::join( $date->reverse()->toArray(), "/" );
+
+        return "{$date} às {$hour}";
     }
 }

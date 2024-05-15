@@ -329,7 +329,7 @@ class DataTranslator
                         "quantity"          => $lg[ "quantity" ],
                         "stock"             => $stock,
                         "deliveryPrice"     => convert_price( $price ),
-                        "deliveryTime"      => Helper::convertDeliveryTime( $deliveryTime ),
+                        "deliveryTime"      => convert_delivery_time( $deliveryTime ),
                         "availableQuantity" => ( $lg[ "quantity" ] <= $stock ),
                         "regular_price"     => convert_price( $item[ "listPrice" ] ),
                         "sale_price"        => convert_price( $item[ "price"     ] ),
@@ -569,7 +569,7 @@ class DataTranslator
 
         // Define an associative array to map keys to their respective formats.
         $formats = [
-            "date"               => fn( $value ) => Helper::convertDeliveryDate($value),
+            "date"               => fn( $value ) => convert_delivery_date( $value ),
             "marketPlaceOrderId" => fn( $value ) => "Order: #{$value}",
             "orderId"            => fn( $value ) => "FS Order: #{$value}",
             "receipt"            => fn( $value ) => "Protocol: {$value}",

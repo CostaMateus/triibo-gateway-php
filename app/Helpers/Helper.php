@@ -128,40 +128,6 @@ class Helper
         return " ";
     }
 
-    /**
-     * Converte o tempo de entrega da FS para o WC
-     *
-     * @param string $time
-     * @return string
-     */
-    public static function convertDeliveryTime(string $time)
-    {
-        if (strpos($time, "bd") !== false)
-        {
-            return explode("bd", $time)[0];
-        }
-        else
-        {
-            return "1";
-        }
-    }
-
-    /**
-     * Converte data de entrega do pedido, FS para o WC
-     *
-     * @param string $time
-     * @return string
-     */
-    public static function convertDeliveryDate(string $time)
-    {
-        $time = explode("T", $time);
-
-        $hour = $time[1];
-        $date = implode("/", array_reverse(explode("-", $time[0])));
-
-        return "$date às $hour";
-    }
-
     public static function validateImageUrl(string $url)
     {
         if (isset(explode(".jpg", $url)[1]))
