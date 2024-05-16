@@ -513,9 +513,6 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            dump( $data_promotion, $awin_promotion );
-            sleep( 2 );
-
             // Add edit approval request in Firebase.
             $db->getReference( "/Store-Aprovacoes/{$local_promotion[ "push_id" ]}" )
                ->update( [
@@ -612,10 +609,8 @@ class AwinController extends Controller
             }
 
             $aux = $local_data;
-
             foreach ( $aux as &$a )
                 $a[ "data" ] = json_encode( [ "json" => "json" ] );
-
             dump( $aux );
 
             DB::table( "affiliates_promotions" )->insert( $local_data );
