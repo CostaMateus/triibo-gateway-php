@@ -489,7 +489,7 @@ class AwinController extends Controller
 
             $local_promotion  = $local_promotions[ $id ];
             $data_promotion   = json_decode( $local_promotion[ "data" ], true );
-            $establishment_id = $data_promotion[ "establishmentId" ];
+            $establishment_id = $data_promotion[ "establishmentId" ] ?? "";
 
             if ( empty( $establishment_id ) )
             {
