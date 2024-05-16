@@ -207,14 +207,14 @@ class AwinController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            $message = "{$operation_name} : Firebase process error - aborted";
+            $message = "{$operation_name}: Firebase process error - aborted";
 
             // Handle Firebase-specific exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
         }
         catch ( Throwable $e )
         {
-            $message = "{$operation_name} : Unexpected error - aborted";
+            $message = "{$operation_name}: Unexpected error - aborted";
 
             // Handle general exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
@@ -627,11 +627,6 @@ class AwinController extends Controller
                 $promotion[ "push_id" ] = $new_push_promotion;
                 $promotion[ "data"    ] = json_encode( $aux );
             }
-
-            $aux = $local_data;
-            foreach ( $aux as &$a )
-                $a[ "data" ] = json_encode( [ "json" => "json" ] );
-            dump( $aux );
 
             DB::table( "affiliates_promotions" )->insert( $local_data );
 
