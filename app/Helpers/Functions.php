@@ -439,7 +439,9 @@ if ( !function_exists( "convert_delivery_time" ) )
      */
     function convert_delivery_time( string $time ) : string
     {
-        return Str::trim( $time, "bd" ) ?: "1";
+        $time = explode( "bd", $time );
+
+        return $time[ 0 ] ?? "1";
     }
 }
 
