@@ -249,6 +249,7 @@ class AwinController extends Controller
         // Initialize Firebase database references
         $db                      = Firebase::database();
         $establishment_reference = $db->getReference( "/Estabelecimento-v2"            );
+        $approval_reference      = $db->getReference( "/Estabelecimento-Aprovacoes"    );
         $changes_reference       = $db->getReference( "/Establishment-changes-request" );
 
         // Retrieve establishments from Firebase and local sources.
@@ -269,6 +270,15 @@ class AwinController extends Controller
                     // Disable the establishment.
                     $firebase_stablishment[ "isPublished" ] = false;
                     $establishment_reference->update( [ $push => $firebase_stablishment ] );
+
+                    $approval_establishment = $db->getReference( "/Estabelecimento-Aprovacoes/{$push}" )->getValue();
+
+                    if ( $approval_establishment )
+                    {
+                        // TODO possibilidade de mudar status para 'fechado'
+                        $approval_establishment[ "status" ] = "negado";
+                        $approval_reference->update( [ $push => $approval_establishment ] );
+                    }
 
                     log_message( channel: self::LOG_CHANNEL, message: "Establishments: Disabled ID {$push}", print: true );
 
@@ -428,6 +438,7 @@ class AwinController extends Controller
         $db                      = Firebase::database();
         $establishment_reference = $db->getReference( "/Estabelecimento-v2"    );
         $promotions_reference    = $db->getReference( "/Store"                 );
+        $approval_reference      = $db->getReference( "/Store-Aprovacoes"      );
         $changes_reference       = $db->getReference( "/Store-changes-request" );
 
         // Retrieve promotions from Firebase and local sources.
@@ -449,6 +460,15 @@ class AwinController extends Controller
                     // Disable the promotion.
                     $firebase_promotion[ "isPublished" ] = false;
                     $promotions_reference->update( [ $push => $firebase_promotion ] );
+
+                    $approval_promotion = $db->getReference( "/Store-Aprovacoes/{$push}" )->getValue();
+
+                    if ( $approval_promotion )
+                    {
+                        // TODO possibilidade de mudar status para 'fechado'
+                        $approval_promotion[ "status" ] = "negado";
+                        $approval_reference->update( [ $push => $approval_promotion ] );
+                    }
 
                     log_message( channel: self::LOG_CHANNEL, message: "Promotions: Disabled ID {$push}", print: true );
 
