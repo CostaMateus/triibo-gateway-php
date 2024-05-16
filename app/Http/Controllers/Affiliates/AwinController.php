@@ -275,8 +275,9 @@ class AwinController extends Controller
 
                     if ( $approval_establishment )
                     {
-                        // TODO possibilidade de mudar status para 'fechado'
-                        $approval_establishment[ "status" ] = "negado";
+                        $approval_establishment[ "status"  ] = "negado";
+                        $approval_establishment[ "comment" ] = "Estabelecimento desativado, aprovação fechada pelo sistema.";
+
                         $approval_reference->update( [ $push => $approval_establishment ] );
                     }
 
@@ -465,8 +466,9 @@ class AwinController extends Controller
 
                     if ( $approval_promotion )
                     {
-                        // TODO possibilidade de mudar status para 'fechado'
-                        $approval_promotion[ "status" ] = "negado";
+                        $approval_promotion[ "status"  ] = "negado";
+                        $approval_promotion[ "comment" ] = "Promoção desativada, aprovação fechada pelo sistema.";
+
                         $approval_reference->update( [ $push => $approval_promotion ] );
                     }
 
