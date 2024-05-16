@@ -540,7 +540,7 @@ class AwinController extends Controller
                 // "reviewDate"        => "",
                 "storeId"           => $local_promotion[ "push_id" ],
                 "establishmentId"   => $establishment_id,
-                "establishmentName" => $data_promotion[ "establishmentName" ],
+                "establishmentName" => $awin_promotion[ "establishmentName" ],
                 "requesterUid"      => self::REQUESTER_ID,
                 // "validatorUid"      => "",
                 // "comment"           => "",
