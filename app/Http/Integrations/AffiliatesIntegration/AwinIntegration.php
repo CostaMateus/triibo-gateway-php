@@ -92,9 +92,14 @@ class AwinIntegration
             triibo_usort( "id", $establishments[ "data" ] );
 
             $auxStores = [];
+            $i = 0;
 
             foreach ( $establishments[ "data" ] as $key => &$estab )
             {
+                $i++;
+
+                if ( $i <= 5 ) continue;
+
                 $key  += 1;
                 $count = count( $establishments[ "data" ] );
                 echo "Establishments: Loading establishments {$key} of {$count}\n";
