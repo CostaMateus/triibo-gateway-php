@@ -97,7 +97,7 @@ class AwinIntegration
 
             foreach ( $establishments[ "data" ] as $key => &$estab )
             {
-                // $key  += 1;
+                ++$key;
 
                 echo "Establishments: Loading establishments {$key} of {$count}\n";
 
