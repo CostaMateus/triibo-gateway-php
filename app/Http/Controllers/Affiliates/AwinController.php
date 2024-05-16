@@ -513,7 +513,7 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            dump( $data_promotion );
+            dump( $data_promotion, $awin_promotion );
             sleep( 2 );
 
             // Add edit approval request in Firebase.
@@ -522,7 +522,7 @@ class AwinController extends Controller
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $local_promotion[ "push_id" ],
                 "establishmentId"   => $establishment_id,
-                "establishmentName" => $data_promotion[ "establishmentName" ],
+                "establishmentName" => $awin_promotion[ "establishmentName" ],
                 "lastModified"      => self::$date,
                 "requestDate"       => self::$date,
                 "status"            => "aberto",
@@ -610,6 +610,13 @@ class AwinController extends Controller
                 $promotion[ "push_id" ] = $new_push_promotion;
                 $promotion[ "data"    ] = json_encode( $aux );
             }
+
+            $aux = $local_data;
+
+            foreach ( $aux as &$a )
+                $a[ "data" ] = json_encode( [ "json" => "json" ] );
+
+            dump( $aux );
 
             DB::table( "affiliates_promotions" )->insert( $local_data );
 
