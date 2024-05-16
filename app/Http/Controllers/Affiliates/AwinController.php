@@ -513,9 +513,12 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
+            dump( $data_promotion );
+            sleep( 2 );
+
             // Add edit approval request in Firebase.
             $db->getReference( "/Store-Aprovacoes/{$local_promotion[ "push_id" ]}" )
-               ->set( [
+               ->update( [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $local_promotion[ "push_id" ],
                 "establishmentId"   => $establishment_id,
