@@ -107,7 +107,8 @@ class AwinIntegration
                 $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
 
                 $auxStores[] = $estab;
-                if ( $key == 5 ) break;
+                // if ( $key == 5 ) break;
+                if ( $key == 10 ) break;
             }
 
             // return $establishments[ "data" ];
