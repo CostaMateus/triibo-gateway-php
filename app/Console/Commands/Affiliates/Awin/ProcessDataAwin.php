@@ -135,7 +135,7 @@ class ProcessDataAwin extends Command
         //     if ( !isset( $p_approval[ "origin"            ] ) ) continue;
         //     if ( !isset( $p_approval[ "requesterId"       ] ) ) continue;
         //     if ( !isset( $p_approval[ "establishmentId"   ] ) ) continue;
-        //     if ( !isset( $p_approval[ "establishmentName" ] ) ) continue;
+        //     // if ( !isset( $p_approval[ "establishmentName" ] ) ) continue;
 
         //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $p_approval[ "requesterId" ] ) continue;
 
@@ -146,7 +146,7 @@ class ProcessDataAwin extends Command
 
         //     if ( "awin" != $promotions[ $p_approval[ "id" ] ][ "origin" ] ) continue;
 
-        //     echo "{$pa_push} | {$p_approval[ "id" ]} | {$p_approval[ "establishmentName" ]}\n";
+        //     echo "{$pa_push} | {$promotions[ $p_approval[ "id" ] ][ "establishmentName" ]}\n";
 
         //     $p_approvals_reference->update( [ $pa_push => null ] );
         // }
@@ -313,11 +313,11 @@ class ProcessDataAwin extends Command
                 $local_data[ $index ][ "push_id" ] = $push;
                 $this->printMessage( message: "Populate: {$search_id} : {$index} : {$push}" );
             }
-            else
-            {
-                $this->printMessage( message: "Populate: {$search_id} : false : {$push}" );
-            }
         }
+
+        foreach ( $local_data as $index => $data )
+            if ( $data[ "push_id" ] == null )
+                unset( $local_data[ $index ] );
 
         // Truncate and insert the data into the database
         DB::table( table: "affiliates_{$type}" )->truncate();

@@ -207,14 +207,14 @@ class AwinController extends Controller
         }
         catch ( FirebaseException $e )
         {
-            $message = "{$operation_name} : Firebase process error - aborted";
+            $message = "{$operation_name}: Firebase process error - aborted";
 
             // Handle Firebase-specific exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
         }
         catch ( Throwable $e )
         {
-            $message = "{$operation_name} : Unexpected error - aborted";
+            $message = "{$operation_name}: Unexpected error - aborted";
 
             // Handle general exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
@@ -249,6 +249,7 @@ class AwinController extends Controller
         // Initialize Firebase database references
         $db                      = Firebase::database();
         $establishment_reference = $db->getReference( "/Estabelecimento-v2"            );
+        $approval_reference      = $db->getReference( "/Estabelecimento-Aprovacoes"    );
         $changes_reference       = $db->getReference( "/Establishment-changes-request" );
 
         // Retrieve establishments from Firebase and local sources.
@@ -269,6 +270,17 @@ class AwinController extends Controller
                     // Disable the establishment.
                     $firebase_stablishment[ "isPublished" ] = false;
                     $establishment_reference->update( [ $push => $firebase_stablishment ] );
+
+                    $approval_establishment = $db->getReference( "/Estabelecimento-Aprovacoes/{$push}" )->getValue();
+
+                    if ( $approval_establishment )
+                    {
+                        $approval_establishment[ "status"       ] = "negado";
+                        $approval_establishment[ "comment"      ] = "Estabelecimento desativado, aprovação fechada pelo sistema.";
+                        $approval_establishment[ "approvalDate" ] = self::$date;
+
+                        $approval_reference->update( [ $push => $approval_establishment ] );
+                    }
 
                     log_message( channel: self::LOG_CHANNEL, message: "Establishments: Disabled ID {$push}", print: true );
 
@@ -293,17 +305,6 @@ class AwinController extends Controller
                     "data"         => json_encode( $awin_establishment ),
                     "created_at"   => now(),
                     "updated_at"   => now(),
-                ];
-
-                continue;
-            }
-
-            if ( !$local_establishments[ $id ][ "push_id" ] )
-            {
-                $local_data[] = [
-                    "id"        => $local_establishments[ $id ][ "id" ],
-                    "name"      => $awin_establishment[ "nome" ],
-                    "origin_id" => $id,
                 ];
 
                 continue;
@@ -367,7 +368,7 @@ class AwinController extends Controller
         if ( !empty( $local_data ) )
         {
             // Add new establishments to Firebase and update local database with push IDs.
-            foreach ( $local_data as $index => &$establishment )
+            foreach ( $local_data as $establishment )
             {
                 // Add new establishment in Firebase.
                 $new_push_establishment = $establishment_reference->push()->getKey();
@@ -392,18 +393,11 @@ class AwinController extends Controller
 
                 log_message( channel: self::LOG_CHANNEL, message: "Establishments: Created ID = {$new_push_establishment} | Need approval ID = {$new_push_establishment}", print: true );
 
-                if ( isset( $establishment[ "id" ] ) )
-                {
-                    DB::table( "affiliates_establishments" )->where( "id", $establishment[ "id" ] )->update( [ "push_id" => $new_push_establishment ] );
-                    unset( $local_data[ $index ] );
-                    continue;
-                }
-
                 $establishment[ "push_id" ] = $new_push_establishment;
                 $establishment[ "data"    ] = json_encode( $aux );
-            }
 
-            DB::table( "affiliates_establishments" )->insert( $local_data );
+                DB::table( "affiliates_establishments" )->insert( $establishment );
+            }
 
             log_message( channel: self::LOG_CHANNEL, message: "Establishments: Added " . count( $local_data ) . " new establishments in the local table", print: true );
         }
@@ -428,6 +422,7 @@ class AwinController extends Controller
         $db                      = Firebase::database();
         $establishment_reference = $db->getReference( "/Estabelecimento-v2"    );
         $promotions_reference    = $db->getReference( "/Store"                 );
+        $approval_reference      = $db->getReference( "/Store-Aprovacoes"      );
         $changes_reference       = $db->getReference( "/Store-changes-request" );
 
         // Retrieve promotions from Firebase and local sources.
@@ -449,6 +444,17 @@ class AwinController extends Controller
                     // Disable the promotion.
                     $firebase_promotion[ "isPublished" ] = false;
                     $promotions_reference->update( [ $push => $firebase_promotion ] );
+
+                    $approval_promotion = $db->getReference( "/Store-Aprovacoes/{$push}" )->getValue();
+
+                    if ( $approval_promotion )
+                    {
+                        $approval_promotion[ "status"       ] = "negado";
+                        $approval_promotion[ "comment"      ] = "Promoção desativada, aprovação fechada pelo sistema.";
+                        $approval_promotion[ "approvalDate" ] = self::$date;
+
+                        $approval_reference->update( [ $push => $approval_promotion ] );
+                    }
 
                     log_message( channel: self::LOG_CHANNEL, message: "Promotions: Disabled ID {$push}", print: true );
 
@@ -477,19 +483,9 @@ class AwinController extends Controller
                 continue;
             }
 
-            if ( !$local_promotions[ $id ][ "push_id" ] )
-            {
-                $local_data[] = [
-                    "id"   => $local_promotions[ $id ][ "id" ],
-                    "data" => json_encode( $awin_promotion ),
-                ];
-
-                continue;
-            }
-
             $local_promotion  = $local_promotions[ $id ];
             $data_promotion   = json_decode( $local_promotion[ "data" ], true );
-            $establishment_id = $data_promotion[ "establishmentId" ];
+            $establishment_id = $data_promotion[ "establishmentId" ] ?? "";
 
             if ( empty( $establishment_id ) )
             {
@@ -512,9 +508,6 @@ class AwinController extends Controller
 
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
-
-            dump( $data_promotion, $awin_promotion );
-            sleep( 2 );
 
             // Add edit approval request in Firebase.
             $db->getReference( "/Store-Aprovacoes/{$local_promotion[ "push_id" ]}" )
@@ -543,7 +536,7 @@ class AwinController extends Controller
                 // "reviewDate"        => "",
                 "storeId"           => $local_promotion[ "push_id" ],
                 "establishmentId"   => $establishment_id,
-                "establishmentName" => $data_promotion[ "establishmentName" ],
+                "establishmentName" => $awin_promotion[ "establishmentName" ],
                 "requesterUid"      => self::REQUESTER_ID,
                 // "validatorUid"      => "",
                 // "comment"           => "",
@@ -564,7 +557,7 @@ class AwinController extends Controller
         if ( !empty( $local_data ) )
         {
             // Add new promotion to Firebase and update local database with push IDs.
-            foreach ( $local_data as $index => &$promotion )
+            foreach ( $local_data as $promotion )
             {
                 // Add new promotion in Firebase.
                 $new_push_promotion       = $promotions_reference->push()->getKey();
@@ -572,7 +565,7 @@ class AwinController extends Controller
                 $aux                      = json_decode( $promotion[ "data" ], true );
                 $partner_establishment_id = $aux[ "partnerEstablishmentId" ];
 
-                $index                    = array_search( $partner_establishment_id, array_column( $firebase_establishments, "partnerEstablishmentId" ) );
+                $index                    = array_search_by_key( needle: $partner_establishment_id, column: "partnerEstablishmentId", array: $firebase_establishments );
                 $pushes                   = array_keys( $firebase_establishments );
 
                 $aux[ "establishmentId" ] = $pushes[ $index ];
@@ -600,25 +593,11 @@ class AwinController extends Controller
 
                 log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}", print: true );
 
-                if ( isset( $promotion[ "id" ] ) )
-                {
-                    DB::table( "affiliates_promotions" )->where( "id", $promotion[ "id" ] )->update( [ "push_id" => $new_push_promotion ] );
-                    unset( $local_data[ $index ] );
-                    continue;
-                }
-
                 $promotion[ "push_id" ] = $new_push_promotion;
                 $promotion[ "data"    ] = json_encode( $aux );
+
+                DB::table( "affiliates_promotions" )->insert( $promotion );
             }
-
-            $aux = $local_data;
-
-            foreach ( $aux as &$a )
-                $a[ "data" ] = json_encode( [ "json" => "json" ] );
-
-            dump( $aux );
-
-            DB::table( "affiliates_promotions" )->insert( $local_data );
 
             log_message( channel: self::LOG_CHANNEL, message: "Promotions: Added " . count( $local_data ) . " new promotions in the local table", print: true );
         }
