@@ -91,28 +91,24 @@ class AwinIntegration
 
             triibo_usort( "id", $establishments[ "data" ] );
 
-            $auxStores = [];
-            $i = 0;
+            // $auxStores = [];
+
+            $count          = count( $establishments[ "data" ] );
 
             foreach ( $establishments[ "data" ] as $key => &$estab )
             {
-                $i++;
+                // $key  += 1;
 
-                if ( $i <= 5 ) continue;
-
-                $key  += 1;
-                $count = count( $establishments[ "data" ] );
                 echo "Establishments: Loading establishments {$key} of {$count}\n";
 
                 $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
 
-                $auxStores[] = $estab;
-                // if ( $key == 5 ) break;
-                if ( $key == 10 ) break;
+                // $auxStores[] = $estab;
+                // if ( $key == 10 ) break;
             }
 
-            // return $establishments[ "data" ];
-            return $auxStores;
+            return $establishments[ "data" ];
+            // return $auxStores;
         }
 
         if ( $withoutTranslate ) return $this->establishments;
