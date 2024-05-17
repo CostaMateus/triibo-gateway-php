@@ -502,6 +502,8 @@ class AwinIntegration
                 "nome"                   => explode( " BR", $estab[ "name" ] )[ 0 ],
                 "descricao"              => $estab[ "description" ],
                 "email"                  => "contato@triibo.com.br",
+
+                "contatos"               => [ "+55 (11) 94496-5799" ],
                 "contatoTriibo"          => [ [
                     "type"  => "telefone",
                     "value" => "+5511944965799"
