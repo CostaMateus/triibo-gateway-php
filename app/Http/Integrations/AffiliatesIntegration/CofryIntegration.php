@@ -402,6 +402,7 @@ class CofryIntegration
                 "dataAlteracao"          => self::$date_enable,
                 "dataInclusao"           => self::$date_enable,
                 "idGestor"               => "+5511949289507@sms,triibo,com,br",
+                "contatos"               => [ "+55 (11) 94496-5799" ],
                 "isPublished"            => $is_published,
                 "endereco"               => "Brasil",
                 "lat"                    => -15.52047783763576,
