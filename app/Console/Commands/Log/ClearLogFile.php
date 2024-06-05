@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Log;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\File;
 
 class ClearLogFile extends Command
 {
@@ -37,15 +38,26 @@ class ClearLogFile extends Command
      */
     public function handle()
     {
-        exec( 'echo "" > ' . storage_path( "logs/cofry.log"       ) );
+        $date       = date( "Y-m-d" );
+        $log_folder = storage_path( "logs/" );
+        $all_files  = File::files( $log_folder );
+        $bkp_folder = $log_folder . "/bkp-{$date}";
 
-        exec( 'echo "" > ' . storage_path( "logs/fastshop.log"    ) );
+        if ( !File::exists( $bkp_folder ) )
+            File::makeDirectory( $bkp_folder, 0755, true, true );
 
-        exec( 'echo "" > ' . storage_path( "logs/laravel.log"     ) );
+        foreach ( $all_files as $file )
+        {
+            if ( "log" == pathinfo( $file, PATHINFO_EXTENSION ) )
+            {
+                $file = pathinfo( $file );
 
-        exec( 'echo "" > ' . storage_path( "logs/marketplace.log" ) );
-
-        exec( 'echo "" > ' . storage_path( "logs/triibo.log"      ) );
+                File::move(
+                    "{$log_folder}{$file[ "basename" ]}",
+                    "{$bkp_folder}/{$file[ "basename" ]}"
+                );
+            }
+        }
 
         $this->info( "Logs have been cleared" );
     }
