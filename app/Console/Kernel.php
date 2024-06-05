@@ -56,16 +56,16 @@ class Kernel extends ConsoleKernel
             // Lojas, promoções e imagens - Diariamente às 03h
             $schedule->command( "awin:process --option=all"     )->dailyAt( "03:00" )->runInBackground();
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
-            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:00" )->runInBackground();
+            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:30" )->runInBackground();
 
 
             // Cofry Triibo Integration
             // Lojas e promoções - Diariamente às 02 e às 14h
             $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
             // Imagens - Diariamente às 02h05
-            $schedule->command( "cofry:delete_images"           )->dailyAt( "02:05" )->runInBackground();
+            $schedule->command( "cofry:delete_images"           )->dailyAt( "02:30" )->runInBackground();
             // Imagens - Diariamente às 02h10
-            $schedule->command( "cofry:process_images"          )->dailyAt( "02:15" )->runInBackground();
+            $schedule->command( "cofry:process_images"          )->dailyAt( "02:40" )->runInBackground();
 
 
             // // SocialSoul Triibo Integration
@@ -82,13 +82,13 @@ class Kernel extends ConsoleKernel
 
             // Marketplace
             // Get Categories
-            $schedule->command( "mkt:get_categories"              )->dailyAt( "23:59" )->runInBackground();
+            $schedule->command( "mkt:get_categories"              )->dailyAt( "00:15" )->runInBackground();
             // Get stock/price FS
-            $schedule->command( "mkt:get_stock_price_fs"          )->dailyAt( "00:01" )->runInBackground();
+            $schedule->command( "mkt:get_stock_price_fs"          )->dailyAt( "00:30" )->runInBackground();
             // Delete duplicate SKUs
-            $schedule->command( "mkt:delete_duplicate_sku"        )->dailyAt( "01:03" )->runInBackground();
+            $schedule->command( "mkt:delete_duplicate_sku"        )->dailyAt( "01:00" )->runInBackground();
             // Change status of products without images
-            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:05" )->runInBackground();
+            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:15" )->runInBackground();
             // Remove FS products without SKU
             $schedule->command( "mkt:delete_product_without_sku"  )->dailyAt( "05:00" )->runInBackground();
             // Process product informations FS
@@ -96,8 +96,8 @@ class Kernel extends ConsoleKernel
             $schedule->command( "mkt:get_product_infos_fs --action=update" )->dailyAt( "03:00" )->runInBackground();
 
 
-            // // Clear Logs
-            // // $schedule->command( "log:clear" )->weeklyOn( 3, "01:00" )->runInBackground();
+            // Clear Logs - sunday at 00h00
+            $schedule->command( "log:clear" )->weekly()->runInBackground();
         }
     }
 
