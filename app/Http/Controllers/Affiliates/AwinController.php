@@ -83,6 +83,7 @@ class AwinController extends Controller
         "enableDate",
         "listaFotos",
         "fotoThumb",
+        "isPublished",
     ];
 
     /**
@@ -96,6 +97,7 @@ class AwinController extends Controller
         "enableDate",
         "id",
         "establishmentId",
+        "isPublished",
     ];
 
     /**
