@@ -101,7 +101,7 @@ class AwinIntegration
 
                 // if ( $key <= 5 ) continue;
 
-                echo "Establishments: Loading establishments {$key} of {$count}\n";
+                echo "Establishments: Loading establishment {$key} of {$count}\n";
 
                 $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
 
@@ -474,7 +474,7 @@ class AwinIntegration
             $id            = $estab[ "id" ];
             $cashback      = "";
 
-            if ( $estab[ "commissionRange" ] )
+            if ( isset( $estab[ "commissionRange" ] ) )
                 $cashback = get_cashback( $estab[ "commissionRange" ] );
 
             $auxName       = hyphenize( strtolower( $estab[ "name" ] ) );
@@ -551,7 +551,7 @@ class AwinIntegration
 
             $cashback          = "";
 
-            if ( $estab[ "commissionRange" ] )
+            if ( isset( $estab[ "commissionRange" ] ) )
                 $cashback = get_cashback( $estab[ "commissionRange" ] );
 
             $title             = "Ganhe {$cashback}% de volta!";
