@@ -315,6 +315,12 @@ class AwinController extends Controller
             $local_establishment = $local_establishments[ $id ];
             $data_establishment  = json_decode( $local_establishment[ "data" ], true );
 
+            if ( isset( $awin_establishment[ "cashbackDefault" ] ) )
+                $awin_establishment[ "cashbackDefault" ] = ( float ) $awin_establishment[ "cashbackDefault" ];
+
+            if ( isset( $data_establishment[ "cashbackDefault" ] ) )
+                $data_establishment[ "cashbackDefault" ] = ( float ) $data_establishment[ "cashbackDefault" ];
+
             // Compare Awin and local establishments and get differences.
             $diff                = array_diff_assoc_recursive( $awin_establishment, $data_establishment );
 

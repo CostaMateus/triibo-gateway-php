@@ -99,6 +99,8 @@ class AwinIntegration
             {
                 ++$key;
 
+                // if ( $key <= 5 ) continue;
+
                 echo "Establishments: Loading establishments {$key} of {$count}\n";
 
                 $estab[ "commissionRange" ] = $this->searchEstablishmentsDetails( $estab[ "id" ] );
