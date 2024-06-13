@@ -603,7 +603,15 @@ class FastshopController extends Controller
                 Notification::notify( "newOrderError", $data );
 
                 $orderId = $data[ "order" ][ "id" ];
-                $note    = "ERROR FS\n" . $error[ "message" ] . "\nCode: " . $error[ "errorCode" ];
+
+                if ( isset( $error[ "message" ] ) && isset( $error[ "errorCode" ] ) )
+                    $note = "ERROR FS\n" . $error[ "message" ] . "\nCode: " . $error[ "errorCode" ];
+
+                elseif ( isset( $error[ "Message" ] ) && isset( $error[ "ErrorCode" ] ) )
+                    $note = "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ];
+
+                else
+                    $note = "ERROR FS\n message not defined\n Code: 500 MSD".
 
                 $this->createNote( $orderId, $note );
 
