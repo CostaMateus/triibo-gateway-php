@@ -479,8 +479,13 @@ class DataTranslator
         // Map logistics information to the FS format.
         $logisticsInfo = Helper::mapFsLogisticsInfo( $fsLogistics );
 
+        // Retrieve the discount
+        $discount      = ( empty( $order[ "coupon_lines" ] ) )
+                            ? $order[ "discount_total" ]
+                            : ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
+
         // Calculate the total payment value for the marketplace.
-        $total         = $order[ "total" ] + ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
+        $total         = $order[ "total" ] + $discount;
         $total         = number_format( ( float ) $total, 2, ".", "" );
         $total         = ( int ) str_replace( ".", "", $total );
 
