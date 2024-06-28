@@ -53,8 +53,8 @@ class Kernel extends ConsoleKernel
 
 
             // Awin Triibo Integration
-            // Lojas, promoções e imagens - Diariamente às 03h
-            $schedule->command( "awin:process --option=all"     )->dailyAt( "03:00" )->runInBackground();
+            // Lojas, promoções e imagens - segunda a sexta às 03h
+            $schedule->command( "awin:process --option=all"     )->weekdays()->at( "03:00" )->runInBackground();
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
             $schedule->command( "awin:process --option=reports" )->dailyAt( "01:30" )->runInBackground();
 
