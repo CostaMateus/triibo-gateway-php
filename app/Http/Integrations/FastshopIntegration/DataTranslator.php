@@ -469,6 +469,9 @@ class DataTranslator
         // Generate the URL for the invoice notification endpoint using the order ID
         $url           = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
 
+        if ( config( "app.env" ) == "local" )
+            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
+
         // Extract the FS information from the order data.
         $fsLogistics   = $order[ "fs_info" ][ "logisticsInfo" ];
         $fsItems       = $order[ "fs_info" ][ "items" ];
