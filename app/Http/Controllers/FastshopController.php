@@ -611,7 +611,7 @@ class FastshopController extends Controller
                     $note = "ERROR FS\n" . $error[ "Message" ] . "\nCode: " . $error[ "ErrorCode" ];
 
                 else
-                    $note = "ERROR FS\n message not defined\n Code: 500 MSD".
+                    $note = "ERROR FS\n message not defined\n Code: 500 MSD";
 
                 $this->createNote( $orderId, $note );
 
