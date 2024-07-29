@@ -49,19 +49,19 @@ if ( !function_exists( "log_exception" ) )
     /**
      * Log an exception to a specified channel.
      *
-     * @param   string      $channel    The name of the log channel to use.
-     * @param   string      $message    The message to log.
-     * @param   string      $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
-     * @param   string      $method     The method that threw the exception.
-     * @param   string      $type       The type of exception that was thrown.
-     * @param   Throwable   $e          The exception object.
+     * @param   string          $channel    The name of the log channel to use.
+     * @param   string          $message    The message to log.
+     * @param   string          $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
+     * @param   string          $method     The method that threw the exception.
+     * @param   string          $type       The type of exception that was thrown.
+     * @param   Throwable|null  $e          The exception object.
      * @return  void
      */
     function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null ) : void
     {
         $context = [
-            "error_code" => $e->getCode(),
-            "message"    => $e->getMessage(),
+            "error_code" => $e?->getCode(),
+            "message"    => $e?->getMessage(),
             "method"     => $method,
             "type"       => $type,
             "exception"  => $e
@@ -585,13 +585,13 @@ if ( !function_exists( "send_mail_notification" ) )
      * This function sends an email notification to a specific user when a schedule fails.
      * It takes the following parameters:
      *
-     * @param   string      $blade      The name of the blade (view) associated with the schedule.
-     * @param   string      $method     The name of the method that failed.
-     * @param   string      $catch      The catch block where the error occurred.
-     * @param   Throwable   $e          The exception object containing the error details.
+     * @param   string          $blade      The name of the blade (view) associated with the schedule.
+     * @param   string          $method     The name of the method that failed.
+     * @param   string          $catch      The catch block where the error occurred.
+     * @param   Throwable|null  $e          The exception object containing the error details.
      * @return  void
      */
-    function send_mail_notification( string $blade, string $method, string $catch, Throwable $e ) : void
+    function send_mail_notification( string $blade, string $method, string $catch, ?Throwable $e ) : void
     {
         // Determine the environment (HML or PRD) based on the app.env configuration.
         $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
@@ -602,6 +602,7 @@ if ( !function_exists( "send_mail_notification" ) )
             "cofry"       => "{$env} - Integração Cofry",
             "socialsoul"  => "{$env} - Integração SocialSoul",
             "marketplace" => "{$env} - Integração Marketplace",
+            "vtex"        => "{$env} - Integração VTEX",
         ];
 
         // Prepare the email data.
