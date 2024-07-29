@@ -522,6 +522,7 @@ class AwinIntegration
                 "keyWordsSet"            => [],
 
                 "origin"                 => "awin",
+                "id"                     => "",
             ];
         }
 

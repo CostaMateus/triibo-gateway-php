@@ -77,13 +77,14 @@ class AwinController extends Controller
      * @var     array
      */
     private const IGNORE_ESTAB_FIELDS = [
-        "dataAlteracao",
-        "dataInclusao",
-        "disableDate",
-        "enableDate",
-        "listaFotos",
+        "id",
         "fotoThumb",
+        "listaFotos",
+        "enableDate",
+        "disableDate",
         "isPublished",
+        "dataInclusao",
+        "dataAlteracao",
     ];
 
     /**
@@ -92,12 +93,12 @@ class AwinController extends Controller
      * @var     array
      */
     private const IGNORE_PROMO_FIELDS = [
-        "disableDate",
+        "id",
         "dueDate",
         "enableDate",
-        "id",
-        "establishmentId",
+        "disableDate",
         "isPublished",
+        "establishmentId",
     ];
 
     /**
@@ -382,6 +383,7 @@ class AwinController extends Controller
                 $new_push_establishment = $establishment_reference->push()->getKey();
 
                 $aux                    = $awin_establishments[ $establishment[ "origin_id" ] ];
+                $aux[ "id"          ]   = $new_push_establishment;
                 $aux[ "isPublished" ]   = false;
 
                 $establishment_reference->update( [ $new_push_establishment => $aux ] );
