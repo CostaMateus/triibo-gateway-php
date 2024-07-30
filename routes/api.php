@@ -5,6 +5,7 @@ use App\Http\Controllers\ChatGuruController;
 use App\Http\Controllers\FastshopController;
 use App\Http\Controllers\PipedriveWebhookController;
 use App\Http\Controllers\Affiliates\SocialSoulController;
+use App\Http\Controllers\Vtex\CategoryController as VtexCategoryController;
 
 /*
 |--------------------------------------------------------------------------
@@ -104,8 +105,8 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
     /**
      * APIs chamadas pelo marketplace
      */
-    Route::name( "wc." )->prefix( "wc" )->group( function () {
-
+    Route::name( "wc." )->prefix( "wc" )->group( function ()
+    {
         // Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
         // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
         Route::post(
@@ -140,6 +141,20 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
             "/ordercancelation/{orderId}",
             [ FastshopController::class, "orderCancelation" ]
         )->name( "ordercancelation" );
+    } );
+
+
+    /**
+     * APIs VTEX
+     */
+    Route::name( "vtex." )->prefix( "vtex" )->group( function ()
+    {
+        Route::name( "categories." )->prefix( "categories" )->group( function ()
+        {
+            Route::get(  "/categories", [ VtexCategoryController::class, "categories" ] )->name( "categories" );
+            Route::post( "/mapping",    [ VtexCategoryController::class, "mapping"    ] )->name( "mapping"    );
+        } );
+
     } );
 
 } );
