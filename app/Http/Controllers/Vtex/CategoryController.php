@@ -37,14 +37,14 @@ class CategoryController extends ConnectorController
         $data    = [];
 
         // Retrieve configuration values.
-        $env     = config( "vtex.env"                 );
-        $account = config( "vtex.{$env}.account_name" );
+        $env     = config( key: "vtex.env"                 );
+        $account = config( key: "vtex.{$env}.account_name" );
 
         // Prepare the request body.
         $body    = [
             "displayName"          => "Marketplace Triibo",
-            "categoryTreeEndPoint" => route( "api.marketplace.vtex.categories.categories" ),
-            "mappingEndPoint"      => route( "api.marketplace.vtex.categories.mapping"    ),
+            "categoryTreeEndPoint" => route( name: "api.marketplace.vtex.categories.categories" ),
+            "mappingEndPoint"      => route( name: "api.marketplace.vtex.categories.mapping"    ),
             "properties"           => [ "allowsRemap" => true ],
             // "CategoryTreeProcessingNotificationEndpoint" => "",
         ];
@@ -54,12 +54,12 @@ class CategoryController extends ConnectorController
         $this->vtex->origin( origin: "registration" );
         $this->vtex->url( account: "portal", environment: "vtexcommercestable", api: "category-register", param: "?an={$account}" );
 
-        [ $code, $data ] = $this->vtex->call( "POST", $body );
+        [ $code, $data ] = $this->vtex->call( method: "post", body: $body );
 
-        save_file( "vtex-registration", $data );
+        save_file( name: "vtex-registration", data: $data );
 
         // Return JSON response with appropriate status code.
-        return response()->json( $data, $code );
+        return response()->json( data: $data, status: $code );
     }
 
     /**
@@ -83,7 +83,7 @@ class CategoryController extends ConnectorController
             $categories = get_marketplace_categories();
 
             // Format categories for VTEX integration.
-            $categories = format_categories_to_vtex( $categories );
+            $categories = format_categories_to_vtex( data: $categories );
 
             $this->vtex->logMessage();
             $this->vtex->logNotify();
@@ -92,7 +92,7 @@ class CategoryController extends ConnectorController
 
             $body = [ "categories" => $categories ];
 
-            [ $code, $data ] = $this->vtex->call( "POST", $body );
+            [ $code, $data ] = $this->vtex->call( method: "post", body: $body );
         }
         catch ( Throwable $e )
         {
@@ -101,7 +101,7 @@ class CategoryController extends ConnectorController
         }
 
         // Return JSON response with appropriate status code.
-        return response()->json( $data, $code );
+        return response()->json( data: $data, status: $code );
     }
 
     /**
@@ -117,7 +117,7 @@ class CategoryController extends ConnectorController
 
         try
         {
-            save_file( "vtex-category-mapping", $request->all() );
+            save_file( name: "vtex-category-mapping", data: $request->all() );
 
             // Prepare successful response data.
             $data    = [
@@ -141,7 +141,7 @@ class CategoryController extends ConnectorController
         }
 
         // Return JSON response with appropriate status code.
-        return response()->json( $data, $code );
+        return response()->json( data: $data, status: $code );
     }
 
     /**
@@ -160,7 +160,7 @@ class CategoryController extends ConnectorController
             $categories = get_marketplace_categories();
 
             // Format categories for VTEX integration.
-            $categories = format_categories_to_vtex( $categories );
+            $categories = format_categories_to_vtex( data: $categories );
 
             // Prepare successful response data.
             $data       = [
@@ -184,7 +184,7 @@ class CategoryController extends ConnectorController
         }
 
         // Return JSON response with appropriate status code.
-        return response()->json( $data, $code );
+        return response()->json( data: $data, status: $code );
     }
 
 }
