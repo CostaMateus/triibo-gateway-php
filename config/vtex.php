@@ -5,10 +5,10 @@ return [
     "env"        => env( "VTEX_ENV", "local" ),
 
     "local"      => [
-        "account_name" => "xxxxxxxx",
-        "environment"  => "xxxxxxxx",
-
-        "url"          => [
+        "affiliated_id" => "xxxxxxxx",           // fastshop precisa fornecer
+        "account_name"  => "xxxxxxxx",           // fastshop precisa fornecer
+        "environment"   => "vtexcommercestable", // nao sei ao certo
+        "url"           => [
             "prefix"              => "https://",
             "sufix"               => ".com.br/api/",
 
@@ -17,19 +17,7 @@ return [
             "checkout-simulation" => "checkout/pub/orderForms/simulation",
             "fulfillment"         => "fulfillment/pvt/orders",
         ],
-
-        /**
-         * https://portal       .{environment}.com.br/api/mkp-category-mapper/connector/register
-         * https://portal       .{environment}.com.br/api/mkp-category-mapper/categories/marketplace/{id}
-         * https://{accountName}.{environment}.com.br/api/order-integration/orders
-         * https://{accountName}.{environment}.com.br/api/order-integration/orders/status
-         * https://{accountName}.{environment}.com.br/api/checkout/pub/orderForms/simulation
-         * https://{accountName}.{environment}.com.br/api/fulfillment/pvt/orders
-         * https://{accountName}.{environment}.com.br/api/fulfillment/pvt/orders/{orderId}/fulfill
-         */
     ],
 
-    // "production" => [
-    //     "account_name" => "FastShop",
-    // ],
+    // "production" => [],
 ];
