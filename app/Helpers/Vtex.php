@@ -127,3 +127,14 @@ if ( !function_exists( "format_categories_to_vtex" ) )
         return format_categories( items: $categories );
     }
 }
+
+if ( !function_exists( "save_file" ) )
+{
+    function save_file( string $name, array $data )
+    {
+        $date    = date( "Ymd-his" );
+        $encoded = json_encode( $data, JSON_UNESCAPED_SLASHES );
+
+        Storage::put( "{$name}-{$date}.json", $encoded );
+    }
+}
