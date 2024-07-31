@@ -130,6 +130,13 @@ if ( !function_exists( "format_categories_to_vtex" ) )
 
 if ( !function_exists( "save_file" ) )
 {
+    /**
+     * Saves an array of data to a file with a timestamped name.
+     *
+     * @param   string  $name   The base name of the file (without extension).
+     * @param   array   $data   The data to be saved as JSON.
+     * @return  void
+     */
     function save_file( string $name, array $data )
     {
         $date    = date( "Ymd-his" );
