@@ -15,11 +15,23 @@ class CategoryController extends ConnectorController
      */
 
     /**
-     * Registers the marketplace connector with VTEX
+     * Connector controller.
+     *
+     * @var     ConnectorController
+     */
+    private $vtex;
+
+    public function __construct()
+    {
+        $this->vtex = new ConnectorController();
+    }
+
+    /**
+     * Registers the marketplace connector with VTEX.
      *
      * @return  JsonResponse    A JSON response indicating the result of the operation.
      */
-    public static function registration() : JsonResponse
+    public function registration() : JsonResponse
     {
         $code    = 200;
         $data    = [];
@@ -37,13 +49,12 @@ class CategoryController extends ConnectorController
             // "CategoryTreeProcessingNotificationEndpoint" => "",
         ];
 
-        $vtex = new ConnectorController();
-        $vtex->logMessage();
-        $vtex->logNotify();
-        $vtex->origin( origin: "registration" );
-        $vtex->url( account: "portal", environment: "vtexcommercestable", api: "category-register", param: "?an={$account}" );
+        $this->vtex->logMessage();
+        $this->vtex->logNotify();
+        $this->vtex->origin( origin: "registration" );
+        $this->vtex->url( account: "portal", environment: "vtexcommercestable", api: "category-register", param: "?an={$account}" );
 
-        [ $code, $data ] = $vtex->call( "POST", $body );
+        [ $code, $data ] = $this->vtex->call( "POST", $body );
 
         save_file( "vtex-registration", $data );
 
@@ -56,13 +67,13 @@ class CategoryController extends ConnectorController
      *
      * @return  JsonResponse            A JSON response indicating the result of the operation.
      */
-    public static function sendMapping() : JsonResponse
+    public function sendMapping() : JsonResponse
     {
         $code    = 200;
         $data    = [];
 
         /**
-         * TODO remove | For test, this ID will be returned in registration() method
+         * TODO remove | For test, this ID will be returned in registration() method.
          */
         $id      = 123123; // for test
 
@@ -74,15 +85,14 @@ class CategoryController extends ConnectorController
             // Format categories for VTEX integration.
             $categories = format_categories_to_vtex( $categories );
 
-            $vtex = new ConnectorController();
-            $vtex->logMessage();
-            $vtex->logNotify();
-            $vtex->origin( origin: "sendMapping" );
-            $vtex->url( account: "portal", environment: "vtexcommercestable", api: "category-marketplace", param: $id );
+            $this->vtex->logMessage();
+            $this->vtex->logNotify();
+            $this->vtex->origin( origin: "sendMapping" );
+            $this->vtex->url( account: "portal", environment: "vtexcommercestable", api: "category-marketplace", param: $id );
 
             $body = [ "categories" => $categories ];
 
-            [ $code, $data ] = $vtex->call( "POST", $body );
+            [ $code, $data ] = $this->vtex->call( "POST", $body );
         }
         catch ( Throwable $e )
         {
@@ -95,12 +105,12 @@ class CategoryController extends ConnectorController
     }
 
     /**
-     * Handles the mapping of VTEX categories
+     * Handles the mapping of VTEX categories.
      *
      * @param   Request     $request    The incoming HTTP request containing category mapping data.
      * @return  JsonResponse            A JSON response indicating the result of the operation.
      */
-    public static function mapping( Request $request ) : JsonResponse
+    public function mapping( Request $request ) : JsonResponse
     {
         $code = 200;
         $data = [];
@@ -139,7 +149,7 @@ class CategoryController extends ConnectorController
      *
      * @return  JsonResponse    A JSON response indicating the result of the operation.
      */
-    public static function categories() : JsonResponse
+    public function categories() : JsonResponse
     {
         $code = 200;
         $data = [];
