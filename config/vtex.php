@@ -2,7 +2,7 @@
 
 return [
 
-    "env"        => env( "VTEX_ENV", "local" ),
+    "env"        => env( key: "VTEX_ENV", default: "local" ),
 
     "local"      => [
         "affiliated_id" => "xxxxxxxx",           // fastshop precisa fornecer
@@ -16,6 +16,13 @@ return [
             "order-integration"   => "order-integration/orders",
             "checkout-simulation" => "checkout/pub/orderForms/simulation",
             "fulfillment"         => "fulfillment/pvt/orders",
+        ],
+
+        "headers"       => [
+            "Accept"              => "application/json",
+            "Content-Type"        => "application/json",
+            "X-VTEX-API-AppKey"   => env( key: "VTEX_FS_API_KEY_HML"   ),
+            "X-VTEX-API-AppToken" => env( key: "VTEX_FS_API_TOKEN_HML" )
         ],
     ],
 
