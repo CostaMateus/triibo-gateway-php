@@ -100,7 +100,7 @@ class CategoryController extends ConnectorController
      * @param   Request     $request    The incoming HTTP request containing category mapping data.
      * @return  JsonResponse            A JSON response indicating the result of the operation.
      */
-    public function mapping( Request $request ) : JsonResponse
+    public static function mapping( Request $request ) : JsonResponse
     {
         $code = 200;
         $data = [];
@@ -139,7 +139,7 @@ class CategoryController extends ConnectorController
      *
      * @return  JsonResponse    A JSON response indicating the result of the operation.
      */
-    public function categories() : JsonResponse
+    public static function categories() : JsonResponse
     {
         $code = 200;
         $data = [];
