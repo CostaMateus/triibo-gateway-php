@@ -48,6 +48,13 @@ class ConnectorController extends Controller
     private $url;
 
     /**
+     * Headers.
+     *
+     * @var     array
+     */
+    private $headers;
+
+    /**
      * Flag indicating whether to log a message when an error occurs.
      *
      * @var     boolean
@@ -81,28 +88,23 @@ class ConnectorController extends Controller
      */
     public function url( ?string $account = null, ?string $environment = null, string $api, ?string $param = null )
     {
-        $this->env   = config( "vtex.env"                       );
-        $url_prefix  = config( "vtex.{$this->env}.url.prefix"   );
-        $url_sufix   = config( "vtex.{$this->env}.url.sufix"    );
+        $this->env     = config( key: "vtex.env"                     );
+        $this->headers = config( key: "vtex.{$this->env}.headers"    );
 
-        $account     = $account     ? $account     : config( "vtex.{$this->env}.account_name" );
-        $environment = $environment ? $environment : config( "vtex.{$this->env}.environment"  );
+        $url_prefix    = config( key: "vtex.{$this->env}.url.prefix" );
+        $url_sufix     = config( key: "vtex.{$this->env}.url.sufix"  );
 
-        $base        = match ( $api )
+        $account       = $account     ? $account     : config( key: "vtex.{$this->env}.account_name" );
+        $environment   = $environment ? $environment : config( key: "vtex.{$this->env}.environment"  );
+
+        $base          = match ( $api )
         {
             "category-register"    => "mkp-category-mapper/connector/register",
             "category-marketplace" => "mkp-category-mapper/categories/marketplace/",
         };
 
         // Construct the registration URL.
-        $this->url   = implode( "", [
-            $url_prefix,
-            $account . ".",
-            $environment,
-            $url_sufix,
-            $base,
-            $param,
-        ] );
+        $this->url   = implode( separator: "", array: [ $url_prefix, "{$account}.", $environment, $url_sufix, $base, $param ] );
     }
 
     /**
@@ -151,15 +153,15 @@ class ConnectorController extends Controller
     {
         try
         {
-            if ( $method == "POST" && !empty( $body ) )
-                $response = Http::withBody( json_encode( $body ), "application/json" )->post( $this->url );
-            elseif ( $method == "POST" )
-                $response = Http::post( $this->url );
-            elseif ( $method == "GET" )
-                $response = Http::get( $this->url );
+            $pending  = Http::withHeaders( headers: $this->headers );
+
+            if ( !empty( $body ) )
+                $pending = $pending->withBody( content: json_encode( $body ), contentType: "application/json" );
+
+            $response = $pending->{$method}( url: $this->url );
 
             // Prepare response data.
-            $data = [
+            $data     = [
                 "error_code" => null,
                 "message"    => $response->reason(),
                 "data"       => $response->json(),
@@ -181,8 +183,7 @@ class ConnectorController extends Controller
                 $code                 = 400;
                 $data[ "error_code" ] = $response->status();
             }
-
-            if ( $this->log_message )
+            elseif ( $this->log_message )
             {
                 log_message(
                     channel : self::LOG_CHANNEL,
