@@ -15,15 +15,23 @@ class CategoryController extends ConnectorController
      */
 
     /**
+     * Seller.
+     *
+     * @var     string
+     */
+    private $seller;
+
+    /**
      * Connector controller.
      *
      * @var     ConnectorController
      */
     private $vtex;
 
-    public function __construct()
+    public function __construct( string $seller )
     {
-        $this->vtex = new ConnectorController();
+        $this->seller = $seller;
+        $this->vtex   = new ConnectorController( $seller );
     }
 
     /**
@@ -37,8 +45,8 @@ class CategoryController extends ConnectorController
         $data    = [];
 
         // Retrieve configuration values.
-        $env     = config( key: "vtex.env"                 );
-        $account = config( key: "vtex.{$env}.account_name" );
+        $env     = config( key: "vtex.{$this->seller}.env"                 );
+        $account = config( key: "vtex.{$this->seller}.{$env}.account_name" );
 
         // Prepare the request body.
         $body    = [
