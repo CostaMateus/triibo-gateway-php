@@ -145,3 +145,171 @@ if ( !function_exists( "save_file" ) )
         Storage::put( "{$name}-{$date}.json", $encoded );
     }
 }
+
+if ( !function_exists( "map_vtex_order_items" ) )
+{
+    /**
+     * Maps order items from a given logistics array to the format required by VTEX.
+     *
+     * @param   array   $logistics  The logistics information related to the order items.
+     * @param   array   $items      The actual items from the order.
+     * @return  array               The order items formatted for VTEX.
+     */
+    function map_order_items( array $logistics, array $items )
+    {
+        // Use array_map to transform each item to the VTEX format using the logistics array.
+        return array_map( function ( $item ) use ( $items )
+        {
+            // Retrieve the corresponding item from the items array using the itemIndex.
+            $item_id  = $item[ "itemIndex" ];
+            $aux_item = $items[ $item_id ];
+
+            // Return an array with the item data mapped to the VTEX format.
+            return [
+                "id"       => $aux_item[ "id"       ],
+                "price"    => $aux_item[ "price"    ],
+                "quantity" => $aux_item[ "quantity" ],
+            ];
+
+        }, $logistics );
+    }
+}
+
+if ( !function_exists( "map_vtex_logistics_info" ) )
+{
+    /**
+     * Maps the logistics information from WooCommerce to the format required by VTEX.
+     *
+     * @param   array   $data   The logistics information from a WooCommerce order.
+     * @return  array           The logistics information formatted for VTEX.
+     */
+    function map_logistics_info( array $data )
+    {
+        // Map logistics information to the VTEX format.
+        return array_map( function ( $item )
+        {
+            // Search for the index of the SLA that corresponds to the "delivery" delivery channel.
+            $sla_id       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
+
+            // Select the SLA based on the found index.
+            $selected_sla = $item[ "slas" ][ $sla_id ];
+
+            // Return an array with the logistics information mapped to the VTEX format.
+            return [
+                "selectedDeliveryChannel" => "delivery", // or 'pickup-in-point'
+                "lockTTL"                 => "3d", // 'b' or 'bd'
+                "price"                   => $selected_sla[ "price"            ],
+                "selectedSla"             => $selected_sla[ "id"               ],
+                "shippingEstimate"        => $selected_sla[ "shippingEstimate" ],
+                "deliveryIds"             => [ "warehouseId" => "" ],
+            ];
+
+        }, $data );
+    }
+}
+
+if ( !function_exists( "map_vtex_client_data" ) )
+{
+    function map_vtex_client_data( array $data )
+    {
+        // Determine if the order is from a corporate entity based on the person type.
+        $is_corporate  = isset( $data[ "persontype" ] ) && $data[ "persontype" ] === "J";
+        $state_inscrpt = ( $is_corporate && isset( $data[ "state_inscription" ] ) ) ? $data[ "state_inscription" ] : null;
+
+        return [
+            "email"             => $data[ "email"      ],
+            "firstName"         => $data[ "first_name" ],
+            "lastName"          => $data[ "last_name"  ],
+            "phone"             => $data[ "phone"      ],
+            "document"          => $data[ "cpf"        ],
+            "corporateDocument" => $is_corporate ? $data[ "cnpj"    ] : null,
+            "corporatePhone"    => $is_corporate ? $data[ "phone"   ] : null,
+            "corporateName"     => $is_corporate ? $data[ "company" ] : null,
+            "tradeName"         => $is_corporate ? $data[ "company" ] : null,
+            "stateInscription"  => $state_inscrpt,
+        ];
+    }
+}
+
+if ( !function_exists( "map_vtex_selected_addresses" ) )
+{
+
+    function map_vtex_selected_addresses( array $data )
+    {
+        $name = implode( " ", [ $data[ "first_name" ], $data[ "last_name" ] ] );
+
+        return [
+            [
+                "addressId"      => "1",
+                "addressType"    => "residential", // or 'commercial', 'pickup'
+                "receiverName"   => $name,
+                "postalCode"     => $data[ "postcode"     ],
+                "street"         => $data[ "address_1"    ],
+                "number"         => $data[ "number"       ],
+                "complement"     => $data[ "address_2"    ],
+                "neighborhood"   => $data[ "neighborhood" ],
+                "city"           => $data[ "city"         ],
+                "state"          => $data[ "state"        ],
+                "country"        => "BRA",
+            ]
+        ];
+    }
+}
+
+if ( !function_exists( "new_vtex_order" ) )
+{
+    /**
+     * Converts WooCommerce order data to the format required by VTEX.
+     *
+     * @param   array   $data   The original order data from WooCommerce.
+     * @return  array           The order data formatted for VTEX.
+     */
+    function new_vtex_order( array $data )
+    {
+        // Extract parent order data if available, otherwise use the current order data.
+        $parent   = $data[ "parent" ] ?? null;
+        $order    = $data[ "order"  ];
+
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url      = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
+
+        if ( config( "app.env" ) == "local" )
+            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
+
+        // Extract the VTEX information from the order data.
+        $info     = $order[ "fs_info" ][ "logisticsInfo" ];
+
+        // Retrieve the discount
+        $discount = ( empty( $order[ "coupon_lines" ] ) )
+                            ? $order[ "discount_total" ]
+                            : ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
+
+        // Calculate the total payment value for the marketplace.
+        $total    = $order[ "total" ] + $discount;
+        $total    = number_format( ( float ) $total, 2, ".", "" );
+        $total    = ( int ) str_replace( ".", "", $total );
+
+        // Extract billing and shipping information, using parent data if available.
+        $billing  = $parent[ "billing"  ] ?? $order[ "billing"  ];
+        $shipping = $parent[ "shipping" ] ?? $order[ "shipping" ];
+
+        // Return the formatted order data for VTEX.
+        return [
+            "marketplaceOrderId"      => $order[ "id" ],
+            "marketplaceOrderStatus"  => "new",  // or 'approved'
+            "marketplacePaymentValue" => $total,
+            "connectorName"           => "???",  // TODO fastshop precisa fornecer/confirmar
+            "connectorEndpoint"       => "???",  // TODO fastshop precisa fornecer/confirmar
+            "allowFranchises"         => false,
+            "items"                   => map_vtex_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
+            "clientProfileData"       => map_vtex_client_data( $billing ),
+            "shippingData"            => [
+                "isFob"                    => false,
+                "isMarketplaceFulfillment" => false,
+
+                "logisticsInfo"            => map_vtex_logistics_info( $info[ "logisticsInfo" ] ),
+                "selectedAddresses"        => map_vtex_selected_addresses( $shipping ),
+            ],
+        ];
+    }
+}
