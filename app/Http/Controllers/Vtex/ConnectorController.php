@@ -34,6 +34,13 @@ class ConnectorController extends Controller
     private const LOG_CHANNEL = "vtex";
 
     /**
+     * Seller.
+     *
+     * @var     string
+     */
+    private $seller;
+
+    /**
      * Env (e.g., local, production) as a string.
      *
      * @var     string
@@ -75,7 +82,10 @@ class ConnectorController extends Controller
      */
     private $call_origin = "";
 
-    public function __construct() {}
+    public function __construct( string $seller )
+    {
+        $this->seller = $seller;
+    }
 
     /**
      * Construct the request URL based on the provided parameters.
@@ -88,19 +98,21 @@ class ConnectorController extends Controller
      */
     public function url( ?string $account = null, ?string $environment = null, string $api, ?string $param = null )
     {
-        $this->env     = config( key: "vtex.env"                     );
-        $this->headers = config( key: "vtex.{$this->env}.headers"    );
+        $this->env     = config( key: "vtex.{$this->seller}.env"                     );
+        $this->headers = config( key: "vtex.{$this->seller}.{$this->env}.headers"    );
 
-        $url_prefix    = config( key: "vtex.{$this->env}.url.prefix" );
-        $url_sufix     = config( key: "vtex.{$this->env}.url.sufix"  );
+        $url_prefix    = config( key: "vtex.{$this->seller}.{$this->env}.url.prefix" );
+        $url_sufix     = config( key: "vtex.{$this->seller}.{$this->env}.url.sufix"  );
 
-        $account       = $account     ? $account     : config( key: "vtex.{$this->env}.account_name" );
-        $environment   = $environment ? $environment : config( key: "vtex.{$this->env}.environment"  );
+        $account       = $account     ? $account     : config( key: "vtex.{$this->seller}.{$this->env}.account_name" );
+        $environment   = $environment ? $environment : config( key: "vtex.{$this->seller}.{$this->env}.environment"  );
 
         $base          = match ( $api )
         {
-            "category-register"    => "mkp-category-mapper/connector/register",
-            "category-marketplace" => "mkp-category-mapper/categories/marketplace/",
+            "category-register"        => "mkp-category-mapper/connector/register",
+            "category-marketplace"     => "mkp-category-mapper/categories/marketplace/",
+            "order-integration"        => "order-integration/orders",
+            "order-integration-status" => "order-integration/orders/status"
         };
 
         // Construct the registration URL.
