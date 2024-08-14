@@ -19,7 +19,7 @@ class CategoryService
      *
      * @param   ConnectorService    $connector
      */
-    public function __construct( ConnectorService $connector)
+    public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
     }
@@ -32,7 +32,7 @@ class CategoryService
      * @param   string  $account
      * @return  array
      */
-    public function registerMarketplaceConnector( string $account )
+    public function registerMarketplaceConnector( string $account ) : array
     {
         // Prepare the request body.
         $body     = [
@@ -67,9 +67,9 @@ class CategoryService
      *
      * @param   integer     $id
      * @param   array       $categories   Categories in VTEX format.
-     * @return  void
+     * @return  array
      */
-    public function sendCategoryMapping( int $id, array $categories )
+    public function sendCategoryMapping( int $id, array $categories ) : array
     {
         try
         {

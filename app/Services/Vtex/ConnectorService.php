@@ -86,7 +86,7 @@ class ConnectorService
      * @param   string|null     $param
      * @return  ConnectorService
      */
-    public function buildUrl( string $api, ?string $account = null, ?string $environment = null, ?string $param = null )
+    public function buildUrl( string $api, ?string $account = null, ?string $environment = null, ?string $param = null ) : ConnectorService
     {
         $base        = config( "vtex.{$this->seller}.{$this->env}.url.{$api}" );
         $url_prefix  = config( "vtex.{$this->seller}.{$this->env}.url.prefix" );
@@ -106,7 +106,7 @@ class ConnectorService
      * @param   bool    $register   Whether to enable or disable logging messages. Defaults to true.
      * @return  ConnectorService
      */
-    public function enableLogMessage( bool $register = true )
+    public function enableLogMessage( bool $register = true ) : ConnectorService
     {
         $this->log_message = $register;
 
@@ -120,7 +120,7 @@ class ConnectorService
      * @param   bool    $notify     Whether to enable or disable sending notifications. Defaults to true.
      * @return  ConnectorService
      */
-    public function enableLogNotify( bool $notify = true )
+    public function enableLogNotify( bool $notify = true ) : ConnectorService
     {
         $this->log_notify = $notify;
 
@@ -134,7 +134,7 @@ class ConnectorService
      * @param   string  $origin     The origin of the call (e.g. "API Request" or "Manual Trigger").
      * @return  ConnectorService
      */
-    public function setCallOrigin( string $origin = "" )
+    public function setCallOrigin( string $origin = "" ) : ConnectorService
     {
         $this->call_origin = $origin;
 
@@ -148,7 +148,7 @@ class ConnectorService
      * @param   array   $body       The request body as an associative array.
      * @return  array               An array containing the response code and data, or a default error message if the request was not successful.
      */
-    public function sendRequest( string $method, array $body = [] )
+    public function sendRequest( string $method, array $body = [] ) : array
     {
         try
         {
