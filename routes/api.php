@@ -149,7 +149,7 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
      */
     Route::name( "vtex." )->prefix( "vtex" )->group( function ()
     {
-        Route::name( "categories." )->prefix( "categories" )->group( function ()
+        Route::name( "mapper." )->prefix( "mapper" )->group( function ()
         {
             Route::get(  "/categories", [ VtexCategoryController::class, "categories" ] )->name( "categories" );
             Route::post( "/mapping",    [ VtexCategoryController::class, "mapping"    ] )->name( "mapping"    );
