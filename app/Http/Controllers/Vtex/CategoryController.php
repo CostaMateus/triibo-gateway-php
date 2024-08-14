@@ -17,7 +17,7 @@ class CategoryController extends ConnectorController
     /**
      * Seller.
      *
-     * @var     string
+     * @var     string|null
      */
     private $seller;
 
@@ -28,14 +28,19 @@ class CategoryController extends ConnectorController
      */
     private $vtex;
 
-    public function __construct( string $seller )
+    public function __construct( ?string $seller = null )
     {
-        $this->seller = $seller;
-        $this->vtex   = new ConnectorController( $seller );
+        if ( $seller )
+        {
+            $this->seller = $seller;
+            $this->vtex   = new ConnectorController( $seller );
+        }
     }
 
     /**
      * Registers the marketplace connector with VTEX.
+     *
+     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *
      * @return  JsonResponse    A JSON response indicating the result of the operation.
      */
@@ -73,17 +78,19 @@ class CategoryController extends ConnectorController
     /**
      * Sends marketplace category mapping to VTEX.
      *
-     * @return  JsonResponse            A JSON response indicating the result of the operation.
+     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/categories/marketplace/-id-
+     *
+     * @return  JsonResponse    A JSON response indicating the result of the operation.
      */
     public function sendMapping() : JsonResponse
     {
-        $code    = 200;
-        $data    = [];
+        $code = 200;
+        $data = [];
 
         /**
          * TODO remove | For test, this ID will be returned in registration() method.
          */
-        $id      = 123123; // for test
+        $id   = 123123; // for test
 
         try
         {
@@ -114,6 +121,9 @@ class CategoryController extends ConnectorController
 
     /**
      * Handles the mapping of VTEX categories.
+     *
+     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
+     *          Parameter mappingEndPoint
      *
      * @param   Request     $request    The incoming HTTP request containing category mapping data.
      * @return  JsonResponse            A JSON response indicating the result of the operation.
@@ -155,9 +165,13 @@ class CategoryController extends ConnectorController
     /**
      * Retrieves and formats marketplace categories for VTEX integration.
      *
-     * @return  JsonResponse    A JSON response indicating the result of the operation.
+     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
+     *          Parameter categoryTreeEndPoint
+     *
+     * @param   Request     $request    The incoming HTTP request containing category mapping data.
+     * @return  JsonResponse            A JSON response indicating the result of the operation.
      */
-    public function categories() : JsonResponse
+    public function categories( Request $request ) : JsonResponse
     {
         $code = 200;
         $data = [];
