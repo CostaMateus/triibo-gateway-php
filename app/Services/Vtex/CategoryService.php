@@ -66,17 +66,19 @@ class CategoryService
      * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/categories/marketplace/-id-
      *
      * @param   integer     $id
+     * @param   array       $categories   Categories in VTEX format.
      * @return  void
      */
-    public function sendCategoryMapping( int $id )
+    public function sendCategoryMapping( int $id, array $categories )
     {
         try
         {
-            // Fetch all marketplace categories.
-            $categories = get_marketplace_categories();
+            // TODO remover
+            // // Fetch all marketplace categories.
+            // $categories = get_marketplace_categories();
 
-            // Format categories for VTEX integration.
-            $body       = [ "categories" => format_categories_to_vtex( $categories ) ];
+            // // Format categories for VTEX integration.
+            // $body       = [ "categories" => format_categories_to_vtex( $categories ) ];
 
             $this->connector
                 ->setCallOrigin(
@@ -89,7 +91,7 @@ class CategoryService
                     param       : $id
                 );
 
-            return $this->connector->sendRequest( method: "post", body: $body );
+            return $this->connector->sendRequest( method: "post", body: [ "categories" => $categories ] );
         }
         catch ( Throwable $e )
         {
