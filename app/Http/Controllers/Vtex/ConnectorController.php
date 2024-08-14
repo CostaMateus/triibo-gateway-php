@@ -107,13 +107,7 @@ class ConnectorController extends Controller
         $account       = $account     ? $account     : config( key: "vtex.{$this->seller}.{$this->env}.account_name" );
         $environment   = $environment ? $environment : config( key: "vtex.{$this->seller}.{$this->env}.environment"  );
 
-        $base          = match ( $api )
-        {
-            "category-register"        => "mkp-category-mapper/connector/register",
-            "category-marketplace"     => "mkp-category-mapper/categories/marketplace/",
-            "order-integration"        => "order-integration/orders",
-            "order-integration-status" => "order-integration/orders/status"
-        };
+        $base          = config( key: "vtex.{$this->seller}.{$this->env}.url.{$api}" );
 
         // Construct the registration URL.
         $this->url   = implode( separator: "", array: [ $url_prefix, "{$account}.", $environment, $url_sufix, $base, $param ] );
