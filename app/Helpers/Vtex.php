@@ -137,7 +137,7 @@ if ( !function_exists( "save_file" ) )
      * @param   array   $data   The data to be saved as JSON.
      * @return  void
      */
-    function save_file( string $name, array $data )
+    function save_file( string $name, array $data ) : void
     {
         $date    = date( "Ymd-his" );
         $encoded = json_encode( $data, JSON_UNESCAPED_SLASHES );
@@ -155,7 +155,7 @@ if ( !function_exists( "map_vtex_order_items" ) )
      * @param   array   $items      The actual items from the order.
      * @return  array               The order items formatted for VTEX.
      */
-    function map_order_items( array $logistics, array $items )
+    function map_order_items( array $logistics, array $items ) : array
     {
         // Use array_map to transform each item to the VTEX format using the logistics array.
         return array_map( function ( $item ) use ( $items )
@@ -183,7 +183,7 @@ if ( !function_exists( "map_vtex_logistics_info" ) )
      * @param   array   $data   The logistics information from a WooCommerce order.
      * @return  array           The logistics information formatted for VTEX.
      */
-    function map_logistics_info( array $data )
+    function map_logistics_info( array $data ) : array
     {
         // Map logistics information to the VTEX format.
         return array_map( function ( $item )
@@ -210,7 +210,13 @@ if ( !function_exists( "map_vtex_logistics_info" ) )
 
 if ( !function_exists( "map_vtex_client_data" ) )
 {
-    function map_vtex_client_data( array $data )
+    /**
+     * Maps VTEX client data to a standardized format.
+     *
+     * @param   array   $data   The user data array.
+     * @return  array           The mapped client data array.
+     */
+    function map_vtex_client_data( array $data ) : array
     {
         // Determine if the order is from a corporate entity based on the person type.
         $is_corporate  = isset( $data[ "persontype" ] ) && $data[ "persontype" ] === "J";
@@ -233,8 +239,13 @@ if ( !function_exists( "map_vtex_client_data" ) )
 
 if ( !function_exists( "map_vtex_selected_addresses" ) )
 {
-
-    function map_vtex_selected_addresses( array $data )
+    /**
+     * Maps VTEX selected address to a standardized format.
+     *
+     * @param   array   $data   The user data array.
+     * @return  array           An array containing a single address object.
+     */
+    function map_vtex_selected_addresses( array $data ) : array
     {
         $name = implode( " ", [ $data[ "first_name" ], $data[ "last_name" ] ] );
 
@@ -264,7 +275,7 @@ if ( !function_exists( "new_vtex_order" ) )
      * @param   array   $data   The original order data from WooCommerce.
      * @return  array           The order data formatted for VTEX.
      */
-    function new_vtex_order( array $data )
+    function new_vtex_order( array $data ) : array
     {
         // Extract parent order data if available, otherwise use the current order data.
         $parent   = $data[ "parent" ] ?? null;
@@ -310,6 +321,26 @@ if ( !function_exists( "new_vtex_order" ) )
                 "logisticsInfo"            => map_vtex_logistics_info( $info[ "logisticsInfo" ] ),
                 "selectedAddresses"        => map_vtex_selected_addresses( $shipping ),
             ],
+        ];
+    }
+}
+
+if ( !function_exists( "update_vtex_order" ) )
+{
+    /**
+     * Formats the order data for updating in VTEX.
+     *
+     * @param   string  $order_id   The unique identifier of the order.
+     * @return  array               A formatted array containing the updated order data for VTEX.
+     */
+    function update_vtex_order( string $order_id ) : array
+    {
+        // Return the formatted order data for VTEX.
+        return [
+            "marketplaceOrderId"      => $order_id,
+            "marketplaceOrderStatus"  => "approved",
+            "connectorName"           => "???",  // TODO fastshop precisa fornecer/confirmar
+            "connectorEndpoint"       => "???",  // TODO fastshop precisa fornecer/confirmar
         ];
     }
 }
