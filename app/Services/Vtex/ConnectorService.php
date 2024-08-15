@@ -78,13 +78,13 @@ class ConnectorService
     }
 
     /**
-     * Undocumented function
+     * Build the URL for a VTEX API call.
      *
-     * @param   string          $api
-     * @param   string|null     $account
-     * @param   string|null     $environment
-     * @param   string|null     $param
-     * @return  ConnectorService
+     * @param   string          $api            The name of the API endpoint to be called.
+     * @param   string|null     $account        Account for the API call (default value will be used if not provided).
+     * @param   string|null     $environment    Environment for the API call (default value will be used if not provided).
+     * @param   string|null     $param          Additional query string parameters to the URL (default null).
+     * @return  ConnectorService                The object itself, allowing method chaining.
      */
     public function buildUrl( string $api, ?string $account = null, ?string $environment = null, ?string $param = null ) : ConnectorService
     {
@@ -104,7 +104,7 @@ class ConnectorService
      * Enable log message flag.
      *
      * @param   bool    $register   Whether to enable or disable logging messages. Defaults to true.
-     * @return  ConnectorService
+     * @return  ConnectorService    The object itself, allowing method chaining.
      */
     public function enableLogMessage( bool $register = true ) : ConnectorService
     {
@@ -118,7 +118,7 @@ class ConnectorService
      * Used to determine whether a notification should be sent when an error occurs.
      *
      * @param   bool    $notify     Whether to enable or disable sending notifications. Defaults to true.
-     * @return  ConnectorService
+     * @return  ConnectorService    The object itself, allowing method chaining.
      */
     public function enableLogNotify( bool $notify = true ) : ConnectorService
     {
@@ -132,7 +132,7 @@ class ConnectorService
      * Used to track the source of a specific request or action.
      *
      * @param   string  $origin     The origin of the call (e.g. "API Request" or "Manual Trigger").
-     * @return  ConnectorService
+     * @return  ConnectorService    The object itself, allowing method chaining.
      */
     public function setCallOrigin( string $origin = "" ) : ConnectorService
     {
