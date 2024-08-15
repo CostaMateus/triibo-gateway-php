@@ -29,7 +29,7 @@ class CategoryService
      *
      * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *
-     * @param   string  $account
+     * @param   string  $account    The name of the VTEX account.
      * @return  array
      */
     public function registerMarketplaceConnector( string $account ) : array
