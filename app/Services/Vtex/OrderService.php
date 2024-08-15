@@ -25,7 +25,7 @@ class OrderService
      *
      * @param   ConnectorService    $connector
      */
-    public function __construct( ConnectorService $connector)
+    public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
         $this->env       = config( "vtex.{$this->connector->seller}.env" );
@@ -36,7 +36,7 @@ class OrderService
      *
      * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/order-integration/orders
      *
-     * @param   array   $data   Order data in VTEX format
+     * @param   array   $data   Order data in VTEX format.
      * @return  array
      */
     public function newOrder( array $data )
@@ -58,14 +58,27 @@ class OrderService
     }
 
     /**
-     * Update Order Status
+     * Update Order Status.
      *
      * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#put-/api/order-integration/orders/status
      *
+     * @param   string  $account    The name of the VTEX account.
+     * @param   array   $data       Order data in VTEX format.
      * @return  array
      */
-    public function updateOrderStatus()
+    public function updateOrderStatus( string $account, array $data )
     {
-        //
+        $this->connector
+            ->setCallOrigin(
+                origin      : "updateOrderStatus"
+            )
+            ->buildUrl(
+                api         : "order-integration-status",
+                account     : null,
+                environment : null,
+                param       : "?an={$account}"
+            );
+
+        return $this->connector->sendRequest( method: "put", body: $data );
     }
 }
