@@ -8,7 +8,7 @@ use App\Services\Vtex\ConnectorService;
 class CategoryService
 {
     /**
-     * Vtex Connector Service
+     * Vtex Connector Service.
      *
      * @var     ConnectorService
      */
