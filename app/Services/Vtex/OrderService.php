@@ -7,18 +7,18 @@ use App\Services\Vtex\ConnectorService;
 class OrderService
 {
     /**
+     * Vtex Connector Service.
+     *
+     * @var     ConnectorService
+     */
+    private $connector;
+
+    /**
      * Env (e.g., local, production) as a string.
      *
      * @var     string
      */
     private $env;
-
-    /**
-     * Vtex Connector Service
-     *
-     * @var     ConnectorService
-     */
-    private $connector;
 
     /**
      * Constructor.

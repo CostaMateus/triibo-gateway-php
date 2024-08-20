@@ -6,8 +6,9 @@ return [
         "env"        => env( key: "VTEX_ENV", default: "local" ),
 
         "local"      => [
-            "affiliated_id" => "xxxxxxxx",           // fastshop precisa fornecer
-            "account_name"  => "xxxxxxxx",           // fastshop precisa fornecer
+            "affiliated_id" => "xxxxxxxx",           // TODO fastshop precisa fornecer
+            "sales_channel" => "xxxxxxxx",           // TODO fastshop precisa fornecer
+            "account_name"  => "xxxxxxxx",           // TODO fastshop precisa fornecer
             "environment"   => "vtexcommercestable", // nao sei ao certo
             "url"           => [
                 "prefix"                   => "https://",
@@ -16,7 +17,11 @@ return [
                 "category-register"        => "mkp-category-mapper/connector/register",
                 "category-marketplace"     => "mkp-category-mapper/categories/marketplace/",
                 "order-integration"        => "order-integration/orders",
-                "order-integration-status" => "order-integration/orders/status"
+                "order-integration-status" => "order-integration/orders/status",
+
+                "fulfillment-simulation"   => "checkout/pub/orderForms/simulation",
+                "fulfillment-order"        => "fulfillment/pvt/orders",
+                "fulfillment-dispatch"     => "fulfillment/pvt/orders/{orderId}/fulfill",
             ],
 
             "headers"       => [
