@@ -27,7 +27,7 @@ class CategoryService
     /**
      * Registers the marketplace connector with VTEX.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *
      * @param   string  $account    The name of the VTEX account.
      * @return  array
@@ -63,7 +63,7 @@ class CategoryService
     /**
      * Sends marketplace category mapping to VTEX.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/categories/marketplace/-id-
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/categories/marketplace/-id-
      *
      * @param   integer     $id
      * @param   array       $categories   Categories in VTEX format.

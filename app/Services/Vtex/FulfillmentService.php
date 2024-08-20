@@ -35,7 +35,7 @@ class FulfillmentService
     /**
      * Simulates the process of creating a new order by sending a request to the order integration API.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/checkout/pub/orderForms/simulation
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/checkout/pub/orderForms/simulation
      *
      * @param   array   $data  The data to be sent in the request body.
      * @return  array
@@ -62,7 +62,7 @@ class FulfillmentService
     /**
      * Handles the fulfillment of an order by sending the order data to the fulfillment API.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders
      *
      * @param   array   $data   Order data in VTEX format.
      * @return  array
@@ -89,7 +89,7 @@ class FulfillmentService
     /**
      * Dispatches an order by sending a request to the fulfillment dispatch API.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders/-orderId-/fulfill
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders/-orderId-/fulfill
      *
      * @param   string  $order_id  The ID of the order to be dispatched.
      * @return  array              The response from the API call.

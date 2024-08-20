@@ -12,7 +12,7 @@ class CategoryController extends ConnectorController
     /**
      * Handles the mapping of VTEX categories.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *          Parameter mappingEndPoint
      *
      * @param   Request     $request    The incoming HTTP request containing category mapping data.
@@ -55,7 +55,7 @@ class CategoryController extends ConnectorController
     /**
      * Retrieves and formats marketplace categories for VTEX integration.
      *
-     * @refer   https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *          Parameter categoryTreeEndPoint
      *
      * @param   Request     $request    The incoming HTTP request containing category mapping data.
