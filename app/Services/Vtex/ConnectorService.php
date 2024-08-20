@@ -216,4 +216,19 @@ class ConnectorService
 
         return [ $code, $data ];
     }
+
+    /**
+     * Replaces placeholders in the URL with corresponding values from the provided data array.
+     *
+     * This function iterates through the provided associative array, where each key represents
+     * a placeholder in the URL, and each value is the replacement for that placeholder.
+     *
+     * @param   array   $data  An associative array where keys are placeholders and values are replacements.
+     * @return  void
+     */
+    public function replaceUrl( array $data )
+    {
+        foreach ( $data as $key => $value )
+            $this->url = str_replace( $key, $value, $this->url );
+    }
 }
