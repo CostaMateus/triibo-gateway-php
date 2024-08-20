@@ -36,6 +36,8 @@ class OrderService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/order-integration/orders
      *
+     * @uses    $data must be result of app\Helpers\Vtex::vtex_new_order
+     *
      * @param   array   $data   Order data in VTEX format.
      * @return  array
      */
@@ -61,6 +63,8 @@ class OrderService
      * Update Order Status.
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#put-/api/order-integration/orders/status
+     *
+     * @uses    $data must be result of app\Helpers\Vtex::vtex_update_order
      *
      * @param   string  $account    The name of the VTEX account.
      * @param   array   $data       Order data in VTEX format.

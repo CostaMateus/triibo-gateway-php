@@ -65,6 +65,8 @@ class CategoryService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/categories/marketplace/-id-
      *
+     * @uses    $data must be result of app\Helpers\Vtex::vtex_format_categories
+     *
      * @param   integer     $id
      * @param   array       $categories   Categories in VTEX format.
      * @return  array
@@ -78,7 +80,7 @@ class CategoryService
             // $categories = get_marketplace_categories();
 
             // // Format categories for VTEX integration.
-            // $body       = [ "categories" => format_categories_to_vtex( $categories ) ];
+            // $body       = [ "categories" => vtex_format_categories( $categories ) ];
 
             $this->connector
                 ->setCallOrigin(
