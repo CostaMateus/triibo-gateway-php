@@ -409,10 +409,10 @@ if ( !function_exists( "vtex_fulfillment_order" ) )
 if ( !function_exists( "vtex_fulfillment_simulation" ) )
 {
     /**
-     * Converts WooCommerce order data to the format required by VTEX.
+     * Converts WooCommerce freight data to the format required by VTEX.
      *
-     * @param   array   $data   The original order data from WooCommerce.
-     * @return  array           The order data formatted for VTEX.
+     * @param   array   $data   The original freight data from WooCommerce.
+     * @return  array           The freight data formatted for VTEX.
      */
     function vtex_fulfillment_simulation( array $data )
     {
