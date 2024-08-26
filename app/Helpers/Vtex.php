@@ -405,3 +405,38 @@ if ( !function_exists( "vtex_fulfillment_order" ) )
         ];
     }
 }
+
+if ( !function_exists( "vtex_fulfillment_simulation" ) )
+{
+    /**
+     * Converts WooCommerce order data to the format required by VTEX.
+     *
+     * @param   array   $data   The original order data from WooCommerce.
+     * @return  array           The order data formatted for VTEX.
+     */
+    function vtex_fulfillment_simulation( array $data )
+    {
+        return array_map( function ( $data )
+        {
+            $items = [];
+
+            // Maps each line item to the desired structure.
+            foreach ( $data[ "items" ] as $item )
+            {
+                $items = [
+                    "id"       => str_replace( "FS-", "", $item[ "sku" ] ),
+                    "quantity" => $item[ "quantity" ],
+                    "seller"   => self::DEFAULT_SELLER,
+                ];
+            }
+
+            return [
+                "items"      => $items,
+                "postalCode" => $data[ "postalCode" ],
+                "country"    => "BRA",
+                "selectedSla" => "Normal",
+            ];
+
+        }, $data );
+    }
+}
