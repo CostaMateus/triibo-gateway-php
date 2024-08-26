@@ -345,3 +345,63 @@ if ( !function_exists( "vtex_update_order" ) )
         ];
     }
 }
+
+if ( !function_exists( "vtex_fulfillment_order" ) )
+{
+    /**
+     * Converts WooCommerce order data to the format required by VTEX.
+     *
+     * @param   array   $data   The original order data from WooCommerce.
+     * @return  array           The order data formatted for VTEX.
+     */
+    function vtex_fulfillment_order( array $data ) : array
+    {
+        // Extract parent order data if available, otherwise use the current order data.
+        $parent   = $data[ "parent" ] ?? null;
+        $order    = $data[ "order"  ];
+
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url      = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
+
+        if ( config( "app.env" ) == "local" )
+            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
+
+        // Calculate the total payment value for the marketplace.
+        $total    = $order[ "total" ] + $discount;
+        $total    = number_format( ( float ) $total, 2, ".", "" );
+        $total    = ( int ) str_replace( ".", "", $total );
+
+        // Extract billing and shipping information, using parent data if available.
+        $billing  = $parent[ "billing"  ] ?? $order[ "billing"  ];
+        $shipping = $parent[ "shipping" ] ?? $order[ "shipping" ];
+
+        // Return the formatted order data for VTEX.
+        return [
+            "marketplaceOrderId"          => $order[ "id" ],
+            "marketplaceServicesEndpoint" => $url,
+            "marketplacePaymentValue"     => $total,
+
+            // @see https://help.vtex.com/en/tutorial/configuring-price-divergence-rule--awAKP0sS5J8jgLs2g7pPe
+            // true if the order was created asynchronously.
+            "isCreatedAsync"              => false, // TODO confirmar
+
+            "items"                       => vtex_map_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
+            "clientProfileData"           => vtex_map_client_data( $billing ),
+            "shippingData"                => [
+                "address"       => vtex_map_selected_addresses( $shipping ),
+                "logisticsInfo" => tex_map_logistics_info( $info[ "logisticsInfo" ] ),
+                "updateStatus"  => "updated"
+            ],
+            "openTextField"               => "",
+            "paymentData"                 => null,
+            "marketingData"               => [
+                "utmSource"    => "",
+                "utmMedium"    => "",
+                "utmCampaign"  => "",
+                "utmiPage"     => "",
+                "utmiPart"     => "",
+                "utmiCampaign" => "",
+            ],
+        ];
+    }
+}
