@@ -102,7 +102,7 @@ if ( !function_exists( "format_categories" ) )
     }
 }
 
-if ( !function_exists( "format_categories_to_vtex" ) )
+if ( !function_exists( "vtex_format_categories" ) )
 {
     /**
      * Formats category data for VTEX integration.
@@ -110,7 +110,7 @@ if ( !function_exists( "format_categories_to_vtex" ) )
      * @param   array   $data   Raw category data.
      * @return  array           Formatted and hierarchically organized category data.
      */
-    function format_categories_to_vtex( array $data ) : array
+    function vtex_format_categories( array $data ) : array
     {
         $categories = [];
 
@@ -196,10 +196,11 @@ if ( !function_exists( "vtex_map_logistics_info" ) )
 
             // Return an array with the logistics information mapped to the VTEX format.
             return [
+                "itemIndex"               => $item[ "itemIndex" ],
                 "selectedDeliveryChannel" => "delivery", // or 'pickup-in-point'
-                "lockTTL"                 => "3d", // 'b' or 'bd'
+                "lockTTL"                 => "3d",       // 'b' or 'bd'
                 "price"                   => $selected_sla[ "price"            ],
-                "selectedSla"             => $selected_sla[ "id"               ],
+                "selecetdSla"             => $selected_sla[ "id"               ],
                 "shippingEstimate"        => $selected_sla[ "shippingEstimate" ],
                 "deliveryIds"             => [ "warehouseId" => "" ],
             ];
