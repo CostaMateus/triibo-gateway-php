@@ -91,7 +91,7 @@ class FulfillmentService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders/-orderId-/fulfill
      *
-     * @param   string  $order_id  The ID of the order to be dispatched.
+     * @param   string  $order_id  The marketplace order id to be dispatched.
      * @return  array              The response from the API call.
      */
     public function dispatchOrder( string $order_id )
