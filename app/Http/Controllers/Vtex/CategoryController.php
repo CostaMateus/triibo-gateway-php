@@ -72,7 +72,7 @@ class CategoryController extends ConnectorController
             $categories = get_marketplace_categories();
 
             // Format categories for VTEX integration.
-            $categories = format_categories_to_vtex( data: $categories );
+            $categories = vtex_format_categories( data: $categories );
 
             // Prepare successful response data.
             $data       = [
