@@ -142,6 +142,21 @@ class ConnectorService
     }
 
     /**
+     * Replaces placeholders in the URL with corresponding values from the provided data array.
+     *
+     * This function iterates through the provided associative array, where each key represents
+     * a placeholder in the URL, and each value is the replacement for that placeholder.
+     *
+     * @param   array   $data  An associative array where keys are placeholders and values are replacements.
+     * @return  void
+     */
+    public function replaceUrl( array $data )
+    {
+        foreach ( $data as $key => $value )
+            $this->url = str_replace( $key, $value, $this->url );
+    }
+
+    /**
      * Sends a request to the Vtex API based on the provided method and data.
      *
      * @param   string  $method     The HTTP method to be used (e.g. "POST", "GET").
@@ -215,20 +230,5 @@ class ConnectorService
         }
 
         return [ $code, $data ];
-    }
-
-    /**
-     * Replaces placeholders in the URL with corresponding values from the provided data array.
-     *
-     * This function iterates through the provided associative array, where each key represents
-     * a placeholder in the URL, and each value is the replacement for that placeholder.
-     *
-     * @param   array   $data  An associative array where keys are placeholders and values are replacements.
-     * @return  void
-     */
-    public function replaceUrl( array $data )
-    {
-        foreach ( $data as $key => $value )
-            $this->url = str_replace( $key, $value, $this->url );
     }
 }
