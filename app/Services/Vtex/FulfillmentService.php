@@ -108,9 +108,10 @@ class FulfillmentService
                 account     : null,
                 environment : null,
                 param       : "?affiliateId={$affiliated_id}&sc={$sales_channel}",
+            )
+            ->replaceUrl(
+                data        : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
             );
-
-        $this->connector->replaceUrl( data: [ "{orderId}" => "{$affiliated_id}-{$order_id}" ] );
 
         return $this->connector->sendRequest( method: "post", body: [ "marketplaceOrderId" => $order_id ] );
     }
