@@ -49,7 +49,7 @@ class CategoryService
             ->buildUrl(
                 api         : "category-register",
                 account     : "portal",
-                environment : "vtexcommercestable",
+                environment : null,
                 param       : "?an={$account}"
             );
 
@@ -73,47 +73,27 @@ class CategoryService
      */
     public function sendCategoryMapping( int $id, array $categories ) : array
     {
-        try
-        {
-            // TODO remover
-            // // Fetch all marketplace categories.
-            // $categories = get_marketplace_categories();
+        // TODO remover
+        // // Fetch all marketplace categories.
+        // $categories = get_marketplace_categories();
 
-            // // Format categories for VTEX integration.
-            // $body       = [ "categories" => vtex_format_categories( $categories ) ];
+        // // Format categories for VTEX integration.
+        // $body       = [ "categories" => vtex_format_categories( $categories ) ];
 
-            $this->connector
-                ->setCallOrigin(
-                    origin      : "sendCategoryMapping"
-                )
-                ->buildUrl(
-                    api         : "category-marketplace",
-                    account     : "portal",
-                    environment : "vtexcommercestable",
-                    param       : $id
-                );
-
-            return $this->connector->sendRequest( method: "post", body: [ "categories" => $categories ] );
-        }
-        catch ( Throwable $e )
-        {
-            // Log the exception for debugging purposes.
-            log_exception(
-                channel : self::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : "sendMapping",
-                type    : "Throwable",
-                e       : $e
+        $this->connector
+            ->setCallOrigin(
+                origin      : "sendCategoryMapping"
+            )
+            ->buildUrl(
+                api         : "category-marketplace",
+                account     : "portal",
+                environment : null,
+                param       : null
+            )
+            ->replaceUrl(
+                data        : [ "{id}" => $id ]
             );
 
-            return [
-                500,
-                [
-                    "error_code" => $e->getCode(),
-                    "message"    => "Unexpected error",
-                    "data"       => null
-                ]
-            ];
-        }
+        return $this->connector->sendRequest( method: "post", body: [ "categories" => $categories ] );
     }
 }
