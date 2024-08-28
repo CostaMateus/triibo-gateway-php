@@ -9,19 +9,23 @@ return [
             "affiliated_id" => "xxxxxxxx",           // TODO fastshop precisa fornecer
             "sales_channel" => "xxxxxxxx",           // TODO fastshop precisa fornecer
             "account_name"  => "xxxxxxxx",           // TODO fastshop precisa fornecer
-            "environment"   => "vtexcommercestable", // nao sei ao certo
+            "environment"   => "vtexcommercestable", // TODO nao sei ao certo
             "url"           => [
                 "prefix"                   => "https://",
                 "sufix"                    => ".com.br/api/",
 
                 "category-register"        => "mkp-category-mapper/connector/register",
-                "category-marketplace"     => "mkp-category-mapper/categories/marketplace/",
+                "category-marketplace"     => "mkp-category-mapper/categories/marketplace/{id}",
                 "order-integration"        => "order-integration/orders",
                 "order-integration-status" => "order-integration/orders/status",
 
                 "fulfillment-simulation"   => "checkout/pub/orderForms/simulation",
                 "fulfillment-order"        => "fulfillment/pvt/orders",
                 "fulfillment-dispatch"     => "fulfillment/pvt/orders/{orderId}/fulfill",
+
+                "all-skus-list"            => "catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel",
+                "get-detail-sku"           => "catalog/pvt/stockkeepingunit/{skuId}",
+                "get-detail-product"       => "catalog_system/pvt/products/productget/{productId}",
             ],
 
             "headers"       => [
