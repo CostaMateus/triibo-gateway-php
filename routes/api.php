@@ -5,6 +5,7 @@ use App\Http\Controllers\ChatGuruController;
 use App\Http\Controllers\FastshopController;
 use App\Http\Controllers\PipedriveWebhookController;
 use App\Http\Controllers\Affiliates\SocialSoulController;
+use App\Http\Controllers\Vtex\ProductController as VtexProductController;
 use App\Http\Controllers\Vtex\CategoryController as VtexCategoryController;
 
 /*
@@ -142,6 +143,11 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
         {
             Route::get(  "/categories", [ VtexCategoryController::class, "categories" ] )->name( "categories" );
             Route::post( "/mapping",    [ VtexCategoryController::class, "mapping"    ] )->name( "mapping"    );
+        } );
+
+        Route::name( "notification." )->prefix( "notification" )->group( function ()
+        {
+            Route::post( "/", [ VtexProductController::class, "newSku" ] )->name( "new.sku"    );
         } );
 
     } );
