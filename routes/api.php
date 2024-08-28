@@ -26,8 +26,8 @@ use App\Http\Controllers\Vtex\CategoryController as VtexCategoryController;
 /**
  * Integração Pipedrive => Mautic
  */
-Route::prefix( "pipedrive" )->group( function () {
-
+Route::prefix( "pipedrive" )->group( function ()
+{
     // Route::prefix( "organization" )->group( function () {
     //     Route::post( "/added",   [ PipedriveWebhookController::class, "organization" ] )->name( "pipe.org.added"   );
     //     Route::post( "/updated", [ PipedriveWebhookController::class, "organization" ] )->name( "pipe.org.updated" );
@@ -38,25 +38,23 @@ Route::prefix( "pipedrive" )->group( function () {
     Route::post( "/person",        [ PipedriveWebhookController::class, "person"       ] )->name( "pipe.person"       );
     Route::post( "/stage",         [ PipedriveWebhookController::class, "stage"        ] )->name( "pipe.stage"        );
     Route::post( "/deal",          [ PipedriveWebhookController::class, "deal"         ] )->name( "pipe.deal"         );
-
 } );
 
 
 /**
  * Integração Triibo => ChatGuru
  */
-Route::prefix( "triibo" )->group( function () {
-
+Route::prefix( "triibo" )->group( function ()
+{
     Route::post( "/chatguru", [ ChatGuruController::class, "index" ] )->name( "triibo.chatguru" );
-
 } );
 
 
 /**
  *Integração MarketplaceTriibo <=> Fastshop
  */
-Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketplace" )->group( function () {
-
+Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketplace" )->group( function ()
+{
     /**
      * APIs chamadas pela Fastshop
      */
@@ -100,52 +98,45 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
     )->name( "cancellationnotification" );
 
 
-
-
     /**
      * APIs chamadas pelo marketplace
      */
     Route::name( "wc." )->prefix( "wc" )->group( function ()
     {
-        // Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
-        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
-        Route::post(
-            "/freightcalculation",
-            [ FastshopController::class, "freightCalculation" ]
-        )->name( "freightcalculation" );
+        /**
+         * Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
+         * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
+         */
+        Route::post( "/freightcalculation",         [ FastshopController::class, "freightCalculation" ] )->name( "freightcalculation" );
 
-        // Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
-        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop
-        Route::post(
-            "/updatesku/{sku}",
-            [ FastshopController::class, "updateSkuWc" ]
-        )->name( "updatesku" );
+        /**
+         * Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
+         * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop
+         */
+        Route::post( "/updatesku/{sku}",            [ FastshopController::class, "updateSkuWc"        ] )->name( "updatesku"          );
 
-        // Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation/{orderId}
-        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
-        Route::post(
-            "/ordercreation/{orderId}",
-            [ FastshopController::class, "orderCreation" ]
-        )->name( "ordercreation" );
+        /**
+         * Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation/{orderId}
+         * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
+         */
+        Route::post( "/ordercreation/{orderId}",    [ FastshopController::class, "orderCreation"      ] )->name( "ordercreation"      );
 
-        // Route-api: php.triibo.com.br/api/marketplace/wc/orderapproved/{orderId}
-        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
-        Route::post(
-            "/orderapproved/{orderId}",
-            [ FastshopController::class, "orderApproved" ]
-        )->name( "orderapproved" );
+        /**
+         * Route-api: php.triibo.com.br/api/marketplace/wc/orderapproved/{orderId}
+         * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
+         */
+        Route::post( "/orderapproved/{orderId}",    [ FastshopController::class, "orderApproved"      ] )->name( "orderapproved"      );
 
-        //Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{orderId}
-        // API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
-        Route::post(
-            "/ordercancelation/{orderId}",
-            [ FastshopController::class, "orderCancelation" ]
-        )->name( "ordercancelation" );
+        /**
+         * Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{orderId}
+         * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
+         */
+        Route::post( "/ordercancelation/{orderId}", [ FastshopController::class, "orderCancelation"   ] )->name( "ordercancelation"   );
     } );
 
 
     /**
-     * APIs VTEX
+     * APIs VTEX / Fast Shop
      */
     Route::name( "vtex." )->prefix( "vtex" )->group( function ()
     {
@@ -158,17 +149,3 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
     } );
 
 } );
-
-// Route::name( "api.affiliates." )->middleware( "log.route" )->prefix( "affiliates" )->group( function () {
-//
-//     Route::name( "ss." )->prefix( "socialsoul" )->group( function () {
-//         Route::get( "/postback",
-//             [ SocialSoulController::class, "postback" ]
-//         )->name( "postback" );
-//     } );
-//
-// } );
-
-
-// // TESTES
-// Route::post( "/gateway/teste", [HomeController::class, 'gateway'])->name('gateway');
