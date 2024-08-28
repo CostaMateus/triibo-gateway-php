@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\Vtex;
 
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 
-class OrderController extends ConnectorController
+class OrderController extends Controller
 {
     /**
      * https://{accountName}.{environment}.com.br/api/order-integration/orders

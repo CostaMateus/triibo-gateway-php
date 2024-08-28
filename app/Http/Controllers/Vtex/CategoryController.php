@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Vtex;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Vtex\ConnectorController;
+use App\Http\Controllers\Controller;
 
-class CategoryController extends ConnectorController
+class CategoryController extends Controller
 {
     /**
      * Handles the mapping of VTEX categories.
