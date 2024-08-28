@@ -145,10 +145,7 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
             Route::post( "/mapping",    [ VtexCategoryController::class, "mapping"    ] )->name( "mapping"    );
         } );
 
-        Route::name( "notification." )->prefix( "notification" )->group( function ()
-        {
-            Route::post( "/", [ VtexProductController::class, "newSku" ] )->name( "new.sku"    );
-        } );
+        Route::post( "/notification", [ VtexProductController::class, "updateOrCreateSku" ] )->name( "notification.sku"    );
 
     } );
 
