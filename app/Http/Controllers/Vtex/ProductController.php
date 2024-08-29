@@ -3,9 +3,10 @@
 namespace App\Http\Controllers\Vtex;
 
 use Throwable;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Models\Vtex\Product;
+use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
+use App\Http\Controllers\Controller;
 
 class ProductController extends Controller
 {
@@ -22,44 +23,50 @@ class ProductController extends Controller
      * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-new-products
      *
      * @param   Request     $request
-     * @return  void
+     * @return  JsonResponse
      */
-    public function updateOrCreateSku( Request $request )
+    public function updateOrCreateSku( Request $request ) : JsonResponse
     {
+        $vtex_data = $request->all();
+
+        // Prepare successful response data.
+        $code      = 200;
+        $data      = [
+            "error_code" => null,
+            "message"    => "ok",
+            "data"       => null,
+        ];
+
         try
         {
-            $data    = $request->all();
-
-            save_file( name: "Vtex-ProductController-updateOrCreateSku", data: $data );
+            save_file( name: "Vtex-ProductController-updateOrCreateSku", data: $vtex_data );
 
             // TODO indentificar origem da requisição
             $origin  = "fastshop";
 
-            $product = Product::where( "sku", $data[ "idSKU" ] )
+            $product = Product::where( "sku", $vtex_data[ "idSKU" ] )
                               ->where( "origin", $origin )
                               ->first();
 
             if ( !$product )
             {
                 $create = [
-                    "sku"    => $data[ "idSku" ],
+                    "sku"    => $vtex_data[ "idSku" ],
                     "origin" => $origin,
                     "action" => "create",
                     "status" => "unprocessed",
-                    "meta"   => json_encode( $data ),
+                    "meta"   => json_encode( $vtex_data ),
                 ];
 
                 Product::create( $create );
             }
             else
             {
-                $product->action = ( $data[ "isActive" ] == true ) ? "update" : "disable";
+                $product->action = ( $vtex_data[ "isActive" ] == true ) ? "update" : "disable";
                 $product->status = "unprocessed";
-                $product->meta   = json_encode( $data );
+                $product->meta   = json_encode( $vtex_data );
                 $product->save();
             }
-
-            return response()->json( [ "message" => "ok" ], 200 );
         }
         catch ( Throwable $e )
         {
@@ -81,10 +88,14 @@ class ProductController extends Controller
             );
 
             // Handle any unexpected errors.
-            return response()->json( [
-                "errorCode" => $e->getCode(),
-                "message"   => "Unexpected error",
-            ], $e->getCode() );
+            $code = 500;
+            $data = [
+                "error_code" => $e->getCode(),
+                "message"    => "Unexpected error",
+                "data"       => $vtex_data,
+            ];
         }
+
+        return response()->json( $data, $code );
     }
 }
