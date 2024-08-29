@@ -41,7 +41,7 @@ class OrderService
      * @param   array   $data   Order data in VTEX format.
      * @return  array
      */
-    public function newOrder( array $data )
+    public function newOrder( array $data ) : array
     {
         $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
 
@@ -70,7 +70,7 @@ class OrderService
      * @param   array   $data       Order data in VTEX format.
      * @return  array
      */
-    public function updateOrderStatus( string $account, array $data )
+    public function updateOrderStatus( string $account, array $data ) : array
     {
         $this->connector
             ->setCallOrigin(

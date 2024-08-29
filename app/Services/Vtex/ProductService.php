@@ -39,7 +39,7 @@ class ProductService
      * @param   int     $page   The page number to fetch. Defaults to 1.
      * @return  array
      */
-    public function initialSkuLoad( int $page = 1 )
+    public function initialSkuLoad( int $page = 1 ) : array
     {
         $page_size     = 500;
         $only_assigned = true;
@@ -67,7 +67,7 @@ class ProductService
      * @param   string  $sku    The SKU identifier.
      * @return  array
      */
-    public function getSku( string $sku )
+    public function getSku( string $sku ) : array
     {
         $this->connector
             ->setCallOrigin(
@@ -94,7 +94,7 @@ class ProductService
      * @param   int     $product_id     The product ID.
      * @return  array
      */
-    public function getProduct( int $product_id )
+    public function getProduct( int $product_id ) : array
     {
         $account = config( "vtex.{$this->connector->seller}.{$this->env}.account" );
 

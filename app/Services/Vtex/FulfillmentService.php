@@ -40,7 +40,7 @@ class FulfillmentService
      * @param   array   $data  The data to be sent in the request body.
      * @return  array
      */
-    public function simulate( array $data )
+    public function simulate( array $data ) : array
     {
         $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
         $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );
@@ -67,7 +67,7 @@ class FulfillmentService
      * @param   array   $data   Order data in VTEX format.
      * @return  array
      */
-    public function fulfillmentOrder( array $data )
+    public function fulfillmentOrder( array $data ) : array
     {
         $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
         $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );
@@ -94,7 +94,7 @@ class FulfillmentService
      * @param   string  $order_id  The marketplace order id to be dispatched.
      * @return  array              The response from the API call.
      */
-    public function dispatchOrder( string $order_id )
+    public function dispatchOrder( string $order_id ) : array
     {
         $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
         $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );

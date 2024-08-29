@@ -150,7 +150,7 @@ class ConnectorService
      * @param   array   $data  An associative array where keys are placeholders and values are replacements.
      * @return  void
      */
-    public function replaceUrl( array $data )
+    public function replaceUrl( array $data ) : void
     {
         foreach ( $data as $key => $value )
             $this->url = str_replace( $key, $value, $this->url );
