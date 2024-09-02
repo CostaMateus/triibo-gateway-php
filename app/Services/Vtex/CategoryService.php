@@ -15,6 +15,13 @@ class CategoryService
     private $connector;
 
     /**
+     * Env (e.g., local, production) as a string.
+     *
+     * @var     string
+     */
+    private $env;
+
+    /**
      * Constructor.
      *
      * @param   ConnectorService    $connector
@@ -22,6 +29,7 @@ class CategoryService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
+        $this->env       = config( "vtex.{$this->connector->seller}.env" );
     }
 
     /**
@@ -29,11 +37,12 @@ class CategoryService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *
-     * @param   string  $account    The name of the VTEX account.
      * @return  array
      */
-    public function registerMarketplaceConnector( string $account ) : array
+    public function registerMarketplaceConnector() : array
     {
+        $account  = config( "vtex.{$this->connector->seller}.{$this->env}.account_name" );
+
         // Prepare the request body.
         $body     = [
             "displayName"          => "Marketplace Triibo",
@@ -44,13 +53,12 @@ class CategoryService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "registerMarketplaceConnector"
+                origin  : "registerMarketplaceConnector"
             )
             ->buildUrl(
-                api         : "category-register",
-                account     : "portal",
-                environment : null,
-                param       : "?an={$account}"
+                api     : "category-register",
+                account : "portal",
+                param   : "?an={$account}"
             );
 
         $response = $this->connector->sendRequest( method: "post", body: $body );
@@ -65,7 +73,7 @@ class CategoryService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/categories/marketplace/-id-
      *
-     * @uses    $data must be result of app\Helpers\Vtex::vtex_format_categories
+     * @uses    $categories recovers marketplace categories in app\Helpers\Vtex::get_marketplace_categories, than treats response with app\Helpers\Vtex::vtex_format_categories
      *
      * @param   integer     $id
      * @param   array       $categories   Categories in VTEX format.
@@ -73,25 +81,16 @@ class CategoryService
      */
     public function sendCategoryMapping( int $id, array $categories ) : array
     {
-        // TODO remover
-        // // Fetch all marketplace categories.
-        // $categories = get_marketplace_categories();
-
-        // // Format categories for VTEX integration.
-        // $body       = [ "categories" => vtex_format_categories( $categories ) ];
-
         $this->connector
             ->setCallOrigin(
-                origin      : "sendCategoryMapping"
+                origin  : "sendCategoryMapping"
             )
             ->buildUrl(
-                api         : "category-marketplace",
-                account     : "portal",
-                environment : null,
-                param       : null
+                api     : "category-marketplace",
+                account : "portal",
             )
             ->replaceUrl(
-                data        : [ "{id}" => $id ]
+                data    : [ "{id}" => $id ]
             );
 
         return $this->connector->sendRequest( method: "post", body: [ "categories" => $categories ] );

@@ -47,13 +47,11 @@ class FulfillmentService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "simulate"
+                origin : "simulate"
             )
             ->buildUrl(
-                api         : "fulfillment-simulation",
-                account     : null,
-                environment : null,
-                param       : "?affiliateId={$affiliated_id}&sc={$sales_channel}"
+                api    : "fulfillment-simulation",
+                param  : "?affiliateId={$affiliated_id}&sc={$sales_channel}"
             );
 
         return $this->connector->sendRequest( method: "post", body: $data );
@@ -74,13 +72,11 @@ class FulfillmentService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "fulfillmentOrder"
+                origin : "fulfillmentOrder"
             )
             ->buildUrl(
-                api         : "fulfillment-order",
-                account     : null,
-                environment : null,
-                param       : "?affiliateId={$affiliated_id}&sc={$sales_channel}"
+                api    : "fulfillment-order",
+                param  : "?affiliateId={$affiliated_id}&sc={$sales_channel}"
             );
 
         return $this->connector->sendRequest( method: "post", body: $data );
@@ -101,16 +97,14 @@ class FulfillmentService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "dispatchOrder"
+                origin : "dispatchOrder"
             )
             ->buildUrl(
-                api         : "fulfillment-dispatch",
-                account     : null,
-                environment : null,
-                param       : "?affiliateId={$affiliated_id}&sc={$sales_channel}",
+                api    : "fulfillment-dispatch",
+                param  : "?affiliateId={$affiliated_id}&sc={$sales_channel}",
             )
             ->replaceUrl(
-                data        : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
+                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
             );
 
         return $this->connector->sendRequest( method: "post", body: [ "marketplaceOrderId" => $order_id ] );

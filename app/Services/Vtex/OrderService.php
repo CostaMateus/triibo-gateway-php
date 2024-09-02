@@ -47,13 +47,11 @@ class OrderService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "newOrder"
+                origin : "newOrder"
             )
             ->buildUrl(
-                api         : "order-integration",
-                account     : null,
-                environment : null,
-                param       : "?affiliateId={$affiliated_id}"
+                api    : "order-integration",
+                param  : "?affiliateId={$affiliated_id}"
             );
 
         return $this->connector->sendRequest( method: "post", body: $data );
@@ -66,21 +64,20 @@ class OrderService
      *
      * @uses    $data must be result of app\Helpers\Vtex::vtex_update_order
      *
-     * @param   string  $account    The name of the VTEX account.
      * @param   array   $data       Order data in VTEX format.
      * @return  array
      */
-    public function updateOrderStatus( string $account, array $data ) : array
+    public function updateOrderStatus( array $data ) : array
     {
+        $account = config( "vtex.{$this->connector->seller}.{$this->env}.account_name" );
+
         $this->connector
             ->setCallOrigin(
-                origin      : "updateOrderStatus"
+                origin : "updateOrderStatus"
             )
             ->buildUrl(
-                api         : "order-integration-status",
-                account     : null,
-                environment : null,
-                param       : "?an={$account}"
+                api    : "order-integration-status",
+                param  : "?an={$account}"
             );
 
         return $this->connector->sendRequest( method: "put", body: $data );

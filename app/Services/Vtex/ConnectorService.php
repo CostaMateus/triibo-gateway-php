@@ -68,10 +68,10 @@ class ConnectorService
      *
      * @param   string  $seller
      */
-    public function __construct( string $seller )
+    public function __construct( string $seller = "fast_shop" )
     {
         $this->seller  = $seller;
-        $this->env     = config( "vtex.{$this->seller}.env" );
+        $this->env     = config( "vtex.{$this->seller}.env"                  );
         $this->headers = config( "vtex.{$this->seller}.{$this->env}.headers" );
 
         $this->enableLogMessage()->enableLogNotify();
@@ -82,20 +82,19 @@ class ConnectorService
      *
      * @param   string          $api            The name of the API endpoint to be called.
      * @param   string|null     $account        Account for the API call (default value will be used if not provided).
-     * @param   string|null     $environment    Environment for the API call (default value will be used if not provided).
      * @param   string|null     $param          Additional query string parameters to the URL (default null).
      * @return  ConnectorService                The object itself, allowing method chaining.
      */
-    public function buildUrl( string $api, ?string $account = null, ?string $environment = null, ?string $param = null ) : ConnectorService
+    public function buildUrl( string $api, ?string $account = null, ?string $param = null ) : ConnectorService
     {
-        $base        = config( "vtex.{$this->seller}.{$this->env}.url.{$api}" );
-        $url_prefix  = config( "vtex.{$this->seller}.{$this->env}.url.prefix" );
-        $url_sufix   = config( "vtex.{$this->seller}.{$this->env}.url.sufix"  );
+        $account   = $account ?? config( "vtex.{$this->seller}.{$this->env}.account_name" );
 
-        $account     = $account     ?? config( "vtex.{$this->seller}.{$this->env}.account_name" );
-        $environment = $environment ?? config( "vtex.{$this->seller}.{$this->env}.environment"  );
+        $url_sufix = config( "vtex.{$this->seller}.api.{$api}"           );
+        $url_raw   = config( "vtex.{$this->seller}.{$this->env}.raw_url" );
 
-        $this->url   = implode( "", [ $url_prefix, "{$account}.", $environment, $url_sufix, $base, $param ] );
+        $url_base  = str_replace( "{account_name}", $account, $url_raw );
+
+        $this->url = implode( "", [ $url_base, $url_sufix, $param ] );
 
         return $this;
     }

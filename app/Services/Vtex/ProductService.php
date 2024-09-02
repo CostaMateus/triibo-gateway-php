@@ -47,13 +47,11 @@ class ProductService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "initialSkuLoad"
+                origin : "initialSkuLoad"
             )
             ->buildUrl(
-                api         : "all-skus-list",
-                account     : null,
-                environment : null,
-                param       : "?onlyAssigned={$only_assigned}&sc={$sales_channel}&pageSize={$page_size}&page={$page}"
+                api    : "all-skus-list",
+                param  : "?onlyAssigned={$only_assigned}&sc={$sales_channel}&pageSize={$page_size}&page={$page}"
             );
 
         return $this->connector->sendRequest( method: "get", body: $data );
@@ -71,16 +69,13 @@ class ProductService
     {
         $this->connector
             ->setCallOrigin(
-                origin      : "getSku"
+                origin : "getSku"
             )
             ->buildUrl(
-                api         : "get-detail-sku",
-                account     : null,
-                environment : null,
-                param       : null
+                api    : "get-detail-sku",
             )
             ->replaceUrl(
-                data        : [ "{skuId}" => $sku ]
+                data   : [ "{skuId}" => $sku ]
             );
 
         return $this->connector->sendRequest( method: "get", body: $data );
@@ -100,16 +95,14 @@ class ProductService
 
         $this->connector
             ->setCallOrigin(
-                origin      : "getProduct"
+                origin : "getProduct"
             )
             ->buildUrl(
-                api         : "get-detail-product",
-                account     : null,
-                environment : null,
-                param       : "?an={$account}"
+                api    : "get-detail-product",
+                param  : "?an={$account}"
             )
             ->replaceUrl(
-                data        : [ "{productId}" => $product_id ]
+                data   : [ "{productId}" => $product_id ]
             );
 
         return $this->connector->sendRequest( method: "get", body: $data );
