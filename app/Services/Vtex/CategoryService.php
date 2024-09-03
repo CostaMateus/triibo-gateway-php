@@ -29,7 +29,7 @@ class CategoryService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.{$this->connector->seller}.env" );
+        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -41,7 +41,7 @@ class CategoryService
      */
     public function registerMarketplaceConnector() : array
     {
-        $account  = config( "vtex.{$this->connector->seller}.{$this->env}.account_name" );
+        $account  = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account_name" );
 
         // Prepare the request body.
         $body     = [

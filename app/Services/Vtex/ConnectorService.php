@@ -71,8 +71,8 @@ class ConnectorService
     public function __construct( string $seller = "fast_shop" )
     {
         $this->seller  = $seller;
-        $this->env     = config( "vtex.{$this->seller}.env"                  );
-        $this->headers = config( "vtex.{$this->seller}.{$this->env}.headers" );
+        $this->env     = config( "vtex.partners.{$this->seller}.env"                  );
+        $this->headers = config( "vtex.partners.{$this->seller}.{$this->env}.headers" );
 
         $this->enableLogMessage()->enableLogNotify();
     }
@@ -87,10 +87,10 @@ class ConnectorService
      */
     public function buildUrl( string $api, ?string $account = null, ?string $param = null ) : ConnectorService
     {
-        $account   = $account ?? config( "vtex.{$this->seller}.{$this->env}.account_name" );
+        $account   = $account ?? config( "vtex.partners.{$this->seller}.{$this->env}.account_name" );
 
-        $url_sufix = config( "vtex.{$this->seller}.api.{$api}"           );
-        $url_raw   = config( "vtex.{$this->seller}.{$this->env}.raw_url" );
+        $url_sufix = config( "vtex.api.{$api}" );
+        $url_raw   = config( "vtex.partners.{$this->seller}.{$this->env}.raw_url" );
 
         $url_base  = str_replace( "{account_name}", $account, $url_raw );
 

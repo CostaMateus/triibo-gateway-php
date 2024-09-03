@@ -28,7 +28,7 @@ class ProductService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.{$this->connector->seller}.env" );
+        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -43,7 +43,7 @@ class ProductService
     {
         $page_size     = 500;
         $only_assigned = true;
-        $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );
+        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
 
         $this->connector
             ->setCallOrigin(
@@ -91,7 +91,7 @@ class ProductService
      */
     public function getProduct( int $product_id ) : array
     {
-        $account = config( "vtex.{$this->connector->seller}.{$this->env}.account" );
+        $account = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account" );
 
         $this->connector
             ->setCallOrigin(

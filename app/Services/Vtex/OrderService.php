@@ -28,7 +28,7 @@ class OrderService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.{$this->connector->seller}.env" );
+        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -43,7 +43,7 @@ class OrderService
      */
     public function newOrder( array $data ) : array
     {
-        $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
 
         $this->connector
             ->setCallOrigin(
@@ -69,7 +69,7 @@ class OrderService
      */
     public function updateOrderStatus( array $data ) : array
     {
-        $account = config( "vtex.{$this->connector->seller}.{$this->env}.account_name" );
+        $account = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account_name" );
 
         $this->connector
             ->setCallOrigin(

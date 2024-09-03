@@ -29,7 +29,7 @@ class FulfillmentService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.{$this->connector->seller}.env" );
+        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -42,8 +42,8 @@ class FulfillmentService
      */
     public function simulate( array $data ) : array
     {
-        $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
-        $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
 
         $this->connector
             ->setCallOrigin(
@@ -67,8 +67,8 @@ class FulfillmentService
      */
     public function fulfillmentOrder( array $data ) : array
     {
-        $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
-        $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
 
         $this->connector
             ->setCallOrigin(
@@ -92,8 +92,8 @@ class FulfillmentService
      */
     public function dispatchOrder( string $order_id ) : array
     {
-        $affiliated_id = config( "vtex.{$this->connector->seller}.{$this->env}.affiliated_id" );
-        $sales_channel = config( "vtex.{$this->connector->seller}.{$this->env}.sales_channel" );
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
 
         $this->connector
             ->setCallOrigin(
