@@ -531,7 +531,8 @@ class AwinController extends Controller
                 "status"            => "aberto",
                 "action"            => "edit",
                 "type"              => "promotion",
-                "origin"            => "awin"
+                "origin"            => "awin",
+                "dueDate"           => $awin_promotion[ "dueDate" ],
             ] );
 
             // Get pending changes
@@ -598,7 +599,8 @@ class AwinController extends Controller
                     "status"            => "aberto",
                     "action"            => "create",
                     "type"              => "promotion",
-                    "origin"            => "awin"
+                    "origin"            => "awin",
+                    "dueDate"           => $aux[ "dueDate" ],
                 ] );
 
                 log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}", print: true );
