@@ -3,15 +3,38 @@
 namespace App\Http\Controllers\Vtex;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class OrderController extends Controller
 {
+
     /**
-     * https://{accountName}.{environment}.com.br/api/order-integration/orders
-     * https://{accountName}.{environment}.com.br/api/order-integration/orders/status
-     * https://{accountName}.{environment}.com.br/api/checkout/pub/orderForms/simulation
-     * https://{accountName}.{environment}.com.br/api/fulfillment/pvt/orders
-     * https://{accountName}.{environment}.com.br/api/fulfillment/pvt/orders/{orderId}/fulfill
+     * Handles the invoice notification.
+     *
+     * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-invoice-tracking
+     *
+     * @param   Request     $request
+     * @param   string      $orderId
+     * @return  JsonResponse
      */
+    public function invoiceNotification( Request $request, string $orderId ) : JsonResponse
+    {
+        return response()->json( [ "success" => true ], 200 );
+    }
+
+    /**
+     * Handles the cancel notification.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/orders-api#post-/api/oms/pvt/orders/-orderId-/cancel
+     *
+     * @param   Request     $request
+     * @param   string      $orderId
+     * @return  JsonResponse
+     */
+    public function cancellationNotification( Request $request, string $orderId ) : JsonResponse
+    {
+        return response()->json( [ "success" => true ], 200 );
+    }
+
 }

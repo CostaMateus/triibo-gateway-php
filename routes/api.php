@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatGuruController;
 use App\Http\Controllers\FastshopController;
 use App\Http\Controllers\PipedriveWebhookController;
-use App\Http\Controllers\Affiliates\SocialSoulController;
+use App\Http\Controllers\Vtex\OrderController as VtexOrderController;
 use App\Http\Controllers\Vtex\ProductController as VtexProductController;
 use App\Http\Controllers\Vtex\CategoryController as VtexCategoryController;
 
@@ -146,6 +146,12 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
         } );
 
         Route::post( "/notification", [ VtexProductController::class, "updateOrCreateSku" ] )->name( "notification.sku" );
+
+        Route::name( "order." )->prefix( "order" )->group( function ()
+        {
+            Route::post( "/pub/orders/{orderId}/invoice", [ VtexOrderController::class, "invoiceNotification"      ] )->name( "notification.invoice" );
+            Route::post( "/pvt/orders/{orderId}/cancel",  [ VtexOrderController::class, "cancellationNotification" ] )->name( "notification.cancel"  );
+        } );
 
     } );
 
