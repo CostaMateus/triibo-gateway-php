@@ -149,8 +149,8 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
 
         Route::name( "order." )->prefix( "order" )->group( function ()
         {
-            Route::post( "/pub/orders/{orderId}/invoice", [ VtexOrderController::class, "invoiceNotification"      ] )->name( "notification.invoice" );
-            Route::post( "/pvt/orders/{orderId}/cancel",  [ VtexOrderController::class, "cancellationNotification" ] )->name( "notification.cancel"  );
+            Route::post( "/pub/orders/{order_id}/invoice", [ VtexOrderController::class, "invoiceNotification"      ] )->name( "notification.invoice" );
+            Route::post( "/pvt/orders/{order_id}/cancel",  [ VtexOrderController::class, "cancellationNotification" ] )->name( "notification.cancel"  );
         } );
 
     } );

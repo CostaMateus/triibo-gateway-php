@@ -15,10 +15,10 @@ class OrderController extends Controller
      * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-invoice-tracking
      *
      * @param   Request     $request
-     * @param   string      $orderId
+     * @param   string      $order_id
      * @return  JsonResponse
      */
-    public function invoiceNotification( Request $request, string $orderId ) : JsonResponse
+    public function invoiceNotification( Request $request, string $order_id ) : JsonResponse
     {
         return response()->json( [ "success" => true ], 200 );
     }
@@ -29,10 +29,10 @@ class OrderController extends Controller
      * @see     https://developers.vtex.com/docs/api-reference/orders-api#post-/api/oms/pvt/orders/-orderId-/cancel
      *
      * @param   Request     $request
-     * @param   string      $orderId
+     * @param   string      $order_id
      * @return  JsonResponse
      */
-    public function cancellationNotification( Request $request, string $orderId ) : JsonResponse
+    public function cancellationNotification( Request $request, string $order_id ) : JsonResponse
     {
         return response()->json( [ "success" => true ], 200 );
     }
