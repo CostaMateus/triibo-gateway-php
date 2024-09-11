@@ -54,7 +54,7 @@ class ProductService
                 param  : "?onlyAssigned={$only_assigned}&sc={$sales_channel}&pageSize={$page_size}&page={$page}"
             );
 
-        return $this->connector->sendRequest( method: "get", body: $data );
+        return $this->connector->sendRequest( method: "get" );
     }
 
     /**
@@ -78,7 +78,7 @@ class ProductService
                 data   : [ "{skuId}" => $sku ]
             );
 
-        return $this->connector->sendRequest( method: "get", body: $data );
+        return $this->connector->sendRequest( method: "get" );
     }
 
     /**
@@ -105,6 +105,6 @@ class ProductService
                 data   : [ "{productId}" => $product_id ]
             );
 
-        return $this->connector->sendRequest( method: "get", body: $data );
+        return $this->connector->sendRequest( method: "get" );
     }
 }
