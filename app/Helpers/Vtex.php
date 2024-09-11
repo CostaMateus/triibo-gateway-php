@@ -252,17 +252,17 @@ if ( !function_exists( "vtex_map_selected_addresses" ) )
 
         return [
             [
-                "addressId"      => "1",
-                "addressType"    => "residential", // or 'commercial', 'pickup'
-                "receiverName"   => $name,
-                "postalCode"     => $data[ "postcode"     ],
-                "street"         => $data[ "address_1"    ],
-                "number"         => $data[ "number"       ],
-                "complement"     => $data[ "address_2"    ],
-                "neighborhood"   => $data[ "neighborhood" ],
-                "city"           => $data[ "city"         ],
-                "state"          => $data[ "state"        ],
-                "country"        => "BRA",
+                "addressId"    => "1",
+                "addressType"  => "residential", // or 'commercial', 'pickup'
+                "receiverName" => $name,
+                "postalCode"   => $data[ "postcode"     ],
+                "street"       => $data[ "address_1"    ],
+                "number"       => $data[ "number"       ],
+                "complement"   => $data[ "address_2"    ],
+                "neighborhood" => $data[ "neighborhood" ],
+                "city"         => $data[ "city"         ],
+                "state"        => $data[ "state"        ],
+                "country"      => "BRA",
             ]
         ];
     }
@@ -279,39 +279,41 @@ if ( !function_exists( "vtex_new_order" ) )
     function vtex_new_order( array $data ) : array
     {
         // Extract parent order data if available, otherwise use the current order data.
-        $parent   = $data[ "parent" ] ?? null;
-        $order    = $data[ "order"  ];
+        $parent    = $data[ "parent" ] ?? null;
+        $order     = $data[ "order"  ];
 
         // Generate the URL for the invoice notification endpoint using the order ID
-        $url      = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
+        $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
 
         if ( config( "app.env" ) == "local" )
             $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
 
         // Extract the VTEX information from the order data.
-        $info     = $order[ "fs_info" ][ "logisticsInfo" ];
+        $info      = $order[ "fs_info" ][ "logisticsInfo" ];
 
         // Retrieve the discount
-        $discount = ( empty( $order[ "coupon_lines" ] ) )
-                            ? $order[ "discount_total" ]
-                            : ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
+        $discount  = ( empty( $order[ "coupon_lines" ] ) )
+                        ? $order[ "discount_total" ]
+                        : ( $order[ "coupon_lines" ][ 0 ][ "discount" ] ?? 0 );
 
         // Calculate the total payment value for the marketplace.
-        $total    = $order[ "total" ] + $discount;
-        $total    = number_format( ( float ) $total, 2, ".", "" );
-        $total    = ( int ) str_replace( ".", "", $total );
+        $total     = $order[ "total" ] + $discount;
+        $total     = number_format( ( float ) $total, 2, ".", "" );
+        $total     = ( int ) str_replace( ".", "", $total );
 
         // Extract billing and shipping information, using parent data if available.
-        $billing  = $parent[ "billing"  ] ?? $order[ "billing"  ];
-        $shipping = $parent[ "shipping" ] ?? $order[ "shipping" ];
+        $billing   = $parent[ "billing"  ] ?? $order[ "billing"  ];
+        $shipping  = $parent[ "shipping" ] ?? $order[ "shipping" ];
+
+        $connector = config( "vtex.partners.{$seller}.connector_name" );
 
         // Return the formatted order data for VTEX.
         return [
             "marketplaceOrderId"      => $order[ "id" ],
             "marketplaceOrderStatus"  => "new",  // or 'approved'
             "marketplacePaymentValue" => $total,
-            "connectorName"           => "???",  // TODO fastshop precisa fornecer/confirmar
-            "connectorEndpoint"       => "???",  // TODO fastshop precisa fornecer/confirmar
+            "connectorName"           => $connector,
+            "connectorEndpoint"       => $url,
             "allowFranchises"         => false,
             "items"                   => vtex_map_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
             "clientProfileData"       => vtex_map_client_data( $billing ),
@@ -331,17 +333,26 @@ if ( !function_exists( "vtex_update_order" ) )
     /**
      * Formats the order data for updating in VTEX.
      *
+     * @param   string  $seller     The seller identifier (e.g., fast_shop).
      * @param   string  $order_id   The unique identifier of the order.
      * @return  array               A formatted array containing the updated order data for VTEX.
      */
-    function vtex_update_order( string $order_id ) : array
+    function vtex_update_order( string $seller, string $order_id ) : array
     {
+        $connector = config( "vtex.partners.{$seller}.connector_name" );
+
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order_id ] );
+
+        if ( config( "app.env" ) == "local" )
+            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
+
         // Return the formatted order data for VTEX.
         return [
             "marketplaceOrderId"      => $order_id,
             "marketplaceOrderStatus"  => "approved",
-            "connectorName"           => "???",  // TODO fastshop precisa fornecer/confirmar
-            "connectorEndpoint"       => "???",  // TODO fastshop precisa fornecer/confirmar
+            "connectorName"           => $connector,
+            "connectorEndpoint"       => $url,
         ];
     }
 }
@@ -361,7 +372,7 @@ if ( !function_exists( "vtex_fulfillment_order" ) )
         $order    = $data[ "order"  ];
 
         // Generate the URL for the invoice notification endpoint using the order ID
-        $url      = route( "api.marketplace.invoicenotification", [ "orderId" => $order[ "id" ] ] );
+        $url      = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
 
         if ( config( "app.env" ) == "local" )
             $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
@@ -383,7 +394,7 @@ if ( !function_exists( "vtex_fulfillment_order" ) )
 
             // @see https://help.vtex.com/en/tutorial/configuring-price-divergence-rule--awAKP0sS5J8jgLs2g7pPe
             // true if the order was created asynchronously.
-            "isCreatedAsync"              => false, // TODO confirmar
+            "isCreatedAsync"              => true, // TODO confirmar
 
             "items"                       => vtex_map_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
             "clientProfileData"           => vtex_map_client_data( $billing ),
