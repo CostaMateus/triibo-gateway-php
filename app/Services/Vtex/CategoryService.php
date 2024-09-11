@@ -75,11 +75,11 @@ class CategoryService
      *
      * @uses    $categories recovers marketplace categories in app\Helpers\Vtex::get_marketplace_categories, than treats response with app\Helpers\Vtex::vtex_format_categories
      *
-     * @param   integer     $id
-     * @param   array       $categories   Categories in VTEX format.
+     * @param   string  $id
+     * @param   array   $categories   Categories in VTEX format.
      * @return  array
      */
-    public function sendCategoryMapping( int $id, array $categories ) : array
+    public function sendCategoryMapping( string $id, array $categories ) : array
     {
         $this->connector
             ->setCallOrigin(
