@@ -61,11 +61,7 @@ class CategoryService
                 param   : "?an={$account}"
             );
 
-        $response = $this->connector->sendRequest( method: "post", body: $body );
-
-        save_file( name: "Vtex-CategoryService-registerMarketplaceConnector", data: $response );
-
-        return $response;
+        return $this->connector->sendRequest( method: "post", body: $body );
     }
 
     /**
