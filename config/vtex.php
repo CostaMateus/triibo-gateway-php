@@ -3,10 +3,12 @@
 return [
 
     "partners"    => [
-        "fast_shop"  => [
-            "env"        => env( key: "VTEX_ENV", default: "local" ),
+        "fast_shop" => [
+            "env"            => env( key: "VTEX_ENV", default: "local" ),
 
-            "local"      => [
+            "connector_name" => "Marketplace Triibo", // TODO fastshop precisa confirmar
+
+            "local"          => [
                 "sales_channel" => 8,
                 "affiliated_id" => "TRB",
                 "account_name"  => "fastshopbrqa2",
@@ -19,7 +21,7 @@ return [
                 ],
             ],
 
-            "production" => [
+            "production"     => [
                 "sales_channel" => "",
                 "affiliated_id" => "",
                 "account_name"  => "",
@@ -82,6 +84,5 @@ return [
             "EOI009" => "Order out of valid status to approve",
         ],
     ],
-
 
 ];
