@@ -15,13 +15,6 @@ class ConnectorService
     private const LOG_CHANNEL = "vtex";
 
     /**
-     * Seller.
-     *
-     * @var     string
-     */
-    private $seller;
-
-    /**
      * Env (e.g., local, production) as a string.
      *
      * @var     string
@@ -62,6 +55,13 @@ class ConnectorService
      * @var     string
      */
     private $call_origin = "";
+
+    /**
+     * Seller.
+     *
+     * @var     string
+     */
+    public $seller;
 
     /**
      * Constructor.
@@ -164,6 +164,9 @@ class ConnectorService
      */
     public function sendRequest( string $method, array $body = [] ) : array
     {
+        $code = 200;
+        $data = [];
+
         try
         {
             $pending  = Http::withHeaders( headers: $this->headers );
