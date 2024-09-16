@@ -47,8 +47,8 @@ return [
         "fulfillment-dispatch"     => "fulfillment/pvt/orders/{orderId}/fulfill",
 
         "all-skus-list"            => "catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel",
-        "get-detail-sku"           => "catalog/pvt/stockkeepingunit/{skuId}",
-        "get-detail-product"       => "catalog_system/pvt/products/productget/{productId}",
+        "get-detail-sku"           => "catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}",
+        "get-detail-product"       => "catalog/pvt/product/{productId}",
     ],
 
     "order_codes" => [
