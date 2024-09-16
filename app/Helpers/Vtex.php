@@ -33,6 +33,50 @@ if ( !function_exists( "get_marketplace_categories" ) )
     }
 }
 
+if ( !function_exists( "get_categories_ids" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $ids
+     * @param   array   $names
+     * @return  array
+     */
+    function get_categories_ids( string $ids, array $names ) : array
+    {
+        $data       = array_values( array_filter( explode( "/", $ids ) ) );
+        $categories = [];
+
+        foreach ( $data as $index => $vtex_category_id )
+        {
+            $slug     = Str::slug( $names[ $vtex_category_id ], "-" );
+            $category = DB::table( "marketplace_product_categories" )->where( "cat_slug", $slug )->first();
+
+            if ( $category )
+            {
+                $categories[] = $cat->cat_id;
+            }
+            else
+            {
+                $parent       = ( $index == 0 ) ? 0 : $categories[ $key - 1 ];
+
+                $new_category = Category::create( [
+                    "name"   => $catName,
+                    "parent" => $parent,
+                ] );
+
+                $categories[] = $new_category[ "id" ];
+
+                DB::table( "marketplace_product_categories" )->insert( [
+                    "cat_id"   => $new_category[ "id"   ],
+                    "cat_slug" => $new_category[ "slug" ]
+                ] );
+            }
+        }
+
+        return $categories;
+    }
+}
 
 if ( !function_exists( "vtex_get_product_images" ) )
 {
