@@ -39,38 +39,49 @@ class GetCategories extends Command
      */
     public function handle()
     {
-        DB::table( "marketplace_product_categories" )->truncate();
-
-        $ended = false;
-        $page  = 1;
-        $cats  = [];
-        $data  = [];
-
-        do
+        try
         {
-            $search = [
-                "per_page" => 100,
-                "page"     => $page,
-            ];
+            $this->info( "Truncate table: marketplace_product_categories" );
+            DB::table( "marketplace_product_categories" )->truncate();
 
-            $aux    = Category::all( $search );
+            $page       = 1;
+            $categories = [];
+            $data       = [];
 
-            if ( $aux->count() < 100 ) $ended = true;
+            do
+            {
+                $this->info( "Searching for categories in the marketplace, page {$page}" );
 
-            $cats   = array_merge( $aux->toArray(), $cats );
+                $response   = Category::all( [
+                    "per_page" => 100,
+                    "page"     => $page,
+                ] );
 
-            $page++;
+                $categories = array_merge( $response->toArray(), $categories );
+
+                $page++;
+            }
+            while ( $response->count() == 100 );
+
+            $this->info( "Loaded categories" );
+
+            foreach ( $categories as $category )
+            {
+                $data[] = [
+                    "cat_id"   => $category->id,
+                    "cat_slug" => $category->slug,
+                ];
+            }
+
+            $this->info( "Inserting in table: marketplace_product_categories" );
+
+            DB::table( "marketplace_product_categories" )->insert( $data );
+
+            $this->info( "Done" );
         }
-        while ( !$ended );
-
-        foreach ( $cats as $cat )
+        catch ( \Exception $e )
         {
-            $data[] = [
-                "cat_id"   => $cat->id,
-                "cat_slug" => $cat->slug,
-            ];
+            $this->error( $e->getMessage() );
         }
-
-        DB::table( "marketplace_product_categories" )->insert( $data );
     }
 }
