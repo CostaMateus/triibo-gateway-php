@@ -33,7 +33,44 @@ if ( !function_exists( "get_marketplace_categories" ) )
     }
 }
 
-if( !function_exists( "add_sub_category" ) )
+if ( !function_exists( "vtex_get_product_attributes" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $attributes
+     * @return  array
+     */
+    function vtex_get_product_attributes( array $attributes )
+    {
+        $specifications = array_map( function ( $attr, $key )
+        {
+            // TODO possível ajuste qnd em prod
+
+            // // Skip the ProductLineId field.
+            // if ( $attr[ "FieldName" ] === "ProductLineId" )
+            //     return null;
+
+            // Convert boolean 'true' to 'SIM'.
+            $field_value = $attr[ "FieldValues" ][ 0 ] === "true"
+                            ? "SIM"
+                            : $attr[ "FieldValues" ][ 0 ];
+
+            // Return the transformed attribute.
+            return [
+                "name"      => $attr[ "FieldName" ],
+                "position"  => $key,
+                "visible"   => true,
+                "variation" => true,
+                "options"   => [ $field_value ],
+            ];
+        }, $attributes, array_keys( $attributes ) );
+
+        return array_filter( $specifications );
+    }
+}
+
+if ( !function_exists( "add_sub_category" ) )
 {
     /**
      * Recursively adds a child category to its parent in a hierarchical structure.
