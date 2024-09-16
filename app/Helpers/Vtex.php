@@ -33,6 +33,35 @@ if ( !function_exists( "get_marketplace_categories" ) )
     }
 }
 
+
+if ( !function_exists( "vtex_get_product_images" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $images
+     * @return  array
+     */
+    function vtex_get_product_images( array $images )
+    {
+        // Filter Vtex images.
+        $filtered = array_filter( $images, function ( $image ) {
+            return validate_image_url( $image[ "ImageUrl" ] );
+        } );
+
+        // Map Vtex images to WooCommerce image format.
+        $data     = array_map( function ( $image ) {
+            return [
+                "src"  => explode( "?", $image[ "ImageUrl" ] )[ 0 ],
+                "name" => $image[ "ImageName" ],
+                "alt"  => $image[ "ImageName" ]
+            ];
+        }, $filtered );
+
+        return $data;
+    }
+}
+
 if ( !function_exists( "vtex_get_product_attributes" ) )
 {
     /**
