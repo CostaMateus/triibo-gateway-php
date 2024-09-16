@@ -437,7 +437,7 @@ if ( !function_exists( "vtex_fulfillment_simulation" ) )
                 $items = [
                     "id"       => str_replace( "FS-", "", $item[ "sku" ] ),
                     "quantity" => $item[ "quantity" ],
-                    "seller"   => self::DEFAULT_SELLER,
+                    "seller"   => "1",
                 ];
             }
 
@@ -448,6 +448,54 @@ if ( !function_exists( "vtex_fulfillment_simulation" ) )
                 "selectedSla" => "Normal",
             ];
 
+        }, $data );
+    }
+}
+
+if ( !function_exists( "vtex_product_to_mkt" ) )
+{
+    function vtex_product_to_mkt( array $data ) : array
+    {
+        return array_map( function ( $data )
+        {
+            // Vtex categories to WooCommerce category format.
+            $categories = get_categories_ids( $data[ "ProductCategoryIds" ], $data[ "ProductCategories" ] );
+
+            $images     = vtex_get_product_images( $data[ "Images" ] );
+
+            // Get product attributes from Fast Shop data.
+            $attributes = vtex_get_product_attributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
+
+            // Return the WooCommerce product array.
+            return [
+                "name"              => $data[ "ProductName" ],
+                "slug"              => Str::slug( $data[ "ProductName" ] ),
+                "description"       => $data[ "ProductDescription" ],
+                "short_description" => $shortDescr,
+                "sku"               => "FS-{$sku}",
+                "regular_price"     => insert_decimal( $data[ "Pricing" ][ "ListPrice" ] ),
+                "sale_price"        => insert_decimal( $data[ "Pricing" ][ "SalePrice" ] ),
+                "manage_stock"      => true,
+                "stock_quantity"    => 0,            // TODO ?
+                "stock_status"      => "outofstock", // TODO ?
+                "backorders"        => "no",
+                "sold_individually" => false,
+                "weight"            => ( string ) $data[ "Dimension" ][ "weight" ],
+                "dimensions"        => [
+                    "length" => ( string ) $data[ "Dimension" ][ "length" ],
+                    "width"  => ( string ) $data[ "Dimension" ][ "width"  ],
+                    "height" => ( string ) $data[ "Dimension" ][ "height" ]
+                ],
+                "shipping_class"    => "fast-shop",
+                "upsell_ids"        => [],
+                "cross_sell_ids"    => [],
+                "parent_id"         => 0,
+                "purchase_note"     => "",
+                "tags"              => [],
+                "categories"        => $categories,
+                "images"            => $images,
+                "attributes"        => $attributes,
+            ];
         }, $data );
     }
 }
