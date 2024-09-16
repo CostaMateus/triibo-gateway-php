@@ -473,7 +473,8 @@ if ( !function_exists( "validate_image_url" ) )
      */
     function validate_image_url( string $url ) : bool
     {
-        $extensions     = [ ".jpg", ".jpeg", ".png" ];
+        $url            = explode( "?", $url )[ 0 ];
+        $extensions     = [ "jpg", "jpeg", "png", "webp" ];
         $file_extension = strtolower( pathinfo( $url, PATHINFO_EXTENSION ) );
 
         return in_array( $file_extension, $extensions );
