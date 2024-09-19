@@ -233,4 +233,84 @@ class ConnectorService
 
         return [ $code, $data ];
     }
+
+    /**
+     * Registration of connector on Vtex.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/channel-manager/connector
+     *
+     * @return  array
+     */
+    public function register() : array
+    {
+        $response = $this->searchRegistration();
+
+        if ( $response[ 0 ] === 200 )
+        {
+            $results = $response[ 1 ][ "data" ][ "results" ];
+
+            if ( count( $results ) == 1 )
+            {
+                $response[ 1 ][ "data" ] = $results[ 0 ];
+
+                return $response;
+            }
+        }
+
+        $account  = config( "vtex.partners.{$this->seller}.{$this->env}.account_name" );
+
+        // Prepare the request body.
+        $body     = [
+            "name"                   => "Marketplace Triibo",
+            "website"                => "marketplace.triibo.com.br",
+            "logo"                   => "http://php.triibo.com.br/images/logo/logo-triibo.png",
+            "description"            => "Uma das empresas do grupo Synoro, a Triibo é uma plataforma de engajamento baseada no conceito de comunidade, que conecta empresas, pessoas, marcas e afins de maneira descomplicada e intuitiva.",
+            "segment"                => "OTHERS",
+            "availableCountries"     => [ "BRA" ],
+            "type"                   => "EXTERNAL",
+            "isActive"               => true,
+            "helpUrl"                => config( "app.url" ),
+            "connectorApiEndpoint"   => config( "app.url" ),
+            "connectorPageUrl"       => config( "app.url" ),
+            "connectorVtexAdminPath" => "/bridge/#/settings?openConfig=marketplacetriibo",
+            "channelId"              => 8
+        ];
+
+        $this->setCallOrigin(
+                origin  : "register"
+            )
+            ->buildUrl(
+                api     : "manager-connector",
+                account : "portal",
+                param   : "?an={$account}"
+            );
+
+        return $this->sendRequest( method: "post", body: $body );
+    }
+
+    /**
+     * Search connector already registered on Vtex.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/channel-manager/connector
+     *
+     * @return  array
+     */
+    public function searchRegistration() : array
+    {
+        $account  = config( "vtex.partners.{$this->seller}.{$this->env}.account_name" );
+
+        $name     = "Marketplace Triibo";
+        $country  = "BRA";
+
+        $this->setCallOrigin(
+                origin  : "searchRegistration"
+            )
+            ->buildUrl(
+                api     : "manager-connector",
+                account : "portal",
+                param   : "/all?an={$account}&name={$name}&country={$country}"
+            );
+
+        return $this->sendRequest( method: "get" );
+    }
 }

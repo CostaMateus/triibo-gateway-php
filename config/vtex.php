@@ -37,6 +37,8 @@ return [
     ],
 
     "api"         => [
+        "manager-connector"        => "channel-manager/connector",
+
         "category-register"        => "mkp-category-mapper/connector/register",
         "category-marketplace"     => "mkp-category-mapper/categories/marketplace/{id}",
         "order-integration"        => "order-integration/orders",
