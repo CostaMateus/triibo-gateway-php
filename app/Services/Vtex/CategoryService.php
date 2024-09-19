@@ -45,10 +45,11 @@ class CategoryService
 
         // Prepare the request body.
         $body     = [
-            "displayName"          => "Marketplace Triibo",
-            "categoryTreeEndPoint" => route( "api.marketplace.vtex.mapper.categories" ),
-            "mappingEndPoint"      => route( "api.marketplace.vtex.mapper.mapping"    ),
-            "properties"           => [ "allowsRemap" => true ],
+            "displayName"                                => "Marketplace Triibo",
+            "categoryTreeEndPoint"                       => route( "api.marketplace.vtex.mapper.categories"   ),
+            "mappingEndPoint"                            => route( "api.marketplace.vtex.mapper.mapping"      ),
+            "CategoryTreeProcessingNotificationEndpoint" => route( "api.marketplace.vtex.mapper.notification" ),
+            "properties"                                 => [ "allowsRemap" => false ],
         ];
 
         $this->connector

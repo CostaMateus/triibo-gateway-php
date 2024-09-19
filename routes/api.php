@@ -141,8 +141,9 @@ Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketpla
     {
         Route::name( "mapper." )->prefix( "mapper" )->group( function ()
         {
-            Route::get(  "/categories", [ VtexCategoryController::class, "categories" ] )->name( "categories" );
-            Route::post( "/mapping",    [ VtexCategoryController::class, "mapping"    ] )->name( "mapping"    );
+            Route::get(  "/notification", [ VtexCategoryController::class, "notification" ] )->name( "notification" );
+            Route::get(  "/categories",   [ VtexCategoryController::class, "categories"   ] )->name( "categories"   );
+            Route::post( "/mapping",      [ VtexCategoryController::class, "mapping"      ] )->name( "mapping"      );
         } );
 
         Route::post( "/notification", [ VtexProductController::class, "updateOrCreateSku" ] )->name( "notification.sku" );

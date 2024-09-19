@@ -98,4 +98,47 @@ class CategoryController extends Controller
         // Return JSON response with appropriate status code.
         return response()->json( data: $data, status: $code );
     }
+
+    /**
+     * Handles the notification mapping of VTEX categories.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
+     *          Parameter CategoryTreeProcessingNotificationEndpoint
+     *
+     * @param   Request     $request    The incoming HTTP request containing category mapping data.
+     * @return  JsonResponse            A JSON response indicating the result of the operation.
+     */
+    public function notification( Request $request ) : JsonResponse
+    {
+        $code = 200;
+        $data = [];
+
+        try
+        {
+            save_file( name: "vtex-category-mapping-notification", data: $request->all() );
+
+            // Prepare successful response data.
+            $data    = [
+                "error_code" => null,
+                "message"    => "ok",
+                "data"       => null,
+            ];
+        }
+        catch ( Throwable $e )
+        {
+            // Handle any unexpected errors.
+            $code = 500;
+            $data = [
+                "error_code" => $e->getCode(),
+                "message"    => "Unexpected error",
+                "data"       => null,
+            ];
+
+            // Log the exception for debugging purposes.
+            log_exception( channel: self::LOG_CHANNEL, message: $e->getMessage(), method: "notification", type: "Throwable", e: $e );
+        }
+
+        // Return JSON response with appropriate status code.
+        return response()->json( data: $data, status: $code );
+    }
 }
