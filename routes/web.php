@@ -57,6 +57,13 @@ Route::get( "/", function ()
     ] );
 } )->name( "welcome" );
 
+Route::get( "/clear-caches", function()
+{
+    Artisan::call( "optimize:clear" );
+    return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.cache" ) ] );
+
+} )->name( "clear.caches" );
+
 Route::group( ["middleware" => "auth" ], function() {
 
     Route::get( "/home", function ()
@@ -64,34 +71,17 @@ Route::group( ["middleware" => "auth" ], function() {
         return view( "home" );
     } )->name( "home" );
 
-    Route::get( "/clear-caches", function()
-    {
-        Artisan::call( "optimize:clear" );
-        return view( "welcome", [
-            "showToast" => true,
-            "message"   => __( "marketplace.cache" )
-        ] );
-    } )->name( "clear.caches" );
-
-    Route::get( "/update-stages", function()
-    {
-        MauticIntegration::updateStages();
-
-        return view( "welcome", [
-            "showToast" => true,
-            "message"   => __( "marketplace.update.all.stages" )
-        ] );
-    } )->name( "update.stages" );
-
-    Route::get( "/sync-ids", function()
-    {
-        MauticIntegration::syncIdsMauticPipe();
-
-        return view( "welcome", [
-            "showToast" => true,
-            "message"   => __( "marketplace.sync.id" )
-        ] );
-    } )->name( "sync.ids" );
+    // Route::get( "/update-stages", function()
+    // {
+    //     MauticIntegration::updateStages();
+    //     return view( "welcome", [ "showToast" => true,"message" => __( "marketplace.update.all.stages" )] );
+    // } )->name( "update.stages" );
+    //
+    // Route::get( "/sync-ids", function()
+    // {
+    //     MauticIntegration::syncIdsMauticPipe();
+    //     return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.sync.id" ) ] );
+    // } )->name( "sync.ids" );
 
     Route::resource( "users", UserController::class );
 
