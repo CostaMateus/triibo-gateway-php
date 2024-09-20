@@ -52,9 +52,10 @@ Route::prefix( "triibo" )->group( function ()
 
 
 /**
- *Integração MarketplaceTriibo <=> Fastshop
+ * Integração MarketplaceTriibo <=> Fastshop
+ * ->middleware( "log.route" )
  */
-Route::name( "api.marketplace." )->middleware( "log.route" )->prefix( "marketplace" )->group( function ()
+Route::name( "api.marketplace." )->prefix( "marketplace" )->group( function ()
 {
     /**
      * TODO excluir esse grupo qnd as APIs novas estiverem ativas
