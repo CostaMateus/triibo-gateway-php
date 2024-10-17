@@ -12,7 +12,7 @@ class ConnectorService
      *
      * @var     string
      */
-    private const LOG_CHANNEL = "vtex";
+    private const LOG_CHANNEL = "marketplace";
 
     /**
      * Env (e.g., local, production) as a string.

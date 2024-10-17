@@ -60,19 +60,43 @@ class ProductService
     /**
      * Fetches detailed information for a specific SKU from the VTEX API.
      *
-     * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/stockkeepingunit/-skuId-
+     * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog_system/pvt/sku/stockkeepingunitbyid/-skuId-
      *
      * @param   string  $sku    The SKU identifier.
      * @return  array
      */
-    public function getSku( string $sku ) : array
+    public function getSkuContext( string $sku ) : array
     {
         $this->connector
             ->setCallOrigin(
-                origin : "getSku"
+                origin : "getSkuContext"
             )
             ->buildUrl(
-                api    : "get-detail-sku",
+                api    : "get-sku-context",
+            )
+            ->replaceUrl(
+                data   : [ "{skuId}" => $sku ]
+            );
+
+        return $this->connector->sendRequest( method: "get" );
+    }
+
+    /**
+     * Fetches detailed information for a specific SKU from the VTEX API.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/stockkeepingunit/-skuId-
+     *
+     * @param   string  $sku
+     * @return  array
+     */
+    public function getSkuData( string $sku ) : array
+    {
+        $this->connector
+            ->setCallOrigin(
+                origin : "getSkuData"
+            )
+            ->buildUrl(
+                api    : "get-sku-data",
             )
             ->replaceUrl(
                 data   : [ "{skuId}" => $sku ]

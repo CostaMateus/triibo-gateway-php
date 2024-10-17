@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Vtex;
 use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vtex\VtexController;
 
-class CategoryController extends Controller
+class CategoryController extends VtexController
 {
     /**
      * Handles the mapping of VTEX categories.
@@ -45,7 +45,7 @@ class CategoryController extends Controller
             ];
 
             // Log the exception for debugging purposes.
-            log_exception( channel: self::LOG_CHANNEL, message: $e->getMessage(), method: "mapping", type: "Throwable", e: $e );
+            log_exception( channel: parent::LOG_CHANNEL, message: $e->getMessage(), method: "mapping", type: "Throwable", e: $e );
         }
 
         // Return JSON response with appropriate status code.
@@ -92,7 +92,7 @@ class CategoryController extends Controller
             ];
 
             // Log the exception for debugging purposes.
-            log_exception( channel: self::LOG_CHANNEL, message: $e->getMessage(), method: "categories", type: "Throwable", e: $e );
+            log_exception( channel: parent::LOG_CHANNEL, message: $e->getMessage(), method: "categories", type: "Throwable", e: $e );
         }
 
         // Return JSON response with appropriate status code.
@@ -135,7 +135,7 @@ class CategoryController extends Controller
             ];
 
             // Log the exception for debugging purposes.
-            log_exception( channel: self::LOG_CHANNEL, message: $e->getMessage(), method: "notification", type: "Throwable", e: $e );
+            log_exception( channel: parent::LOG_CHANNEL, message: $e->getMessage(), method: "notification", type: "Throwable", e: $e );
         }
 
         // Return JSON response with appropriate status code.

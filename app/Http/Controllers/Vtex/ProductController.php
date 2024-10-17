@@ -6,17 +6,10 @@ use Throwable;
 use App\Models\Vtex\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vtex\VtexController;
 
-class ProductController extends Controller
+class ProductController extends VtexController
 {
-    /**
-     * Define a class constant for the log channel.
-     *
-     * @var     string
-     */
-    private const LOG_CHANNEL = "vtex";
-
     /**
      * Handles the creation of a new SKU based on the request data.
      *
@@ -72,19 +65,10 @@ class ProductController extends Controller
         {
             // Log the data received
             log_message(
-                channel : self::LOG_CHANNEL,
+                channel : parent::LOG_CHANNEL,
                 message : "Error on ProductController::updateOrCreateSku",
                 context : $request->all(),
                 print   : true
-            );
-
-            // Log the exception for debugging purposes.
-            log_exception(
-                channel : self::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : "Error on ProductController::updateOrCreateSku",
-                type    : "Throwable",
-                e       : $e
             );
 
             // Handle any unexpected errors.

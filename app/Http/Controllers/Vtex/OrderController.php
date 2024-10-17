@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Vtex;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Vtex\VtexController;
 
-class OrderController extends Controller
+class OrderController extends VtexController
 {
 
     /**
@@ -20,6 +20,9 @@ class OrderController extends Controller
      */
     public function invoiceNotification( Request $request, string $order_id ) : JsonResponse
     {
+
+        save_file( name: "Vtex-OrderController-{$order_id}-invoiceNotification", data: $request->all() );
+
         return response()->json( [ "success" => true ], 200 );
     }
 
@@ -34,6 +37,8 @@ class OrderController extends Controller
      */
     public function cancellationNotification( Request $request, string $order_id ) : JsonResponse
     {
+        save_file( name: "Vtex-OrderController-{$order_id}-cancellationNotification", data: $request->all() );
+
         return response()->json( [ "success" => true ], 200 );
     }
 
