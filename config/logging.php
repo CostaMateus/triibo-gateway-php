@@ -146,22 +146,6 @@ return [
             "path"   => storage_path( "logs/triibo.log" ),
             "level"  => "debug"
         ],
-
-        // fastshop
-        "fastshop"     => [
-            "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/fastshop.log" ),
-            "level"      => "debug"
-        ],
-
-        // vtex
-        "vtex"         => [
-            "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/vtex.log" ),
-            "level"      => "debug"
-        ],
     ],
 
 ];
