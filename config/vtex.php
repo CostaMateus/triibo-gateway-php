@@ -4,7 +4,7 @@ return [
 
     "partners"    => [
         "fast_shop" => [
-            "env"            => env( key: "VTEX_ENV", default: "local" ),
+            "env"            => env( key: "FS_VTEX_ENV", default: "local" ),
 
             "connector_name" => "Marketplace Triibo", // TODO fastshop precisa confirmar
 
@@ -16,8 +16,8 @@ return [
                 "headers"       => [
                     "Accept"              => "application/json",
                     "Content-Type"        => "application/json",
-                    "X-VTEX-API-AppKey"   => env( key: "VTEX_FS_API_KEY_HML"   ),
-                    "X-VTEX-API-AppToken" => env( key: "VTEX_FS_API_TOKEN_HML" )
+                    "X-VTEX-API-AppKey"   => env( key: "FS_VTEX_HML_KEY"   ),
+                    "X-VTEX-API-AppToken" => env( key: "FS_VTEX_HML_TOKEN" )
                 ],
             ],
 
@@ -29,8 +29,8 @@ return [
                 "headers"       => [
                     "Accept"              => "application/json",
                     "Content-Type"        => "application/json",
-                    "X-VTEX-API-AppKey"   => env( key: "VTEX_FS_API_KEY_PRD"   ),
-                    "X-VTEX-API-AppToken" => env( key: "VTEX_FS_API_TOKEN_PRD" )
+                    "X-VTEX-API-AppKey"   => env( key: "FS_VTEX_PRD_KEY"   ),
+                    "X-VTEX-API-AppToken" => env( key: "FS_VTEX_PRD_TOKEN" )
                 ],
             ],
         ],
@@ -44,12 +44,25 @@ return [
         "order-integration"        => "order-integration/orders",
         "order-integration-status" => "order-integration/orders/status",
 
+        // preço/estoque/frete | é pra sempre ter preço e estoque | só tem frete se mandar o CEP no body
+        // https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/checkout/pub/orderForms/simulation
         "fulfillment-simulation"   => "checkout/pub/orderForms/simulation",
+
         "fulfillment-order"        => "fulfillment/pvt/orders",
         "fulfillment-dispatch"     => "fulfillment/pvt/orders/{orderId}/fulfill",
 
         "all-skus-list"            => "catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel",
-        "get-detail-sku"           => "catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}",
+
+        // Contexto de um SKU
+        // https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog_system/pvt/sku/stockkeepingunitbyid/-skuId-
+        "get-sku-context"          => "catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}",
+
+        // Dados de um SKU
+        // https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/stockkeepingunit/-skuId-
+        "get-sku-data"             => "catalog/pvt/stockkeepingunit/{skuId}",
+
+        // Recupera um produto pelo ID
+        // https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/product/-productId-
         "get-detail-product"       => "catalog/pvt/product/{productId}",
     ],
 
