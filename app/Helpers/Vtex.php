@@ -54,14 +54,14 @@ if ( !function_exists( "get_categories_ids" ) )
 
             if ( $category )
             {
-                $categories[] = $cat->cat_id;
+                $categories[] = $category->cat_id;
             }
             else
             {
-                $parent       = ( $index == 0 ) ? 0 : $categories[ $key - 1 ];
+                $parent       = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
 
                 $new_category = Category::create( [
-                    "name"   => $catName,
+                    "name"   => $names[ $vtex_category_id ],
                     "parent" => $parent,
                 ] );
 
@@ -532,80 +532,79 @@ if ( !function_exists( "vtex_fulfillment_simulation" ) )
     /**
      * Converts WooCommerce freight data to the format required by VTEX.
      *
-     * @param   array   $data   The original freight data from WooCommerce.
-     * @return  array           The freight data formatted for VTEX.
+     * @param   array   $data       The original freight data from WooCommerce.
+     * @param   string  $seller     The seller identifier (e.g., fast_shop).
+     * @return  array               The freight data formatted for VTEX.
      */
-    function vtex_fulfillment_simulation( array $data )
+    function vtex_fulfillment_simulation( array $data, string $seller = "1" )
     {
-        return array_map( function ( $data )
-        {
-            $items = [];
-
+        return [
             // Maps each line item to the desired structure.
-            foreach ( $data[ "items" ] as $item )
+            "items" => array_map( function ( $item ) use ( $seller )
             {
-                $items = [
-                    "id"       => str_replace( "FS-", "", $item[ "sku" ] ),
-                    "quantity" => $item[ "quantity" ],
-                    "seller"   => "1",
+                return [
+                    "id"       => $item[ "product_id" ],
+                    "quantity" => $item[ "quantity"   ],
+                    "seller"   => $seller,
                 ];
-            }
 
-            return [
-                "items"      => $items,
-                "postalCode" => $data[ "postalCode" ],
-                "country"    => "BRA",
-                "selectedSla" => "Normal",
-            ];
+            }, $data[ "items" ] ),
 
-        }, $data );
+            "isCheckedIn" => false,
+            "country"     => "BRA",
+            "selectedSla" => "Normal",
+            "postalCode"  => $data[ "postalCode" ],
+        ];
     }
 }
 
 if ( !function_exists( "vtex_product_to_mkt" ) )
 {
-    function vtex_product_to_mkt( array $data ) : array
+    function vtex_product_to_mkt( array $data, array $simulate ) : array
     {
-        return array_map( function ( $data )
-        {
-            // Vtex categories to WooCommerce category format.
-            $categories = get_categories_ids( $data[ "ProductCategoryIds" ], $data[ "ProductCategories" ] );
+        // Vtex categories to WooCommerce category format.
+        $categories = get_categories_ids( $data[ "ProductCategoryIds" ], $data[ "ProductCategories" ] );
 
-            $images     = vtex_get_product_images( $data[ "Images" ] );
+        $images     = vtex_get_product_images( $data[ "Images" ] );
 
-            // Get product attributes from Fast Shop data.
-            $attributes = vtex_get_product_attributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
+        // Get product attributes from Fast Shop data.
+        $attributes = vtex_get_product_attributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
 
-            // Return the WooCommerce product array.
-            return [
-                "name"              => $data[ "ProductName" ],
-                "slug"              => Str::slug( $data[ "ProductName" ] ),
-                "description"       => $data[ "ProductDescription" ],
-                "short_description" => $shortDescr,
-                "sku"               => "FS-{$sku}",
-                "regular_price"     => insert_decimal( $data[ "Pricing" ][ "ListPrice" ] ),
-                "sale_price"        => insert_decimal( $data[ "Pricing" ][ "SalePrice" ] ),
-                "manage_stock"      => true,
-                "stock_quantity"    => 0,            // TODO ?
-                "stock_status"      => "outofstock", // TODO ?
-                "backorders"        => "no",
-                "sold_individually" => false,
-                "weight"            => ( string ) $data[ "Dimension" ][ "weight" ],
-                "dimensions"        => [
-                    "length" => ( string ) $data[ "Dimension" ][ "length" ],
-                    "width"  => ( string ) $data[ "Dimension" ][ "width"  ],
-                    "height" => ( string ) $data[ "Dimension" ][ "height" ]
-                ],
-                "shipping_class"    => "fast-shop",
-                "upsell_ids"        => [],
-                "cross_sell_ids"    => [],
-                "parent_id"         => 0,
-                "purchase_note"     => "",
-                "tags"              => [],
-                "categories"        => $categories,
-                "images"            => $images,
-                "attributes"        => $attributes,
-            ];
-        }, $data );
+        // Return the WooCommerce product array.
+        return [
+            "name"              => $data[ "ProductName" ],
+            "slug"              => Str::slug( $data[ "ProductName" ] ),
+            "description"       => $data[ "ProductDescription" ],
+            "short_description" => $data[ "ProductDescription" ],
+            "sku"               => "FS-" . $data[ "ProductRefId" ],
+            "regular_price"     => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ) : 0,
+            "sale_price"        => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ) : 0,
+            "manage_stock"      => false,                                                                                     // TODO ?
+            // "stock_quantity"    => 0,                                                                                      // TODO ?
+            "stock_status"      => isset( $simulate[ "items" ] ) ? ( ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock" ) : "outofstock", // TODO ?
+            "backorders"        => "no",
+            "sold_individually" => false,
+            "weight"            => ( string ) $data[ "Dimension" ][ "weight" ],
+            "dimensions"        => [
+                "length" => ( string ) $data[ "Dimension" ][ "length" ],
+                "width"  => ( string ) $data[ "Dimension" ][ "width"  ],
+                "height" => ( string ) $data[ "Dimension" ][ "height" ]
+            ],
+            "shipping_class"    => "fast-shop",
+            "upsell_ids"        => [],
+            "cross_sell_ids"    => [],
+            "parent_id"         => 0,
+            "purchase_note"     => "",
+            "tags"              => [],
+            "categories"        => $categories,
+            "images"            => $images,
+            "attributes"        => $attributes,
+            "meta_data"         => [
+                [
+                    "key"   => "_fs_product_id",
+                    "value" => $data[ "ProductId" ],
+                ]
+            ]
+        ];
     }
 }
