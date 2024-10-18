@@ -26,13 +26,12 @@ class VtexController extends Controller
 
         $key    = $request->header( "api-key"    );
         $token  = $request->header( "api-token"  );
-        $plugin = $request->header( "api-plugin" );
 
         if ( $_key != $key || $_token != $token )
         {
             log_message(
                 channel : self::LOG_CHANNEL,
-                message : "WooCommerce - {$plugin}: credentials validation failed",
+                message : "WooCommerce: credentials validation failed",
                 level   : "error",
                 context : [ "key" => $key, "token" => $token, "plugin" => $plugin ],
                 notify  : true
