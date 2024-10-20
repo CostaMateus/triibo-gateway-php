@@ -63,14 +63,6 @@ class ProductController extends VtexController
         }
         catch ( Throwable $e )
         {
-            // Log the data received
-            log_message(
-                channel : parent::LOG_CHANNEL,
-                message : "Error on ProductController::updateOrCreateSku",
-                context : $request->all(),
-                print   : true
-            );
-
             // Handle any unexpected errors.
             $code = 500;
             $data = [
@@ -78,6 +70,15 @@ class ProductController extends VtexController
                 "message"    => "Unexpected error",
                 "data"       => $vtex_data,
             ];
+
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "updateOrCreateSku",
+                type    : "Throwable",
+                e       : $e
+            );
         }
 
         return response()->json( $data, $code );

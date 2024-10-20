@@ -11,7 +11,7 @@ use App\Http\Controllers\Vtex\VtexController;
 class SimulateController extends VtexController
 {
     /**
-     * TODO doc
+     * 
      *
      * @param   Request     $request
      * @return  Response
@@ -96,11 +96,16 @@ class SimulateController extends VtexController
                 "data"      => $data,
             ], 200 );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::exception( "MP - freightCalculation", $e );
-
-            // log_exception( $e );
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "freightCalculation",
+                type    : "Throwable",
+                e       : $e
+            );
 
             return response()->json( [
                 "errorCode" => "5000", // 5000 - erro generico

@@ -20,7 +20,6 @@ class OrderController extends VtexController
      */
     public function invoiceNotification( Request $request, string $order_id ) : JsonResponse
     {
-
         save_file( name: "Vtex-OrderController-{$order_id}-invoiceNotification", data: $request->all() );
 
         return response()->json( [ "success" => true ], 200 );

@@ -45,7 +45,13 @@ class CategoryController extends VtexController
             ];
 
             // Log the exception for debugging purposes.
-            log_exception( channel: parent::LOG_CHANNEL, message: $e->getMessage(), method: "mapping", type: "Throwable", e: $e );
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "mapping",
+                type    : "Throwable",
+                e       : $e
+            );
         }
 
         // Return JSON response with appropriate status code.
@@ -92,7 +98,13 @@ class CategoryController extends VtexController
             ];
 
             // Log the exception for debugging purposes.
-            log_exception( channel: parent::LOG_CHANNEL, message: $e->getMessage(), method: "categories", type: "Throwable", e: $e );
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "categories",
+                type    : "Throwable",
+                e       : $e
+            );
         }
 
         // Return JSON response with appropriate status code.
@@ -135,7 +147,13 @@ class CategoryController extends VtexController
             ];
 
             // Log the exception for debugging purposes.
-            log_exception( channel: parent::LOG_CHANNEL, message: $e->getMessage(), method: "notification", type: "Throwable", e: $e );
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "notification",
+                type    : "Throwable",
+                e       : $e
+            );
         }
 
         // Return JSON response with appropriate status code.
