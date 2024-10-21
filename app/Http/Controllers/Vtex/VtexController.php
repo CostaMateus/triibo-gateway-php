@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Vtex;
 
+use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
 class VtexController extends Controller
@@ -11,7 +12,7 @@ class VtexController extends Controller
      *
      * @var     string
      */
-    private const LOG_CHANNEL = "marketplace";
+    protected const LOG_CHANNEL = "marketplace";
 
     /**
      * Credential validation.
@@ -19,10 +20,10 @@ class VtexController extends Controller
      * @param   Request     $request
      * @return  true|Response
      */
-    private function validateKeys( Request $request )
+    protected function validateKeys( Request $request )
     {
-        $_key   = config( "woocommerce.plugins.key" );
-        $_token = config( "woocommerce.plugins.key" );
+        $_key   = config( "woocommerce.plugins.key"   );
+        $_token = config( "woocommerce.plugins.token" );
 
         $key    = $request->header( "api-key"    );
         $token  = $request->header( "api-token"  );
@@ -33,8 +34,7 @@ class VtexController extends Controller
                 channel : self::LOG_CHANNEL,
                 message : "WooCommerce: credentials validation failed",
                 level   : "error",
-                context : [ "key" => $key, "token" => $token, "plugin" => $plugin ],
-                notify  : true
+                context : [ "key" => $key, "token" => $token ],
             );
 
             return response()->json( [
