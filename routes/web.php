@@ -181,7 +181,20 @@ Route::prefix( "mkt" )->group( function ()
     {
         $product = Product::find( $id );
 
-        dd( $product );
+        $meta = [];
+
+        $keys = [
+            "_subscription_period",
+            "_subscription_period_interval",
+            "_subscription_length",
+            "_subscription_limit"
+        ];
+
+        foreach ( $product[ "meta_data" ] as $value )
+            if ( in_array( $value->key, $keys ) )
+                $meta[] = $value;
+
+        dd( $meta );
     } );
 
     Route::get( "/create-product", function()

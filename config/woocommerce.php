@@ -6,7 +6,7 @@ return [
      * Plugin key and token.
      */
     "plugins"            => [
-        "key"   => ( env( key: "MKT_ENV" ) == "local" ) ? env( key: "WOO_PLG_HML_KEY"   ) : env( key: "WOO_PLG_PRD_KEY"   ),
+        "key"   => ( env( key: "MKT_ENV" ) == "local" ) ? env( key: "WOO_PLG_HML_KEY"   ) : env( key: "WOO_PLG_HML_KEY"   ),
         "token" => ( env( key: "MKT_ENV" ) == "local" ) ? env( key: "WOO_PLG_HML_TOKEN" ) : env( key: "WOO_PLG_PRD_TOKEN" ),
     ],
 
