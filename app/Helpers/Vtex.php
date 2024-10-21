@@ -608,3 +608,112 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
         ];
     }
 }
+
+if ( !function_exists( "vtex_freight_to_woo"  ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $data
+     * @return  array
+     */
+    function vtex_freight_to_woo( array $data )
+    {
+        if ( !empty( $data[ "logisticsInfo" ] ) && !empty( $data[ "items" ] ) )
+        {
+            $logistics = [];
+
+            foreach ( $data[ "logisticsInfo" ] as $log_info )
+            {
+                $deliveryChannel = current( array_filter( $log_info[ "deliveryChannels" ], function ( $channel )
+                {
+                    return $channel[ "id" ] === "delivery";
+                } ) );
+
+                $slas            = current( array_filter( $log_info[ "slas" ], function ( $sla )
+                {
+                    // TODO ? em prod pode mudar isso bem aqui
+                    return strtolower( $sla[ "id" ] ) === "normal";
+                } ) );
+
+                if ( $deliveryChannel && $slas )
+                {
+                    $hub     = strtolower( $slas[ "id" ] );
+                    $price   = $slas[ "price"            ];
+                    $time    = $slas[ "shippingEstimate" ];
+
+                    $code    = null;
+                    $message = "ok";
+                }
+                else
+                {
+                    $price   = 0;
+                    $time    = "";
+                    $hub     = "";
+                    $code    = 4000;
+                    $message = "Delivery not found";
+                }
+
+                $itemIndex = $log_info[ "itemIndex" ] ?? null;
+
+                if ( $itemIndex !== null && isset( $data[ "items" ][ $itemIndex ] ) )
+                {
+                    $product                       = $data[ "items" ][ $itemIndex ];
+
+                    $logistics[ $product[ "id" ] ] = [
+                        "product_id"    => $product[ "id"           ],
+                        "quantity"      => $product[ "quantity"     ],
+                        "availability"  => $product[ "availability" ] == "available" ? true : false,
+                        "deliveryPrice" => convert_price( $price ),
+                        "deliveryTime"  => convert_delivery_time( $time ),
+                        "sale_price"    => convert_price( $product[ "price"     ] ),
+                        "regular_price" => convert_price( $product[ "listPrice" ] ),
+                        "hub"           => $hub,
+                        "code"          => $code,
+                        "message"       => $message,
+                    ];
+                }
+            }
+
+            return $logistics;
+        }
+
+        if ( empty( $logistics ) )
+            return vtex_freight_to_woo_failed( $data );
+    }
+}
+
+if ( !function_exists( "vtex_freight_to_woo_failed" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $data
+     * @return  array
+     */
+    function vtex_freight_to_woo_failed( array $data )
+    {
+        $logistics = [];
+
+        if ( !empty( $data[ "items" ] ) )
+        {
+            foreach ( $data[ "items" ] as $product )
+            {
+                $logistics[ $product[ "id" ] ] = [
+                    "product_id"    => $product[ "id"       ],
+                    "quantity"      => $product[ "quantity" ],
+                    "availability"  => false,
+                    "deliveryPrice" => "0.00",
+                    "deliveryTime"  => "0",
+                    "sale_price"    => convert_price( $product[ "price"     ] ),
+                    "regular_price" => convert_price( $product[ "listPrice" ] ),
+                    "hub"           => "",
+                    "code"          => 4001,
+                    "message"       => "SKU currently unavailable",
+                ];
+            }
+        }
+
+        return $logistics;
+    }
+}
