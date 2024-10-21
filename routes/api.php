@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChatGuruController;
 use App\Http\Controllers\FastshopController;
+use App\Http\Controllers\Vtex\SimulateController;
 use App\Http\Controllers\PipedriveWebhookController;
 use App\Http\Controllers\Vtex\OrderController as VtexOrderController;
 use App\Http\Controllers\Vtex\ProductController as VtexProductController;
@@ -107,7 +108,7 @@ Route::name( "api.marketplace." )->prefix( "marketplace" )->group( function ()
          * Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
          */
-        Route::post( "/freightcalculation",         [ FastshopController::class, "freightCalculation" ] )->name( "freightcalculation" );
+        Route::post( "/freightcalculation",         [ SimulateController::class, "freightCalculation" ] )->name( "freightcalculation" );
 
         /**
          * Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
