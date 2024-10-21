@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Vtex;
 
 use Throwable;
-use App\Models\Vtex\Product;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Services\Vtex\ConnectorService;
+use App\Services\Vtex\FulfillmentService;
 use App\Http\Controllers\Vtex\VtexController;
 
 class SimulateController extends VtexController
 {
     /**
-     * 
+     *
      *
      * @param   Request     $request
      * @return  Response
@@ -24,13 +24,14 @@ class SimulateController extends VtexController
         $wc_data    = $request->all();
         $seller     = $request->header( "seller" );
         $connector  = new ConnectorService( $seller );
+        $connector->enableLogMessage( false );
+
         $simulation = new FulfillmentService( $connector );
 
         try
         {
-            $vtex_data = vtex_fulfillment_simulation( $wc_data );
-
-            $response  = $simulation->simulate( $vtex_data );
+            $req_data  = vtex_fulfillment_simulation( $wc_data );
+            $response  = $simulation->simulate( $req_data );
 
             if ( $response[ 0 ] != 200 )
             {
@@ -45,49 +46,37 @@ class SimulateController extends VtexController
                     ]
                 );
 
-                return null;
+                return response()->json( [
+                    "errorCode" => "5001",
+                    "message"   => "Something wrong when consulting the delivery price",
+                    "data"      => null,
+                ], 200 );
             }
 
-            foreach ( $resps as $key => $response )
+            $vtex_data = $response[ 1 ][ "data" ];
+            $data      = [];
+
+            $translated_data = vtex_freight_to_woo( $vtex_data );
+
+            foreach ( $req_data[ "items" ] as $product )
             {
-                // falha na consulta
-                // não altera nada no MKT
-                // não exibe frete
-                if ( !$response->successful() )
+                if ( isset( $translated_data[ $product[ "id" ] ] ) )
                 {
-                    Log::freightCalculation( $fsData[ $key ] );
+                    $temp_data = $translated_data[ $product[ "id" ] ];
+                    $code      = $temp_data[ "code"    ];
+                    $message   = $temp_data[ "message" ];
 
-                    $item         = $wc_data[ "items" ][ $key ];
-                    $sku          = $item[ "sku" ];
-                    $data[ $sku ] = [
-                        "errorCode" => "5001",
-                        "message"   => "Something wrong when consulting the delivery price",
-                        "data"      => $item
+                    unset(
+                        $temp_data[ "code"    ],
+                        $temp_data[ "message" ]
+                    );
+
+                    $data[ $product[ "id" ] ] = [
+                        "errorCode" => $code,
+                        "message"   => $message,
+                        "data"      => $temp_data,
                     ];
-
-                    continue;
                 }
-
-                $item                  = $wc_data[ "items" ][ $key ];
-                $sku                   = $item[ "sku" ];
-
-                $fsData                = $response->json();
-
-                $aWc_data               = DataTranslator::translate( "freightCalcWc", $fsData );
-
-                $aWc_data[ "sku"      ] = isset( $aWc_data[ "sku"      ] ) ? $aWc_data[ "sku"      ] : $sku;
-                $aWc_data[ "quantity" ] = isset( $aWc_data[ "quantity" ] ) ? $aWc_data[ "quantity" ] : $item[ "quantity" ];
-
-                $code                  = $aWc_data[ "code"    ];
-                $message               = $aWc_data[ "message" ];
-
-                unset( $aWc_data[ "code" ], $aWc_data[ "message" ] );
-
-                $data[ $sku ] = [
-                    "errorCode" => $code,
-                    "message"   => $message,
-                    "data"      => $aWc_data,
-                ];
             }
 
             return response()->json( [
