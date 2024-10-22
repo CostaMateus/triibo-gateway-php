@@ -30,8 +30,8 @@ class SimulateController extends VtexController
 
         try
         {
-            $req_data  = vtex_fulfillment_simulation( $wc_data );
-            $response  = $simulation->simulate( $req_data );
+            $req_data        = vtex_fulfillment_simulation( $wc_data );
+            $response        = $simulation->simulate( $req_data );
 
             if ( $response[ 0 ] != 200 )
             {
@@ -47,14 +47,14 @@ class SimulateController extends VtexController
                 );
 
                 return response()->json( [
-                    "errorCode" => "5001",
+                    "errorCode" => 5001,
                     "message"   => "Something wrong when consulting the delivery price",
                     "data"      => null,
                 ], 200 );
             }
 
-            $vtex_data = $response[ 1 ][ "data" ];
-            $data      = [];
+            $vtex_data       = $response[ 1 ][ "data" ];
+            $data            = [];
 
             $translated_data = vtex_freight_to_woo( $vtex_data );
 
@@ -70,13 +70,22 @@ class SimulateController extends VtexController
                         $temp_data[ "code"    ],
                         $temp_data[ "message" ]
                     );
-
-                    $data[ $product[ "id" ] ] = [
-                        "errorCode" => $code,
-                        "message"   => $message,
-                        "data"      => $temp_data,
-                    ];
                 }
+                else
+                {
+                    $code      = 5002;
+                    $message   = "Something wrong when consulting the delivery price";
+                    $temp_data = null;
+                }
+
+                $wc_index        = array_search_by_key( $product[ "id" ], "product_id", $wc_data[ "items" ] );
+                $wc_sku          = $wc_data[ "items" ][ $wc_index ][ "sku" ];
+
+                $data[ $wc_sku ] = [
+                    "errorCode" => $code,
+                    "message"   => $message,
+                    "data"      => $temp_data,
+                ];
             }
 
             return response()->json( [
@@ -97,7 +106,7 @@ class SimulateController extends VtexController
             );
 
             return response()->json( [
-                "errorCode" => "5000", // 5000 - erro generico
+                "errorCode" => 5000, // 5000 - erro generico
                 "message"   => $e->getMessage(),
                 "data"      => $wc_data[ "items" ],
             ], 500 );
