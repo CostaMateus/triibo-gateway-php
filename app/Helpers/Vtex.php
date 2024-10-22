@@ -58,12 +58,24 @@ if ( !function_exists( "get_categories_ids" ) )
             }
             else
             {
-                $parent       = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
+                $search = Category::where( "slug", $slug )->first();
 
-                $new_category = Category::create( [
-                    "name"   => $names[ $vtex_category_id ],
-                    "parent" => $parent,
-                ] );
+                if ( $search->isNotEmpty() )
+                {
+                    $new_category = [
+                        "id"   => $search[ "id"   ],
+                        "slug" => $search[ "slug" ],
+                    ];
+                }
+                else
+                {
+                    $parent       = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
+
+                    $new_category = Category::create( [
+                        "name"   => $names[ $vtex_category_id ],
+                        "parent" => $parent,
+                    ] );
+                }
 
                 $categories[] = $new_category[ "id" ];
 
@@ -661,16 +673,16 @@ if ( !function_exists( "vtex_freight_to_woo"  ) )
                     $product                       = $data[ "items" ][ $itemIndex ];
 
                     $logistics[ $product[ "id" ] ] = [
-                        "product_id"    => $product[ "id"           ],
-                        "quantity"      => $product[ "quantity"     ],
-                        "availability"  => $product[ "availability" ] == "available" ? true : false,
-                        "deliveryPrice" => convert_price( $price ),
-                        "deliveryTime"  => convert_delivery_time( $time ),
-                        "sale_price"    => convert_price( $product[ "price"     ] ),
-                        "regular_price" => convert_price( $product[ "listPrice" ] ),
-                        "hub"           => $hub,
-                        "code"          => $code,
-                        "message"       => $message,
+                        "_fs_product_id" => $product[ "id"           ],
+                        "quantity"       => $product[ "quantity"     ],
+                        "availability"   => $product[ "availability" ] == "available" ? true : false,
+                        "delivery_price" => convert_price( $price ),
+                        "delivery_time"  => convert_delivery_time( $time ),
+                        "sale_price"     => convert_price( $product[ "price"     ] ),
+                        "regular_price"  => convert_price( $product[ "listPrice" ] ),
+                        "hub"            => $hub,
+                        "code"           => $code,
+                        "message"        => $message,
                     ];
                 }
             }
@@ -700,16 +712,16 @@ if ( !function_exists( "vtex_freight_to_woo_failed" ) )
             foreach ( $data[ "items" ] as $product )
             {
                 $logistics[ $product[ "id" ] ] = [
-                    "product_id"    => $product[ "id"       ],
-                    "quantity"      => $product[ "quantity" ],
-                    "availability"  => false,
-                    "deliveryPrice" => "0.00",
-                    "deliveryTime"  => "0",
-                    "sale_price"    => convert_price( $product[ "price"     ] ),
-                    "regular_price" => convert_price( $product[ "listPrice" ] ),
-                    "hub"           => "",
-                    "code"          => 4001,
-                    "message"       => "SKU currently unavailable",
+                    "_fs_product_id" => $product[ "id"       ],
+                    "quantity"       => $product[ "quantity" ],
+                    "availability"   => false,
+                    "delivery_price" => "0.00",
+                    "delivery_time"  => "0",
+                    "sale_price"     => convert_price( $product[ "price"     ] ),
+                    "regular_price"  => convert_price( $product[ "listPrice" ] ),
+                    "hub"            => "",
+                    "code"           => 4001,
+                    "message"        => "SKU currently unavailable",
                 ];
             }
         }
