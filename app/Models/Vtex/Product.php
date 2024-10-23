@@ -2,7 +2,7 @@
 
 namespace App\Models\Vtex;
 
-class Product
+class Product extends Model
 {
     protected $table    = "vtex_products";
 
