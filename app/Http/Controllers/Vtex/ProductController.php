@@ -34,17 +34,16 @@ class ProductController extends VtexController
         {
             save_file( name: "Vtex-ProductController-updateOrCreateSku", data: $vtex_data );
 
-            // TODO indentificar origem da requisição
-            $origin  = "fastshop";
+            $origin  = $vtex_data[ "An" ];
 
-            $product = Product::where( "sku", $vtex_data[ "idSKU" ] )
+            $product = Product::where( "sku", $vtex_data[ "IdSku" ] )
                               ->where( "origin", $origin )
                               ->first();
 
             if ( !$product )
             {
                 $create = [
-                    "sku"    => $vtex_data[ "idSku" ],
+                    "sku"    => $vtex_data[ "IdSku" ],
                     "origin" => $origin,
                     "action" => "create",
                     "status" => "unprocessed",
@@ -55,7 +54,7 @@ class ProductController extends VtexController
             }
             else
             {
-                $product->action = ( $vtex_data[ "isActive" ] == true ) ? "update" : "disable";
+                $product->action = ( $vtex_data[ "IsActive" ] == true ) ? "update" : "disable";
                 $product->status = "unprocessed";
                 $product->meta   = json_encode( $vtex_data );
                 $product->save();
