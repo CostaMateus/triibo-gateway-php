@@ -32,10 +32,7 @@ class ProductController extends VtexController
 
         try
         {
-            save_file( name: "Vtex-ProductController-updateOrCreateSku", data: $vtex_data );
-
             $origin  = $vtex_data[ "An" ];
-
             $product = Product::where( "sku", $vtex_data[ "IdSku" ] )
                               ->where( "origin", $origin )
                               ->first();
