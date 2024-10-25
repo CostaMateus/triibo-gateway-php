@@ -184,7 +184,10 @@ class Helper
 
         $count     = count( $body[ "items" ] );
 
-        log_message( channel: "fastshop", message: "Stock|Price: Querying {$count} SKUs at once...", print: true );
+        $message   = "Stock|Price: Querying {$count} SKUs at once...";
+
+        log_message( channel: "fastshop", message: $message );
+        echo $message;
 
         try
         {

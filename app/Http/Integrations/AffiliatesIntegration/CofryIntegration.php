@@ -209,9 +209,11 @@ class CofryIntegration
         // If the response is not successful or contains an error code, log the error details.
         $code    = $response[ "errorCode"    ] ?? "Unknow";
         $error   = $response[ "errorMessage" ] ?? "No error message provided";
-        $message = "{$type} | Code: {$code} | Message: {$error}";
+        $message = "API: {$type} | Code: {$code} | Message: {$error}";
 
-        log_message( channel: "marketplace", level: "error", message: "API: {$message}", print: true );
+        log_message( channel: "marketplace", level: "error", message: $message );
+
+        echo $message;
 
         // Return null if the request was not successful or if an error code was present.
         return null;

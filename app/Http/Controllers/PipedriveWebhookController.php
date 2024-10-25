@@ -91,7 +91,7 @@ class PipedriveWebhookController extends Controller
 
         if ( $params[ "meta" ][ "change_source" ] == "api" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | " . self::MSG_CHANGE_BY_API );
 
             return response()->json( [
                 "status"  => "Ok",
@@ -111,7 +111,7 @@ class PipedriveWebhookController extends Controller
 
                     if ( !$params[ $index ][ "org_id" ] )
                     {
-                        log_message( channel: self::LOG_CHANNEL, message: "Deals: code 404 | Not found: org_id", print: true );
+                        log_message( channel: self::LOG_CHANNEL, message: "Deals: code 404 | Not found: org_id" );
                         break;
                     }
 
@@ -179,7 +179,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
+                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
                         "status"  => "Error",
@@ -191,7 +191,7 @@ class PipedriveWebhookController extends Controller
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | " . $e->getMessage(), print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | " . $e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
@@ -221,7 +221,7 @@ class PipedriveWebhookController extends Controller
         if ( $params[ "meta" ][ "change_source" ] == "api" )
         {
             $message = "";
-            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | " . self::MSG_CHANGE_BY_API );
 
             return response()->json( [
                 "status"  => "Ok",
@@ -262,7 +262,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
+                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
                         "status"  => "Error",
@@ -274,7 +274,7 @@ class PipedriveWebhookController extends Controller
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | " . $e->getMessage(), print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | " . $e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
@@ -304,7 +304,7 @@ class PipedriveWebhookController extends Controller
 
         if ( $params[ "meta" ][ "change_source" ] == "api" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | " . self::MSG_CHANGE_BY_API );
 
             return response()->json( [
                 "status"  => "Ok",
@@ -324,7 +324,7 @@ class PipedriveWebhookController extends Controller
                 break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
+                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
                         "status"  => "Error",
@@ -336,7 +336,7 @@ class PipedriveWebhookController extends Controller
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | " . $e->getMessage(), print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | " . $e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
@@ -363,7 +363,7 @@ class PipedriveWebhookController extends Controller
     {
         if ( env( "APP_ENV" ) == "production" || env( "APP_ENV" ) == "local" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Persons: code -1 | Deactivated", print: true );
+            log_message( channel: self::LOG_CHANNEL, message: "Persons: code -1 | Deactivated" );
 
             return response()->json( [
                 "status"  => "Ok",
@@ -375,7 +375,7 @@ class PipedriveWebhookController extends Controller
 
         // if ( $params[ "meta" ][ "change_source" ] == "api" )
         // {
-        //     log_message( channel: self::LOG_CHANNEL, message: "Persons: code 0 | " . self::MSG_CHANGE_BY_API, print: true );
+        //     log_message( channel: self::LOG_CHANNEL, message: "Persons: code 0 | " . self::MSG_CHANGE_BY_API );
 
         //     return response()->json( [
         //         "status"  => "Ok",
@@ -405,7 +405,7 @@ class PipedriveWebhookController extends Controller
         //
         //                if ( !$result )
         //                {
-        //                    log_message( channel: self::LOG_CHANNEL, message: "Persons: code 0 | Discarded changes", print: true );
+        //                    log_message( channel: self::LOG_CHANNEL, message: "Persons: code 0 | Discarded changes" );
         //                    break;
         //                }
         //            }
@@ -418,7 +418,7 @@ class PipedriveWebhookController extends Controller
         //         break;
         //
         //        default:
-        //            log_message( channel: self::LOG_CHANNEL, message: "Persons: code 400 | " . self::MSG_UNSUPPORTED_EVENT, print: true );
+        //            log_message( channel: self::LOG_CHANNEL, message: "Persons: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
         //
         //            return response()->json( [
         //                "status"  => "Error",
@@ -430,7 +430,7 @@ class PipedriveWebhookController extends Controller
         // }
         // catch ( Exception $e )
         // {
-        //     log_message( channel: self::LOG_CHANNEL, message: "Persons: code 500 | " . $e->getMessage(), print: true );
+        //     log_message( channel: self::LOG_CHANNEL, message: "Persons: code 500 | " . $e->getMessage() );
 
         //     self::sendMailNotification( $params, $e );
 
@@ -441,7 +441,7 @@ class PipedriveWebhookController extends Controller
         //     ], 500 );
         // }
 
-        // log_message( channel: self::LOG_CHANNEL, message: "Persons: code 200 | Success", print: true );
+        // log_message( channel: self::LOG_CHANNEL, message: "Persons: code 200 | Success" );
 
         // return response()->json( [
         //     "status"  => "Ok",

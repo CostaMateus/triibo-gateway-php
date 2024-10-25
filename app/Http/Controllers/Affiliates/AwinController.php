@@ -206,7 +206,10 @@ class AwinController extends Controller
             // Attempt to call the Firebase operation method.
             $this->{$operation_method}();
 
-            log_message( channel: self::LOG_CHANNEL, message: "{$operation_name}: Sent successfully", print: true );
+            $message = "{$operation_name}: Sent successfully";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
         catch ( FirebaseException $e )
         {
@@ -214,6 +217,7 @@ class AwinController extends Controller
 
             // Handle Firebase-specific exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
+            echo $message;
         }
         catch ( Throwable $e )
         {
@@ -221,6 +225,7 @@ class AwinController extends Controller
 
             // Handle general exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+            echo $message;
         }
     }
 
@@ -241,7 +246,10 @@ class AwinController extends Controller
      */
     private function insertEstablishmentsFirebase()
     {
-        log_message( channel: self::LOG_CHANNEL, message: "Establishments: Searching ...", print: true );
+        $message                 = "Establishments: Searching ...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Delete the existing establishments directory.
         $local_path              = public_path( path: self::LC_BASE_PATH . "/establishments" );
@@ -261,7 +269,10 @@ class AwinController extends Controller
         $local_establishments    = DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_establishments    = json_decode( json_encode( $local_establishments ), true );
 
-        log_message( channel: self::LOG_CHANNEL, message: "Establishments: Validating ...", print: true );
+        $message                 = "Establishments: Validating ...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Disable Firebase establishments not present in Awin establishments.
         foreach ( $firebase_establishments as $push => $firebase_stablishment )
@@ -285,7 +296,10 @@ class AwinController extends Controller
                         $approval_reference->update( [ $push => $approval_establishment ] );
                     }
 
-                    log_message( channel: self::LOG_CHANNEL, message: "Establishments: Disabled ID {$push}", print: true );
+                    $message                = "Establishments: Disabled ID {$push}";
+
+                    log_message( channel: self::LOG_CHANNEL, message: $message );
+                    echo $message;
 
                     // Remove the establishment from the list.
                     unset( $firebase_establishments[ $push ] );
@@ -369,8 +383,10 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
-            $context = "Edited ID = {$local_establishment[ "push_id" ]} | Need approval ID = {$local_establishment[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
-            log_message( channel: self::LOG_CHANNEL, message: "Establishments: {$context}", print: true );
+            $message          = "Establishments: Edited ID = {$local_establishment[ "push_id" ]} | Need approval ID = {$local_establishment[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
 
         // Insert new establishments into the local database if any.
@@ -401,7 +417,10 @@ class AwinController extends Controller
                     "origin"            => "awin",
                 ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Establishments: Created ID = {$new_push_establishment} | Need approval ID = {$new_push_establishment}", print: true );
+                $message                    = "Establishments: Created ID = {$new_push_establishment} | Need approval ID = {$new_push_establishment}";
+
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
 
                 $establishment[ "push_id" ] = $new_push_establishment;
                 $establishment[ "data"    ] = json_encode( $aux );
@@ -409,7 +428,10 @@ class AwinController extends Controller
                 DB::table( "affiliates_establishments" )->insert( $establishment );
             }
 
-            log_message( channel: self::LOG_CHANNEL, message: "Establishments: Added " . count( $local_data ) . " new establishments in the local table", print: true );
+            $message = "Establishments: Added " . count( $local_data ) . " new establishments in the local table";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
     }
 
@@ -420,7 +442,10 @@ class AwinController extends Controller
      */
     private function insertPromotionsFirebase()
     {
-        log_message( channel: self::LOG_CHANNEL, message: "Promotions: Searching ...", print: true );
+        $message                 = "Promotions: Searching ...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Delete the existing promotions directory.
         $local_path              = public_path( path: self::LC_BASE_PATH . "/promotions" );
@@ -442,7 +467,10 @@ class AwinController extends Controller
         $local_promotions        = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_promotions        = json_decode( json_encode( $local_promotions ), true );
 
-        log_message( channel: self::LOG_CHANNEL, message: "Promotions: Validating ...", print: true );
+        $message                 = "Promotions: Validating ...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Disable Firebase promotions not present in Awin promotions.
         foreach ( $firebase_promotions as $push => $firebase_promotion )
@@ -466,7 +494,10 @@ class AwinController extends Controller
                         $approval_reference->update( [ $push => $approval_promotion ] );
                     }
 
-                    log_message( channel: self::LOG_CHANNEL, message: "Promotions: Disabled ID {$push}", print: true );
+                    $message            = "Promotions: Disabled ID {$push}";
+
+                    log_message( channel: self::LOG_CHANNEL, message: $message );
+                    echo $message;
 
                     // Remove the promotion from the list.
                     unset( $firebase_promotions[ $push ] );
@@ -560,8 +591,10 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $local_promotion[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
-            $context = "Edited ID {$local_promotion[ "push_id" ]} | Need approval ID = {$local_promotion[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
-            log_message( channel: self::LOG_CHANNEL, message: "Promotions: {$context}", print: true );
+            $message          = "Promotions: Edited ID {$local_promotion[ "push_id" ]} | Need approval ID = {$local_promotion[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
 
         // Insert new promotions into the local database if any.
@@ -603,7 +636,10 @@ class AwinController extends Controller
                     "dueDate"           => $aux[ "dueDate" ],
                 ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}", print: true );
+                $message                = "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}";
+
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
 
                 $promotion[ "push_id" ] = $new_push_promotion;
                 $promotion[ "data"    ] = json_encode( $aux );
@@ -611,7 +647,10 @@ class AwinController extends Controller
                 DB::table( "affiliates_promotions" )->insert( $promotion );
             }
 
-            log_message( channel: self::LOG_CHANNEL, message: "Promotions: Added " . count( $local_data ) . " new promotions in the local table", print: true );
+            $message = "Promotions: Added " . count( $local_data ) . " new promotions in the local table";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
     }
 
@@ -625,7 +664,10 @@ class AwinController extends Controller
      */
     private function insertReportsFirebase()
     {
-        log_message( channel: self::LOG_CHANNEL, message: "Reports: Searching for new...", print: true );
+        $message           = "Reports: Searching for new...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Get a reference to the "Triibo-Purchases-Awin" node in Firebase.
         $firebase_awin     = Firebase::database()->getReference( "/Triibo-Purchases-Awin"     );
@@ -639,7 +681,10 @@ class AwinController extends Controller
         // If new reports are available and not empty.
         if ( $new_reports[ "success" ] && !empty( $new_reports[ "data" ] ) )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Reports: Sending new transactions to Firebase ...", print: true );
+            $message = "Reports: Sending new transactions to Firebase ...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
 
             // Loop through each new report.
             foreach ( $new_reports[ "data" ] as $report )
@@ -655,15 +700,24 @@ class AwinController extends Controller
                 $push_cash = $firebase_cashback->push()->getKey();
                 $firebase_cashback->update( [ $push_cash => $report[ "metaData" ] ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Reports: New transaction ID = {$push_awin} | {$push_cash}", print: true );
+                $message   = "Reports: New transaction ID = {$push_awin} | {$push_cash}";
+
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
             }
         }
         else
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Reports: No new transactions ...", print: true );
+            $message = "Reports: No new transactions ...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
 
-        log_message( channel: self::LOG_CHANNEL, message: "Reports: Searching for updated ..", print: true );
+        $message         = "Reports: Searching for updated ..";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Retrieve updated reports from the integration.
         $updated_reports = $this->integration->getReports( true );
@@ -675,7 +729,10 @@ class AwinController extends Controller
             $firebase_reports_awin = $firebase_awin->getValue();
             $firebase_reports_cash = $firebase_cashback->getValue();
 
-            log_message( channel: self::LOG_CHANNEL, message: "Reports: Sending updated transactions for updated ...", print: true );
+            $message               = "Reports: Sending updated transactions for updated ...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
 
             // Loop through each report in the "Triibo-Purchases-Awin" node.
             foreach ( $firebase_reports_awin as $push_awin => $firebase_report_awin )
@@ -709,7 +766,10 @@ class AwinController extends Controller
                 // Update the report in the "Triibo-Purchases-Awin" node.
                 $firebase_awin->update( [ $push_awin => $firebase_report_awin ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Reports: Updated Awin transactions ID {$push_awin}", print: true );
+                $message = "Reports: Updated Awin transactions ID {$push_awin}";
+
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
             }
 
             // Loop through each report in the "Triibo-Purchases-Cashback" node.
@@ -737,12 +797,18 @@ class AwinController extends Controller
                 // Update the report in the "Triibo-Purchases-Cashback" node.
                 $firebase_cashback->update( [ $push_cash => $firebase_report_cash ] );
 
-                log_message( channel: self::LOG_CHANNEL, message: "Reports: Updated Cash transactions ID {$push_cash}", print: true );
+                $message = "Reports: Updated Cash transactions ID {$push_cash}";
+
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
             }
         }
         else
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Reports: No transactions for update ...", print: true );
+            $message = "Reports: No transactions for update ...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
     }
 
@@ -816,11 +882,17 @@ class AwinController extends Controller
         // Check if there are no files found in the local directory.
         if ( empty( $files ) )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Images: No images to upload - {$type}...", print: true );
+            $message = "Images: No images to upload - {$type}...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
             return;
         }
 
-        log_message( channel: self::LOG_CHANNEL, message: "Images: Capturing names of {$type}...", print: true );
+        $message    = "Images: Capturing names of {$type}...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Get the file names from the list of files.
         $file_names = get_files_name( files: $files );
@@ -848,7 +920,10 @@ class AwinController extends Controller
         $storage = Firebase::storage();
         $bucket  = $storage->getBucket();
 
-        log_message( channel: self::LOG_CHANNEL, message: "Images: Sending to Firebase - {$type}...", print: true );
+        $message = "Images: Sending to Firebase - {$type}...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Iterate over each image and upload it to Firebase.
         foreach ( $images as $img )
@@ -861,7 +936,10 @@ class AwinController extends Controller
 
             try
             {
-                log_message( channel: self::LOG_CHANNEL, message: "Images: ID {$img}", print: true );
+                $message = "Images: ID {$img}";
+
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
                 // Perform the upload.
                 $uploader->upload();
             }
@@ -871,6 +949,7 @@ class AwinController extends Controller
 
                 // Handle Firebase-specific exceptions.
                 log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
+                echo $message;
             }
             catch (Throwable $e)
             {
@@ -878,6 +957,7 @@ class AwinController extends Controller
 
                 // Handle general exceptions.
                 log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+                echo $message;
             }
             finally
             {
@@ -887,7 +967,10 @@ class AwinController extends Controller
             }
         }
 
-        log_message( channel: self::LOG_CHANNEL, message: "Images: Sending finished - {$type}...", print: true );
+        $message = "Images: Sending finished - {$type}...";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         File::deleteDirectory( directory: $local_path, preserve: true );
     }

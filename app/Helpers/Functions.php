@@ -18,18 +18,13 @@ if ( !function_exists( "log_message" ) )
      * @param   string  $message    The message to log.
      * @param   string  $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
      * @param   array   $context    Additional context data to include with the log entry.
-     * @param   bool    $print      Whether to print the message to the console or not.
      * @param   bool    $notify     Whether to send a notification email or not.
      * @return  void
      */
-    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $print = false, bool $notify = false ) : void
+    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $notify = false ) : void
     {
         // Log the message using the specified log channel and level.
         Log::channel( $channel )->$level( message: $message, context: $context );
-
-        // If $print is true, print the message to the console.
-        if ( $print )
-            echo $message . "\n";
 
         // If $notification is true, send a notification email.
         if ( $notify )
@@ -38,8 +33,9 @@ if ( !function_exists( "log_message" ) )
             $method    = $context[ "method"    ];
             $type      = $context[ "type"      ];
 
-            // Send an email notification about the exception.
-            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
+            // TODO descomentar
+            // // Send an email notification about the exception.
+            // send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
         }
     }
 }
@@ -67,7 +63,7 @@ if ( !function_exists( "log_exception" ) )
             "exception"  => $e
         ];
 
-        log_message( channel: $channel, level: $level, message: $message, context: $context, print: true, notify: true );
+        log_message( channel: $channel, level: $level, message: $message, context: $context, notify: true );
     }
 }
 
