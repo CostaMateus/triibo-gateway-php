@@ -36,18 +36,11 @@ class ConnectorService
     private $headers;
 
     /**
-     * Flag indicating whether to log a message when an error occurs.
-     *
-     * @var     boolean
-     */
-    private $log_message = false;
-
-    /**
      * Flag indicating whether to send a notification when an error occurs.
      *
      * @var     boolean
      */
-    private $log_notify  = false;
+    private $log_notify  = true;
 
     /**
      * Stores the origin of the call (e.g., a specific method or function).
@@ -73,8 +66,6 @@ class ConnectorService
         $this->seller  = $seller;
         $this->env     = config( "vtex.partners.{$this->seller}.env"                  );
         $this->headers = config( "vtex.partners.{$this->seller}.{$this->env}.headers" );
-
-        $this->enableLogMessage()->enableLogNotify();
     }
 
     /**
@@ -95,19 +86,6 @@ class ConnectorService
         $url_base  = str_replace( "{account_name}", $account, $url_raw );
 
         $this->url = implode( "", [ $url_base, $url_sufix, $param ] );
-
-        return $this;
-    }
-
-    /**
-     * Enable log message flag.
-     *
-     * @param   bool    $register   Whether to enable or disable logging messages. Defaults to true.
-     * @return  ConnectorService    The object itself, allowing method chaining.
-     */
-    public function enableLogMessage( bool $register = true ) : ConnectorService
-    {
-        $this->log_message = $register;
 
         return $this;
     }
@@ -191,24 +169,12 @@ class ConnectorService
                     level   : "error",
                     message : $response->reason(),
                     context : $data,
-                    print   : true,
                     notify  : $this->log_notify
                 );
 
                 // Update response code and error code.
                 $code                 = 400;
                 $data[ "error_code" ] = $response->status();
-            }
-            elseif ( $this->log_message )
-            {
-                log_message(
-                    channel : self::LOG_CHANNEL,
-                    level   : "info",
-                    message : $response->reason(),
-                    context : $data,
-                    print   : true,
-                    notify  : false
-                );
             }
         }
         catch ( Throwable $e )
