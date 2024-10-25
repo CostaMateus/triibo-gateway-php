@@ -59,4 +59,10 @@ return [
      * Total pages header. Default value "X-WP-TotalPages"
      */
     "header_total_pages" => env( key: "WOO_WP_HEADER_TOTAL_PAGES", default: "X-WP-TotalPages" ),
+
+    "partners" => [
+        "fast_shop" => [
+            "store_id" => ( env( key: "MKT_ENV" ) == "local" ) ? env( key: "FS_WOO_HML_STORE_ID" ) : env( key: "FS_WOO_PRD_STORE_ID" ),
+        ],
+    ]
 ];
