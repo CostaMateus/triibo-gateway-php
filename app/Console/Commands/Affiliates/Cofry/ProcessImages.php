@@ -38,10 +38,16 @@ class ProcessImages extends Command
      */
     public function handle()
     {
-        log_message( channel: "cofry", message: "Images: Start processing...", print: true );
+        $message = "Images: Start processing...";
+
+        log_message( channel: "cofry", message: $message );
+        $this->info( $message );
 
         ( new CofryController() )->images();
 
-        log_message( channel: "cofry", message: "Images: End processing...", print: true );
+        $message = "Images: End processing...";
+
+        log_message( channel: "cofry", message: $message );
+        $this->info( $message );
     }
 }
