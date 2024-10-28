@@ -67,31 +67,31 @@ Route::name( "api.marketplace." )->prefix( "marketplace" )->group( function ()
          * Route-api: php.triibo.com.br/api/marketplace/wc/freightcalculation
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-shipping
          */
-        Route::post( "/freightcalculation",         [ VtexSimulateController::class, "freightCalculation" ] )->name( "freightcalculation" );
+        Route::post( "/freightcalculation",           [ VtexSimulateController::class, "freightCalculation" ] )->name( "freightcalculation" );
 
         /**
          * Route-api: php.triibo.com.br/api/marketplace/wc/mkt-updatesku/{sku}
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop
          */
-        Route::post( "/updatesku/{sku}",            [ FastshopController::class, "updateSkuWc" ] )->name( "updatesku" );
+        Route::post( "/updatesku/{sku}",              [ FastshopController::class, "updateSkuWc" ] )->name( "updatesku" );
 
         /**
          * Route-api: php.triibo.com.br/api/marketplace/wc/ordercreation/{order_id}
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
          */
-        Route::post( "/ordercreation/{order_id}",    [ VtexOrderController::class, "orderCreation" ] )->name( "ordercreation" );
+        Route::post( "/ordercreation/{order_id}",     [ VtexOrderController::class, "orderCreation" ] )->name( "ordercreation" );
 
         /**
          * Route-api: php.triibo.com.br/api/marketplace/wc/orderapproval/{order_id}
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
          */
-        Route::post( "/orderapproval/{order_id}",    [ VtexOrderController::class, "orderApproval" ] )->name( "orderapproval" );
+        Route::post( "/orderapproval/{order_id}",     [ VtexOrderController::class, "orderApproval" ] )->name( "orderapproval" );
 
         /**
-         * Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{order_id}
+         * Route-api: php.triibo.com.br/api/marketplace/wc/ordercancellation/{order_id}
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
          */
-        Route::post( "/ordercancelation/{order_id}", [ VtexOrderController::class, "orderCancelation" ] )->name( "ordercancelation" );
+        Route::post( "/ordercancellation/{order_id}", [ VtexOrderController::class, "orderCancellation" ] )->name( "ordercancellation" );
     } );
 
 
