@@ -29,13 +29,12 @@ if ( !function_exists( "log_message" ) )
         // If $notification is true, send a notification email.
         if ( $notify )
         {
-            $exception = $context[ "exception" ];
-            $method    = $context[ "method"    ];
-            $type      = $context[ "type"      ];
+            $exception = $context[ "exception" ] ?? "";
+            $method    = $context[ "method"    ] ?? "";
+            $type      = $context[ "type"      ] ?? "";
 
-            // TODO descomentar
-            // // Send an email notification about the exception.
-            // send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
+            // Send an email notification about the exception.
+            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
         }
     }
 }
