@@ -45,7 +45,6 @@ class GetProductList extends Command
         // 2.
         $connector                = new ConnectorService( $seller );
         $connector->enableLogNotify( false );
-        $connector->enableLogMessage( false );
 
         $this->product_service    = new ProductService( $connector );
         $this->simulation_service = new FulfillmentService( $connector );
