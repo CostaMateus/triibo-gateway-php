@@ -247,6 +247,7 @@ if ( !function_exists( "create_error_note" ) )
             "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
             "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido a Fast Shop",
             "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido a Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "approved_order_error_3"  => "Pedido já aprovado na Fast Shop",
             "custom"                  => null,
         ];
 
@@ -1232,6 +1233,7 @@ if ( !function_exists( "send_notification" ) )
             "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
             "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop",
             "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "approved_order_error_3"  => "Pedido já aprovado na Fast Shop"
         ];
 
         $error_title = $error_codes[ $error_option ] ?? "Erro desconhecido - Falha genérica";
