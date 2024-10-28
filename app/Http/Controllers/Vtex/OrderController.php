@@ -154,7 +154,7 @@ class OrderController extends VtexController
             return response()->json( [
                 "error_code" => null,
                 "message"   => "ok",
-                "data"      => $response[ 1 ],
+                "data"      => $response[ "data" ],
             ], 200 );
         }
         catch ( Throwable $e )
