@@ -136,7 +136,7 @@ class OrderController extends VtexController
                 create_error_note( parent::LOG_CHANNEL, $order_id, "custom", "{$message}\nCode: {$code}" );
 
                 return response()->json( [
-                    "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
+                    "error_code" => "5002", // 5002 - erro na criação do pedido na FS
                     "message"   => "something wrong",
                     "data"      => [ $code, $message ]
                 ], 500 );
@@ -152,7 +152,7 @@ class OrderController extends VtexController
             create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ] );
 
             return response()->json( [
-                "errorCode" => null,
+                "error_code" => null,
                 "message"   => "ok",
                 "data"      => $response[ 1 ],
             ], 200 );
@@ -169,7 +169,7 @@ class OrderController extends VtexController
             );
 
             return response()->json( [
-                "errorCode" => "5000", // 5000 - falha generica
+                "error_code" => "5000", // 5000 - falha generica
                 "message"   => $e->getMessage(),
             ], 500 );
         }
@@ -222,7 +222,7 @@ class OrderController extends VtexController
                 create_error_note( parent::LOG_CHANNEL, $order_id, "approved_order_error_2" );
 
                 return response()->json( [
-                    "errorCode" => "4002",
+                    "error_code" => "4002",
                     "message"   => "Order does not have meta_data '_fastshop_order_id'"
                 ], 400 );
             }
@@ -246,18 +246,18 @@ class OrderController extends VtexController
                 create_error_note( parent::LOG_CHANNEL, $order_id, "custom", "{$message}\nCode: {$code}" );
 
                 return response()->json( [
-                    "errorCode" => "5002", // 5002 - erro na criação do pedido na FS
-                    "message"   => "something wrong",
-                    "data"      => [ $code, $message ]
+                    "error_code" => "5002", // 5002 - erro na criação do pedido na FS
+                    "message"    => "something wrong",
+                    "data"       => [ $code, $message ]
                 ], 500 );
             }
 
             create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO APROVADO NA FAST SHOP" );
 
             return response()->json( [
-                "errorCode" => null,
-                "message"   => "ok",
-                "data"      => $response[ 1 ],
+                "error_code" => null,
+                "message"    => "ok",
+                "data"       => $response[ 1 ],
             ], 200 );
         }
         catch ( Throwable $e )
@@ -272,8 +272,8 @@ class OrderController extends VtexController
             );
 
             return response()->json( [
-                "errorCode" => "5000", // 5000 - falha generica
-                "message"   => $e->getMessage(),
+                "error_code" => "5000", // 5000 - falha generica
+                "message"    => $e->getMessage(),
             ], 500 );
         }
     }
