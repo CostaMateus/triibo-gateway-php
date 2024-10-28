@@ -65,7 +65,8 @@ class OrderController extends VtexController
 
             if ( $order == false )
             {
-                // notificar
+                send_notification( $praent, $order, "error_order_creation" );
+
                 return response()->json( [], 404 );
             }
             elseif ( $order == null )
@@ -183,9 +184,9 @@ class OrderController extends VtexController
      *
      * @param   Request     $request
      * @param   string      $order_id
-     * @return  Response
+     * @return  Response approval
      */
-    public function orderApproved( Request $request, $order_id )
+    public function orderApproval( Request $request, $order_id )
     {
         if ( ( $verified = $this->validateKeys( $request ) ) !== true )
             return $verified;
@@ -198,7 +199,8 @@ class OrderController extends VtexController
 
             if ( $order == false )
             {
-                // notificar
+                send_notification( $praent, $order, "error_order_approval" );
+
                 return response()->json( [], 404 );
             }
             elseif ( $order == null )
@@ -214,7 +216,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderApproved 1",
+                    message : "VTEX - orderApproval 1",
                     level   : "error",
                     context : [ "order_id" => $order_id ],
                 );
@@ -233,7 +235,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderApproved 2",
+                    message : "VTEX - orderApproval 2",
                     level   : "error",
                     context : [ "order_id" => $order_id ],
                 );
@@ -254,7 +256,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderApproved 3",
+                    message : "VTEX - orderApproval 3",
                     level   : "error",
                     context : [ "order_id" => $order_id, "response" => $response ],
                 );
@@ -294,7 +296,7 @@ class OrderController extends VtexController
             log_exception(
                 channel : parent::LOG_CHANNEL,
                 message : $e->getMessage(),
-                method  : "VTEX - orderApproved 4",
+                method  : "VTEX - orderApproval 4",
                 type    : "Throwable",
                 e       : $e
             );

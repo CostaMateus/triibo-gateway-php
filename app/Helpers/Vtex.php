@@ -1233,7 +1233,9 @@ if ( !function_exists( "send_notification" ) )
             "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
             "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop",
             "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'",
-            "approved_order_error_3"  => "Pedido já aprovado na Fast Shop"
+            "approved_order_error_3"  => "Pedido já aprovado na Fast Shop",
+            "error_order_creation"    => "Falha ao recuperar pedido do Marketplace na criação do pedido na Fast Shop",
+            "error_order_approval"    => "Falha ao recuperar pedido do Marketplace na aprovação do pedido na Fast Shop",
         ];
 
         $error_title = $error_codes[ $error_option ] ?? "Erro desconhecido - Falha genérica";

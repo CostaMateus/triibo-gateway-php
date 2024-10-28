@@ -82,10 +82,10 @@ Route::name( "api.marketplace." )->prefix( "marketplace" )->group( function ()
         Route::post( "/ordercreation/{order_id}",    [ VtexOrderController::class, "orderCreation" ] )->name( "ordercreation" );
 
         /**
-         * Route-api: php.triibo.com.br/api/marketplace/wc/orderapproved/{order_id}
+         * Route-api: php.triibo.com.br/api/marketplace/wc/orderapproval/{order_id}
          * API chamada a partir do ../plugins/triibo-api-services | triibo-fastshop-orders
          */
-        Route::post( "/orderapproved/{order_id}",    [ VtexOrderController::class, "orderApproved" ] )->name( "orderapproved" );
+        Route::post( "/orderapproval/{order_id}",    [ VtexOrderController::class, "orderApproval" ] )->name( "orderapproval" );
 
         /**
          * Route-api: php.triibo.com.br/api/marketplace/wc/ordercancelation/{order_id}
