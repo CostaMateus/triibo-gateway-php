@@ -1,4 +1,13 @@
 <?php
+
+use App\Models\User;
+use Illuminate\Http\JsonResponse;
+use App\Services\Vtex\OrderService;
+use App\Services\Vtex\ConnectorService;
+use App\Services\Vtex\FulfillmentService;
+use App\Notifications\FastShop\OrderError;
+use Codexshaper\WooCommerce\Facades\{ Note, Order };
+
 /**
  * Helper functions for various tasks in the application.
  */
@@ -90,68 +99,224 @@ if ( !function_exists( "get_categories_ids" ) )
     }
 }
 
-if ( !function_exists( "vtex_get_product_images" ) )
+if ( !function_exists( "get_email_order_error" ) )
 {
-    /**
-     * Undocumented function
-     *
-     * @param   array   $images
-     * @return  array
-     */
-    function vtex_get_product_images( array $images )
+    function get_email_order_error( array $parent, array $order )
     {
-        // Filter Vtex images.
-        $filtered = array_filter( $images, function ( $image ) {
-            return validate_image_url( $image[ "ImageUrl" ] );
-        } );
+        if ( !empty( $parent ) )
+        {
+            $order_id     = $parent[ "id" ];
+            $sub_order_id = $order[ "id" ];
+        }
+        else
+        {
+            $order_id     = $order[ "id" ];
+            $sub_order_id = "";
+        }
 
-        // Map Vtex images to WooCommerce image format.
-        $data     = array_map( function ( $image ) {
-            return [
-                "src"  => explode( "?", $image[ "ImageUrl" ] )[ 0 ],
-                "name" => $image[ "ImageName" ],
-                "alt"  => $image[ "ImageName" ]
-            ];
-        }, $filtered );
+        $customer_id = $order[ "customer_id" ];
+        $billing     = $order[ "billing"     ];
 
-        return $data;
+        return [
+            "order_id"     => $order_id,
+            "sub_order_id" => $sub_order_id,
+            "customer_id"  => $customer_id,
+            "name"         => $billing[ "first_name" ] . " " . $billing[ "last_name" ],
+            "email"        => $billing[ "email"      ],
+            "phone"        => $billing[ "phone"      ],
+        ];
     }
 }
 
-if ( !function_exists( "vtex_get_product_attributes" ) )
+if ( !function_exists( "get_wc_order" ) )
 {
     /**
      * Undocumented function
      *
-     * @param   array   $attributes
+     * @param   string  $channel
+     * @param   string  $order_id
+     * @param   string  $seller_id
      * @return  array
      */
-    function vtex_get_product_attributes( array $attributes )
+    function get_wc_order( string $channel, string $order_id, string $seller_id )
     {
-        $specifications = array_map( function ( $attr, $key )
+        $parent = null;
+        $order  = null;
+
+        try
         {
-            // TODO possível ajuste qnd em prod
+            $order = Order::find( $order_id );
+            $order = json_decode( json_encode( $order ), true );
 
-            // // Skip the ProductLineId field.
-            // if ( $attr[ "FieldName" ] === "ProductLineId" )
-            //     return null;
+            if ( $order[ "parent_id" ] != 0 )
+            {
+                do
+                {
+                    $parent = Order::find( $order[ "parent_id" ] );
+                    $parent = json_decode( json_encode( $parent ), true );
 
-            // Convert boolean 'true' to 'SIM'.
-            $field_value = $attr[ "FieldValues" ][ 0 ] === "true"
-                            ? "SIM"
-                            : $attr[ "FieldValues" ][ 0 ];
+                    if ( $parent[ "parent_id" ] != 0 )
+                        $order[ "parent_id" ] = $parent[ "parent_id" ];
+                }
+                while ( $parent[ "parent_id" ] != 0 );
+            }
+        }
+        catch ( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : $channel,
+                message : $e->getMessage(),
+                method  : "get_wc_order",
+                type    : "Throwable",
+                e       : $e
+            );
 
-            // Return the transformed attribute.
-            return [
-                "name"      => $attr[ "FieldName" ],
-                "position"  => $key,
-                "visible"   => true,
-                "variation" => true,
-                "options"   => [ $field_value ],
+            $order = false;
+
+            return [ $parent, $order ];
+        }
+
+        $store_id = config( "woocommerce.partners.{$seller_id}.store_id" );
+
+        if ( $order[ "store" ][ "id" ] != $store_id )
+            return [ null, null ];
+
+        return [ $parent, $order ];
+    }
+}
+
+if ( !function_exists( "create_order_note" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $channel
+     * @param   string  $order_id
+     * @param   string  $message
+     * @return  void
+     */
+    function create_order_note( string $channel, string $order_id, string $message )
+    {
+        $retry  = 0;
+        $failed = false;
+
+        do
+        {
+            try
+            {
+                Note::create( $order_id, [ "note" => $message ] );
+                return;
+            }
+            catch ( Throwable $e )
+            {
+                $retry++;
+                $failed = true;
+            }
+        }
+        while ( $failed && $retry < 3 );
+
+        log_exception(
+            channel : $channel,
+            message : $e->getMessage(),
+            method  : "create_order_note",
+            type    : "Throwable",
+            e       : $e ?? null
+        );
+    }
+}
+
+if ( !function_exists( "create_error_note" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string          $channel
+     * @param   string          $order_id
+     * @param   string          $error_option
+     * @param   string|null     $custom
+     * @return  void
+     */
+    function create_error_note( string $channel, string $order_id, string $error_option, ?string $custom = null )
+    {
+        $message     = "ERROR FS\n";
+        $error_codes = [
+            "new_order_error"         => "Falha na consulta do frete",
+            "new_order_error_2"       => "Falha na criação | SKU indisponível",
+            "cancelation_order_error" => "Falha no cancelamento do pedido na Fast Shop",
+            "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
+            "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido a Fast Shop",
+            "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido a Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "custom"                  => null,
+        ];
+
+        if ( $error_codes[ $error_option ] !== null )
+            $message .= $error_codes[ $error_option ];
+
+        elseif ( $custom !== null )
+            $message .= $custom;
+
+        else
+            $message .= "Erro desconhecido - Falha genérica";
+
+        create_order_note( $channel, $order_id, $message );
+    }
+}
+
+if ( !function_exists( "update_order_meta" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $order_id
+     * @param   array   $data
+     * @return  void
+     */
+    function update_order_meta( string $order_id, array $data )
+    {
+        $retry  = 0;
+        $failed = false;
+
+        do
+        {
+            try
+            {
+                Order::update( $order_id, $data );
+                return;
+            }
+            catch ( Throwable $e )
+            {
+                $retry++;
+                $failed = true;
+            }
+        }
+        while ( $failed && $retry < 3 );
+    }
+}
+
+if ( !function_exists( "format_product_to_freight" ) )
+{
+    function format_product_to_freight( array $order )
+    {
+        $data = [
+            "items"      => [],
+            "postalCode" => $order[ "shipping" ][ "postcode" ],
+        ];
+
+        $products = $order[ "line_items" ];
+
+        foreach ( $products as $product )
+        {
+            $index = array_search_by_key( "_fs_product_id", "key", $product[ "meta_data" ] );
+
+            $data[ "items" ][] = [
+                "product_id" => $product[ "meta_data" ][ $index ][ "value" ],
+                "quantity"   => $product[ "quantity"  ],
+                "sku"        => $product[ "sku"       ],
             ];
-        }, $attributes, array_keys( $attributes ) );
+        }
 
-        return array_filter( $specifications );
+        return $data;
     }
 }
 
@@ -224,6 +389,89 @@ if ( !function_exists( "format_categories" ) )
     }
 }
 
+if ( !function_exists( "save_file" ) )
+{
+    /**
+     * Saves an array of data to a file with a timestamped name.
+     *
+     * @param   string  $name   The base name of the file (without extension).
+     * @param   array   $data   The data to be saved as JSON.
+     * @return  void
+     */
+    function save_file( string $name, array $data ) : void
+    {
+        $date    = date( "Ymd-his" );
+        $encoded = json_encode( $data, JSON_UNESCAPED_SLASHES );
+
+        Storage::put( "{$name}-{$date}.json", $encoded );
+    }
+}
+
+if ( !function_exists( "vtex_get_product_images" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $images
+     * @return  array
+     */
+    function vtex_get_product_images( array $images )
+    {
+        // Filter Vtex images.
+        $filtered = array_filter( $images, function ( $image ) {
+            return validate_image_url( $image[ "ImageUrl" ] );
+        } );
+
+        // Map Vtex images to WooCommerce image format.
+        $data     = array_map( function ( $image ) {
+            return [
+                "src"  => explode( "?", $image[ "ImageUrl" ] )[ 0 ],
+                "name" => $image[ "ImageName" ],
+                "alt"  => $image[ "ImageName" ]
+            ];
+        }, $filtered );
+
+        return $data;
+    }
+}
+
+if ( !function_exists( "vtex_get_product_attributes" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $attributes
+     * @return  array
+     */
+    function vtex_get_product_attributes( array $attributes )
+    {
+        $specifications = array_map( function ( $attr, $key )
+        {
+            // TODO possível ajuste qnd em prod
+
+            // // Skip the ProductLineId field.
+            // if ( $attr[ "FieldName" ] === "ProductLineId" )
+            //     return null;
+
+            // Convert boolean 'true' to 'SIM'.
+            $field_value = $attr[ "FieldValues" ][ 0 ] === "true"
+                            ? "SIM"
+                            : $attr[ "FieldValues" ][ 0 ];
+
+            // Return the transformed attribute.
+            return [
+                "name"      => $attr[ "FieldName" ],
+                "position"  => $key,
+                "visible"   => true,
+                "variation" => true,
+                "options"   => [ $field_value ],
+            ];
+        }, $attributes, array_keys( $attributes ) );
+
+        return array_filter( $specifications );
+    }
+}
+
 if ( !function_exists( "vtex_format_categories" ) )
 {
     /**
@@ -247,24 +495,6 @@ if ( !function_exists( "vtex_format_categories" ) )
         }
 
         return format_categories( items: $categories );
-    }
-}
-
-if ( !function_exists( "save_file" ) )
-{
-    /**
-     * Saves an array of data to a file with a timestamped name.
-     *
-     * @param   string  $name   The base name of the file (without extension).
-     * @param   array   $data   The data to be saved as JSON.
-     * @return  void
-     */
-    function save_file( string $name, array $data ) : void
-    {
-        $date    = date( "Ymd-his" );
-        $encoded = json_encode( $data, JSON_UNESCAPED_SLASHES );
-
-        Storage::put( "{$name}-{$date}.json", $encoded );
     }
 }
 
@@ -310,21 +540,22 @@ if ( !function_exists( "vtex_map_logistics_info" ) )
         // Map logistics information to the VTEX format.
         return array_map( function ( $item )
         {
-            // Search for the index of the SLA that corresponds to the "delivery" delivery channel.
-            $sla_id       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
-
-            // Select the SLA based on the found index.
-            $selected_sla = $item[ "slas" ][ $sla_id ];
+            // Search for the index of the SLA that corresponds to the "normal delivery" delivery channel.
+            $sla          = current( array_filter( $item[ "slas" ], function ( $sla )
+            {
+                // TODO ? em prod pode mudar isso bem aqui
+                return strtolower( $sla[ "id" ] ) === "normal";
+            } ) );
 
             // Return an array with the logistics information mapped to the VTEX format.
             return [
                 "itemIndex"               => $item[ "itemIndex" ],
                 "selectedDeliveryChannel" => "delivery", // or 'pickup-in-point'
-                "lockTTL"                 => "3d",       // 'b' or 'bd'
-                "price"                   => $selected_sla[ "price"            ],
-                "selecetdSla"             => $selected_sla[ "id"               ],
-                "shippingEstimate"        => $selected_sla[ "shippingEstimate" ],
-                "deliveryIds"             => [ "warehouseId" => "" ],
+                "lockTTL"                 => "3d",       // 'd' or 'bd'
+                "price"                   => $sla[ "price"            ],
+                "selecetdSla"             => $sla[ "id"               ],
+                "shippingEstimate"        => $sla[ "shippingEstimate" ],
+                // "deliveryIds"             => [ "warehouseId" => "" ],
             ];
 
         }, $data );
@@ -395,15 +626,14 @@ if ( !function_exists( "vtex_new_order" ) )
     /**
      * Converts WooCommerce order data to the format required by VTEX.
      *
-     * @param   array   $data   The original order data from WooCommerce.
-     * @return  array           The order data formatted for VTEX.
+     * @param   string      $seller
+     * @param   array       $freight
+     * @param   array       $order
+     * @param   array|null  $parent
+     * @return  array
      */
-    function vtex_new_order( array $data ) : array
+    function vtex_new_order( string $seller, array $freight, array $order, ?array $parent = null ) : array
     {
-        // Extract parent order data if available, otherwise use the current order data.
-        $parent    = $data[ "parent" ] ?? null;
-        $order     = $data[ "order"  ];
-
         // Generate the URL for the invoice notification endpoint using the order ID
         $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
 
@@ -411,7 +641,7 @@ if ( !function_exists( "vtex_new_order" ) )
             $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
 
         // Extract the VTEX information from the order data.
-        $info      = $order[ "fs_info" ][ "logisticsInfo" ];
+        $info      = $freight[ "logisticsInfo" ];
 
         // Retrieve the discount
         $discount  = ( empty( $order[ "coupon_lines" ] ) )
@@ -429,22 +659,26 @@ if ( !function_exists( "vtex_new_order" ) )
 
         $connector = config( "vtex.partners.{$seller}.connector_name" );
 
+        $items     = vtex_map_order_items( $freight[ "logisticsInfo" ], $freight[ "items" ] );
+        $client    = vtex_map_client_data( $billing );
+        $logistics = vtex_map_logistics_info( $freight[ "logisticsInfo" ] );
+        $address   = vtex_map_selected_addresses( $shipping );
+
         // Return the formatted order data for VTEX.
         return [
-            "marketplaceOrderId"      => $order[ "id" ],
+            "marketplaceOrderId"      => ( string ) $order[ "id" ],
             "marketplaceOrderStatus"  => "new",  // or 'approved'
             "marketplacePaymentValue" => $total,
             "connectorName"           => $connector,
             "connectorEndpoint"       => $url,
             "allowFranchises"         => false,
-            "items"                   => vtex_map_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
-            "clientProfileData"       => vtex_map_client_data( $billing ),
+            "items"                   => $items,
+            "clientProfileData"       => $client,
             "shippingData"            => [
                 "isFob"                    => false,
                 "isMarketplaceFulfillment" => false,
-
-                "logisticsInfo"            => vtex_map_logistics_info( $info[ "logisticsInfo" ] ),
-                "selectedAddresses"        => vtex_map_selected_addresses( $shipping ),
+                "logisticsInfo"            => $logistics,
+                "selectedAddresses"        => $address,
             ],
         ];
     }
@@ -539,7 +773,81 @@ if ( !function_exists( "vtex_fulfillment_order" ) )
     }
 }
 
-if ( !function_exists( "vtex_fulfillment_simulation" ) )
+if ( !function_exists( "vtex_order_exec" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string      $channel
+     * @param   string      $seller
+     * @param   array       $freight
+     * @param   array       $order
+     * @param   array|null  $parent
+     * @return  array
+     */
+    function vtex_order_exec( string $channel, string $seller, array $freight, array $order, ?array $parent = null )
+    {
+        $connector = new ConnectorService( $seller );
+        $service   = new OrderService( $connector );
+
+        try
+        {
+            $data     = vtex_new_order( $seller, $freight, $order, $parent );
+            $response = $service->newOrder( $data );
+
+            if ( $response[ 0 ] != 200 )
+            {
+                log_message(
+                    channel : $channel,
+                    level   : "error",
+                    message : "VTEX - vtex_order_exec",
+                    context : [
+                        "seller"   => $seller,
+                        "response" => $response,
+                    ]
+                );
+
+                $data = [
+                    "error_code" => 5001,
+                    "message"    => "Something wrong when creating order",
+                    "data"       => null,
+                ];
+
+                if ( isset( $response[ 1 ][ "data" ] ) )
+                {
+                    $data = [
+                        "error_code" => $response[ 1 ][ "data" ][ "code"    ],
+                        "message"    => $response[ 1 ][ "data" ][ "message" ],
+                        "data"       => $response[ 1 ][ "data" ],
+                    ];
+                }
+
+                return $data;
+            }
+
+            return $response[ 1 ];
+        }
+        catch( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : $channel,
+                message : $e->getMessage(),
+                method  : "VTEX - vtex_order_exec",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            return [
+                "error_code" => 5000, // 5000 - erro generico
+                "message"    => $e->getMessage(),
+                "data"       => $order,
+            ];
+        }
+    }
+}
+
+if ( !function_exists( "vtex_freight_prepare" ) )
 {
     /**
      * Converts WooCommerce freight data to the format required by VTEX.
@@ -548,7 +856,7 @@ if ( !function_exists( "vtex_fulfillment_simulation" ) )
      * @param   string  $seller     The seller identifier (e.g., fast_shop).
      * @return  array               The freight data formatted for VTEX.
      */
-    function vtex_fulfillment_simulation( array $data, string $seller = "1" )
+    function vtex_freight_prepare( array $data, string $seller = "1" ) : array
     {
         return [
             // Maps each line item to the desired structure.
@@ -567,6 +875,116 @@ if ( !function_exists( "vtex_fulfillment_simulation" ) )
             "selectedSla" => "Normal",
             "postalCode"  => $data[ "postalCode" ],
         ];
+    }
+}
+
+if ( !function_exists( "vtex_freight_exec" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $channel
+     * @param   string  $seller
+     * @param   array   $wc_data
+     * @return  JsonResponse|array
+     */
+    function vtex_freight_exec( string $channel, string $seller, array $wc_data, bool $full_data = false ) : JsonResponse|array
+    {
+        $connector = new ConnectorService( $seller );
+        $service   = new FulfillmentService( $connector );
+
+        try
+        {
+            $req_data   = vtex_freight_prepare( $wc_data );
+            $response   = $service->simulate( $req_data );
+
+            if ( $response[ 0 ] != 200 )
+            {
+                log_message(
+                    channel : $channel,
+                    level   : "error",
+                    message : "VTEX - vtex_freight_exec",
+                    context : [
+                        "seller"   => $seller,
+                        "response" => $response,
+                    ]
+                );
+
+                if ( $full_data )
+                    return $response[ 1 ];
+
+                return response()->json( [
+                    "error_code" => 5001,
+                    "message"    => "Something wrong when consulting the delivery price",
+                    "data"       => null,
+                ], 400 );
+            }
+
+            $vtex_data  = $response[ 1 ][ "data" ];
+            $data       = [];
+
+            if ( $full_data )
+                return $response[ 1 ];
+
+            $translated = vtex_freight_to_woo( $vtex_data );
+
+            foreach ( $req_data[ "items" ] as $product )
+            {
+                if ( isset( $translated[ $product[ "id" ] ] ) )
+                {
+                    $temp_data = $translated[ $product[ "id" ] ];
+                    $code      = $temp_data[ "code"    ];
+                    $message   = $temp_data[ "message" ];
+
+                    unset(
+                        $temp_data[ "code"    ],
+                        $temp_data[ "message" ]
+                    );
+                }
+                else
+                {
+                    $code      = 5002;
+                    $message   = "Something wrong when consulting the delivery price";
+                    $temp_data = null;
+                }
+
+                $wc_index        = array_search_by_key( $product[ "id" ], "product_id", $wc_data[ "items" ] );
+                $wc_sku          = $wc_data[ "items" ][ $wc_index ][ "sku" ];
+
+                $data[ $wc_sku ] = [
+                    "error_code" => $code,
+                    "message"   => $message,
+                    "data"      => $temp_data,
+                ];
+            }
+
+            return response()->json( [
+                "error_code" => null,
+                "message"    => "ok",
+                "data"       => $data,
+            ], 200 );
+        }
+        catch ( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : $channel,
+                message : $e->getMessage(),
+                method  : "VTEX - vtex_freight_exec",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $data = [
+                "error_code" => 5000, // 5000 - erro generico
+                "message"    => $e->getMessage(),
+                "data"       => $wc_data[ "items" ],
+            ];
+
+            if ( $full_data ) return $data;
+
+            return response()->json( $data, 500 );
+        }
     }
 }
 
@@ -727,5 +1145,39 @@ if ( !function_exists( "vtex_freight_to_woo_failed" ) )
         }
 
         return $logistics;
+    }
+}
+
+if ( !function_exists( "send_notification" ) )
+{
+    function send_notification( $parent, $order, $error_option )
+    {
+        $data        = get_email_order_error( $parent, $order );
+
+        $error_codes = [
+            "new_order_error"         => "Falha na criação do pedido abaixo na Fast Shop",
+            "cancelation_order_error" => "Falha no cancelamento do pedido abaixo na Fast Shop",
+            "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
+            "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop",
+            "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'",
+        ];
+
+        $error_title = $error_codes[ $error_option ] ?? "Erro desconhecido - Falha genérica";
+
+        $order_error = new OrderError( [
+            "subject" => "Falha em pedido Fast Shop",
+            "title"   => $error_title,
+            "data"    => $data,
+        ] );
+
+        $to_notify    = [
+            "mateus.costa@triibo.com.br",
+            "equipemarketplace@triibo.com.br",
+        ];
+
+        $users        = User::whereIn( "email", $to_notify )->get();
+
+        foreach ( $users as $user )
+            $user->notify( $order_error );
     }
 }
