@@ -169,7 +169,6 @@ class ConnectorService
                     level   : "error",
                     message : $response->reason(),
                     context : $data,
-                    notify  : $this->log_notify
                 );
 
                 // Update response code and error code.
