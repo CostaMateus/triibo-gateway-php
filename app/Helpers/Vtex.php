@@ -800,7 +800,7 @@ if ( !function_exists( "vtex_order_exec" ) )
                 log_message(
                     channel : $channel,
                     level   : "error",
-                    message : "VTEX - vtex_order_exec",
+                    message : "VTEX - vtex_order_exec 1",
                     context : [
                         "seller"   => $seller,
                         "response" => $response,
@@ -833,7 +833,79 @@ if ( !function_exists( "vtex_order_exec" ) )
             log_exception(
                 channel : $channel,
                 message : $e->getMessage(),
-                method  : "VTEX - vtex_order_exec",
+                method  : "VTEX - vtex_order_exec 2",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            return [
+                "error_code" => 5000, // 5000 - erro generico
+                "message"    => $e->getMessage(),
+                "data"       => $order,
+            ];
+        }
+    }
+}
+
+if ( !function_exists( "vtex_update_order_exec" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string      $channel
+     * @param   string      $seller
+     * @param   string      $order_id
+     * @return  array
+     */
+    function vtex_update_order_exec( string $channel, string $seller, string $order_id )
+    {
+        $connector = new ConnectorService( $seller );
+        $service   = new OrderService( $connector );
+
+        try
+        {
+            $data     = vtex_update_order( $seller, $order_id );
+            $response = $service->updateOrderStatus( $data );
+
+            if ( $response[ 0 ] != 200 )
+            {
+                log_message(
+                    channel : $channel,
+                    level   : "error",
+                    message : "VTEX - vtex_update_order_exec 1",
+                    context : [
+                        "seller"   => $seller,
+                        "response" => $response,
+                    ]
+                );
+
+                $data = [
+                    "error_code" => 5001,
+                    "message"    => "Something wrong when creating order",
+                    "data"       => null,
+                ];
+
+                if ( isset( $response[ 1 ][ "data" ] ) )
+                {
+                    $data = [
+                        "error_code" => $response[ 1 ][ "data" ][ "code"    ],
+                        "message"    => $response[ 1 ][ "data" ][ "message" ],
+                        "data"       => $response[ 1 ][ "data" ],
+                    ];
+                }
+
+                return $data;
+            }
+
+            return $response[ 1 ];
+        }
+        catch( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : $channel,
+                message : $e->getMessage(),
+                method  : "VTEX - vtex_update_order_exec 2",
                 type    : "Throwable",
                 e       : $e
             );
