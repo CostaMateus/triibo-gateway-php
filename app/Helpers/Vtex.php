@@ -101,29 +101,39 @@ if ( !function_exists( "get_categories_ids" ) )
 
 if ( !function_exists( "get_email_order_error" ) )
 {
-    function get_email_order_error( array $parent, array $order )
+    /**
+     * Undocumented function
+     *
+     * @param   array|null  $parent
+     * @param   array|null  $order
+     * @return  array
+     */
+    function get_email_order_error( ?array $parent = null, ?array $order = null )
     {
         if ( !empty( $parent ) )
         {
-            $order_id     = $parent[ "id" ];
-            $sub_order_id = $order[ "id" ];
+            $order_id     = $parent[ "id" ] ?? "";
+            $sub_order_id = $order[  "id" ] ?? "";
         }
         else
         {
-            $order_id     = $order[ "id" ];
+            $order_id     = $order[ "id" ] ?? "";
             $sub_order_id = "";
         }
 
-        $customer_id = $order[ "customer_id" ];
-        $billing     = $order[ "billing"     ];
+        $customer_id = $order[ "customer_id" ] ?? "";
+        $billing     = $order[ "billing"     ] ?? "";
+
+        $f_name      = $billing[ "first_name" ] ?? "";
+        $l_name      = $billing[ "last_name"  ] ?? "";
 
         return [
             "order_id"     => $order_id,
             "sub_order_id" => $sub_order_id,
             "customer_id"  => $customer_id,
-            "name"         => $billing[ "first_name" ] . " " . $billing[ "last_name" ],
-            "email"        => $billing[ "email"      ],
-            "phone"        => $billing[ "phone"      ],
+            "name"         => implode( " ", [ $f_name, $l_name ] ),
+            "email"        => $billing[ "email" ] ?? "",
+            "phone"        => $billing[ "phone" ] ?? "",
         ];
     }
 }
@@ -172,9 +182,11 @@ if ( !function_exists( "get_wc_order" ) )
                 e       : $e
             );
 
-            $order = false;
+            $order = [ "id" => $order_id ];
 
-            return [ $parent, $order ];
+            send_notification( null, $order, "error_mkt_order" );
+
+            return [ false, false ];
         }
 
         $store_id = config( "woocommerce.partners.{$seller_id}.store_id" );
