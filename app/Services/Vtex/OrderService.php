@@ -32,6 +32,33 @@ class OrderService
     }
 
     /**
+     * Get Order.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/orders-api#get-/api/oms/pvt/orders/-orderId-
+     *
+     * @param   string  $order_id
+     * @return  array
+     */
+    public function getOrder( string $order_id ) : array
+    {
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+
+        $this->connector
+            ->setCallOrigin(
+                origin : "getOrder"
+            )
+            ->buildUrl(
+                api    : "order-retrieve",
+            )
+            ->replaceUrl(
+                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
+            );
+
+        return $this->connector->sendRequest( method: "get" );
+
+    }
+
+    /**
      * New Order.
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/order-integration/orders
@@ -81,32 +108,5 @@ class OrderService
             );
 
         return $this->connector->sendRequest( method: "put", body: $data );
-    }
-
-    /**
-     * Get Order.
-     *
-     * @see     https://developers.vtex.com/docs/api-reference/orders-api#get-/api/oms/pvt/orders/-orderId-
-     *
-     * @param   string  $order_id
-     * @return  array
-     */
-    public function getOrder( string $order_id ) : array
-    {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-
-        $this->connector
-            ->setCallOrigin(
-                origin : "getOrder"
-            )
-            ->buildUrl(
-                api    : "order-retrieve",
-            )
-            ->replaceUrl(
-                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
-            );
-
-        return $this->connector->sendRequest( method: "get" );
-
     }
 }
