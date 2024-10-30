@@ -38,7 +38,47 @@ class OrderController extends VtexController
     {
         save_file( name: "Vtex-OrderController-{$order_id}-cancellationNotification", data: $request->all() );
 
-        return response()->json( [ "success" => true ], 200 );
+        $seller = "fast_shop";
+
+        try
+        {
+            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+
+            if ( $order === false )
+            {
+                return response()->json( [], 404 );
+            }
+            elseif ( $order === null )
+            {
+                return response()->json( [], 200 );
+            }
+
+            $message  = "PEDIDO CANCELADO PELA FAST SHOP\n";
+            $message .= "{$request->reason}\n";
+            $message .= date( "d/m/Y à\s H:i:s" ) . "\n";
+
+            send_notification( $parent, $order, "order_cancelled" );
+
+            create_order_note( parent::LOG_CHANNEL, $order_id, $message );
+
+            return response()->json( [ "success" => true ], 200 );
+        }
+        catch ( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "VTEX - cancellationNotification 2",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            return response()->json( [
+                "error_code" => "5000", // 5000 - falha generica
+                "message"    => "Something wrong when cancelling the order",
+            ], 400 );
+        }
     }
 
     /**
@@ -87,7 +127,7 @@ class OrderController extends VtexController
 
                 send_notification( $parent, $order, "order_creation_error" );
 
-                create_error_note( parent::LOG_CHANNEL, $order_id, "order_creation_error" );
+                create_error_note( parent::LOG_CHANNEL, $order_id, "order_creation_error_1" );
 
                 return response()->json( [
                     "error_code" => "5001", // 5001 - erro na consulta dos dados de frete na FS
@@ -216,7 +256,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderApproval 3",
+                    message : "VTEX - orderApproval 1",
                     level   : "error",
                     context : [ "order_id" => $order_id, "response" => $response ],
                 );
@@ -256,7 +296,7 @@ class OrderController extends VtexController
             log_exception(
                 channel : parent::LOG_CHANNEL,
                 message : $e->getMessage(),
-                method  : "VTEX - orderApproval 4",
+                method  : "VTEX - orderApproval 2",
                 type    : "Throwable",
                 e       : $e
             );
@@ -307,7 +347,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderCancellation 3",
+                    message : "VTEX - orderCancellation 1",
                     level   : "error",
                     context : [ "order_id" => $order_id, "response" => $response ],
                 );
@@ -335,7 +375,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderCancellation 4",
+                    message : "VTEX - orderCancellation 2",
                     level   : "error",
                     context : [ "order_id" => $order_id, "response" => $response ],
                 );
@@ -364,7 +404,7 @@ class OrderController extends VtexController
             {
                 log_message(
                     channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderCancellation 5",
+                    message : "VTEX - orderCancellation 3",
                     level   : "error",
                     context : [ "order_id" => $order_id, "response" => $response ],
                 );
@@ -394,13 +434,20 @@ class OrderController extends VtexController
                 "data"       => $response[ "data" ],
             ], 200 );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::exception( "MP - orderCancellation", $e );
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "VTEX - orderCancellation 4",
+                type    : "Throwable",
+                e       : $e
+            );
 
             return response()->json( [
-                "errorCode" => "5000",
-                "message"   => $e->getMessage(),
+                "error_code" => "5000", // 5000 - falha generica
+                "message"    => $e->getMessage(),
             ], 500 );
         }
     }
