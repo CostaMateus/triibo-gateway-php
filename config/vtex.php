@@ -41,6 +41,7 @@ return [
 
         "category-register"        => "mkp-category-mapper/connector/register",
         "category-marketplace"     => "mkp-category-mapper/categories/marketplace/{id}",
+        "order-retrieve"           => "oms/pvt/orders/{orderId}",
         "order-integration"        => "order-integration/orders",
         "order-integration-status" => "order-integration/orders/status",
 
