@@ -1346,3 +1346,66 @@ if ( !function_exists( "send_notification" ) )
             $user->notify( $order_error );
     }
 }
+
+if ( !function_exists( "process_handle_key_missing" ) )
+{
+    function process_handle_key_missing( string $channel, array $parent = null, array $order, array $data )
+    {
+        log_message(
+            channel : $channel,
+            message : $data[ "function" ],
+            level   : "error",
+            context : [ "order_id" => $order[ "id" ] ],
+        );
+
+        send_notification( $parent, $order, $data[ "type" ] );
+
+        create_error_note( $channel, $order[ "id" ], $data[ "type" ] );
+
+        return response()->json( $data[ "response" ], 400 );
+    }
+}
+
+if ( !function_exists( "handle_order_meta_fs_id_missing" ) )
+{
+    function handle_order_meta_fs_id_missing( string $channel, array $parent = null, array $order, string $function )
+    {
+        $data = [
+            "type"     => "order_approval_error_2",
+            "function" => "VTEX - {$function} 1",
+            "response" => [
+                "error_code" => "4002",
+                "message"    => "Order does not have meta_data '_fastshop_order_id'"
+            ]
+        ];
+
+        $meta_key = array_search( "_fastshop_order_id", array_column( $order[ "meta_data" ], "key" ) );
+
+        if ( $meta_key === false )
+            return process_handle_key_missing( $channel, $parent, $order, $data );
+
+        return null;
+    }
+}
+
+if ( !function_exists( "handle_order_meta_fs_approval_missing" ) )
+{
+    function handle_order_meta_fs_approval_missing( string $channel, array $parent = null, array $order, string $function )
+    {
+        $data = [
+            "type"     => "order_approval_error_3",
+            "function" => "VTEX - {$function} 2",
+            "response" => [
+                "error_code" => "4002",
+                "message"   => "Order already approved"
+            ]
+        ];
+
+        $meta_key = array_search( "_fastshop_order_approved", array_column( $order[ "meta_data" ], "key" ) );
+
+        if ( $meta_key !== false )
+            return process_handle_key_missing( $channel, $parent, $order, $data );
+
+        return null;
+    }
+}
