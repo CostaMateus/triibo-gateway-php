@@ -1181,7 +1181,7 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
             "meta_data"         => [
                 [
                     "key"   => "_fs_product_id",
-                    "value" => $data[ "ProductId" ], // TODO or id
+                    "value" => $data[ "Id" ],
                 ]
             ]
         ];

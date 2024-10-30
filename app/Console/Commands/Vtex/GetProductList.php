@@ -134,7 +134,7 @@ class GetProductList extends Command
             }
 
             // 4 g.
-            $simulate = $this->getSimulate( $data[ "ProductId" ] );
+            $simulate = $this->getSimulate( $data[ "Id" ] );
 
             $product  = [
                 "data"     => $data,
@@ -146,7 +146,7 @@ class GetProductList extends Command
 
             $products[ $sku ] = $product;
 
-            if ( count( $products ) == 10 )
+            if ( count( $products ) == 5 )
             {
                 $wc_products = $this->translateProducts( $products );
 
