@@ -650,7 +650,7 @@ if ( !function_exists( "vtex_get_order" ) )
                 log_message(
                     channel : $channel,
                     level   : "error",
-                    message : "VTEX - vtex_cancel_order_exec 1",
+                    message : "VTEX - vtex_get_order 1",
                     context : [
                         "seller"   => $seller,
                         "response" => $response,
@@ -683,7 +683,7 @@ if ( !function_exists( "vtex_get_order" ) )
             log_exception(
                 channel : $channel,
                 message : $e->getMessage(),
-                method  : "VTEX - vtex_order_exec 2",
+                method  : "VTEX - vtex_get_order 2",
                 type    : "Throwable",
                 e       : $e
             );
@@ -697,7 +697,7 @@ if ( !function_exists( "vtex_get_order" ) )
     }
 }
 
-if ( !function_exists( "vtex_new_order" ) )
+if ( !function_exists( "vtex_new_order_prepare" ) )
 {
     /**
      * Converts WooCommerce order data to the format required by VTEX.
@@ -708,7 +708,7 @@ if ( !function_exists( "vtex_new_order" ) )
      * @param   array|null  $parent
      * @return  array
      */
-    function vtex_new_order( string $seller, array $freight, array $order, ?array $parent = null ) : array
+    function vtex_new_order_prepare( string $seller, array $freight, array $order, ?array $parent = null ) : array
     {
         // Generate the URL for the invoice notification endpoint using the order ID
         $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
@@ -761,96 +761,7 @@ if ( !function_exists( "vtex_new_order" ) )
     }
 }
 
-if ( !function_exists( "vtex_update_order" ) )
-{
-    /**
-     * Formats the order data for updating in VTEX.
-     *
-     * @param   string  $seller     The seller identifier (e.g., fast_shop).
-     * @param   string  $order_id   The unique identifier of the order.
-     * @return  array               A formatted array containing the updated order data for VTEX.
-     */
-    function vtex_update_order( string $seller, string $order_id ) : array
-    {
-        $connector = config( "vtex.partners.{$seller}.connector_name" );
-
-        // Generate the URL for the invoice notification endpoint using the order ID
-        $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order_id ] );
-
-        if ( config( "app.env" ) == "local" )
-            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
-
-        // Return the formatted order data for VTEX.
-        return [
-            "marketplaceOrderId"      => $order_id,
-            "marketplaceOrderStatus"  => "approved",
-            "connectorName"           => $connector,
-            "connectorEndpoint"       => $url,
-        ];
-    }
-}
-
-if ( !function_exists( "vtex_fulfillment_order" ) )
-{
-    /**
-     * Converts WooCommerce order data to the format required by VTEX.
-     *
-     * @param   array   $data   The original order data from WooCommerce.
-     * @return  array           The order data formatted for VTEX.
-     */
-    function vtex_fulfillment_order( array $data ) : array
-    {
-        // Extract parent order data if available, otherwise use the current order data.
-        $parent   = $data[ "parent" ] ?? null;
-        $order    = $data[ "order"  ];
-
-        // Generate the URL for the invoice notification endpoint using the order ID
-        $url      = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
-
-        if ( config( "app.env" ) == "local" )
-            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
-
-        // Calculate the total payment value for the marketplace.
-        $total    = $order[ "total" ] + $discount;
-        $total    = number_format( ( float ) $total, 2, ".", "" );
-        $total    = ( int ) str_replace( ".", "", $total );
-
-        // Extract billing and shipping information, using parent data if available.
-        $billing  = $parent[ "billing"  ] ?? $order[ "billing"  ];
-        $shipping = $parent[ "shipping" ] ?? $order[ "shipping" ];
-
-        // Return the formatted order data for VTEX.
-        return [
-            "marketplaceOrderId"          => $order[ "id" ],
-            "marketplaceServicesEndpoint" => $url,
-            "marketplacePaymentValue"     => $total,
-
-            // @see https://help.vtex.com/en/tutorial/configuring-price-divergence-rule--awAKP0sS5J8jgLs2g7pPe
-            // true if the order was created asynchronously.
-            "isCreatedAsync"              => true, // TODO confirmar
-
-            "items"                       => vtex_map_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
-            "clientProfileData"           => vtex_map_client_data( $billing ),
-            "shippingData"                => [
-                "address"       => vtex_map_selected_addresses( $shipping ),
-                "logisticsInfo" => tex_map_logistics_info( $info[ "logisticsInfo" ] ),
-                "updateStatus"  => "updated"
-            ],
-            "openTextField"               => "",
-            "paymentData"                 => null,
-            "marketingData"               => [
-                "utmSource"    => "",
-                "utmMedium"    => "",
-                "utmCampaign"  => "",
-                "utmiPage"     => "",
-                "utmiPart"     => "",
-                "utmiCampaign" => "",
-            ],
-        ];
-    }
-}
-
-if ( !function_exists( "vtex_order_exec" ) )
+if ( !function_exists( "vtex_new_order_exec" ) )
 {
     /**
      * Undocumented function
@@ -862,14 +773,14 @@ if ( !function_exists( "vtex_order_exec" ) )
      * @param   array|null  $parent
      * @return  array
      */
-    function vtex_order_exec( string $channel, string $seller, array $freight, array $order, ?array $parent = null )
+    function vtex_new_order_exec( string $channel, string $seller, array $freight, array $order, ?array $parent = null )
     {
         $connector = new ConnectorService( $seller );
         $service   = new OrderService( $connector );
 
         try
         {
-            $data     = vtex_new_order( $seller, $freight, $order, $parent );
+            $data     = vtex_new_order_prepare( $seller, $freight, $order, $parent );
             $response = $service->newOrder( $data );
 
             if ( $response[ 0 ] != 200 )
@@ -877,7 +788,7 @@ if ( !function_exists( "vtex_order_exec" ) )
                 log_message(
                     channel : $channel,
                     level   : "error",
-                    message : "VTEX - vtex_order_exec 1",
+                    message : "VTEX - vtex_new_order_exec 1",
                     context : [
                         "seller"   => $seller,
                         "response" => $response,
@@ -910,7 +821,7 @@ if ( !function_exists( "vtex_order_exec" ) )
             log_exception(
                 channel : $channel,
                 message : $e->getMessage(),
-                method  : "VTEX - vtex_order_exec 2",
+                method  : "VTEX - vtex_new_order_exec 2",
                 type    : "Throwable",
                 e       : $e
             );
@@ -921,6 +832,35 @@ if ( !function_exists( "vtex_order_exec" ) )
                 "data"       => $order,
             ];
         }
+    }
+}
+
+if ( !function_exists( "vtex_update_order_prepare" ) )
+{
+    /**
+     * Formats the order data for updating in VTEX.
+     *
+     * @param   string  $seller     The seller identifier (e.g., fast_shop).
+     * @param   string  $order_id   The unique identifier of the order.
+     * @return  array               A formatted array containing the updated order data for VTEX.
+     */
+    function vtex_update_order_prepare( string $seller, string $order_id ) : array
+    {
+        $connector = config( "vtex.partners.{$seller}.connector_name" );
+
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order_id ] );
+
+        if ( config( "app.env" ) == "local" )
+            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
+
+        // Return the formatted order data for VTEX.
+        return [
+            "marketplaceOrderId"      => $order_id,
+            "marketplaceOrderStatus"  => "approved",
+            "connectorName"           => $connector,
+            "connectorEndpoint"       => $url,
+        ];
     }
 }
 
@@ -941,7 +881,7 @@ if ( !function_exists( "vtex_update_order_exec" ) )
 
         try
         {
-            $data     = vtex_update_order( $seller, $order_id );
+            $data     = vtex_update_order_prepare( $seller, $order_id );
             $response = $service->updateOrderStatus( $data );
 
             if ( $response[ 0 ] != 200 )
@@ -1134,6 +1074,66 @@ if ( !function_exists( "vtex_freight_exec" ) )
 
             return response()->json( $data, 500 );
         }
+    }
+}
+
+if ( !function_exists( "vtex_fulfillment_order" ) )
+{
+    /**
+     * Converts WooCommerce order data to the format required by VTEX.
+     *
+     * @param   array   $data   The original order data from WooCommerce.
+     * @return  array           The order data formatted for VTEX.
+     */
+    function vtex_fulfillment_order( array $data ) : array
+    {
+        // Extract parent order data if available, otherwise use the current order data.
+        $parent   = $data[ "parent" ] ?? null;
+        $order    = $data[ "order"  ];
+
+        // Generate the URL for the invoice notification endpoint using the order ID
+        $url      = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
+
+        if ( config( "app.env" ) == "local" )
+            $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
+
+        // Calculate the total payment value for the marketplace.
+        $total    = $order[ "total" ] + $discount;
+        $total    = number_format( ( float ) $total, 2, ".", "" );
+        $total    = ( int ) str_replace( ".", "", $total );
+
+        // Extract billing and shipping information, using parent data if available.
+        $billing  = $parent[ "billing"  ] ?? $order[ "billing"  ];
+        $shipping = $parent[ "shipping" ] ?? $order[ "shipping" ];
+
+        // Return the formatted order data for VTEX.
+        return [
+            "marketplaceOrderId"          => $order[ "id" ],
+            "marketplaceServicesEndpoint" => $url,
+            "marketplacePaymentValue"     => $total,
+
+            // @see https://help.vtex.com/en/tutorial/configuring-price-divergence-rule--awAKP0sS5J8jgLs2g7pPe
+            // true if the order was created asynchronously.
+            "isCreatedAsync"              => true, // TODO confirmar
+
+            "items"                       => vtex_map_order_items( $info[ "logisticsInfo" ], $info[ "items" ] ),
+            "clientProfileData"           => vtex_map_client_data( $billing ),
+            "shippingData"                => [
+                "address"       => vtex_map_selected_addresses( $shipping ),
+                "logisticsInfo" => tex_map_logistics_info( $info[ "logisticsInfo" ] ),
+                "updateStatus"  => "updated"
+            ],
+            "openTextField"               => "",
+            "paymentData"                 => null,
+            "marketingData"               => [
+                "utmSource"    => "",
+                "utmMedium"    => "",
+                "utmCampaign"  => "",
+                "utmiPage"     => "",
+                "utmiPart"     => "",
+                "utmiCampaign" => "",
+            ],
+        ];
     }
 }
 
