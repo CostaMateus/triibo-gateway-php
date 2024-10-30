@@ -253,14 +253,14 @@ if ( !function_exists( "create_error_note" ) )
     {
         $message     = "ERROR FS\n";
         $error_codes = [
-            "order_approval_error_1"   => "Falha ao informar sobre a aprovação do pedido a Fast Shop",
-            "order_approval_error_2"   => "Falha ao informar sobre a aprovação do pedido a Fast Shop - pedido sem meta '_fastshop_order_id'",
-            "order_approval_error_3"   => "Pedido já aprovado na Fast Shop",
-            "order_cancellation_error" => "Falha no cancelamento do pedido na Fast Shop",
-            "order_cancelled"          => "Pedido cancelado pela Fast Shop",
-            "order_creation_error"     => "Falha na consulta do frete",
-            "order_creation_error_2"   => "Falha na criação | SKU indisponível",
-            "custom"                   => null,
+            // "order_approval_error_1" => "Falha ao informar sobre a aprovação do pedido a Fast Shop",
+            "order_approval_error_2" => "Falha ao informar sobre a aprovação do pedido a Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "order_approval_error_3" => "Pedido já aprovado na Fast Shop",
+
+            "order_creation_error_1" => "Falha na consulta do frete",
+            "order_creation_error_2" => "Falha na criação | SKU indisponível",
+
+            "custom"                 => null,
         ];
 
         if ( $error_codes[ $error_option ] !== null )
@@ -1381,7 +1381,6 @@ if ( !function_exists( "send_notification" ) )
             "order_cancellation_e1"    => "Falha ao recuperar pedido na Fast Shop",
             "order_cancellation_e2"    => "Falha ao cancelar pedido na Fast Shop",
             "order_cancellation_e3"    => "Falha ao informar a Fast Shop sobre o cancelamento do pedido",
-            "order_cancellation_error" => "Falha no cancelamento do pedido abaixo na Fast Shop", // TODO ?
             "order_cancelled"          => "Pedido cancelado pela Fast Shop",
 
             "order_creation_error"     => "Falha na criação do pedido abaixo na Fast Shop",
