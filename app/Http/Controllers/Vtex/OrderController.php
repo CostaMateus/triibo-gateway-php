@@ -63,13 +63,11 @@ class OrderController extends VtexController
         {
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order == false )
+            if ( $order === false )
             {
-                send_notification( $praent, $order, "error_order_creation" );
-
                 return response()->json( [], 404 );
             }
-            elseif ( $order == null )
+            elseif ( $order === null )
             {
                 return response()->json( [], 200 );
             }
@@ -87,9 +85,9 @@ class OrderController extends VtexController
                     context : [ "order_id" => $order_id, "wc_data" => $wc_data, "data" => $simulate, ],
                 );
 
-                send_notification( $parent, $order, "new_order_error" );
+                send_notification( $parent, $order, "order_creation_error" );
 
-                create_error_note( parent::LOG_CHANNEL, $order_id, "new_order_error" );
+                create_error_note( parent::LOG_CHANNEL, $order_id, "order_creation_error" );
 
                 return response()->json( [
                     "error_code" => "5001", // 5001 - erro na consulta dos dados de frete na FS
@@ -107,9 +105,9 @@ class OrderController extends VtexController
                     context : [ "order_id" => $order_id, "wc_data" => $wc_data, "data" => $simulate, ],
                 );
 
-                send_notification( $parent, $order, "new_order_error" );
+                send_notification( $parent, $order, "order_creation_error" );
 
-                create_error_note( parent::LOG_CHANNEL, $order_id, "new_order_error_2" );
+                create_error_note( parent::LOG_CHANNEL, $order_id, "order_creation_error_2" );
 
                 return response()->json( [
                     "error_code" => "5002", // 5001 - erro na consulta dos dados de frete na FS
@@ -129,7 +127,7 @@ class OrderController extends VtexController
                     context : [ "order_id" => $order_id, "wc_data" => $wc_data, "response" => $response[ "data" ], ],
                 );
 
-                send_notification( $parent, $order, "new_order_error" );
+                send_notification( $parent, $order, "order_creation_error" );
 
                 $message = $response[ "message"    ];
                 $code    = $response[ "error_code" ];
