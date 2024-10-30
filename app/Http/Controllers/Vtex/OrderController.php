@@ -116,7 +116,7 @@ class OrderController extends VtexController
                 ], 500 );
             }
 
-            $response = vtex_order_exec( parent::LOG_CHANNEL, $seller, $simulate[ "data" ], $order, $parent );
+            $response = vtex_new_order_exec( parent::LOG_CHANNEL, $seller, $simulate[ "data" ], $order, $parent );
 
             if ( $response[ "error_code" ] != null )
             {

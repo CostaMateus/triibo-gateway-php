@@ -36,7 +36,7 @@ class OrderService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/order-integration/orders
      *
-     * @uses    $data must be result of app\Helpers\Vtex::vtex_new_order
+     * @uses    $data must be result of app\Helpers\Vtex::vtex_new_order_prepare
      *
      * @param   array   $data   Order data in VTEX format.
      * @return  array
