@@ -253,14 +253,14 @@ if ( !function_exists( "create_error_note" ) )
     {
         $message     = "ERROR FS\n";
         $error_codes = [
-            "new_order_error"         => "Falha na consulta do frete",
-            "new_order_error_2"       => "Falha na criação | SKU indisponível",
-            "cancelation_order_error" => "Falha no cancelamento do pedido na Fast Shop",
-            "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
-            "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido a Fast Shop",
-            "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido a Fast Shop - pedido sem meta '_fastshop_order_id'",
-            "approved_order_error_3"  => "Pedido já aprovado na Fast Shop",
-            "custom"                  => null,
+            "order_approval_error_1"   => "Falha ao informar sobre a aprovação do pedido a Fast Shop",
+            "order_approval_error_2"   => "Falha ao informar sobre a aprovação do pedido a Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "order_approval_error_3"   => "Pedido já aprovado na Fast Shop",
+            "order_cancellation_error" => "Falha no cancelamento do pedido na Fast Shop",
+            "order_cancelled"          => "Pedido cancelado pela Fast Shop",
+            "order_creation_error"     => "Falha na consulta do frete",
+            "order_creation_error_2"   => "Falha na criação | SKU indisponível",
+            "custom"                   => null,
         ];
 
         if ( $error_codes[ $error_option ] !== null )
@@ -1235,19 +1235,33 @@ if ( !function_exists( "vtex_freight_to_woo_failed" ) )
 
 if ( !function_exists( "send_notification" ) )
 {
-    function send_notification( $parent, $order, $error_option )
+    /**
+     *
+     * @param   array|null  $parent
+     * @param   array|null  $order
+     * @param   string      $error_option
+     * @return  array
+     */
+    function send_notification( ?array $parent = null, ?array $order = null, string $error_option )
     {
         $data        = get_email_order_error( $parent, $order );
 
         $error_codes = [
-            "new_order_error"         => "Falha na criação do pedido abaixo na Fast Shop",
-            "cancelation_order_error" => "Falha no cancelamento do pedido abaixo na Fast Shop",
-            "cancelation_order_fs"    => "Pedido cancelado pela Fast Shop",
-            "approved_order_error_1"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop",
-            "approved_order_error_2"  => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'",
-            "approved_order_error_3"  => "Pedido já aprovado na Fast Shop",
-            "error_order_creation"    => "Falha ao recuperar pedido do Marketplace na criação do pedido na Fast Shop",
-            "error_order_approval"    => "Falha ao recuperar pedido do Marketplace na aprovação do pedido na Fast Shop",
+            "order_approval_error_1"   => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop",
+            "order_approval_error_2"   => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "order_approval_error_3"   => "Pedido já aprovado na Fast Shop",
+
+            "order_cancellation_e1"    => "Falha ao recuperar pedido na Fast Shop",
+            "order_cancellation_e2"    => "Falha ao cancelar pedido na Fast Shop",
+            "order_cancellation_error" => "Falha no cancelamento do pedido abaixo na Fast Shop",
+            "order_cancelled"          => "Pedido cancelado pela Fast Shop",
+
+            "order_creation_error"     => "Falha na criação do pedido abaixo na Fast Shop",
+
+            "error_mkt_order"          => "Falha ao recuperar pedido do Marketplace",
+            "error_mkt_order_creation" => "Falha ao recuperar pedido do Marketplace na criação do pedido na Fast Shop",
+            "error_mkt_order_approval" => "Falha ao recuperar pedido do Marketplace na aprovação do pedido na Fast Shop",
+            "error_order_cancellation" => "Falha ao recuperar pedido do Marketplace no cancelamento do pedido na Fast Shop",
         ];
 
         $error_title = $error_codes[ $error_option ] ?? "Erro desconhecido - Falha genérica";
