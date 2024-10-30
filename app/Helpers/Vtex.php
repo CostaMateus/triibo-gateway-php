@@ -634,6 +634,69 @@ if ( !function_exists( "vtex_map_selected_addresses" ) )
     }
 }
 
+if ( !function_exists( "vtex_get_order" ) )
+{
+    function vtex_get_order( string $channel, string $seller, string $order_id )
+    {
+        $connector = new ConnectorService( $seller );
+        $service   = new OrderService( $connector );
+
+        try
+        {
+            $response = $service->getOrder( $order_id );
+
+            if ( $response[ 0 ] != 200 )
+            {
+                log_message(
+                    channel : $channel,
+                    level   : "error",
+                    message : "VTEX - vtex_cancel_order_exec 1",
+                    context : [
+                        "seller"   => $seller,
+                        "response" => $response,
+                    ]
+                );
+
+                $data = [
+                    "error_code" => 5001,
+                    "message"    => "Something wrong when creating order",
+                    "data"       => null,
+                ];
+
+                if ( isset( $response[ 1 ][ "data" ] ) )
+                {
+                    $data = [
+                        "error_code" => $response[ 1 ][ "data" ][ "code"    ],
+                        "message"    => $response[ 1 ][ "data" ][ "message" ],
+                        "data"       => $response[ 1 ][ "data" ],
+                    ];
+                }
+
+                return $data;
+            }
+
+            return $response[ 1 ];
+        }
+        catch( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : $channel,
+                message : $e->getMessage(),
+                method  : "VTEX - vtex_order_exec 2",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            return [
+                "error_code" => 5000, // 5000 - erro generico
+                "message"    => $e->getMessage(),
+                "data"       => $order,
+            ];
+        }
+    }
+}
+
 if ( !function_exists( "vtex_new_order" ) )
 {
     /**
@@ -1274,7 +1337,7 @@ if ( !function_exists( "send_notification" ) )
 
         $to_notify    = [
             "mateus.costa@triibo.com.br",
-            "equipemarketplace@triibo.com.br",
+            // "equipemarketplace@triibo.com.br",
         ];
 
         $users        = User::whereIn( "email", $to_notify )->get();
