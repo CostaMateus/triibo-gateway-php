@@ -195,60 +195,22 @@ class OrderController extends VtexController
         {
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order == false )
+            if ( $order === false )
             {
-                send_notification( $praent, $order, "error_order_approval" );
-
                 return response()->json( [], 404 );
             }
-            elseif ( $order == null )
+            elseif ( $order === null )
             {
                 return response()->json( [], 200 );
             }
 
-            $meta               = $order[ "meta_data" ];
-            $meta_fsoi_key      = array_search( "_fastshop_order_id",       array_column( $meta, "key" ) );
-            $meta_fsoa_key      = array_search( "_fastshop_order_approved", array_column( $meta, "key" ) );
+            if ( ( $missing_id = handle_order_meta_fs_id_missing( parent::LOG_CHANNEL, $parent, $order, "orderApproval" ) ) !== null )
+                return $missing_id;
 
-            if ( $meta_fsoi_key === false )
-            {
-                log_message(
-                    channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderApproval 1",
-                    level   : "error",
-                    context : [ "order_id" => $order_id ],
-                );
+            if ( ( $missing_approval = handle_order_meta_fs_approval_missing( parent::LOG_CHANNEL, $parent, $order, "orderApproval" ) ) !== null )
+                return $missing_approval;
 
-                send_notification( $parent, $order, "approved_order_error_2" );
-
-                create_error_note( parent::LOG_CHANNEL, $order_id, "approved_order_error_2" );
-
-                return response()->json( [
-                    "error_code" => "4002",
-                    "message"   => "Order does not have meta_data '_fastshop_order_id'"
-                ], 400 );
-            }
-
-            if ( $meta_fsoa_key !== false )
-            {
-                log_message(
-                    channel : parent::LOG_CHANNEL,
-                    message : "VTEX - orderApproval 2",
-                    level   : "error",
-                    context : [ "order_id" => $order_id ],
-                );
-
-                send_notification( $parent, $order, "approved_order_error_3" );
-
-                create_error_note( parent::LOG_CHANNEL, $order_id, "approved_order_error_3" );
-
-                return response()->json( [
-                    "error_code" => "4002",
-                    "message"   => "Order already approved"
-                ], 400 );
-            }
-
-            $response           = vtex_update_order_exec( parent::LOG_CHANNEL, $seller, $order_id );
+            $response = vtex_update_order_exec( parent::LOG_CHANNEL, $seller, $order_id );
 
             if ( $response[ "error_code" ] != null )
             {
@@ -259,7 +221,7 @@ class OrderController extends VtexController
                     context : [ "order_id" => $order_id, "response" => $response ],
                 );
 
-                send_notification( $parent, $order, "approved_order_error_1" );
+                send_notification( $parent, $order, "order_approval_error_1" );
 
                 $message = $response[ "message"    ];
                 $code    = $response[ "error_code" ];
