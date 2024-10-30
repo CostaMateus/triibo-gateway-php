@@ -712,6 +712,7 @@ if ( !function_exists( "vtex_new_order" ) )
     {
         // Generate the URL for the invoice notification endpoint using the order ID
         $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order[ "id" ] ] );
+        $url       = explode( "/pub/orders/", $url )[ 0 ];
 
         if ( config( "app.env" ) == "local" )
             $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
