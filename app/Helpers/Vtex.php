@@ -1180,7 +1180,7 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
             "meta_data"         => [
                 [
                     "key"   => "_fs_product_id",
-                    "value" => $data[ "ProductId" ],
+                    "value" => $data[ "ProductId" ], // TODO or id
                 ]
             ]
         ];
@@ -1305,7 +1305,7 @@ if ( !function_exists( "send_notification" ) )
      * @param   string      $error_option
      * @return  array
      */
-    function send_notification( ?array $parent = null, ?array $order = null, string $error_option )
+    function send_notification( ?array $parent = null, ?array $order = null, string $error_option = "" )
     {
         $data        = get_email_order_error( $parent, $order );
 
