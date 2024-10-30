@@ -109,4 +109,28 @@ class OrderService
 
         return $this->connector->sendRequest( method: "put", body: $data );
     }
+
+    /**
+     * Cancel order.
+     *
+     * @param   string   $string
+     * @return  array
+     */
+    public function cancelOrder( string $order_id ) : array
+    {
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+
+        $this->connector
+            ->setCallOrigin(
+                origin : "cancelOrder"
+            )
+            ->buildUrl(
+                api    : "order-integration-cancel",
+            )
+            ->replaceUrl(
+                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
+            );
+
+        return $this->connector->sendRequest( method: "post" );
+    }
 }

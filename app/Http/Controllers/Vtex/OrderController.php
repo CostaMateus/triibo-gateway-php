@@ -267,4 +267,141 @@ class OrderController extends VtexController
             ], 500 );
         }
     }
+
+    /**
+     * Pedido Cancelado pelo Marketplace
+     * Notifica a Fastshop de que o pedido foi cancelado.
+     *
+     * API chamada a partir do ../plugins/triibo-api-services | triibo_fastshop
+     *
+     * @param   Request     $requests
+     * @param   string      $order_id
+     * @return  Response
+     */
+    public function orderCancellation( Request $request, $order_id )
+    {
+        if ( ( $verified = $this->validateKeys( $request ) ) !== true )
+            return $verified;
+
+        $seller = $request->header( "seller" );
+
+        try
+        {
+            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+
+            if ( $order === false )
+            {
+                return response()->json( [], 404 );
+            }
+            elseif ( $order === null )
+            {
+                return response()->json( [], 200 );
+            }
+
+            if ( ( $missing_id = handle_order_meta_fs_id_missing( parent::LOG_CHANNEL, $parent, $order, "orderCancellation" ) ) !== null )
+                return $missing_id;
+
+            $response = vtex_get_order( parent::LOG_CHANNEL, $seller, $order_id );
+
+            if ( $response[ "error_code" ] != null )
+            {
+                log_message(
+                    channel : parent::LOG_CHANNEL,
+                    message : "VTEX - orderCancellation 3",
+                    level   : "error",
+                    context : [ "order_id" => $order_id, "response" => $response ],
+                );
+
+                send_notification( $parent, $order, "order_cancellation_e1" );
+
+                $code     = $response[ "error_code" ];
+                $message  = "Pedido não cancelado.\n";
+                $message .= "Falha na recuperação do pedido na Fast Shop.\n";
+                $message .= $response[ "message" ] . "\n";
+                $message .= "Code: {$code}";
+
+                create_error_note( parent::LOG_CHANNEL, $order_id, "custom", $message );
+
+                return response()->json( [
+                    "error_code" => "5002", // 5002 - erro na criação do pedido na FS
+                    "message"    => "something wrong",
+                    "data"       => [ $code, $message ]
+                ], 500 );
+            }
+
+            $fs_order = $response[ "data" ];
+
+            if ( strtolower( $fs_order[ "status" ] ) == "invoiced" )
+            {
+                log_message(
+                    channel : parent::LOG_CHANNEL,
+                    message : "VTEX - orderCancellation 4",
+                    level   : "error",
+                    context : [ "order_id" => $order_id, "response" => $response ],
+                );
+
+                send_notification( $parent, $order, "order_cancellation_e2" );
+
+                $status       = $fs_order[ "status"            ];
+                $description  = $fs_order[ "statusDescription" ];
+
+                $message      = "Pedido não pode ser cancelado na Fast Shop.\n";
+                $message     .= "status: {$status}\n";
+                $message     .= "Descrição: {$description}";
+
+                create_error_note( parent::LOG_CHANNEL, $order_id, "custom", $message );
+
+                return response()->json( [
+                    "error_code" => "5002", // 5002 - erro na criação do pedido na FS
+                    "message"    => "something wrong",
+                    "data"       => [ $status, $message ]
+                ], 500 );
+            }
+
+            $response = vtex_cancel_order( parent::LOG_CHANNEL, $seller, $order_id );
+
+            if ( $response[ "error_code" ] != null )
+            {
+                log_message(
+                    channel : parent::LOG_CHANNEL,
+                    message : "VTEX - orderCancellation 5",
+                    level   : "error",
+                    context : [ "order_id" => $order_id, "response" => $response ],
+                );
+
+                send_notification( $parent, $order, "order_cancellation_e3" );
+
+                $code     = $response[ "error_code" ];
+                $message  = "Pedido não cancelado.\n";
+                $message .= "Falha ao informar a Fast Shop sobre o cancelamento do pedido.\n";
+                $message .= $response[ "message" ] . "\n";
+                $message .= "Code: {$code}";
+
+                create_error_note( parent::LOG_CHANNEL, $order_id, "custom", $message );
+
+                return response()->json( [
+                    "error_code" => "5002", // 5002 - erro na criação do pedido na FS
+                    "message"    => "something wrong",
+                    "data"       => [ $code, $message ]
+                ], 500 );
+            }
+
+            create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO CANCELADO NA FAST SHOP" );
+
+            return response()->json( [
+                "error_code" => null,
+                "message"    => "ok",
+                "data"       => $response[ "data" ],
+            ], 200 );
+        }
+        catch ( Exception $e )
+        {
+            Log::exception( "MP - orderCancellation", $e );
+
+            return response()->json( [
+                "errorCode" => "5000",
+                "message"   => $e->getMessage(),
+            ], 500 );
+        }
+    }
 }

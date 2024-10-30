@@ -659,7 +659,7 @@ if ( !function_exists( "vtex_get_order" ) )
 
                 $data = [
                     "error_code" => 5001,
-                    "message"    => "Something wrong when creating order",
+                    "message"    => "Something wrong when retrieving the order",
                     "data"       => null,
                 ];
 
@@ -691,7 +691,70 @@ if ( !function_exists( "vtex_get_order" ) )
             return [
                 "error_code" => 5000, // 5000 - erro generico
                 "message"    => $e->getMessage(),
-                "data"       => $order,
+                "data"       => [ $order_id, $response ],
+            ];
+        }
+    }
+}
+
+if ( !function_exists( "vtex_cancel_order" ) )
+{
+    function vtex_cancel_order( string $channel, string $seller, string $order_id )
+    {
+        $connector = new ConnectorService( $seller );
+        $service   = new OrderService( $connector );
+
+        try
+        {
+            $response = $service->cancelOrder( $order_id );
+
+            if ( $response[ 0 ] != 200 )
+            {
+                log_message(
+                    channel : $channel,
+                    level   : "error",
+                    message : "VTEX - vtex_cancel_order 1",
+                    context : [
+                        "seller"   => $seller,
+                        "response" => $response,
+                    ]
+                );
+
+                $data = [
+                    "error_code" => 5001,
+                    "message"    => "Something wrong when cancelling the order",
+                    "data"       => null,
+                ];
+
+                if ( isset( $response[ 1 ][ "data" ] ) )
+                {
+                    $data = [
+                        "error_code" => $response[ 1 ][ "data" ][ "code"    ],
+                        "message"    => $response[ 1 ][ "data" ][ "message" ],
+                        "data"       => $response[ 1 ][ "data" ],
+                    ];
+                }
+
+                return $data;
+            }
+
+            return $response[ 1 ];
+        }
+        catch( Throwable $e )
+        {
+            // Log the exception for debugging purposes.
+            log_exception(
+                channel : $channel,
+                message : $e->getMessage(),
+                method  : "VTEX - vtex_cancel_order 2",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            return [
+                "error_code" => 5000, // 5000 - erro generico
+                "message"    => $e->getMessage(),
+                "data"       => [ $order_id, $response ],
             ];
         }
     }
@@ -1311,13 +1374,14 @@ if ( !function_exists( "send_notification" ) )
         $data        = get_email_order_error( $parent, $order );
 
         $error_codes = [
-            "order_approval_error_1"   => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop",
-            "order_approval_error_2"   => "Falha ao informar sobre a aprovação do pedido abaixo na Fast Shop - pedido sem meta '_fastshop_order_id'",
+            "order_approval_error_1"   => "Falha ao informar a Fast Shop sobre a aprovação do pedido",
+            "order_approval_error_2"   => "Falha ao informar a Fast Shop sobre a aprovação do pedido - pedido sem meta '_fastshop_order_id'",
             "order_approval_error_3"   => "Pedido já aprovado na Fast Shop",
 
             "order_cancellation_e1"    => "Falha ao recuperar pedido na Fast Shop",
             "order_cancellation_e2"    => "Falha ao cancelar pedido na Fast Shop",
-            "order_cancellation_error" => "Falha no cancelamento do pedido abaixo na Fast Shop",
+            "order_cancellation_e3"    => "Falha ao informar a Fast Shop sobre o cancelamento do pedido",
+            "order_cancellation_error" => "Falha no cancelamento do pedido abaixo na Fast Shop", // TODO ?
             "order_cancelled"          => "Pedido cancelado pela Fast Shop",
 
             "order_creation_error"     => "Falha na criação do pedido abaixo na Fast Shop",

@@ -44,6 +44,7 @@ return [
         "order-retrieve"           => "oms/pvt/orders/{orderId}",
         "order-integration"        => "order-integration/orders",
         "order-integration-status" => "order-integration/orders/status",
+        "order-integration-cancel" => "oms/pvt/orders/{orderId}/cancel",
 
         // preço/estoque/frete | é pra sempre ter preço e estoque | só tem frete se mandar o CEP no body
         // https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/checkout/pub/orderForms/simulation
