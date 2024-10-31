@@ -22,9 +22,9 @@ return [
             ],
 
             "production"     => [
-                "sales_channel" => "",
-                "affiliated_id" => "",
-                "account_name"  => "",
+                "sales_channel" => 35,
+                "affiliated_id" => "TRB",
+                "account_name"  => "fastshopbrqa2",
                 "raw_url"       => "https://{account_name}.vtexcommercestable.com.br/api/",
                 "headers"       => [
                     "Accept"              => "application/json",
