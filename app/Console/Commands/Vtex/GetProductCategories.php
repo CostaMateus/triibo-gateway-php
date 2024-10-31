@@ -64,6 +64,8 @@ class GetProductCategories extends Command
             return;
         }
 
+        $this->info( "Load: " . count( $skus ) );
+
         $this->getAllProducts( $skus );
     }
 
@@ -118,10 +120,13 @@ class GetProductCategories extends Command
 
         foreach ( $skus as $sku )
         {
-            $context          = $this->getSkuContext( $sku );
+            $context = $this->getSkuContext( $sku );
 
             if ( is_null( $context ) )
             {
+                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                $this->error( "SKU: {$s} | Empty or disabled" );
+
                 $fails[] = $sku;
                 continue;
             }
@@ -164,7 +169,9 @@ class GetProductCategories extends Command
         if ( !in_array( $this->sale_channel, $product[ "SalesChannels" ] ) )
             return null;
 
-        $this->info( "SKU: {$sku} | {$product[ "CategoriesFullPath" ][ 0 ]}" );
+        $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+
+        $this->info( "SKU: {$s} | {$product[ "CategoriesFullPath" ][ 0 ]}" );
 
         $categories = explode( "/", $product[ "CategoriesFullPath" ][ 0 ] );
         $categories = array_filter( $categories );
