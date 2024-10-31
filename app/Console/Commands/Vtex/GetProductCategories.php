@@ -7,12 +7,10 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Services\Vtex\ProductService;
 use App\Services\Vtex\ConnectorService;
-use App\Services\Vtex\FulfillmentService;
-use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Category;
 use Throwable;
 
-class GetProductList extends Command
+class GetProductCategories extends Command
 {
     /**
      * The name and signature of the console command.
@@ -35,29 +33,24 @@ class GetProductList extends Command
     /**
      * Create a new command instance.
      *
-     * @return void
+     * @return  void
      */
     public function __construct()
     {
         parent::__construct();
 
-        $seller                   = "fast_shop";
-        $env                      = config( "vtex.partners.{$seller}.env" );
-        $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
+        $seller                = "fast_shop";
+        $env                   = config( "vtex.partners.{$seller}.env" );
+        $this->sale_channel    = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
 
-        // 1.
-        // 2.
-        $connector                = new ConnectorService( $seller );
+        $connector             = new ConnectorService( $seller );
         $connector->enableLogNotify( false );
 
-        $this->product_service    = new ProductService( $connector );
-        // $this->simulation_service = new FulfillmentService( $connector );
+        $this->product_service = new ProductService( $connector );
     }
 
     /**
      * Execute the console command.
-     *
-     * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-product-load
      *
      * @return  void
      */
@@ -125,7 +118,7 @@ class GetProductList extends Command
 
         foreach ( $skus as $sku )
         {
-            $context  = $this->getSkuContext( $sku );
+            $context          = $this->getSkuContext( $sku );
 
             if ( is_null( $context ) )
             {
@@ -194,7 +187,7 @@ class GetProductList extends Command
      */
     private function send_categories( array $products ) : void
     {
-        foreach ( $products as $sku => $product )
+        foreach ( $products as $product )
         {
             try
             {
