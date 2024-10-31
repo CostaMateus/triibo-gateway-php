@@ -157,7 +157,7 @@ class GetProductList extends Command
 
                 $products[ $sku ] = $product;
 
-                if ( count( $products ) == 50 )
+                if ( count( $products ) == 25 )
                 {
                     $wc_products = $this->translateProducts( $products );
 
