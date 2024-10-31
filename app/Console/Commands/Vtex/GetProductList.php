@@ -129,7 +129,7 @@ class GetProductList extends Command
                 if ( is_null( $data ) || is_null( $context ) )
                 {
                     $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                    $this->error( "SKU: {$s} | Empty or disabled" );
+                    $this->error( "SKU: {$s} | Empty or disabled or channel" );
 
                     $fails[] = $sku;
                     continue;
@@ -140,7 +140,7 @@ class GetProductList extends Command
                 if ( is_null( $simulate ) )
                 {
                     $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                    $this->error( "SKU: {$s} | Empty or disabled" );
+                    $this->error( "SKU: {$s} | Without simulate" );
 
                     $fails[] = $sku;
                     continue;
@@ -151,9 +151,6 @@ class GetProductList extends Command
                     "context"  => $context,
                     "simulate" => $simulate,
                 ];
-
-                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                $this->info( "SKU: {$s}" );
 
                 $products[ $sku ] = $product;
 
@@ -336,9 +333,10 @@ class GetProductList extends Command
 
             $wc_data = [];
 
-            foreach( $products as $product )
+            foreach( $products as $sku => $product )
             {
-                $this->info( "Product: " . $product[ "data" ][ "Name" ] );
+                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                $this->info( "SKU: {$s} | " . $product[ "data" ][ "Name" ] );
 
                 $wc_data[] = vtex_product_to_mkt( $product[ "context" ], $product[ "simulate" ] );
             }
