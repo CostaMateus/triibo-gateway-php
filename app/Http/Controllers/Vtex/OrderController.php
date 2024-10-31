@@ -27,11 +27,123 @@ class OrderController extends VtexController
      */
     public function invoiceNotification( Request $request, string $order_id ) : JsonResponse
     {
-        // TODO ?
+        $data   = $request->all();
+        $order  = explode( "-", $data[ "orderId" ] );
 
-        save_file( name: "Vtex-OrderController-{$order_id}-invoiceNotification", data: $request->all() );
+        $seller = get_partner( $order[ 0 ] );
 
-        return response()->json( [ "success" => true ], 200 );
+        if ( $seller === null )
+        {
+            log_message(
+                channel : parent::LOG_CHANNEL,
+                message : "VTEX - invoiceNotification 1",
+                level   : "error",
+                context : [ "order_id" => $order[ 1 ], "data" => $data ],
+            );
+
+            return response()->json( [
+                "error_code" => "5001",
+                "message"    => "Partner not found",
+            ], 404 );
+        }
+
+        try
+        {
+            // Retrieve the WooCommerce order
+            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+
+            if ( $order === false )
+                return response()->json( [], 404 );
+            elseif ( $order === null )
+                return response()->json( [], 200 );
+
+            $invoice  = array_search_by_key( "_has_fs_invoice",  "key", $order[ "meta_data" ] );
+            $tracking = array_search_by_key( "_has_fs_tracking", "key", $order[ "meta_data" ] );
+            $finished = array_search_by_key( "_has_fs_finished", "key", $order[ "meta_data" ] );
+
+            if ( $invoice === false && !is_null( $data[ "embeddedInvoice" ] ) )
+            {
+                $message  = "NOTA FISCAL\n";
+                $message .= "Nº: {$data[ "invoiceNumber" ]}\n";
+                $message .= "Chave: {$data[ "invoiceKey" ]}\n";
+                $message .= "URL: {$data[ "invoiceUrl" ]}";
+
+                create_order_note( parent::LOG_CHANNEL, $order_id, $message );
+
+                update_order_meta( $order_id, [
+                    "meta_data" => [ [
+                        "key"   => "_has_fs_invoice",
+                        "value" => "yes"
+                    ] ]
+                ] );
+            }
+            elseif ( $tracking === false && !is_null( $data[ "trackingUrl" ] ) )
+            {
+                $message  = "PEDIDO ENVIADO PARA ENTREGA\n";
+                $message .= "Empresa: {$data[ "courier" ]}\n";
+                $message .= "Código: {$data[ "trackingNumber" ]}\n";
+                $message .= "URL: {$data[ "trackingUrl" ]}";
+
+                create_order_note( parent::LOG_CHANNEL, $order_id, $message );
+
+                update_order_meta( $order_id, [
+                    "meta_data" => [ [
+                        "key"   => "_has_fs_tracking",
+                        "value" => "yes"
+                    ] ]
+                ] );
+            }
+            elseif ( $finished === false && !is_null( $data[ "courierStatus" ] ) )
+            {
+                $courier = $data[ "courierStatus" ];
+
+                if ( isset( $courier[ "finished" ] ) && $courier[ "finished" ] == true )
+                {
+                    $message  = "ENTREGA REALIZADA\n";
+                    $message .= convert_delivery_date( $data[ "courierStatus" ][ "deliveredDate" ] );
+
+                    create_order_note( parent::LOG_CHANNEL, $order_id, $message );
+
+                    update_order_meta( $order_id, [
+                        "status"    => "completed",
+                        "meta_data" => [ [
+                            "key"   => "_has_fs_finished",
+                            "value" => "yes"
+                        ] ]
+                    ] );
+                }
+            }
+            else
+            {
+                // Log error and send notification
+                log_message(
+                    channel : parent::LOG_CHANNEL,
+                    message : "VTEX - invoiceNotification 2",
+                    level   : "error",
+                    context : [ "order_id" => $order_id, "invoice" => $data ],
+                );
+
+                send_notification( $parent, $order, "invoice_error" );
+            }
+
+            return response()->json( [ "success" => true ], 200 );
+        }
+        catch ( Throwable $e )
+        {
+            // Log the exception
+            log_exception(
+                channel : parent::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "VTEX - invoiceNotification 3",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            return response()->json( [
+                "error_code" => "5000", // 5000 - falha generica
+                "message"    => "Something wrong when receiving invoice notification",
+            ], 400 );
+        }
     }
 
     /**
