@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Vtex;
 
+use Throwable;
 use Illuminate\Console\Command;
 use App\Services\Vtex\ProductService;
 use App\Services\Vtex\ConnectorService;
@@ -27,6 +28,7 @@ class GetProductList extends Command
     protected $sale_channel;
     protected $product_service;
     protected $simulation_service;
+    protected const LOG_CHANNEL = "marketplace";
 
     /**
      * Create a new command instance.
@@ -41,8 +43,6 @@ class GetProductList extends Command
         $env                      = config( "vtex.partners.{$seller}.env" );
         $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
 
-        // 1.
-        // 2.
         $connector                = new ConnectorService( $seller );
         $connector->enableLogNotify( false );
 
@@ -53,13 +53,10 @@ class GetProductList extends Command
     /**
      * Execute the console command.
      *
-     * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-product-load
-     *
      * @return  void
      */
     public function handle() : void
     {
-        // 3.
         $skus = $this->getAllSkus();
 
         if ( count( $skus ) == 0 )
@@ -68,7 +65,8 @@ class GetProductList extends Command
             return;
         }
 
-        // 4.
+        $this->info( "Load: " . count( $skus ) );
+
         $this->getAllProducts( $skus );
     }
 
@@ -121,39 +119,68 @@ class GetProductList extends Command
         $fails    = [];
         $products = [];
 
-        foreach ( $skus as $sku )
+        try
         {
-            // 4 a.
-            $context  = $this->getSkuContext( $sku );
-            $data     = $this->getSkuData( $sku );
-
-            if ( is_null( $data ) || is_null( $context ) )
+            foreach ( $skus as $sku )
             {
-                $fails[] = $sku;
-                continue;
+                $context  = $this->getSkuContext( $sku );
+                $data     = $this->getSkuData( $sku );
+
+                if ( is_null( $data ) || is_null( $context ) )
+                {
+                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $this->error( "SKU: {$s} | Empty or disabled" );
+
+                    $fails[] = $sku;
+                    continue;
+                }
+
+                $simulate = $this->getSimulate( $data[ "Id" ] );
+
+                if ( is_null( $simulate ) )
+                {
+                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $this->error( "SKU: {$s} | Empty or disabled" );
+
+                    $fails[] = $sku;
+                    continue;
+                }
+
+                $product  = [
+                    "data"     => $data,
+                    "context"  => $context,
+                    "simulate" => $simulate,
+                ];
+
+                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                $this->info( "SKU: {$s}" );
+
+                $products[ $sku ] = $product;
+
+                if ( count( $products ) == 50 )
+                {
+                    $wc_products = $this->translateProducts( $products );
+
+                    if ( is_array( $wc_products ) )
+                        $this->sendToMarketplace( $wc_products );
+
+                    $this->info( "=================== Reset ===================" );
+
+                    $products = [];
+                }
             }
+        }
+        catch ( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getAllProducts",
+                type    : "Throwable",
+                e       : $e
+            );
 
-            // 4 g.
-            $simulate = $this->getSimulate( $data[ "Id" ] );
-
-            $product  = [
-                "data"     => $data,
-                "context"  => $context,
-                "simulate" => $simulate,
-            ];
-
-            $this->info( $sku );
-
-            $products[ $sku ] = $product;
-
-            if ( count( $products ) == 5 )
-            {
-                $wc_products = $this->translateProducts( $products );
-
-                $this->sendToMarketplace( $wc_products );
-
-                $products = [];
-            }
+            $this->error( $e->getMessage() );
         }
 
         save_file( name: "vtex-fails-sku", data: $fails );
@@ -167,19 +194,34 @@ class GetProductList extends Command
      */
     private function getSkuData( int $sku ) : array|null
     {
-        $response = $this->product_service->getSkuData( $sku );
+        try
+        {
+            $response = $this->product_service->getSkuData( $sku );
 
-        // save_file( name: "vtex-sku-data", data: $response );
+            if ( $response[ 0 ] != 200 )
+                return null;
 
-        if ( $response[ 0 ] != 200 )
+            $product  = $response[ 1 ][ "data" ];
+
+            if ( $product[ "IsActive" ] == false )
+                return null;
+
+            return $product;
+        }
+        catch( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSkuData",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
             return null;
-
-        $product  = $response[ 1 ][ "data" ];
-
-        if ( $product[ "IsActive" ] == false )
-            return null;
-
-        return $product;
+        }
     }
 
     /**
@@ -190,22 +232,37 @@ class GetProductList extends Command
      */
     private function getSkuContext( int $sku ) : array|null
     {
-        $response = $this->product_service->getSkuContext( $sku );
+        try
+        {
+            $response = $this->product_service->getSkuContext( $sku );
 
-        if ( $response[ 0 ] != 200 )
+            if ( $response[ 0 ] != 200 )
+                return null;
+
+            $product  = $response[ 1 ][ "data" ];
+
+            if ( $product[ "IsActive" ] == false && $product[ "IsProductActive" ] == false )
+                return null;
+
+            if ( !in_array( $this->sale_channel, $product[ "SalesChannels" ] ) )
+                return null;
+
+            return $product;
+        }
+        catch( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSkuContext",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
             return null;
-
-        $product  = $response[ 1 ][ "data" ];
-
-        // 4 b. && 4 d.
-        if ( $product[ "IsActive" ] == false && $product[ "IsProductActive" ] == false )
-            return null;
-
-        // 4 c.
-        if ( !in_array( $this->sale_channel, $product[ "SalesChannels" ] ) )
-            return null;
-
-        return $product;
+        }
     }
 
     /**
@@ -216,59 +273,92 @@ class GetProductList extends Command
      */
     private function getSimulate( int $id ) : array|null
     {
-        $data = [
-            "items" => [
-                [
-                    "id"       => $id,
-                    "quantity" => 1,
-                    "seller"   => "1"
-                ]
-            ],
-            "isCheckedIn" => false,
-            "country"     => "BRA",
-            "selectedSla" => "Normal",
-            // "postalCode"  => "01201030",
-        ];
+        try
+        {
+            $data = [
+                "items" => [
+                    [
+                        "id"       => $id,
+                        "quantity" => 1,
+                        "seller"   => "1"
+                    ]
+                ],
+                "isCheckedIn" => false,
+                "country"     => "BRA",
+                "selectedSla" => "Normal",
+            ];
 
-        $response = $this->simulation_service->simulate( $data );
+            $response = $this->simulation_service->simulate( $data );
 
-        if ( $response[ 0 ] != 200 )
+            if ( $response[ 0 ] != 200 )
+                return null;
+
+            return array_filter(
+                $response[ 1 ][ "data" ],
+                function( $value, $key )
+                {
+                    return $value !== null &&
+                            $value !== [] &&
+                            $key !== "paymentData" &&
+                            $key !== "purchaseConditions" &&
+                            $key !== "ratesAndBenefitsData";
+                },
+                ARRAY_FILTER_USE_BOTH
+            );
+        }
+        catch ( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSimulate",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
             return null;
-
-        return array_filter(
-            $response[ 1 ][ "data" ],
-            function( $value, $key )
-            {
-                return $value !== null &&
-                        $value !== [] &&
-                        $key !== "paymentData" &&
-                        $key !== "purchaseConditions" &&
-                        $key !== "ratesAndBenefitsData";
-            },
-            ARRAY_FILTER_USE_BOTH
-        );
+        }
     }
 
     /**
      * Undocumented function
      *
      * @param   array   $products
-     * @return  array
+     * @return  array|null
      */
-    private function translateProducts( array $products ) : array
+    private function translateProducts( array $products ) : array|null
     {
-        $this->info( "Translate to marketplace" );
-
-        $wc_data = [];
-
-        foreach( $products as $product )
+        try
         {
-            $this->info( "Product: " . $product[ "data" ][ "Name" ] );
+            $this->info( "Translate to marketplace: " . count( $products ) );
 
-            $wc_data[] = vtex_product_to_mkt( $product[ "context" ], $product[ "simulate" ] );
+            $wc_data = [];
+
+            foreach( $products as $product )
+            {
+                $this->info( "Product: " . $product[ "data" ][ "Name" ] );
+
+                $wc_data[] = vtex_product_to_mkt( $product[ "context" ], $product[ "simulate" ] );
+            }
+
+            return $wc_data;
         }
+        catch( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "translateProducts",
+                type    : "Throwable",
+                e       : $e
+            );
 
-        return $wc_data;
+            $this->error( $e->getMessage() );
+
+            return null;
+        }
     }
 
     /**
@@ -279,17 +369,27 @@ class GetProductList extends Command
      */
     private function sendToMarketplace( array $products ) : void
     {
-        $this->info( "Send to marketplace" );
-
         try
         {
+            $this->info( "Send to marketplace" );
+
             Product::batch( [ "create" => $products ] );
 
             $this->info( "Sent to marketplace successfully" );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            dump( $e->getMessage() );
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "sendToMarketplace",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
+            save_file( name: "vtex-fails-products", data: $products );
         }
     }
 }
