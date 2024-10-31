@@ -152,6 +152,9 @@ class GetProductList extends Command
                     "simulate" => $simulate,
                 ];
 
+                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                $this->info( "SKU: {$s}" );
+
                 $products[ $sku ] = $product;
 
                 if ( count( $products ) == 50 )
