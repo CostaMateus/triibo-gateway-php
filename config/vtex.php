@@ -24,7 +24,7 @@ return [
             "production"     => [
                 "sales_channel" => 35,
                 "affiliated_id" => "TRB",
-                "account_name"  => "fastshopbrqa2",
+                "account_name"  => "fastshopbr",
                 "raw_url"       => "https://{account_name}.vtexcommercestable.com.br/api/",
                 "headers"       => [
                     "Accept"              => "application/json",
