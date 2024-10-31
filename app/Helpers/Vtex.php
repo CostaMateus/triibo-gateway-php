@@ -495,6 +495,8 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
                             ? "SIM"
                             : $attr[ "FieldValues" ][ 0 ];
 
+            $field_value = strip_tags( $field_value );
+
             // Return the transformed attribute.
             return [
                 "name"      => $attr[ "FieldName" ],
@@ -1236,12 +1238,15 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
         // Get product attributes from Fast Shop data.
         $attributes = vtex_get_product_attributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
 
+        $short_desc = strip_tags( $data[ "ProductDescription" ] );
+        $short_desc = Str::limit( $short_desc, 140, " (...)" );
+
         // Return the WooCommerce product array.
         return [
             "name"              => $data[ "ProductName" ],
             "slug"              => Str::slug( $data[ "ProductName" ] ),
             "description"       => $data[ "ProductDescription" ],
-            "short_description" => $data[ "ProductDescription" ],
+            "short_description" => $short_desc,
             "sku"               => "FS-" . $data[ "ProductRefId" ],
             "regular_price"     => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ) : 0,
             "sale_price"        => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ) : 0,
