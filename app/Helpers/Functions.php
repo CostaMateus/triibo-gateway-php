@@ -4,7 +4,6 @@
  */
 
 use App\Models\User;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
@@ -18,24 +17,12 @@ if ( !function_exists( "log_message" ) )
      * @param   string  $message    The message to log.
      * @param   string  $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
      * @param   array   $context    Additional context data to include with the log entry.
-     * @param   bool    $notify     Whether to send a notification email or not.
      * @return  void
      */
-    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $notify = false ) : void
+    function log_message( string $channel, string $message, string $level = "info", array $context = [] ) : void
     {
         // Log the message using the specified log channel and level.
-        Log::channel( $channel )->$level( message: $message, context: $context );
-
-        // If $notification is true, send a notification email.
-        if ( $notify )
-        {
-            $exception = $context[ "exception" ] ?? "";
-            $method    = $context[ "method"    ] ?? "";
-            $type      = $context[ "type"      ] ?? "";
-
-            // Send an email notification about the exception.
-            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
-        }
+        Log::channel( channel: $channel )->$level( message: $message, context: $context );
     }
 }
 
@@ -54,7 +41,7 @@ if ( !function_exists( "log_exception" ) )
      */
     function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null ) : void
     {
-        $context = [
+        $context   = [
             "error_code" => $e?->getCode(),
             "message"    => $e?->getMessage(),
             "method"     => $method,
@@ -62,7 +49,11 @@ if ( !function_exists( "log_exception" ) )
             "exception"  => $e
         ];
 
-        log_message( channel: $channel, level: $level, message: $message, context: $context, notify: true );
+        // Log the message using the specified log channel and level.
+        Log::channel( channel: $channel )->$level( message: $message, context: $context );
+
+        // Send an email notification about the exception.
+        send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
     }
 }
 
@@ -442,19 +433,12 @@ if ( !function_exists( "convert_delivery_date" ) )
     /**
      * Converts the order delivery date from FS format to WC format.
      *
-     * @param   string  $time   The delivery date in FS format.
-     * @return  string          The delivery date in WC format.
+     * @param   string  $date_time  The delivery date in FS format.
+     * @return  string              The delivery date in WC format.
      */
-    function convert_delivery_date( string $time ) : string
+    function convert_delivery_date( string $date_time ) : string
     {
-        $time = Str::of( $time )->explode( "T" );
-
-        $hour = $time->last();
-
-        $date = Str::of( $time->first() )->explode( "-" );
-        $date = Arr::join( $date->reverse()->toArray(), "/" );
-
-        return "{$date} às {$hour}";
+        return ( new DateTime( $date_time ) )->format( "d/m/Y \à\s H:i" );
     }
 }
 
@@ -586,7 +570,7 @@ if ( !function_exists( "send_mail_notification" ) )
      * @param   Throwable|null  $e          The exception object containing the error details.
      * @return  void
      */
-    function send_mail_notification( string $blade, string $method, string $catch, ?Throwable $e ) : void
+    function send_mail_notification( string $blade, string $method, string $catch, ?Throwable $e = null ) : void
     {
         // Determine the environment (HML or PRD) based on the app.env configuration.
         $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
