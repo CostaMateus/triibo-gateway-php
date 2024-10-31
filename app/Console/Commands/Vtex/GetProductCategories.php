@@ -143,6 +143,9 @@ class GetProductCategories extends Command
             }
         }
 
+        if ( count( $products ) != 0 )
+            $this->send_categories( $products );
+
         save_file( name: "vtex-fails-sku", data: $fails );
 
         $this->info( "=================== Finish ==================" );

@@ -180,7 +180,17 @@ class GetProductList extends Command
             $this->error( $e->getMessage() );
         }
 
+        if ( count( $products ) != 0 )
+        {
+            $wc_products = $this->translateProducts( $products );
+
+            if ( is_array( $wc_products ) )
+                $this->sendToMarketplace( $wc_products );
+        }
+
         save_file( name: "vtex-fails-sku", data: $fails );
+
+        $this->info( "=================== Finish ==================" );
     }
 
     /**
