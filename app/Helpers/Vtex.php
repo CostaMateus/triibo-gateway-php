@@ -138,6 +138,30 @@ if ( !function_exists( "get_email_order_error" ) )
     }
 }
 
+if ( !function_exists( "get_partner" ) )
+{
+    /**
+     * Get partner index.
+     *
+     * @param   string  $affiliated_id
+     * @return  string|null
+     */
+    function get_partner( string $affiliated_id )
+    {
+        $partners = config( "vtex.partners" );
+
+        foreach ( $partners as $index => $data )
+        {
+            $env = $data[ "env" ];
+
+            if ( isset( $data[ $env ][ "affiliated_id" ] ) && $data[ $env ][ "affiliated_id" ] === $affiliated_id )
+                return $index;
+        }
+
+        return null;
+    }
+}
+
 if ( !function_exists( "get_wc_order" ) )
 {
     /**
@@ -1389,6 +1413,8 @@ if ( !function_exists( "send_notification" ) )
             "error_mkt_order_creation" => "Falha ao recuperar pedido do Marketplace na criação do pedido na Fast Shop",
             "error_mkt_order_approval" => "Falha ao recuperar pedido do Marketplace na aprovação do pedido na Fast Shop",
             "error_order_cancellation" => "Falha ao recuperar pedido do Marketplace no cancelamento do pedido na Fast Shop",
+
+            "invoice_error"            => "Notificação enviado pela Fast Shop não mapeada",
         ];
 
         $error_title = $error_codes[ $error_option ] ?? "Erro desconhecido - Falha genérica";
@@ -1399,12 +1425,10 @@ if ( !function_exists( "send_notification" ) )
             "data"    => $data,
         ] );
 
-        $to_notify    = [
+        $users       = User::whereIn( "email", [
             "mateus.costa@triibo.com.br",
-            // "equipemarketplace@triibo.com.br",
-        ];
-
-        $users        = User::whereIn( "email", $to_notify )->get();
+            "equipemarketplace@triibo.com.br",
+        ] )->get();
 
         foreach ( $users as $user )
             $user->notify( $order_error );
