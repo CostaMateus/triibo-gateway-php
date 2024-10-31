@@ -129,7 +129,7 @@ class GetProductList extends Command
                 if ( is_null( $data ) || is_null( $context ) )
                 {
                     $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                    $this->error( "SKU: {$s} | Empty or disabled or channel" );
+                    $this->error( "SKU: {$s} | Empty or disabled or channel diff" );
 
                     $fails[] = $sku;
                     continue;
