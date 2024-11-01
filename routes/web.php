@@ -74,9 +74,15 @@ Route::prefix( "mkt" )->group( function ()
 
     Route::get( "/get-order/{id}", function( $id )
     {
-        $order = Order::find( $id );
-
-        dd( $order );
+        try
+        {
+            $order = Order::find( $id );
+            dd( $order );
+        }
+        catch ( \Exception $e )
+        {
+            dd( $e->getMessage() );
+        }
     } );
 
     Route::get( "/create-order", function()
