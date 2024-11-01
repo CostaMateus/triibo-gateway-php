@@ -2,6 +2,8 @@
 
 return [
 
+    "env"         => env( key: "MKT_ENV", default: "local" ),
+
     "partners"    => [
         "fast_shop" => [
             "env"            => env( key: "FS_VTEX_ENV", default: "local" ),

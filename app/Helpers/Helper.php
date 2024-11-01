@@ -186,7 +186,7 @@ class Helper
 
         $message   = "Stock|Price: Querying {$count} SKUs at once...";
 
-        log_message( channel: "fastshop", message: $message );
+        log_message( channel: "marketplace", message: $message );
         echo $message;
 
         try
@@ -202,7 +202,7 @@ class Helper
         {
             $message = "Stock|Price: SKUs query failed";
 
-            log_exception( channel: "fastshop", message: $message, method: "getStockPriceFS", type: "Throwable", e: $e );
+            log_exception( channel: "marketplace", message: $message, method: "getStockPriceFS", type: "Throwable", e: $e );
 
             return [];
         }

@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands\Marketplace\Old;
 
-use Exception;
 use Throwable;
 use App\Helpers\Helper;
 use Illuminate\Support\Str;
@@ -163,7 +162,7 @@ class GetProductInfosFastShop extends Command
             {
                 Product::batch( [ $this->action => $skus ] );
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
                 $message = "Products: Failure to send SKUs to MKT - pack {$i} of {$y}";
 

@@ -141,6 +141,6 @@ class Log
     private static function logData( string $type, string $title, array $data )
     {
         // Access the specified log channel and log the data with the given type and title.
-        LogSys::channel( "fastshop" )->{$type}( $title, $data );
+        LogSys::channel( "marketplace" )->{$type}( $title, $data );
     }
 }
