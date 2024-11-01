@@ -22,6 +22,15 @@ class ProductController extends VtexController
     {
         $vtex_data = $request->all();
 
+        if ( empty( $vtex_data ) )
+        {
+            return response()->json( [
+                "error_code" => null,
+                "message"    => "Empty data",
+                "data"       => null,
+            ], 400 );
+        }
+
         // Prepare successful response data.
         $code      = 200;
         $data      = [

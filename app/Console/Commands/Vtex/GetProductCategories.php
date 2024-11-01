@@ -133,7 +133,7 @@ class GetProductCategories extends Command
 
             $products[ $sku ] = $context;
 
-            if ( count( $products ) == 50 )
+            if ( count( $products ) == 20 )
             {
                 $this->send_categories( $products );
 
