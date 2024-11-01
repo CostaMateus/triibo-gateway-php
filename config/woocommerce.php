@@ -23,7 +23,7 @@ return [
     /**
      * Consumer Secret.
      */
-    "consumer_secret"    => ( env( key: "MKT_ENV" ) == "local" ) ? env( key: "WOO_HML_SECRET"    ) : env( key: "WOO_PRDSECRET"     ),
+    "consumer_secret"    => ( env( key: "MKT_ENV" ) == "local" ) ? env( key: "WOO_HML_SECRET"    ) : env( key: "WOO_PRD_SECRET"    ),
 
     /**
      * SSL support
