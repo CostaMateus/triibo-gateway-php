@@ -6,6 +6,7 @@ use Exception;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
+use Throwable;
 
 class DeleteProductWithoutSku extends Command
 {
@@ -40,49 +41,51 @@ class DeleteProductWithoutSku extends Command
      */
     public function handle()
     {
-        $env    = config( "fastshop.env" );
-        $ended  = false;
-        $page   = 1;
-        $per    = 100;
-        $delete = [];
-        $fsIds  = [
-            ( $env == "local" ) ? 4453 : 3970, // padrao
-            ( $env == "local" ) ? 4454 : 4309, // 05 A
-            ( $env == "local" ) ? 4451 : 4310, // 14 B
-            ( $env == "local" ) ? 4345 : 4311, // 33 C
+        $env                = config( "vtex.env" );
+        $has_ended          = false;
+        $page               = 1;
+        $per_page           = 100;
+        $delete             = [];
+        $fs_store_id        = 4265;
+        $shipping_class_ids = [
+            4744,                              // Sem HUB
+            3970,                              // Padrão
+            ( $env == "local" ) ? 4824 : 4799, // Normal
         ];
-        $fsId   = ( $env == "local" ) ? 3158 : 4265;
 
         do
         {
             try
             {
                 $search = [
-                    "per_page"     => $per,
+                    "per_page"     => $per_page,
                     "page"         => $page,
                     "manage_stock" => true,
                 ];
 
                 $aux    = Product::all( $search );
 
-                if ( $aux->count() < 100 ) $ended = true;
+                if ( $aux->count() < 100 ) $has_ended = true;
 
                 $page++;
 
-                foreach ( $aux as $p )
+                foreach ( $aux as $product )
                 {
-                    if ( $p->store->id != $fsId ) continue;
+                    if ( $product->store->id != $fs_store_id )
+                        continue;
 
                     // not empty sku
-                    if ( !empty( $p->sku ) ) continue;
+                    if ( !empty( $product->sku ) )
+                        continue;
 
                     // not shipping-class of FS
-                    if ( !in_array( $p->shipping_class_id, $fsIds ) ) continue;
+                    if ( !in_array( $product->shipping_class_id, $shipping_class_ids ) )
+                        continue;
 
-                    echo "{$p->id}\n";
+                    $this->info( $product->id );
 
                     $delete[] = [
-                        "id"    => $p->id,
+                        "id"    => $product->id,
                         "force" => true
                     ];
 
@@ -94,25 +97,24 @@ class DeleteProductWithoutSku extends Command
                     }
                 }
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
-                echo $e->getMessage() . "\n";
-                $ended = false;
+                $this->error( $e->getMessage() );
+
+                $has_ended = false;
             }
         }
-        while ( !$ended );
+        while ( !$has_ended );
 
         try
         {
-            Product::batch( [
-                "delete" => $delete
-            ] );
+            Product::batch( [ "delete" => $delete ] );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::error( $e );
+            $this->error( $e->getMessage() );
         }
 
-        echo "ENDED";
+        $this->info( "Finished" );
     }
 }

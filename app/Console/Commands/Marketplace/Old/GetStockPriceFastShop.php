@@ -1,14 +1,12 @@
 <?php
 
-namespace App\Console\Commands\Marketplace;
+namespace App\Console\Commands\Marketplace\Old;
 
-use Exception;
 use Throwable;
 use App\Helpers\Helper;
 use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
 class GetStockPriceFastShop extends Command
@@ -18,7 +16,7 @@ class GetStockPriceFastShop extends Command
      *
      * @var     string
      */
-    private const LOG_CHANNEL = "fastshop";
+    private const LOG_CHANNEL = "marketplace";
 
     /**
      * The name and signature of the console command.

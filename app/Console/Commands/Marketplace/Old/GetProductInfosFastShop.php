@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Marketplace;
+namespace App\Console\Commands\Marketplace\Old;
 
 use Exception;
 use Throwable;
@@ -18,7 +18,7 @@ class GetProductInfosFastShop extends Command
      *
      * @var     string
      */
-    private const LOG_CHANNEL = "fastshop";
+    private const LOG_CHANNEL = "marketplace";
 
     /**
      * The name and signature of the console command.
@@ -54,7 +54,8 @@ class GetProductInfosFastShop extends Command
      */
     public function handle()
     {
-        if ( !in_array( $this->option( "action" ), [ "create", "update" ] ) ) return;
+        if ( !in_array( $this->option( "action" ), [ "create", "update" ] ) )
+            return;
 
         $start        = now();
 

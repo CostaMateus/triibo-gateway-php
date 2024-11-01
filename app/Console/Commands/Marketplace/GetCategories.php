@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Category;
@@ -42,6 +43,7 @@ class GetCategories extends Command
         try
         {
             $this->info( "Truncate table: marketplace_product_categories" );
+
             DB::table( "marketplace_product_categories" )->truncate();
 
             $page       = 1;
@@ -77,9 +79,9 @@ class GetCategories extends Command
 
             DB::table( "marketplace_product_categories" )->insert( $data );
 
-            $this->info( "Done" );
+            $this->info( "Finished" );
         }
-        catch ( \Exception $e )
+        catch ( Throwable $e )
         {
             $this->error( $e->getMessage() );
         }

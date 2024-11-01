@@ -2,9 +2,8 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Exception;
+use Throwable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
 class ProductPrivateWithoutImg extends Command
@@ -71,16 +70,16 @@ class ProductPrivateWithoutImg extends Command
 
                     if ( count( $update ) == 100 )
                     {
-                        Product::batch( [
-                            "update" => $update
-                        ] );
+                        Product::batch( [ "update" => $update ] );
 
                         $update = [];
                     }
                 }
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
+                $this->error( $e->getMessage() );
+
                 $ended = false;
             }
         }
@@ -88,15 +87,13 @@ class ProductPrivateWithoutImg extends Command
 
         try
         {
-            Product::batch( [
-                "update" => $update
-            ] );
+            Product::batch( [ "update" => $update ] );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::error( $e );
+            $this->error( $e->getMessage() );
         }
 
-        echo "ENDED";
+        $this->info( "FInished" );
     }
 }

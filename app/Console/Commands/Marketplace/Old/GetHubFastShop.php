@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands\Marketplace;
+namespace App\Console\Commands\Marketplace\Old;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;

@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Console\Commands\Marketplace;
+namespace App\Console\Commands\Marketplace\Old;
 
+use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Product;
-use Exception;
 
 class GetFastshopSkus extends Command
 {
@@ -40,11 +40,11 @@ class GetFastshopSkus extends Command
      */
     public function handle()
     {
-        $ended = false;
-        $page  = 1;
-        $data  = [];
+        $has_ended = false;
+        $page      = 1;
+        $data      = [];
 
-        echo "Starting sku processing\n";
+        $this->info( "Starting sku processing" );
 
         do
         {
@@ -57,23 +57,26 @@ class GetFastshopSkus extends Command
 
                 $aux    = Product::all( $search );
 
-                if ( $aux->count() < 100 ) $ended = true;
+                if ( $aux->count() < 100 )
+                    $has_ended = true;
 
                 $page++;
 
-                foreach ( $aux as $p )
+                foreach ( $aux as $product )
                 {
                     // empty sku
-                    if ( empty( $p->sku ) ) continue;
+                    if ( empty( $product->sku ) )
+                        continue;
 
                     // not FS product
-                    if ( strpos( $p->sku, "FS-" ) === false ) continue;
+                    if ( strpos( $product->sku, "FS-" ) === false )
+                        continue;
 
-                    echo "Add sku : {$p->sku}\n";
+                    $this->info( "Add sku : {$product->sku}" );
 
                     $data[] = [
-                        "product_id"  => $p->id,
-                        "product_sku" => $p->sku,
+                        "product_id"  => $product->id,
+                        "product_sku" => $product->sku,
                     ];
 
                     if ( count( $data ) == 100 )
@@ -103,13 +106,15 @@ class GetFastshopSkus extends Command
                     }
                 }
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
-                $ended = false;
+                $has_ended = false;
+
+                $this->error( $e->getMessage() );
             }
         }
-        while ( !$ended );
+        while ( !$has_ended );
 
-        echo "Finished sku processing\n";
+        $this->info( "Finished" );
     }
 }
