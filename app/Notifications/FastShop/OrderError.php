@@ -15,50 +15,38 @@ class OrderError extends Notification
     /**
      * Create a new notification instance.
      *
-     * @return void
+     * @return  void
      */
-    public function __construct($data)
+    public function __construct( $data )
     {
         $this->data = $data;
     }
 
-
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
-     * @return array
+     * @param   mixed   $notifiable
+     * @return  array
      */
-    public function via($notifiable)
+    public function via( $notifiable )
     {
-        return ['mail'];
+        return [ "mail" ];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
+     * @param   mixed   $notifiable
+     * @return  MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail( $notifiable )
     {
-        return (new MailMessage)->subject($this->data["subject"])
-                                ->markdown("mail.marketplace.fastshop.order_error", [
-                                    "title" => $this->data["title"],
-                                    "data"  => $this->data["data"],
-                                ]);
-    }
+        $mail = new MailMessage;
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
-    public function toArray($notifiable)
-    {
-        return [
-            //
-        ];
+        return $mail->subject( $this->data[ "subject" ] )
+                    ->markdown( "mail.marketplace.fastshop.order_error", [
+                        "title" => $this->data[ "title" ],
+                        "data"  => $this->data[ "data"  ],
+                    ] );
     }
 }

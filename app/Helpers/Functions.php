@@ -4,7 +4,6 @@
  */
 
 use App\Models\User;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
@@ -18,29 +17,12 @@ if ( !function_exists( "log_message" ) )
      * @param   string  $message    The message to log.
      * @param   string  $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
      * @param   array   $context    Additional context data to include with the log entry.
-     * @param   bool    $print      Whether to print the message to the console or not.
-     * @param   bool    $notify     Whether to send a notification email or not.
      * @return  void
      */
-    function log_message( string $channel, string $message, string $level = "info", array $context = [], bool $print = false, bool $notify = false ) : void
+    function log_message( string $channel, string $message, string $level = "info", array $context = [] ) : void
     {
         // Log the message using the specified log channel and level.
-        Log::channel( $channel )->$level( message: $message, context: $context );
-
-        // If $print is true, print the message to the console.
-        if ( $print )
-            echo $message . "\n";
-
-        // If $notification is true, send a notification email.
-        if ( $notify )
-        {
-            $exception = $context[ "exception" ];
-            $method    = $context[ "method"    ];
-            $type      = $context[ "type"      ];
-
-            // Send an email notification about the exception.
-            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $exception );
-        }
+        Log::channel( channel: $channel )->$level( message: $message, context: $context );
     }
 }
 
@@ -49,25 +31,29 @@ if ( !function_exists( "log_exception" ) )
     /**
      * Log an exception to a specified channel.
      *
-     * @param   string      $channel    The name of the log channel to use.
-     * @param   string      $message    The message to log.
-     * @param   string      $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
-     * @param   string      $method     The method that threw the exception.
-     * @param   string      $type       The type of exception that was thrown.
-     * @param   Throwable   $e          The exception object.
+     * @param   string          $channel    The name of the log channel to use.
+     * @param   string          $message    The message to log.
+     * @param   string          $level      The log level (e.g., 'info', 'warning', 'error'). Default is 'info'.
+     * @param   string          $method     The method that threw the exception.
+     * @param   string          $type       The type of exception that was thrown.
+     * @param   Throwable|null  $e          The exception object.
      * @return  void
      */
     function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null ) : void
     {
-        $context = [
-            "error_code" => $e->getCode(),
-            "message"    => $e->getMessage(),
+        $context   = [
+            "error_code" => $e?->getCode(),
+            "message"    => $e?->getMessage(),
             "method"     => $method,
             "type"       => $type,
             "exception"  => $e
         ];
 
-        log_message( channel: $channel, level: $level, message: $message, context: $context, print: true, notify: true );
+        // Log the message using the specified log channel and level.
+        Log::channel( channel: $channel )->$level( message: $message, context: $context );
+
+        // Send an email notification about the exception.
+        send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
     }
 }
 
@@ -447,19 +433,12 @@ if ( !function_exists( "convert_delivery_date" ) )
     /**
      * Converts the order delivery date from FS format to WC format.
      *
-     * @param   string  $time   The delivery date in FS format.
-     * @return  string          The delivery date in WC format.
+     * @param   string  $date_time  The delivery date in FS format.
+     * @return  string              The delivery date in WC format.
      */
-    function convert_delivery_date( string $time ) : string
+    function convert_delivery_date( string $date_time ) : string
     {
-        $time = Str::of( $time )->explode( "T" );
-
-        $hour = $time->last();
-
-        $date = Str::of( $time->first() )->explode( "-" );
-        $date = Arr::join( $date->reverse()->toArray(), "/" );
-
-        return "{$date} às {$hour}";
+        return ( new DateTime( $date_time ) )->format( "d/m/Y \à\s H:i" );
     }
 }
 
@@ -473,7 +452,8 @@ if ( !function_exists( "validate_image_url" ) )
      */
     function validate_image_url( string $url ) : bool
     {
-        $extensions     = [ ".jpg", ".jpeg", ".png" ];
+        $url            = explode( "?", $url )[ 0 ];
+        $extensions     = [ "jpg", "jpeg", "png", "webp" ];
         $file_extension = strtolower( pathinfo( $url, PATHINFO_EXTENSION ) );
 
         return in_array( $file_extension, $extensions );
@@ -504,7 +484,6 @@ if ( !function_exists( "treat_exception_message_fs" ) )
 
 if ( !function_exists( "convert_date" ) )
 {
-
     /**
      * Converts a date between the 'dd/mm/yyyy' and 'yyyy-mm-dd' formats.
      *
@@ -585,13 +564,13 @@ if ( !function_exists( "send_mail_notification" ) )
      * This function sends an email notification to a specific user when a schedule fails.
      * It takes the following parameters:
      *
-     * @param   string      $blade      The name of the blade (view) associated with the schedule.
-     * @param   string      $method     The name of the method that failed.
-     * @param   string      $catch      The catch block where the error occurred.
-     * @param   Throwable   $e          The exception object containing the error details.
+     * @param   string          $blade      The name of the blade (view) associated with the schedule.
+     * @param   string          $method     The name of the method that failed.
+     * @param   string          $catch      The catch block where the error occurred.
+     * @param   Throwable|null  $e          The exception object containing the error details.
      * @return  void
      */
-    function send_mail_notification( string $blade, string $method, string $catch, Throwable $e ) : void
+    function send_mail_notification( string $blade, string $method, string $catch, ?Throwable $e = null ) : void
     {
         // Determine the environment (HML or PRD) based on the app.env configuration.
         $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
@@ -602,6 +581,7 @@ if ( !function_exists( "send_mail_notification" ) )
             "cofry"       => "{$env} - Integração Cofry",
             "socialsoul"  => "{$env} - Integração SocialSoul",
             "marketplace" => "{$env} - Integração Marketplace",
+            "vtex"        => "{$env} - Integração VTEX",
         ];
 
         // Prepare the email data.

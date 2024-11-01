@@ -1,40 +1,14 @@
 <?php
 
-// use App\Models\User;
-// use Mautic\MauticApi;
-// use App\Helpers\Helper;
-// use Mautic\Auth\ApiAuth;
-// use Devio\Pipedrive\Pipedrive;
-// use Triibo\Mautic\Facades\Mautic;
-// use App\Helpers\Helper;
-// use Gregwar\Image\Image;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
-// use Triibo\Mautic\Models\MauticConsumer;
-// use App\Notifications\WebhookMarketplace;
 use Illuminate\Support\Facades\Artisan;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
-// use Codexshaper\WooCommerce\Facades\Note;
-// use Codexshaper\WooCommerce\Facades\Term;
 use Codexshaper\WooCommerce\Facades\Order;
-// use Doctrine\Inflector\Rules\Substitution;
-// use Codexshaper\WooCommerce\Facades\Coupon;
-// use App\Http\Controllers\ChatGuruController;
-use Codexshaper\WooCommerce\Facades\Coupon;
-use App\Http\Integrations\MauticIntegration;
 use Codexshaper\WooCommerce\Facades\Customer;
-// use App\Http\Controllers\FastshopController;
-// use App\Http\Integrations\FastshopIntegration\DataTranslator;
-// use Codexshaper\WooCommerce\Facades\Product;
-// use Codexshaper\WooCommerce\Facades\Category;
-// use Kreait\Laravel\Firebase\Facades\Firebase;
-// use Codexshaper\WooCommerce\Facades\Attribute;
-// use Codexshaper\WooCommerce\Facades\Subscription;
-// use App\Http\Controllers\Affiliates\AwinController;
-// use Codexshaper\WooCommerce\Facades\PaymentGateway;
-// use App\Http\Integrations\FastshopIntegration\DataTranslator;
-// use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
-// use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
+use Codexshaper\WooCommerce\Facades\Product;
+use Codexshaper\WooCommerce\Facades\Subscription;
 
 /*
 |--------------------------------------------------------------------------
@@ -57,41 +31,28 @@ Route::get( "/", function ()
     ] );
 } )->name( "welcome" );
 
-Route::group( ["middleware" => "auth" ], function() {
+Route::get( "/clear-caches", function()
+{
+    Artisan::call( "optimize:clear" );
+    return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.cache" ) ] );
 
-    Route::get( "/home", function ()
-    {
-        return view( "home" );
-    } )->name( "home" );
+} )->name( "clear.caches" );
 
-    Route::get( "/clear-caches", function()
-    {
-        Artisan::call( "optimize:clear" );
-        return view( "welcome", [
-            "showToast" => true,
-            "message"   => __( "marketplace.cache" )
-        ] );
-    } )->name( "clear.caches" );
+Route::group( [ "middleware" => "auth" ], function() {
 
-    Route::get( "/update-stages", function()
-    {
-        MauticIntegration::updateStages();
+    Route::get( "/home", [ HomeController::class, "index" ] )->name( "home" );
 
-        return view( "welcome", [
-            "showToast" => true,
-            "message"   => __( "marketplace.update.all.stages" )
-        ] );
-    } )->name( "update.stages" );
-
-    Route::get( "/sync-ids", function()
-    {
-        MauticIntegration::syncIdsMauticPipe();
-
-        return view( "welcome", [
-            "showToast" => true,
-            "message"   => __( "marketplace.sync.id" )
-        ] );
-    } )->name( "sync.ids" );
+    // Route::get( "/update-stages", function()
+    // {
+    //     MauticIntegration::updateStages();
+    //     return view( "welcome", [ "showToast" => true,"message" => __( "marketplace.update.all.stages" )] );
+    // } )->name( "update.stages" );
+    //
+    // Route::get( "/sync-ids", function()
+    // {
+    //     MauticIntegration::syncIdsMauticPipe();
+    //     return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.sync.id" ) ] );
+    // } )->name( "sync.ids" );
 
     Route::resource( "users", UserController::class );
 
@@ -102,8 +63,8 @@ Route::group( ["middleware" => "auth" ], function() {
 // =========================================
 // ============ ROTAS DE TESTE =============
 // =========================================
-Route::prefix( "mkt" )->group( function () {
-
+Route::prefix( "mkt" )->group( function ()
+{
     Route::get( "/get-customer/{id}", function( $id )
     {
         $customer = Customer::find( $id );
@@ -118,51 +79,32 @@ Route::prefix( "mkt" )->group( function () {
         dd( $order );
     } );
 
-    Route::get( "/update-order", function()
-    {
-        $order_id = "972533";
-        $data     = [
-            "customer_id" => 4591,
-        ];
-
-        $order    = Order::update( $order_id, $data );
-
-        dd( $data, $order );
-    } );
-
     Route::get( "/create-order", function()
     {
         $data = [
-            // "customer_id"          => 1717,
+            "customer_id"          => 1717,
+            "set_paid"             => false,
+            "status"               => "on-hold",
             "payment_method"       => "triibo_assinaturas",
-            "payment_method_title" => "Triibo Assinaturas",
-            "status"               => "on-hold", // pedido entra como aguardando
-            "set_paid"             => false,     // e nao pago
-            "billing"              => [
-                "first_name" => "Mateus",
-                "last_name"  => "Costa",
-                "address_1"  => "Al Eduardo Prado",
-                "address_2"  => "170",
-                "city"       => "Sao Paulo",
-                "state"      => "SP",
-                "postcode"   => "01218011",
-                "country"    => "Brasil",
-                "email"      => "mateus.costa@triibo.com.br",
-                "phone"      => "11949289507",
-            ],
-            "shipping"             => [
-                "first_name" => "Mateus",
-                "last_name"  => "Costa",
-                "address_1"  => "Al Eduardo Prado",
-                "address_2"  => "170",
-                "city"       => "Sao Paulo",
-                "state"      => "SP",
-                "postcode"   => "01218011",
-                "country"    => "Brasil",
+            "payment_method_title" => "Recorrente",
+            "meta_data"            => [
+                [
+                    "key"   => "_triibo_id",
+                    "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
+                ],[
+                    "key"   => "_billing_cellphone",
+                    "value" => "+5511949289507"
+                ],[
+                    "key"   => "_billing_phone",
+                    "value" => "+5511949289507"
+                ],[
+                    "key"   => "_triibo_phone",
+                    "value" => "+5511949289507"
+                ]
             ],
             "line_items"           => [ [
-                "product_id" => 972529,
-                "quantity"   => 1,
+                "product_id" => 986791,
+                "quantity"   => 1
             ] ],
         ];
 
@@ -171,6 +113,105 @@ Route::prefix( "mkt" )->group( function () {
         dd( $data, $order );
     } );
 
+    Route::get( "/update-order/{id}", function( $id )
+    {
+        $data  = [
+            "customer_id" => 1717,
+            "status"      => "processing",
+        ];
+
+        $order = Order::update( $id, $data );
+
+        dd( $data, $order );
+    } );
+
+    Route::get( "/create-subscription/{id}", function( $id )
+    {
+        $data = [
+            "payment_method"       => "triibo_assinaturas",
+            "payment_method_title" => "Recorrente",
+            "customer_id"          => 1717,
+            "parent_id"            => $id,
+            "status"               => "active",
+            "billing_period"       => "month",
+            "billing_interval"     => 1,
+            "start_date"           => "2024-10-01 17:13:07",
+            "next_payment_date"    => "2024-11-01 17:13:07",
+            "meta_data" => [
+                [
+                    "key"   => "_triibo_assinatura_payment_token",
+                    "value" => "0"
+                ],[
+                    "key"   => "_triibo_assinatura_payment_id",
+                    "value" => "ee2d9758-0395-46bb-94bd-2d4d8c651cb7"
+                ],[
+                    "key"   => "_triibo_id",
+                    "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
+                ],[
+                    "key"   => "_billing_cellphone",
+                    "value" => "+5511949289507"
+                ],[
+                    "key"   => "_billing_phone",
+                    "value" => "+5511949289507"
+                ],[
+                    "key"   => "_triibo_phone",
+                    "value" => "+5511949289507"
+                ]
+            ],
+            "payment_details" => [
+                "post_meta" => [
+                    [ "_triibo_id" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3" ],
+                    [ "_triibo_assinatura_payment_token" => "0" ]
+                ]
+            ],
+            "line_items" => [
+                [
+                    "product_id" => 986791,
+                    "quantity"   => 1
+                ]
+            ]
+        ];
+
+        $order = Subscription::create( $data );
+
+        dd( $data, $order );
+    } );
+
+    Route::get( "/get-product/{id}", function( $id )
+    {
+        $product = Product::find( $id );
+
+        $meta = [];
+
+        $keys = [
+            "_subscription_period",
+            "_subscription_period_interval",
+            "_subscription_length",
+            "_subscription_limit"
+        ];
+
+        foreach ( $product[ "meta_data" ] as $value )
+            if ( in_array( $value->key, $keys ) )
+                $meta[] = $value;
+
+        dd( $meta );
+    } );
+
+    Route::get( "/create-product", function()
+    {
+        $data = [
+            'name'              => 'Premium Quality 5',
+            'type'              => 'simple',
+            'regular_price'     => '25.99',
+            'description'       => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.',
+            'short_description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
+            'author'            => 1717
+        ];
+
+        $product = Product::create( $data );
+
+        dd( $product );
+    } );
 } );
 
 Route::get( "/fs", function () {

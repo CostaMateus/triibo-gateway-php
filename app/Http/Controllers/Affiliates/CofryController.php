@@ -92,8 +92,11 @@ class CofryController extends Controller
             // Attempt to call the Firebase operation method.
             $this->{$operation_method}();
 
+            $message = "{$operation_name} : Sent successfully";
+
             // Log the success message if the operation is successful.
-            log_message( channel: self::LOG_CHANNEL, message: "{$operation_name} : Sent successfully", print: true );
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
         }
         catch ( FirebaseException $e )
         {
@@ -101,6 +104,7 @@ class CofryController extends Controller
 
             // Handle Firebase-specific exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
+            echo $message;
         }
         catch ( Throwable $e )
         {
@@ -108,6 +112,7 @@ class CofryController extends Controller
 
             // Handle general exceptions.
             log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+            echo $message;
         }
     }
 
@@ -122,8 +127,11 @@ class CofryController extends Controller
      */
     private function insertEstablishmentsFirebase() : void
     {
+        $message = "Establishments:  Searching...";
+
         // Log the start of the establishment search process.
-        log_message( channel: self::LOG_CHANNEL, message: "Establishments:  Searching...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Retrieve establishments from the Cofry integration.
         $cofry_establishments    = CofryIntegration::getEstablishments();
@@ -131,7 +139,10 @@ class CofryController extends Controller
         // If no establishments are found, log the event and return early.
         if ( !$cofry_establishments )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Establishments: No found...", print: true );
+            $message = "Establishments: No found...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
             return;
         }
 
@@ -159,8 +170,11 @@ class CofryController extends Controller
             }
         }
 
+        $message = "Establishments: Sending to Firebase...";
+
         // Log the start of the establishment sending process to Firebase.
-        log_message( channel: self::LOG_CHANNEL, message: "Establishments: Sending to Firebase...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Loop through the establishments retrieved from Cofry.
         foreach ( $cofry_establishments as $id => $establishment )
@@ -199,8 +213,11 @@ class CofryController extends Controller
      */
     private function insertPromotionsFirebase() : void
     {
+        $message = "Promotions: Searching...";
+
         // Log the start of the promotion search process.
-        log_message( channel: self::LOG_CHANNEL, message: "Promotions: Searching...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Retrieve promotions from the Cofry integration.
         $cofry_promotions    = CofryIntegration::getPromotions();
@@ -208,7 +225,11 @@ class CofryController extends Controller
         // If no promotions are found, log the event and return early.
         if ( !$cofry_promotions )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Promotions: No found...", print: true );
+            $message = "Promotions: No found...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
+
             return;
         }
 
@@ -236,8 +257,11 @@ class CofryController extends Controller
             }
         }
 
+        $message = "Promotions: Sending to Firebase...";
+
         // Log the start of the promotion sending process to Firebase.
-        log_message( channel: self::LOG_CHANNEL, message: "Promotions: Sending to Firebase...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Loop through the promotions retrieved from Cofry.
         foreach ( $cofry_promotions as $id => $promotion )
@@ -375,8 +399,11 @@ class CofryController extends Controller
         // Check if there are no files found in the local directory.
         if ( empty( $files ) )
         {
+            $message = "Images: Generating for {$type}...";
+
             // Log the information that image generation is starting for the given type.
-            log_message( channel: self::LOG_CHANNEL, message: "Images: Generating for {$type}...", print: true );
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            echo $message;
 
             // Call a method to generate images if none are found.
             CofryIntegration::getImages();
@@ -385,8 +412,11 @@ class CofryController extends Controller
             $files = File::allFiles( directory: $path );
         }
 
+        $message = "Images: Capturing names of {$type}...";
+
         // Log the information that the system is capturing file names for the given type.
-        log_message( channel: self::LOG_CHANNEL, message: "Images: Capturing names of {$type}...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Get the file names from the list of files.
         $file_names = get_files_name( files: $files );
@@ -417,8 +447,11 @@ class CofryController extends Controller
         // Get the full local path to the images.
         $path    = public_path( path: $local_path );
 
+        $message = "Images: Sending to Firebase - {$type}...";
+
         // Log the start of the upload process.
-        log_message( channel: self::LOG_CHANNEL, message: "Images: Sending to Firebase - {$type}...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
 
         // Iterate over each image and upload it to Firebase.
         foreach ( $images as $img )
@@ -431,8 +464,12 @@ class CofryController extends Controller
 
             try
             {
+                $message = "Images: ID {$img}";
+
                 // Log the image ID being uploaded.
-                log_message( channel: self::LOG_CHANNEL, message: "Images: ID {$img}", print: true );
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                echo $message;
+
                 // Perform the upload.
                 $uploader->upload();
             }
@@ -442,6 +479,7 @@ class CofryController extends Controller
 
                 // Handle Firebase-specific exceptions.
                 log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
+                echo $message;
             }
             catch ( Throwable $e )
             {
@@ -449,6 +487,7 @@ class CofryController extends Controller
 
                 // Handle general exceptions.
                 log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+                echo $message;
             }
             finally
             {
@@ -458,7 +497,10 @@ class CofryController extends Controller
             }
         }
 
+        $message = "Images: Sending finished - {$type}...";
+
         // Log the completion of the upload process.
-        log_message( channel: self::LOG_CHANNEL, message: "Images: Sending finished - {$type}...", print: true );
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        echo $message;
     }
 }

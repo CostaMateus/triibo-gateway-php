@@ -38,11 +38,17 @@ class DeleteImages extends Command
      */
     public function handle()
     {
-        log_message( channel: "cofry", message: "Images: Deleting images...", print: true );
+        $message = "Images: Deleting images...";
+
+        log_message( channel: "cofry", message: $message );
+        $this->info( $message );
 
         File::deleteDirectory( public_path( "images/estabelecimentos/" ), true );
         File::deleteDirectory( public_path( "images/promos/"           ), true );
 
-        log_message( channel: "cofry", message: "Images: Successfully deleted...", print: true );
+        $message = "Images: Successfully deleted...";
+
+        log_message( channel: "cofry", message: $message );
+        $this->info( $message );
     }
 }

@@ -1,0 +1,136 @@
+<?php
+
+namespace App\Services\Vtex;
+
+use App\Services\Vtex\ConnectorService;
+
+class OrderService
+{
+    /**
+     * Vtex Connector Service.
+     *
+     * @var     ConnectorService
+     */
+    private $connector;
+
+    /**
+     * Env (e.g., local, production) as a string.
+     *
+     * @var     string
+     */
+    private $env;
+
+    /**
+     * Constructor.
+     *
+     * @param   ConnectorService    $connector
+     */
+    public function __construct( ConnectorService $connector )
+    {
+        $this->connector = $connector;
+        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
+    }
+
+    /**
+     * Get Order.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/orders-api#get-/api/oms/pvt/orders/-orderId-
+     *
+     * @param   string  $order_id
+     * @return  array
+     */
+    public function getOrder( string $order_id ) : array
+    {
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+
+        $this->connector
+            ->setCallOrigin(
+                origin : "getOrder"
+            )
+            ->buildUrl(
+                api    : "order-retrieve",
+            )
+            ->replaceUrl(
+                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
+            );
+
+        return $this->connector->sendRequest( method: "get" );
+
+    }
+
+    /**
+     * New Order.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/order-integration/orders
+     *
+     * @uses    $data must be result of app\Helpers\Vtex::vtex_new_order_prepare
+     *
+     * @param   array   $data   Order data in VTEX format.
+     * @return  array
+     */
+    public function newOrder( array $data ) : array
+    {
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+
+        $this->connector
+            ->setCallOrigin(
+                origin : "newOrder"
+            )
+            ->buildUrl(
+                api    : "order-integration",
+                param  : "?affiliateId={$affiliated_id}"
+            );
+
+        return $this->connector->sendRequest( method: "post", body: $data );
+    }
+
+    /**
+     * Update Order Status.
+     *
+     * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#put-/api/order-integration/orders/status
+     *
+     * @uses    $data must be result of app\Helpers\Vtex::vtex_update_order
+     *
+     * @param   array   $data       Order data in VTEX format.
+     * @return  array
+     */
+    public function updateOrderStatus( array $data ) : array
+    {
+        $account = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account_name" );
+
+        $this->connector
+            ->setCallOrigin(
+                origin : "updateOrderStatus"
+            )
+            ->buildUrl(
+                api    : "order-integration-status",
+                param  : "?an={$account}"
+            );
+
+        return $this->connector->sendRequest( method: "put", body: $data );
+    }
+
+    /**
+     * Cancel order.
+     *
+     * @param   string   $string
+     * @return  array
+     */
+    public function cancelOrder( string $order_id ) : array
+    {
+        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
+
+        $this->connector
+            ->setCallOrigin(
+                origin : "cancelOrder"
+            )
+            ->buildUrl(
+                api    : "order-integration-cancel",
+            )
+            ->replaceUrl(
+                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
+            );
+
+        return $this->connector->sendRequest( method: "post" );
+    }
+}
