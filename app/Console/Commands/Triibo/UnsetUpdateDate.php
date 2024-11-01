@@ -39,10 +39,16 @@ class UnsetUpdateDate extends Command
      */
     public function handle()
     {
-        log_message( channel: "triibo", message: "Unset updateDate: Start processing...", print: true );
+        $message = "Unset updateDate: Start processing...";
+
+        log_message( channel: "triibo", message: $message );
+        $this->info( $message );
 
         ( new TriiboController() )->unsetUpdateDate();
 
-        log_message( channel: "triibo", message: "Unset updateDate: End processing...", print: true );
+        $message = "Unset updateDate: End processing...";
+
+        log_message( channel: "triibo", message: $message );
+        $this->info( $message );
     }
 }

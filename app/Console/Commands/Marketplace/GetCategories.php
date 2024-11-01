@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Category;
@@ -39,38 +40,50 @@ class GetCategories extends Command
      */
     public function handle()
     {
-        DB::table( "marketplace_product_categories" )->truncate();
-
-        $ended = false;
-        $page  = 1;
-        $cats  = [];
-        $data  = [];
-
-        do
+        try
         {
-            $search = [
-                "per_page" => 100,
-                "page"     => $page,
-            ];
+            $this->info( "Truncate table: marketplace_product_categories" );
 
-            $aux    = Category::all( $search );
+            DB::table( "marketplace_product_categories" )->truncate();
 
-            if ( $aux->count() < 100 ) $ended = true;
+            $page       = 1;
+            $categories = [];
+            $data       = [];
 
-            $cats   = array_merge( $aux->toArray(), $cats );
+            do
+            {
+                $this->info( "Searching for categories in the marketplace, page {$page}" );
 
-            $page++;
+                $response   = Category::all( [
+                    "per_page" => 100,
+                    "page"     => $page,
+                ] );
+
+                $categories = array_merge( $response->toArray(), $categories );
+
+                $page++;
+            }
+            while ( $response->count() == 100 );
+
+            $this->info( "Loaded categories" );
+
+            foreach ( $categories as $category )
+            {
+                $data[] = [
+                    "cat_id"   => $category->id,
+                    "cat_slug" => $category->slug,
+                ];
+            }
+
+            $this->info( "Inserting in table: marketplace_product_categories" );
+
+            DB::table( "marketplace_product_categories" )->insert( $data );
+
+            $this->info( "Finished" );
         }
-        while ( !$ended );
-
-        foreach ( $cats as $cat )
+        catch ( Throwable $e )
         {
-            $data[] = [
-                "cat_id"   => $cat->id,
-                "cat_slug" => $cat->slug,
-            ];
+            $this->error( $e->getMessage() );
         }
-
-        DB::table( "marketplace_product_categories" )->insert( $data );
     }
 }

@@ -51,16 +51,22 @@ class ProcessStoresPromos extends Command
 
         if ( !in_array( $option, $opts ) )
         {
-            log_message( channel: $channel, message: "Invalid option, terminating process...", print: true );
+            $message = "Invalid option, terminating process...";
+
+            log_message( channel: $channel, message: $message );
             return;
         }
 
         $title   = ( $option != "all" ) ? ucfirst( $option ) : "Stores|Promotions";
+        $message = "{$title}: Start processing...";
 
-        log_message( channel: $channel, message: "{$title}: Start processing...", print: true );
+        log_message( channel: $channel, message: $message );
+        $this->info( $message );
 
         ( new CofryController() )->$option();
 
-        log_message( channel: $channel, message: "{$title}: End processing...", print: true );
+        $message = "{$title}: End processing...";
+        log_message( channel: $channel, message: $message );
+        $this->info( $message );
     }
 }

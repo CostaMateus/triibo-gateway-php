@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Console\Commands\Marketplace;
+namespace App\Console\Commands\Marketplace\Old;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use App\Http\Integrations\MauticIntegration;
 
 class UpdatePipedriveStages extends Command
@@ -39,10 +38,16 @@ class UpdatePipedriveStages extends Command
      */
     public function handle()
     {
-        log_message( channel: "marketplace", message: "Stages|Status|Labels: Start processing of update...", print: true );
+        $message = "Stages|Status|Labels: Start processing of update...";
+
+        log_message( channel: "marketplace", message: $message );
+        $this->info( $message );
 
         MauticIntegration::updateStages();
 
-        log_message( channel: "marketplace", message: "Stages|Status|Labels: End processing...", print: true );
+        $message = "Stages|Status|Labels: End processing...";
+
+        log_message( channel: "marketplace", message: $message );
+        $this->info( $message );
     }
 }

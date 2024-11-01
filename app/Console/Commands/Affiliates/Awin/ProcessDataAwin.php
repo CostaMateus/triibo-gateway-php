@@ -223,9 +223,12 @@ class ProcessDataAwin extends Command
         // Loop through each option
         foreach ( $options as $option )
         {
-            $name = ucfirst( $option );
+            $name    = ucfirst( $option );
+            $message = "{$name}: Start processing...";
 
-            log_message( channel: "awin", message: "{$name}: Start processing...", print: true );
+            log_message( channel: "awin", message: $message );
+
+            $this->info( $message );
 
             // If the AwinController instance is not created yet, create it
             if ( !$awin )
@@ -237,7 +240,11 @@ class ProcessDataAwin extends Command
             // Call the corresponding method on the AwinController instance
             $awin->{$option}();
 
-            log_message( channel: "awin", message: "{$name}: End processing...", print: true );
+            $message = "{$name}: End processing...";
+
+            log_message( channel: "awin", message: $message );
+
+            $this->info( $message );
         }
     }
 
