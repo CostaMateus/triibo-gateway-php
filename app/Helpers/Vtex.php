@@ -63,7 +63,7 @@ if ( !function_exists( "get_categories_ids" ) )
 
             if ( $category )
             {
-                $categories[] = $category->cat_id;
+                $categories[] = [ "id" => $category->cat_id ];
             }
             else
             {
@@ -86,7 +86,7 @@ if ( !function_exists( "get_categories_ids" ) )
                     ] );
                 }
 
-                $categories[] = $new_category[ "id" ];
+                $categories[] = [ "id" => $new_category[ "id" ] ];
 
                 DB::table( "marketplace_product_categories" )->insert( [
                     "cat_id"   => $new_category[ "id"   ],
