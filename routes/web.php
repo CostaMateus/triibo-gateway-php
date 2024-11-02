@@ -187,6 +187,8 @@ Route::prefix( "mkt" )->group( function ()
     {
         $product = Product::find( $id );
 
+        dd( $product );
+
         $meta = [];
 
         $keys = [
