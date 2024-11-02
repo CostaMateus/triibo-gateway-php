@@ -486,22 +486,21 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
         {
             // TODO possível ajuste qnd em prod
 
-            // // Skip the ProductLineId field.
-            // if ( $attr[ "FieldName" ] === "ProductLineId" )
-            //     return null;
+            $field_value = strip_tags( $attr[ "FieldValues" ][ 0 ] );
 
-            // Convert boolean 'true' to 'SIM'.
-            $field_value = $attr[ "FieldValues" ][ 0 ] === "true"
-                            ? "SIM"
-                            : $attr[ "FieldValues" ][ 0 ];
+            $field_value = $field_value === "true" ? "SIM" : $attr[ "FieldValues" ][ 0 ];
+            $field_value = $field_value === "S"    ? "Sim" : $field_value;
+            $field_value = $field_value === "N"    ? "Não" : $field_value;
 
-            $field_value = strip_tags( $field_value );
+            $field_name  = $attr[ "FieldName" ];
+
+            $visible     = $field_name === "MARKETPLACESTORE" ? false : true;
 
             // Return the transformed attribute.
             return [
-                "name"      => $attr[ "FieldName" ],
+                "name"      => $field_name,
                 "position"  => $key,
-                "visible"   => true,
+                "visible"   => $visible,
                 "variation" => true,
                 "options"   => [ $field_value ],
             ];
@@ -1261,7 +1260,7 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
                 "width"  => ( string ) $data[ "Dimension" ][ "width"  ],
                 "height" => ( string ) $data[ "Dimension" ][ "height" ]
             ],
-            "shipping_class"    => "fast-shop",
+            "shipping_class"    => "fast-shop-normal",
             "upsell_ids"        => [],
             "cross_sell_ids"    => [],
             "parent_id"         => 0,

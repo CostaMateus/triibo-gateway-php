@@ -162,7 +162,7 @@ class GetProductList extends Command
                     $wc_products = $this->translateProducts( $products );
 
                     if ( is_array( $wc_products ) )
-                        $this->sendToMarketplace( $wc_products );
+                        $this->sendToMarketplace( $wc_products, $products );
 
                     $this->info( "=================== Reset ===================" );
 
@@ -188,7 +188,7 @@ class GetProductList extends Command
             $wc_products = $this->translateProducts( $products );
 
             if ( is_array( $wc_products ) )
-                $this->sendToMarketplace( $wc_products );
+                $this->sendToMarketplace( $wc_products, $products );
         }
 
         save_file( name: "vtex-fails-sku", data: $fails );
@@ -378,7 +378,7 @@ class GetProductList extends Command
      * @param   array   $products
      * @return  void
      */
-    private function sendToMarketplace( array $products ) : void
+    private function sendToMarketplace( array $products, array $original ) : void
     {
         try
         {
@@ -400,7 +400,7 @@ class GetProductList extends Command
 
             $this->error( $e->getMessage() );
 
-            save_file( name: "vtex-fails-products", data: $products );
+            save_file( name: "vtex-fails-original-products", data: $original );
         }
     }
 }

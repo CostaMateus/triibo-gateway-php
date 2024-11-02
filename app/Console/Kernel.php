@@ -84,8 +84,8 @@ class Kernel extends ConsoleKernel
             // $schedule->command( "mkt:get_product_infos_fs --action=update" )->dailyAt( "03:00" )->runInBackground();
 
 
-            $schedule->command( "vtex:get-product-category-list" )->dailyAt( "15:25" )->runInBackground();
-            $schedule->command( "vtex:get-product-list"          )->dailyAt( "15:30" )->runInBackground();
+            // $schedule->command( "vtex:get-product-category-list" )->dailyAt( "15:25" )->runInBackground();
+            $schedule->command( "vtex:get-product-list"          )->dailyAt( "22:40" )->runInBackground();
         }
     }
 
