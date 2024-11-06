@@ -22,6 +22,7 @@ class Kernel extends ConsoleKernel
 
         \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
         \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
+        // \App\Console\Commands\Marketplace\FixProducts::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
 
@@ -85,7 +86,7 @@ class Kernel extends ConsoleKernel
 
 
             // $schedule->command( "vtex:get-product-category-list" )->dailyAt( "15:25" )->runInBackground();
-            $schedule->command( "vtex:get-product-list"          )->dailyAt( "00:25" )->runInBackground();
+            // $schedule->command( "vtex:get-product-list"          )->dailyAt( "00:25" )->runInBackground();
         }
     }
 
