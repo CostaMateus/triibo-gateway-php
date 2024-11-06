@@ -132,7 +132,7 @@ class AwinController extends Controller
             $date       = new DateTime();
 
             // Set the enable date as a Unix timestamp in milliseconds.
-            self::$date = ( int ) $date->format( "U" ) * 1000;
+            self::$date = ( int ) $date->format( "Uv" );
         }
     }
 
