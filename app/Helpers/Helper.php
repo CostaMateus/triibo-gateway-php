@@ -243,7 +243,7 @@ class Helper
                     ? new DateTime( date( $format ) )
                     : new DateTimeImmutable( $format );
 
-        $date = ( int ) $date->format( "Uv" ) * 1000;
+        $date = ( int ) $date->format( "Uv" );
 
         return $date;
     }
