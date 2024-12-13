@@ -46,7 +46,6 @@ class DeleteProductWithoutSku extends Command
         $page               = 1;
         $per_page           = 100;
         $delete             = [];
-        $fs_store_id        = 4265;
         $shipping_class_ids = [
             4744,                              // Sem HUB
             3970,                              // Padrão
@@ -60,10 +59,14 @@ class DeleteProductWithoutSku extends Command
                 $search = [
                     "per_page"     => $per_page,
                     "page"         => $page,
-                    "manage_stock" => true,
+                    "manage_stock" => false,
+                    "stock_status" => "outofstock",
+                    "status"       => "private",
                 ];
 
                 $aux    = Product::all( $search );
+
+                $this->info( "Page: {$page} | Loaded: {$aux->count()}" );
 
                 if ( $aux->count() < 100 ) $has_ended = true;
 
@@ -71,16 +74,16 @@ class DeleteProductWithoutSku extends Command
 
                 foreach ( $aux as $product )
                 {
-                    if ( $product->store->id != $fs_store_id )
+                    if ( $product->store->id != 4265 )
                         continue;
 
                     // not empty sku
                     if ( !empty( $product->sku ) )
                         continue;
 
-                    // not shipping-class of FS
-                    if ( !in_array( $product->shipping_class_id, $shipping_class_ids ) )
-                        continue;
+                    // // not shipping-class of FS
+                    // if ( !in_array( $product->shipping_class_id, $shipping_class_ids ) )
+                    //     continue;
 
                     $this->info( $product->id );
 
@@ -91,7 +94,14 @@ class DeleteProductWithoutSku extends Command
 
                     if ( count( $delete ) == 100 )
                     {
-                        Product::batch( [ "delete" => $delete ] );
+                        try
+                        {
+                            Product::batch( [ "delete" => $delete ] );
+                        }
+                        catch ( Throwable $e )
+                        {
+                            $this->error( $e->getMessage() );
+                        }
 
                         $delete = [];
                     }
