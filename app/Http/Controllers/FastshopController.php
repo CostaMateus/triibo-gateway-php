@@ -3,25 +3,19 @@
 namespace App\Http\Controllers;
 
 use Exception;
+use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Http;
-use Codexshaper\WooCommerce\Facades\Product;
-use App\Http\Integrations\FastshopIntegration\Log;
-use App\Http\Integrations\FastshopIntegration\DataTranslator;
+use Codexshaper\WooCommerce\Facades\Product as WC_Product;
+use App\Http\Integrations\FastshopIntegration\{ Log, DataTranslator };
 
 class FastshopController extends Controller
 {
-    private $env;
-    private $fs_url;
-    private $fs_headers;
-
-    public function __construct()
-    {
-        $this->env        = config( "fastshop.env"                     );
-        $this->fs_url     = config( "fastshop.{$this->env}.fs.url"     );
-        $this->fs_headers = config( "fastshop.{$this->env}.fs.headers" );
-    }
+    protected $sale_channel;
+    protected $product_service;
+    protected $simulation_service;
+    protected const LOG_CHANNEL = "marketplace";
 
     /**
      * Atualiza preço e estoque
@@ -32,135 +26,237 @@ class FastshopController extends Controller
      * @param   string      $sku
      * @return  Response
      */
-    public function updateSkuWc( Request $request, $sku )
+    public function updateSkuWc( Request $request, string $sku = "" )
     {
         // Verifição de chaves
-        if ( ( $verify = $this->keysVerification( $request, true ) ) !== TRUE )
+        if ( ( $verify = $this->keysVerification( $request ) ) !== true )
             return $verify;
+
+        if ( !isset( $sku ) )
+            return $this->returnResponse( 400, "Empty data" );
+
+        $seller                   = $request->header( "seller" );
+        $env                      = config( "vtex.partners.{$seller}.env" );
+        $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
+
+        $connector                = new ConnectorService( $seller );
+        $connector->enableLogNotify( false );
+
+        $this->product_service    = new ProductService( $connector );
+        $this->simulation_service = new FulfillmentService( $connector );
 
         try
         {
-            // Procura produto no Marketplace pelo SKU
-            $product = Product::all( [ "sku" => strtoupper( $sku ) ] )->first();
+            [ $product_id, $sku ] = explode( "_", $sku );
 
-            if ( !$product )
+            $context  = $this->getSkuContext( $sku );
+            $data     = $this->getSkuData( $sku );
+
+            if ( $context === null || $data === null )
+                return $this->returnResponse( 400, "Empty data" );
+
+            if ( $context === false || $data === false )
             {
-                return response()->json( [
-                    "errorCode" => "4001",
-                    "message"   => "Unable to retrieve product data",
-                ], 404 );
+                WC_Product::update( $product_id, [ "stock_status" => "outofstock" ] );
+                return $this->returnResponse( 200, "ok" );
             }
 
-            $sku     = explode( "FS-", $sku )[ 1 ];
+            $simulate = $this->getSimulate( $data[ "Id" ] );
 
-            // Atualiza produto no Marketplace
-            $this->updateStockPrice( $product, $sku );
+            if ( $simulate === null )
+                return $this->returnResponse( 400, "Empty data" );
 
-            return response()->json( [
-                "errorCode" => null,
-                "message"   => "Ok",
-            ], 200 );
+            if ( !isset( $simulate[ "items" ] ) )
+            {
+                WC_Product::update( $product_id, [ "stock_status" => "outofstock" ] );
+                return $this->returnResponse( 200, "ok" );
+            }
+
+            WC_Product::update( $product_id, [
+                "regular_price" => convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ),
+                "sale_price"    => convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ),
+                "stock_status"  => ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock",
+            ] );
+
+            return $this->returnResponse( 200, "ok" );
         }
         catch ( Exception $e )
         {
-            Log::exception( "MP - updateSkuWc", $e );
-
-            return response()->json( [
-                "errorCode" => "5000", // 5000 - erro generico
-                "message"   => $e->getMessage(),
-            ], 500 );
+            return $this->returnResponse( 500, $e->getMessage() );
         }
     }
 
     /**
      * Valida as chaves das requisições recebidas
      *
-     * @param Request $request
-     * @param boolean $wc       Valida chaves do WooCommerce
-     * @return true|Response
+     * @param   Request     $request
+     * @return  true|Response
      */
-    private function keysVerification( Request $request, bool $wc = false )
+    private function keysVerification( Request $request )
     {
-        if ( !$wc )
+        $app_key   = $request->header( "api-key"   );
+        $app_token = $request->header( "api-token" );
+
+        // Verifição de chaves
+        if ( $app_key != config( "woocommerce.plugins.key" ) || $app_token != config( "woocommerce.plugins.token" ) )
         {
-            $app_key   = $request->header( "x-vtex-api-appkey"   );
-            $app_token = $request->header( "x-vtex-api-apptoken" );
+            Log::invalidCredentials( $app_key, $app_token );
 
-            // Verifição de chaves
-            if ( $app_key != config( "fastshop.{$this->env}.fs.key" ) || $app_token != config( "fastshop.{$this->env}.fs.token" ) )
-            {
-                Log::invalidCredentials( $app_key, $app_token );
-
-                return response()->json( [
-                    "errorCode" => "400",
-                    "message"   => "invalid credentials"
-                ], 400 );
-            }
-            else
-            {
-                return TRUE;
-            }
+            return response()->json( [
+                "errorCode" => "400",
+                "message"   => "invalid credentials"
+            ], 400 );
         }
-        else
+
+        return true;
+    }
+
+    /**
+     *
+     * @param   integer     $code
+     * @param   string      $message
+     * @return  JsonResponse
+     */
+    private function returnResponse( int $code, string $message )
+    {
+        return match ( $code )
         {
-            $app_key   = $request->header( "api-key"   );
-            $app_token = $request->header( "api-token" );
+            200     => response()->json( [ "errorCode" => 200, "message" => $message, ], 200 ),
+            400     => response()->json( [ "errorCode" => 400, "message" => $message, ], 400 ),
+            default => response()->json( [ "errorCode" => 500, "message" => $message, ], 500 ),
+        };
+    }
 
-            // Verifição de chaves
-            if ( $app_key != config( "fastshop.{$this->env}.wc.key" ) || $app_token != config( "fastshop.{$this->env}.wc.token" ) )
-            {
-                Log::invalidCredentials( $app_key, $app_token );
+    /**
+     *
+     * @param   integer     $sku
+     * @return  array|false|null
+     */
+    private function getSkuContext( int $sku ) : array|false|null
+    {
+        try
+        {
+            $response = $this->product_service->getSkuContext( $sku );
 
-                return response()->json( [
-                    "errorCode" => "400",
-                    "message"   => "invalid credentials"
-                ], 400 );
-            }
-            else
-            {
-                return TRUE;
-            }
+            if ( $response[ 0 ] != 200 )
+                return null;
+
+            $product  = $response[ 1 ][ "data" ];
+
+            if ( $product[ "IsActive" ] == false && $product[ "IsProductActive" ] == false )
+                return false;
+
+            if ( !in_array( $this->sale_channel, $product[ "SalesChannels" ] ) )
+                return false;
+
+            return $product;
+        }
+        catch( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSkuContext",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
+            return null;
         }
     }
 
     /**
-     * Atualização de preço/estoque
-     * Consulta a Fastshop para atualizar os dados do produto.
-     * Toda vez que changeNotification() retornar o status 200.
      *
-     * @param Product $Product
-     * @param string $sellerSkuId
-     * @return void
+     * @param   integer     $sku
+     * @return  array|false|null
      */
-    private function updateStockPrice( $product, $seller_sku_id )
+    private function getSkuData( int $sku ) : array|false|null
     {
-        $url  = "{$this->fs_url}/pvt/orderForms/simulation";
-        $body = DataTranslator::translate( "queryStockPrice", [ $seller_sku_id ] );
-
         try
         {
-            // Consulta produto na FS
-            $response = Http::withHeaders( $this->fs_headers )->withBody( json_encode( $body ), "application/json" )->post( $url );
+            $response = $this->product_service->getSkuData( $sku );
 
-            if ( $response->successful() )
-            {
-                $fsData = $response->json();
+            if ( $response[ 0 ] != 200 )
+                return null;
 
-                // Converte produto da FS para WC
-                $wcData = DataTranslator::translate( "updateStockPrice", [ $product, $fsData ] );
+            $product  = $response[ 1 ][ "data" ];
 
-                // Atualiza produto no Marketplace
-                Product::update( $product->id, $wcData );
-            }
-            else
-            {
-                // Registrar log de falha
-                Log::updateStockPrice( $product, null, true );
-            }
+            if ( $product[ "IsActive" ] == false )
+                return false;
+
+            return $product;
         }
-        catch ( Exception $e )
+        catch( Throwable $e )
         {
-            Log::exception( "INT - updateStockPrice", $e, $seller_sku_id );
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSkuData",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
+            return null;
+        }
+    }
+
+    /**
+     *
+     * @param   integer     $id
+     * @return  array|null
+     */
+    private function getSimulate( int $id ) : array|null
+    {
+        try
+        {
+            $data = [
+                "items" => [
+                    [
+                        "id"       => $id,
+                        "quantity" => 1,
+                        "seller"   => "1"
+                    ]
+                ],
+                "isCheckedIn" => false,
+                "country"     => "BRA",
+                "selectedSla" => "Normal",
+            ];
+
+            $response = $this->simulation_service->simulate( $data );
+
+            if ( $response[ 0 ] != 200 )
+                return null;
+
+            return array_filter(
+                $response[ 1 ][ "data" ],
+                function( $value, $key )
+                {
+                    return $value !== null &&
+                            $value !== [] &&
+                            $key !== "paymentData" &&
+                            $key !== "purchaseConditions" &&
+                            $key !== "ratesAndBenefitsData";
+                },
+                ARRAY_FILTER_USE_BOTH
+            );
+        }
+        catch ( Throwable $e )
+        {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSimulate",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->error( $e->getMessage() );
+
+            return null;
         }
     }
 }
