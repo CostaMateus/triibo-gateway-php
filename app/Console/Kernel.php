@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         \App\Console\Commands\Triibo\UnsetVouchers::class,
 
-        \App\Console\Commands\Vtex\UpdateOrCreateProducts::class,
+        // \App\Console\Commands\Vtex\UpdateOrCreateProducts::class,
     ];
 
     /**
