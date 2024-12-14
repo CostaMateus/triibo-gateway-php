@@ -20,9 +20,6 @@ class ProductController extends VtexController
      */
     public function updateOrCreateSku( Request $request ) : JsonResponse
     {
-        // Send an email notification about the exception.
-        send_mail_notification( blade: parent::LOG_CHANNEL, method: "updateOrCreateSku", catch: "Teste de notificação" );
-
         $vtex_data = $request->all();
 
         if ( empty( $vtex_data ) )
