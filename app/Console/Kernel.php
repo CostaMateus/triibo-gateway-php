@@ -55,15 +55,16 @@ class Kernel extends ConsoleKernel
             $schedule->command( "awin:process --option=reports" )->dailyAt( "01:30" )->runInBackground();
 
 
-            ################################
-            ### Cofry Triibo Integration ###
-            ################################
-            // Lojas e promoções - Diariamente às 02 e às 14h
-            $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
-            // Imagens - Diariamente às 02h05
-            $schedule->command( "cofry:delete_images"           )->dailyAt( "02:30" )->runInBackground();
-            // Imagens - Diariamente às 02h10
-            $schedule->command( "cofry:process_images"          )->dailyAt( "02:40" )->runInBackground();
+            // ################################
+            // ### Cofry Triibo Integration ###
+            // ### desativado 17/12/2024    ###
+            // ################################
+            // // Lojas e promoções - Diariamente às 02 e às 14h
+            // $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
+            // // Imagens - Diariamente às 02h05
+            // $schedule->command( "cofry:delete_images"           )->dailyAt( "02:30" )->runInBackground();
+            // // Imagens - Diariamente às 02h10
+            // $schedule->command( "cofry:process_images"          )->dailyAt( "02:40" )->runInBackground();
 
             ################################
             ### Marketplace ################
