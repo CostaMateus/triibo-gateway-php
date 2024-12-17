@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         \App\Console\Commands\Triibo\UnsetVouchers::class,
 
-        // \App\Console\Commands\Vtex\UpdateOrCreateProducts::class,
+        \App\Console\Commands\Vtex\ProcessProducts::class,
     ];
 
     /**
@@ -80,9 +80,8 @@ class Kernel extends ConsoleKernel
             // Change status of products without images - diariamente as 2h15
             $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:15" )->runInBackground();
 
-            // // Process product informations FS
-            // $schedule->command( "vtex:update_or_create_products --action=create" )->hourlyAt( "15" )->between( "7:00", "23:00" )->runInBackground();
-            // $schedule->command( "vtex:update_or_create_products --action=update" )->hourlyAt( "45" )->between( "7:00", "23:00" )->runInBackground();
+            // Process product informations FS
+            $schedule->command( "vtex:process_products --seller=fast_shop" )->hourlyAt( "15" )->between( "7:00", "23:30" )->runInBackground();
 
             // $schedule->command( "vtex:get-product-category-list" )->dailyAt( "15:25" )->runInBackground();
             // $schedule->command( "vtex:get-product-list"          )->dailyAt( "00:25" )->runInBackground();
