@@ -1,12 +1,13 @@
 <?php
 
+use Throwable;
 use App\Models\User;
+use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
-use App\Services\Vtex\OrderService;
-use App\Services\Vtex\ConnectorService;
-use App\Services\Vtex\FulfillmentService;
 use App\Notifications\FastShop\OrderError;
-use Codexshaper\WooCommerce\Facades\{ Note, Order };
+use Illuminate\Support\Facades\{ DB, Storage };
+use Codexshaper\WooCommerce\Facades\{ Category, Note, Order };
+use App\Services\Vtex\{ OrderService, ConnectorService, FulfillmentService };
 
 /**
  * Helper functions for various tasks in the application.
@@ -45,11 +46,11 @@ if ( !function_exists( "get_marketplace_categories" ) )
 if ( !function_exists( "get_categories_ids" ) )
 {
     /**
-     * Undocumented function
+     * Retrieves category IDs based on provided IDs and names.
      *
-     * @param   string  $ids
-     * @param   array   $names
-     * @return  array
+     * @param   string  $ids    A string containing category IDs separated by slashes.
+     * @param   array   $names  An associative array where keys are category IDs and values are category names.
+     * @return  array           An array of associative arrays, each containing the 'id' of a category.
      */
     function get_categories_ids( string $ids, array $names ) : array
     {
@@ -102,13 +103,13 @@ if ( !function_exists( "get_categories_ids" ) )
 if ( !function_exists( "get_email_order_error" ) )
 {
     /**
-     * Undocumented function
+     * Retrieves email order error details based on the provided parent and order arrays.
      *
-     * @param   array|null  $parent
-     * @param   array|null  $order
-     * @return  array
+     * @param   array|null  $parent     An optional array containing parent order details.
+     * @param   array|null  $order      An optional array containing order details.
+     * @return  array                   An associative array with order and customer information.
      */
-    function get_email_order_error( ?array $parent = null, ?array $order = null )
+    function get_email_order_error( ?array $parent = null, ?array $order = null ) : array
     {
         if ( !empty( $parent ) )
         {
@@ -146,7 +147,7 @@ if ( !function_exists( "get_partner" ) )
      * @param   string  $affiliated_id
      * @return  string|null
      */
-    function get_partner( string $affiliated_id )
+    function get_partner( string $affiliated_id ) : string|null
     {
         $partners = config( "vtex.partners" );
 
@@ -165,14 +166,14 @@ if ( !function_exists( "get_partner" ) )
 if ( !function_exists( "get_wc_order" ) )
 {
     /**
-     * Undocumented function
+     * Retrieves a WooCommerce order and its parent order if applicable.
      *
-     * @param   string  $channel
-     * @param   string  $order_id
-     * @param   string  $seller_id
-     * @return  array
+     * @param   string  $channel    The logging channel to use for error logging.
+     * @param   string  $order_id   The ID of the order to retrieve.
+     * @param   string  $seller_id  The ID of the seller associated with the order.
+     * @return  array               An array containing the parent order and the order details, or [false, false] in case of an error.
      */
-    function get_wc_order( string $channel, string $order_id, string $seller_id )
+    function get_wc_order( string $channel, string $order_id, string $seller_id ) : array
     {
         $parent = null;
         $order  = null;
@@ -225,14 +226,14 @@ if ( !function_exists( "get_wc_order" ) )
 if ( !function_exists( "create_order_note" ) )
 {
     /**
-     * Undocumented function
+     * Creates a note for a specific order.
      *
-     * @param   string  $channel
-     * @param   string  $order_id
-     * @param   string  $message
+     * @param   string  $channel    The logging channel to use for error logging.
+     * @param   string  $order_id   The ID of the order to which the note will be added.
+     * @param   string  $message    The message content of the note.
      * @return  void
      */
-    function create_order_note( string $channel, string $order_id, string $message )
+    function create_order_note( string $channel, string $order_id, string $message ) : void
     {
         $retry  = 0;
         $failed = false;
@@ -265,15 +266,15 @@ if ( !function_exists( "create_order_note" ) )
 if ( !function_exists( "create_error_note" ) )
 {
     /**
-     * Undocumented function
+     * Creates an error note for a specific order.
      *
-     * @param   string          $channel
-     * @param   string          $order_id
-     * @param   string          $error_option
-     * @param   string|null     $custom
+     * @param   string          $channel        The logging channel to use for error logging.
+     * @param   string          $order_id       The ID of the order to which the error note will be added.
+     * @param   string          $error_option   The specific error code to generate the message.
+     * @param   string|null     $custom         An optional custom message to include in the note.
      * @return  void
      */
-    function create_error_note( string $channel, string $order_id, string $error_option, ?string $custom = null )
+    function create_error_note( string $channel, string $order_id, string $error_option, ?string $custom = null ) : void
     {
         $message     = "ERROR FS\n";
         $error_codes = [
@@ -303,13 +304,13 @@ if ( !function_exists( "create_error_note" ) )
 if ( !function_exists( "update_order_meta" ) )
 {
     /**
-     * Undocumented function
+     * Updates the metadata for a specific order.
      *
-     * @param   string  $order_id
-     * @param   array   $data
+     * @param   string  $order_id   The ID of the order whose metadata will be updated.
+     * @param   array   $data       An associative array of metadata to update.
      * @return  void
      */
-    function update_order_meta( string $order_id, array $data )
+    function update_order_meta( string $order_id, array $data ) : void
     {
         $retry  = 0;
         $failed = false;
@@ -333,7 +334,13 @@ if ( !function_exists( "update_order_meta" ) )
 
 if ( !function_exists( "format_product_to_freight" ) )
 {
-    function format_product_to_freight( array $order )
+    /**
+     * Formats the order products for freight calculation.
+     *
+     * @param   array   $order  The order array containing shipping and line items information.
+     * @return  array           The formatted data including items and postal code.
+     */
+    function format_product_to_freight( array $order ) : array
     {
         $data = [
             "items"      => [],
@@ -361,9 +368,6 @@ if ( !function_exists( "add_sub_category" ) )
 {
     /**
      * Recursively adds a child category to its parent in a hierarchical structure.
-     *
-     * This function searches for the parent of a given child category in the result array
-     * or its nested children, and adds the child to the appropriate parent's children array.
      *
      * @param   array   &$result    The array of categories to search through. Passed by reference.
      * @param   array   $child      The child category to be added.
@@ -447,12 +451,12 @@ if ( !function_exists( "save_file" ) )
 if ( !function_exists( "vtex_get_product_images" ) )
 {
     /**
-     * Undocumented function
+     * Retrieves and formats product images from Vtex.
      *
-     * @param   array   $images
-     * @return  array
+     * @param   array   $images     The array of images from Vtex.
+     * @return  array               The formatted array of images suitable for WooCommerce.
      */
-    function vtex_get_product_images( array $images )
+    function vtex_get_product_images( array $images ) : array
     {
         // Filter Vtex images.
         $filtered = array_filter( $images, function ( $image ) {
@@ -475,12 +479,12 @@ if ( !function_exists( "vtex_get_product_images" ) )
 if ( !function_exists( "vtex_get_product_attributes" ) )
 {
     /**
-     * Undocumented function
+     * Transforms Vtex product attributes into a structured format.
      *
-     * @param   array   $attributes
-     * @return  array
+     * @param   array   $attributes     The array of attributes from Vtex.
+     * @return  array                   The filtered and transformed array of product attributes.
      */
-    function vtex_get_product_attributes( array $attributes )
+    function vtex_get_product_attributes( array $attributes ) : array
     {
         $specifications = array_map( function ( $attr, $key )
         {
@@ -661,7 +665,15 @@ if ( !function_exists( "vtex_map_selected_addresses" ) )
 
 if ( !function_exists( "vtex_get_order" ) )
 {
-    function vtex_get_order( string $channel, string $seller, string $order_id )
+    /**
+     * Retrieves an order from VTEX.
+     *
+     * @param   string  $channel    The logging channel.
+     * @param   string  $seller     The seller identifier.
+     * @param   string  $order_id   The ID of the order to retrieve.
+     * @return  array               The response data containing order details or error information.
+     */
+    function vtex_get_order( string $channel, string $seller, string $order_id ) : array
     {
         $connector = new ConnectorService( $seller );
         $service   = new OrderService( $connector );
@@ -724,7 +736,15 @@ if ( !function_exists( "vtex_get_order" ) )
 
 if ( !function_exists( "vtex_cancel_order" ) )
 {
-    function vtex_cancel_order( string $channel, string $seller, string $order_id )
+    /**
+     * Cancels an order in VTEX.
+     *
+     * @param   string  $channel    The logging channel.
+     * @param   string  $seller     The seller identifier.
+     * @param   string  $order_id   The ID of the order to cancel.
+     * @return  array               The response data indicating success or error information.
+     */
+    function vtex_cancel_order( string $channel, string $seller, string $order_id ) : array
     {
         $connector = new ConnectorService( $seller );
         $service   = new OrderService( $connector );
@@ -852,16 +872,16 @@ if ( !function_exists( "vtex_new_order_prepare" ) )
 if ( !function_exists( "vtex_new_order_exec" ) )
 {
     /**
-     * Undocumented function
+     * Executes the creation of a new order in VTEX.
      *
-     * @param   string      $channel
-     * @param   string      $seller
-     * @param   array       $freight
-     * @param   array       $order
-     * @param   array|null  $parent
-     * @return  array
+     * @param   string      $channel    The logging channel.
+     * @param   string      $seller     The seller identifier.
+     * @param   array       $freight    The freight information for the order.
+     * @param   array       $order      The order details.
+     * @param   array|null  $parent     Optional parent order data.
+     * @return  array                   The response data indicating success or error information.
      */
-    function vtex_new_order_exec( string $channel, string $seller, array $freight, array $order, ?array $parent = null )
+    function vtex_new_order_exec( string $channel, string $seller, array $freight, array $order, ?array $parent = null ) : array
     {
         $connector = new ConnectorService( $seller );
         $service   = new OrderService( $connector );
@@ -955,14 +975,14 @@ if ( !function_exists( "vtex_update_order_prepare" ) )
 if ( !function_exists( "vtex_update_order_exec" ) )
 {
     /**
-     * Undocumented function
+     * Executes the update of an order status in VTEX.
      *
-     * @param   string      $channel
-     * @param   string      $seller
-     * @param   string      $order_id
-     * @return  array
+     * @param   string  $channel    The logging channel.
+     * @param   string  $seller     The seller identifier.
+     * @param   string  $order_id   The ID of the order to update.
+     * @return  array               The response data indicating success or error information.
      */
-    function vtex_update_order_exec( string $channel, string $seller, string $order_id )
+    function vtex_update_order_exec( string $channel, string $seller, string $order_id ) : array
     {
         $connector = new ConnectorService( $seller );
         $service   = new OrderService( $connector );
@@ -1058,12 +1078,13 @@ if ( !function_exists( "vtex_freight_prepare" ) )
 if ( !function_exists( "vtex_freight_exec" ) )
 {
     /**
-     * Undocumented function
+     * Executes the freight calculation in VTEX.
      *
-     * @param   string  $channel
-     * @param   string  $seller
-     * @param   array   $wc_data
-     * @return  JsonResponse|array
+     * @param   string  $channel    The logging channel.
+     * @param   string  $seller     The seller identifier.
+     * @param   array   $wc_data    The WooCommerce data for the freight calculation.
+     * @param   bool    $full_data  Optional flag to return full data.
+     * @return  JsonResponse|array  The response data indicating success or error information.
      */
     function vtex_freight_exec( string $channel, string $seller, array $wc_data, bool $full_data = false ) : JsonResponse|array
     {
@@ -1227,6 +1248,13 @@ if ( !function_exists( "vtex_fulfillment_order" ) )
 
 if ( !function_exists( "vtex_product_to_mkt" ) )
 {
+    /**
+     * Converts a Vtex product data structure to a WooCommerce product format.
+     *
+     * @param   array   $data       The product data from Vtex.
+     * @param   array   $simulate   The simulation data for pricing.
+     * @return  array               The formatted WooCommerce product array.
+     */
     function vtex_product_to_mkt( array $data, array $simulate ) : array
     {
         // Vtex categories to WooCommerce category format.
@@ -1282,12 +1310,12 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
 if ( !function_exists( "vtex_freight_to_woo"  ) )
 {
     /**
-     * Undocumented function
+     * Converts Vtex freight information to WooCommerce format.
      *
-     * @param   array   $data
-     * @return  array
+     * @param   array   $data   The freight data from Vtex.
+     * @return  array           The formatted logistics information for WooCommerce.
      */
-    function vtex_freight_to_woo( array $data )
+    function vtex_freight_to_woo( array $data ) : array
     {
         if ( !empty( $data[ "logisticsInfo" ] ) && !empty( $data[ "items" ] ) )
         {
@@ -1356,12 +1384,12 @@ if ( !function_exists( "vtex_freight_to_woo"  ) )
 if ( !function_exists( "vtex_freight_to_woo_failed" ) )
 {
     /**
-     * Undocumented function
+     * Handles the failure case for converting Vtex freight information to WooCommerce format.
      *
-     * @param   array   $data
-     * @return  array
+     * @param   array   $data   The freight data from Vtex.
+     * @return  array           The logistics information indicating failure.
      */
-    function vtex_freight_to_woo_failed( array $data )
+    function vtex_freight_to_woo_failed( array $data ) : array
     {
         $logistics = [];
 
@@ -1391,13 +1419,14 @@ if ( !function_exists( "vtex_freight_to_woo_failed" ) )
 if ( !function_exists( "send_notification" ) )
 {
     /**
+     * Sends a notification regarding an order error.
      *
-     * @param   array|null  $parent
-     * @param   array|null  $order
-     * @param   string      $error_option
-     * @return  array
+     * @param   array|null  $parent         The parent order data, if available.
+     * @param   array|null  $order          The order data.
+     * @param   string      $error_option   The error option to determine the notification message.
+     * @return  void
      */
-    function send_notification( ?array $parent = null, ?array $order = null, string $error_option = "" )
+    function send_notification( ?array $parent = null, ?array $order = null, string $error_option = "" ) : void
     {
         $data        = get_email_order_error( $parent, $order );
 
@@ -1441,7 +1470,16 @@ if ( !function_exists( "send_notification" ) )
 
 if ( !function_exists( "process_handle_key_missing" ) )
 {
-    function process_handle_key_missing( string $channel, array $parent = null, array $order, array $data )
+    /**
+     * Processes the handling of a missing key in the order.
+     *
+     * @param   string      $channel    The logging channel.
+     * @param   array|null  $parent     The parent order data, if available.
+     * @param   array       $order      The order data.
+     * @param   array       $data       The data related to the missing key.
+     * @return  JsonResponse            The JSON response indicating the error.
+     */
+    function process_handle_key_missing( string $channel, array $parent = null, array $order, array $data ) : JsonResponse
     {
         log_message(
             channel : $channel,
@@ -1460,7 +1498,16 @@ if ( !function_exists( "process_handle_key_missing" ) )
 
 if ( !function_exists( "handle_order_meta_fs_id_missing" ) )
 {
-    function handle_order_meta_fs_id_missing( string $channel, array $parent = null, array $order, string $function )
+    /**
+     * Handles the case where the Fast Shop ID is missing from the order metadata.
+     *
+     * @param   string      $channel    The logging channel.
+     * @param   array|null  $parent     The parent order data, if available.
+     * @param   array       $order      The order data.
+     * @param   string      $function   The function name that triggered the check.
+     * @return  mixed|null              The result of the process handling or null.
+     */
+    function handle_order_meta_fs_id_missing( string $channel, array $parent = null, array $order, string $function ) : mixed
     {
         $data = [
             "type"     => "order_approval_error_2",
@@ -1482,7 +1529,16 @@ if ( !function_exists( "handle_order_meta_fs_id_missing" ) )
 
 if ( !function_exists( "handle_order_meta_fs_approval_missing" ) )
 {
-    function handle_order_meta_fs_approval_missing( string $channel, array $parent = null, array $order, string $function )
+    /**
+     * Handles the case where the Fast Shop approval metadata is missing from the order.
+     *
+     * @param   string      $channel    The logging channel.
+     * @param   array|null  $parent     The parent order data, if available.
+     * @param   array       $order      The order data.
+     * @param   string      $function   The function name that triggered the check.
+     * @return  mixed|null              The result of the process handling or null.
+     */
+    function handle_order_meta_fs_approval_missing( string $channel, array $parent = null, array $order, string $function ) : mixed
     {
         $data = [
             "type"     => "order_approval_error_3",
