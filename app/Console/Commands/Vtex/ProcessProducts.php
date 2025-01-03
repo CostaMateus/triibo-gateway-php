@@ -147,8 +147,6 @@ class ProcessProducts extends Command
         foreach ( $products as $product )
             $this->processProduct( $product );
 
-        dd( $this->delete_local, $this->update_wc );
-
         $message                  = "Products: Finished FS data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
