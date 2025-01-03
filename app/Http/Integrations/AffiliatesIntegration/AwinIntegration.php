@@ -9,6 +9,7 @@ use App\Helpers\Helper;
 use Gregwar\Image\Image;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use Kreait\Laravel\Firebase\Facades\Firebase;
 
 class AwinIntegration
 {
@@ -153,6 +154,39 @@ class AwinIntegration
      */
     public function getReports( bool $isUpdate = false )
     {
+        // TODO remove
+        // if ( false )
+        // {
+        //     $firebase_cashback     = Firebase::database()->getReference( "/Triibo-Purchases-Cashback" );
+        //     $firebase_reports_cash = $firebase_cashback->getValue();
+
+        //     // Loop through each report in the "Triibo-Purchases-Cashback" node.
+        //     foreach ( $firebase_reports_cash as $push_cash => $fb_cash )
+        //     {
+        //         if ( $fb_cash[ "commissionClient" ] != 1 )
+        //             continue;
+
+        //         $data   = $this->searchReports_fix( $isUpdate, $fb_cash[ "transactionId" ] );
+
+        //         if ( !$data[ "success" ] )
+        //             continue;
+
+        //         $report = $data[ "data" ][ 0 ][ "metaData" ];
+
+        //         $diff   = array_diff_assoc_recursive( $report, $fb_cash );
+
+        //         foreach ( $diff as $key => $value )
+        //             if ( $value !== null )
+        //                 $fb_cash[ $key ] = $value;
+
+        //         $firebase_cashback->update( [ $push_cash => $fb_cash ] );
+
+        //         dump( "Reports: Updated Cash transactions ID {$push_cash}" );
+        //     }
+
+        //     dd( "DONE" );
+        // }
+
         return $this->searchReports( $isUpdate );
     }
 
@@ -373,6 +407,120 @@ class AwinIntegration
                 sleep( 10 );
 
                 $data = $this->searchReports( $isUpdate );
+            }
+            else
+            {
+                $data = [
+                    "success" => false,
+                    "code"    => 4001,
+                    "data"    => null
+                ];
+            }
+        }
+        else
+        {
+            $data = [
+                "success" => true,
+                "code"    => 0,
+                "data"    => $response->json()
+            ];
+        }
+
+        if ( !empty( $data[ "data" ] ) )
+        {
+            foreach ( $data[ "data" ] as &$report )
+            {
+                $aux                        = [];
+
+                $establishmentId            = $report[ "advertiserId" ];
+                $establishmentInfo          = $this->searchEstablishmentsDetails( $establishmentId, true );
+                $cashback                   = get_cashback( $establishmentInfo[ "commissionRange" ][ 0 ] );
+                $establishmentName          = explode( " BR", $establishmentInfo[ "programmeInfo" ][ "name" ] )[ 0 ];
+
+                $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
+                                                ? $report[ "clickRefs" ][ "clickRef" ]
+                                                : null;
+
+                $aux[ "partner"           ] = "awin";
+                $aux[ "transactionId"     ] = $report[ "id" ];
+                $aux[ "transactionDate"   ] = Helper::getDateTimeUnix( $report[ "transactionDate" ], true );
+                $aux[ "processingDate"    ] = null;
+                $aux[ "status"            ] = Helper::awinReportStatus( $report[ "commissionStatus" ] );
+
+                $aux[ "updateDate"        ] = ( !$isUpdate && $aux[ "status" ] == "pending" )
+                                                ? $report[ "transactionDate" ]
+                                                : $report[ "validationDate"  ];
+
+                $aux[ "updateDate"        ] = Helper::getDateTimeUnix( $aux[ "updateDate" ], true );
+
+                $aux[ "advertiserId"      ] = $establishmentId;
+                $aux[ "advertiserName"    ] = $establishmentName;
+
+                $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];
+                $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];
+
+                $totalCommission            = ( $commission > 0 ) ? ( 100 * $commission ) / $totalOrder : 0;
+                $totalCommission            = ( float ) number_format( $totalCommission, 2, ".", "" );
+
+                $commissionClient           = ( float ) str_replace( ",", ".", $cashback );
+
+                $commissionTriibo           = $totalCommission - $commissionClient;
+                $commissionTriibo           = ( float ) number_format( $commissionTriibo, 2, ".", "" );
+
+                $amountClient               = ( $totalOrder * $commissionClient ) / 100;
+                $amountTriibo               = ( $totalOrder * $commissionTriibo ) / 100;
+
+                $aux[ "amount"            ] = $totalOrder;
+                $aux[ "amountCommission"  ] = $commission;
+                $aux[ "amountClient"      ] = ( float ) number_format( $amountClient, 2, ".", "" );
+                $aux[ "amountTriibo"      ] = ( float ) number_format( $amountTriibo, 2, ".", "" );
+                $aux[ "amountPartner"     ] = null;
+
+                $aux[ "commissionClient"  ] = $commissionClient;
+                $aux[ "commissionTriibo"  ] = $commissionTriibo;
+                $aux[ "commissionPartner" ] = null;
+
+                $report[ "metaData" ]       = $aux;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * TODO remove
+     * Get Awin reports
+     *
+     * @param   boolean     $isUpdate   Get only reports has dateType == 'validation', default false
+     * @return  array
+     */
+    private function searchReports_fix( bool $isUpdate = false, string $a_id )
+    {
+        $query = "?ids={$a_id}";
+        $query .= "&timezone=" . self::TZ;
+
+        try
+        {
+            $response = Http::withToken( $this->tkn )->get( "{$this->url_transactions}/{$query}" );
+        }
+        catch ( Exception $e )
+        {
+            dump( "Reports: Fail searchReports_fix(). Retry. {$a_id}" );
+
+            // log_exception( channel: self::LOG_CHANNEL, message: $message, method: "searchReports_fix", type: "Throwable", e: $e );
+
+            return $this->searchReports_fix( $isUpdate, $a_id );
+        }
+
+        if ( !$response->successful() )
+        {
+            $err = json_decode( $response->body(), true );
+
+            if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+            {
+                sleep( 10 );
+
+                $data = $this->searchReports_fix( $isUpdate, $a_id );
             }
             else
             {
