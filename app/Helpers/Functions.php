@@ -673,8 +673,7 @@ if ( !function_exists( "get_cashback" ) )
         $max   = ( float ) $max;
 
         // Calculate the average and half of the average.
-        $media = ( $max + $min ) / 2;
-        $half  = $media / 2;
+        $half  = ( $max + $min ) / 4;
 
         // Determine the cashback value based on the conditions.
         if ( $half >= $min )
