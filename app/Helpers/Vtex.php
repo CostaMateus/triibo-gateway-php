@@ -1,6 +1,5 @@
 <?php
 
-use Throwable;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
