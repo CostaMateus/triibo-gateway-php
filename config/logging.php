@@ -146,6 +146,14 @@ return [
             "path"   => storage_path( "logs/triibo.log" ),
             "level"  => "debug"
         ],
+
+        // TODO remover
+        "vtex"       => [
+            "permission" => 0777,
+            "driver" => "single",
+            "path"   => storage_path( "logs/vtex-notification.log" ),
+            "level"  => "debug"
+        ],
     ],
 
 ];
