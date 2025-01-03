@@ -22,7 +22,6 @@ class AwinIntegration
     private const RG          = "BR";
     private const TZ          = "America/Sao_Paulo";
 
-    // protected $env;
     protected $tkn;
 
     protected $url_promotions;
@@ -37,7 +36,6 @@ class AwinIntegration
     protected $url_linkbuilder;
 
     protected $establishments = [];
-    // protected $storesLocal    = [];
 
     protected $base           = 100; // base de calculo, ex 100 reais gastos
     protected $rate           = 10;  // taxa de conversão, 10 pontos a cada 1 real
@@ -402,7 +400,7 @@ class AwinIntegration
 
                 $establishmentId            = $report[ "advertiserId" ];
                 $establishmentInfo          = $this->searchEstablishmentsDetails( $establishmentId, true );
-                $cashback                   = get_cashback( $establishmentInfo[ "commissionRange" ] );
+                $cashback                   = get_cashback( $establishmentInfo[ "commissionRange" ][ 0 ] );
                 $establishmentName          = explode( " BR", $establishmentInfo[ "programmeInfo" ][ "name" ] )[ 0 ];
 
                 $aux[ "uid"               ] = ( isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] ) )
@@ -423,7 +421,6 @@ class AwinIntegration
 
                 $aux[ "advertiserId"      ] = $establishmentId;
                 $aux[ "advertiserName"    ] = $establishmentName;
-
 
                 $totalOrder                 = ( float ) $report[ "saleAmount"       ][ "amount" ];
                 $commission                 = ( float ) $report[ "commissionAmount" ][ "amount" ];
@@ -464,7 +461,6 @@ class AwinIntegration
      */
     private function translateEstablishments( array $data )
     {
-        // $newStores = [];
         $establishments = [];
         $dateEn         = Helper::getDateTimeUnix();
         $dateDis        = Helper::getDateTimeUnixInterval( "P7Y" );
