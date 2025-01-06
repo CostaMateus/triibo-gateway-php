@@ -5,6 +5,7 @@
 
 use App\Models\User;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
 
