@@ -6,6 +6,7 @@ use Throwable;
 use App\Models\Vtex\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Vtex\VtexController;
 
 class ProductController extends VtexController
