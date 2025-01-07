@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use Exception;
 use Throwable;
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Http\{ Request, Response };
+use App\Http\Integrations\FastshopIntegration\Log;
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
-use App\Http\Integrations\FastshopIntegration\{ Log, DataTranslator };
+use App\Services\Vtex\{ ProductService, ConnectorService, FulfillmentService };
 
 class FastshopController extends Controller
 {
