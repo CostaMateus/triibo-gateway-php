@@ -494,7 +494,7 @@ class AwinController extends Controller
                         $approval_reference->update( [ $push => $approval_promotion ] );
                     }
 
-                    $message            = "Promotions: Disabled ID {$push}";
+                    $message = "Promotions: Disabled ID {$push}";
 
                     log_message( channel: self::LOG_CHANNEL, message: $message );
                     echo $message;
