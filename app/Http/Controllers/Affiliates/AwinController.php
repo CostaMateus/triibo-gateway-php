@@ -485,7 +485,7 @@ class AwinController extends Controller
 
                     $approval_promotion = $db->getReference( "/Store-Aprovacoes/{$push}" )->getValue();
 
-                    if ( $approval_promotion )
+                    if ( $approval_promotion && $approval_promotion[ "status" ] == "aberto" )
                     {
                         $approval_promotion[ "status"       ] = "negado";
                         $approval_promotion[ "comment"      ] = "Promoção desativada, aprovação fechada pelo sistema.";
