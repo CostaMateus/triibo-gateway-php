@@ -3,18 +3,12 @@
 namespace App\Console\Commands\Vtex;
 
 use Throwable;
-use App\Helpers\Helper;
-use Illuminate\Support\Str;
 use App\Models\Vtex\Product;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use App\Services\Vtex\ProductService;
 use App\Services\Vtex\ConnectorService;
-use Illuminate\Support\Facades\Storage;
 use App\Services\Vtex\FulfillmentService;
-use Codexshaper\WooCommerce\Facades\Category;
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
-use Google\Cloud\Storage\Connection\Rest;
 
 class ProcessProducts extends Command
 {
@@ -132,6 +126,21 @@ class ProcessProducts extends Command
                                            ->where( "origin", $origin )
                                            ->get();
 
+        if ( $products->count() == 0 )
+        {
+            $message = "Products: No products to process...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
+
+            $diff    = $start->diffInMinutes( now() );
+            $message = "Products: Runtime {$diff} minutes...";
+
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
+            return;
+        }
+
         $env                      = config( "vtex.partners.{$seller}.env"                  );
         $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
         $this->store_id           = config( "woocommerce.partners.{$seller}.store_id"      );
@@ -193,9 +202,6 @@ class ProcessProducts extends Command
                     $this->info( "Products: {$c} loaded" );
                     $this->wc_products = array_merge( $this->wc_products, $products );
                 }
-
-                // if ( count( $this->wc_products ) >= 200 )
-                //     break;
 
                 $page++;
             }
