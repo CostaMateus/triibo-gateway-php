@@ -485,7 +485,7 @@ class AwinController extends Controller
 
                     $approval_promotion = $db->getReference( "/Store-Aprovacoes/{$push}" )->getValue();
 
-                    if ( $approval_promotion )
+                    if ( $approval_promotion && $approval_promotion[ "status" ] == "aberto" )
                     {
                         $approval_promotion[ "status"       ] = "negado";
                         $approval_promotion[ "comment"      ] = "Promoção desativada, aprovação fechada pelo sistema.";
@@ -494,7 +494,7 @@ class AwinController extends Controller
                         $approval_reference->update( [ $push => $approval_promotion ] );
                     }
 
-                    $message            = "Promotions: Disabled ID {$push}";
+                    $message = "Promotions: Disabled ID {$push}";
 
                     log_message( channel: self::LOG_CHANNEL, message: $message );
                     echo $message;
