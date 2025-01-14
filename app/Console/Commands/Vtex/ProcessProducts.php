@@ -154,7 +154,12 @@ class ProcessProducts extends Command
         $this->loadWcProducts();
 
         foreach ( $products as $product )
+        {
             $this->processProduct( $product );
+
+            $product->status = "processed";
+            $product->save();
+        }
 
         $message                  = "Products: Finished FS data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
