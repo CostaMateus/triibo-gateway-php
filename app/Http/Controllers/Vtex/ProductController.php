@@ -23,7 +23,7 @@ class ProductController extends VtexController
     {
         $vtex_data = $request->all();
 
-        Log::channel( channel: "vtex" )->info( message: "updateOrCreateSku", context: $vtex_data );
+        // Log::channel( channel: "vtex" )->info( message: "updateOrCreateSku", context: $vtex_data );
 
         if ( empty( $vtex_data ) )
         {
