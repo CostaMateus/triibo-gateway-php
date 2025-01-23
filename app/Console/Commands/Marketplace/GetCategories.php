@@ -72,6 +72,7 @@ class GetCategories extends Command
                 $data[] = [
                     "cat_id"     => $category->id,
                     "cat_slug"   => $category->slug,
+                    "cat_name"   => $category->name,
                     "cat_parent" => $category->parent,
                 ];
             }
