@@ -70,8 +70,10 @@ class GetCategories extends Command
             foreach ( $categories as $category )
             {
                 $data[] = [
-                    "cat_id"   => $category->id,
-                    "cat_slug" => $category->slug,
+                    "cat_id"     => $category->id,
+                    "cat_slug"   => $category->slug,
+                    "cat_name"   => $category->name,
+                    "cat_parent" => $category->parent,
                 ];
             }
 

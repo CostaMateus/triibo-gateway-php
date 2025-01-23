@@ -9,6 +9,7 @@ use Codexshaper\WooCommerce\Facades\Order;
 use Codexshaper\WooCommerce\Facades\Customer;
 use Codexshaper\WooCommerce\Facades\Product;
 use Codexshaper\WooCommerce\Facades\Subscription;
+use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 
 /*
 |--------------------------------------------------------------------------
@@ -219,6 +220,48 @@ Route::prefix( "mkt" )->group( function ()
         $product = Product::create( $data );
 
         dd( $product );
+    } );
+
+    Route::get( "/products", function()
+    {
+        $page        = 1;
+        $wc_products = [];
+
+        try
+        {
+            // do
+            // {
+            //     $products = WC_Product::all( [
+            //         "status"       => "publish",
+            //         // "manage_stock" => false,
+            //         "per_page"     => 100,
+            //         "page"         => $page,
+            //     ] )->toArray();
+
+            //     $count    = count( $products );
+
+            //     foreach ( $products as $key => $product )
+            //     {
+            //         if ( $product->store->id != 4265 )
+            //         {
+            //             unset( $products[ $key ] );
+            //             continue;
+            //         }
+            //     }
+
+            //     if ( count( $products ) != 0 )
+            //         $wc_products = array_merge( $wc_products, $products );
+
+            //     $page++;
+            // }
+            // while ( $count == 100 );
+        }
+        catch ( Throwable $e )
+        {
+            dd( $e->getMessage() );
+        }
+
+        dd( "Count: " . count( $wc_products ) );
     } );
 } );
 
@@ -469,3 +512,9 @@ Route::get( "/fs", function () {
     // dd( $body );
 
 } );
+
+
+// add_filter('rest_request_before_callbacks', function ($response, $handler, $request) {
+//     error_log("Método: " . $request->get_method() . " | Rota: " . $request->get_route());
+//     return $response;
+// }, 10, 3);
