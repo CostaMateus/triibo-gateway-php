@@ -21,24 +21,9 @@ if ( !function_exists( "get_marketplace_categories" ) )
      */
     function get_marketplace_categories() : array
     {
-        $page       = 1;
-        $aux_cats   = [];
-        $categories = [];
-
-        do
-        {
-            $data     = Category::all( [ "per_page" => 100, "page" => $page ] )->toArray();
-            $aux_cats = array_merge( $aux_cats, $data );
-            $page++;
-        }
-        while ( count( $data ) == 100 );
-
-        foreach ( $aux_cats as $cat )
-            $categories[ $cat->id ] = $cat;
-
-        ksort( $categories );
-
-        return $categories;
+        return DB::table( "marketplace_product_categories" )
+                 ->get( [ "cat_id", "cat_name", "cat_parent" ] )
+                 ->toArray();
     }
 }
 
@@ -528,9 +513,9 @@ if ( !function_exists( "vtex_format_categories" ) )
         foreach ( $data as $category )
         {
             $categories[] = [
-                "id"       => ( string ) $category->id,
-                "name"     => $category->name,
-                "parent"   => ( string ) $category->parent,
+                "id"       => ( string ) $category->cat_id,
+                "name"     =>            $category->cat_name,
+                "parent"   => ( string ) $category->cat_parent,
                 "children" => [],
             ];
         }
