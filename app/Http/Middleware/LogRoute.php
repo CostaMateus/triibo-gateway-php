@@ -32,11 +32,11 @@ class LogRoute
     /**
      * Undocumented function
      *
-     * @param   Request         $request
-     * @param   JsonResponse    $response
+     * @param   Request                 $request
+     * @param   Response|JsonResponse   $response
      * @return  void
      */
-    public function terminate( Request $request, JsonResponse $response ) : void
+    public function terminate( Request $request, Response|JsonResponse $response ) : void
     {
         if ( defined( "LARAVEL_START" ) and $request instanceof Request )
             $this->log( request: $request, response: $response );
@@ -45,11 +45,11 @@ class LogRoute
     /**
      * Undocumented function
      *
-     * @param   Request         $request
-     * @param   JsonResponse    $response
+     * @param   Request                 $request
+     * @param   Response|JsonResponse   $response
      * @return  void
      */
-    protected function log( Request $request, JsonResponse $response ) : void
+    protected function log( Request $request, Response|JsonResponse $response ) : void
     {
         $duration = microtime( true ) - LARAVEL_START;
         $url      = $request->fullUrl();
