@@ -44,8 +44,6 @@ class GetCategories extends Command
         {
             $this->info( "Truncate table: marketplace_product_categories" );
 
-            DB::table( "marketplace_product_categories" )->truncate();
-
             $page       = 1;
             $categories = [];
             $data       = [];
@@ -79,6 +77,7 @@ class GetCategories extends Command
 
             $this->info( "Inserting in table: marketplace_product_categories" );
 
+            DB::table( "marketplace_product_categories" )->truncate();
             DB::table( "marketplace_product_categories" )->insert( $data );
 
             $this->info( "Finished" );
