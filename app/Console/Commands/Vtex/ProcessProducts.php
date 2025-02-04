@@ -98,59 +98,50 @@ class ProcessProducts extends Command
      */
     public function handle() : int
     {
-        $start                    = now();
-        $message                  = "Products: Starting process Vtex data...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $start    = now();
+        $this->log_message( message: "=======================================" );
+        $this->log_message( message: "Products: Starting process Vtex data..." );
 
-        $seller                   = $this->option( key: "seller" );
+        $seller   = $this->option( key: "seller" );
 
         if ( !isset( $this->allowed_sellers[ $seller ] ) )
         {
-            $message = "Products: Seller not allowed...";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $this->log_message( message: "Products: Seller not allowed..." );
 
-            $diff    = $start->diffInMinutes( now() );
-            $message = "Products: Runtime {$diff} minutes...";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $diff = $start->diffInMinutes( date: now() );
 
-            return 1;
+            $this->log_message( message: "Products: Runtime {$diff} minutes..." );
+
+            return 0;
         }
 
-        $origin                   = $this->allowed_sellers[ $seller ];
-        $products                 = Product::where( "status", "unprocessed" )->where( "origin", $origin )->get();
+        $origin   = $this->allowed_sellers[ $seller ];
+        $products = Product::where( column: "status", value: "unprocessed" )->where( column: "origin", value: $origin )->get();
 
         if ( $products->count() == 0 )
         {
-            $message = "Products: No products to process...";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $this->log_message( message: "Products: No products to process..." );
 
-            $diff    = $start->diffInMinutes( now() );
-            $message = "Products: Runtime {$diff} minutes...";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $diff    = $start->diffInMinutes( date: now() );
 
-            return 1;
+            $this->log_message( message: "Products: Runtime {$diff} minutes..." );
+
+            return 0;
         }
 
-        $env                      = config( "vtex.partners.{$seller}.env"                  );
-        $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
-        $this->store_id           = config( "woocommerce.partners.{$seller}.store_id"      );
+        $env                      = config( key: "vtex.partners.{$seller}.env"                  );
+        $this->sale_channel       = config( key: "vtex.partners.{$seller}.{$env}.sales_channel" );
+        $this->store_id           = config( key: "woocommerce.partners.{$seller}.store_id"      );
 
-        $connector                = new ConnectorService( $seller );
-        $connector->enableLogNotify( false );
+        $connector                = new ConnectorService( seller: $seller );
+        $connector->enableLogNotify( notify: false );
 
-        $this->product_service    = new ProductService( $connector );
-        $this->simulation_service = new FulfillmentService( $connector );
+        $this->product_service    = new ProductService( connector: $connector );
+        $this->simulation_service = new FulfillmentService( connector: $connector );
 
         $this->loadWcProducts();
 
-        $message                  = "Products: Processing Vtex notifications...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->log_message( message: "Products: Processing Vtex notifications..." );
 
         $products_chunk           = $products->chunk( 100 );
 
@@ -158,11 +149,9 @@ class ProcessProducts extends Command
         {
             foreach ( $products as $product )
             {
-                $message              = "Products: SKU {$product->sku}...";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
-                $this->info( $message );
+                // $this->log_message( message: "Products: SKU {$product->sku}..." );
 
-                $this->processProduct( $product );
+                $this->processProduct( product: $product );
 
                 $this->update_local[] = $product->id;
             }
@@ -174,16 +163,13 @@ class ProcessProducts extends Command
             $this->updateLocalProducts();
         }
 
-        $message                  = "Products: Finished data process...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->log_message( message: "Products: Finished data process..." );
 
-        $diff                     = $start->diffInMinutes( now() );
-        $message                  = "Products: Runtime {$diff} minutes...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $diff = $start->diffInMinutes( date: now() );
 
-        return 1;
+        $this->log_message( message: "Products: Runtime {$diff} minutes..." );
+
+        return 0;
     }
 
     /**
@@ -192,16 +178,13 @@ class ProcessProducts extends Command
      */
     private function loadWcProducts() : void
     {
-        $message           = "Products: Loading marketplace products...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->log_message( message: "Products: Loading marketplace products..." );
 
-        $this->wc_products = DB::table( "marketplace_product_skus" )->where( "store_id", $this->store_id )->get();
+        $this->wc_products = DB::table( table: "marketplace_product_skus" )->where( column: "store_id", value: $this->store_id )->get();
 
         $count             = count( $this->wc_products );
-        $message           = "Products: {$count} products loaded...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+
+        $this->log_message( message: "Products: {$count} products loaded..." );
     }
 
     /**
@@ -210,9 +193,7 @@ class ProcessProducts extends Command
      */
     private function updateMarketplaceProduct() : void
     {
-        $message       = "Products: Updating marketplace products...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->log_message( message: "Products: Updating marketplace products..." );
 
         $chunks        = [];
         $create_chunks = array_chunk( $this->update_wc[ "create" ], 50 );
@@ -235,15 +216,12 @@ class ProcessProducts extends Command
 
             try
             {
-                WC_Product::batch( $chunk );
+                WC_Product::batch( data: $chunk );
             }
             catch ( Throwable $e )
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
-                {
-                    log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
-                    $this->error( $e->getMessage() );
-                }
+                    $this->log_message( message: $e->getMessage(), type: "error" );
             }
         }
     }
@@ -254,11 +232,9 @@ class ProcessProducts extends Command
      */
     private function deleteProcessed() : void
     {
-        $message = "Products: Deleting completed processes...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->log_message( message: "Products: Deleting completed processes..." );
 
-        Product::where( "status", "processed" )->delete();
+        Product::where( column: "status", value: "processed" )->delete();
     }
 
     /**
@@ -267,9 +243,7 @@ class ProcessProducts extends Command
      */
     private function updateLocalWcProducts() : void
     {
-        $message = "Products: Updating local products...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->log_message( message: "Products: Updating local products..." );
 
         $created = $this->update_wc[ "create" ];
 
@@ -277,29 +251,26 @@ class ProcessProducts extends Command
         {
             try
             {
-                $wc_product = WC_Product::where( "sku", $product[ "sku" ] )->first();
+                $wc_product = WC_Product::where( column: "sku", value: $product[ "sku" ] )->first();
             }
             catch ( Throwable $e )
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
-                {
-                    log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
-                    $this->error( $e->getMessage() );
-                }
+                    $this->log_message( message: $e->getMessage(), type: "error" );
             }
 
             if ( !$wc_product )
                 continue;
 
-            $local_product = DB::table( "marketplace_product_skus" )
-                               ->where( "product_sku", $product[ "sku" ] )
-                               ->whereNull( "product_id" )
+            $local_product = DB::table( table: "marketplace_product_skus" )
+                               ->where( column: "product_sku", value: $product[ "sku" ] )
+                               ->whereNull( columns: "product_id" )
                                ->first();
 
             if ( !$local_product )
                 continue;
 
-            $this->updateWcProduct( $local_product->id, [ "product_id" => $wc_product[ "id" ] ] );
+            $this->updateWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
         }
     }
 
@@ -309,8 +280,8 @@ class ProcessProducts extends Command
      */
     private function updateLocalProducts() : void
     {
-        Product::whereIn( "id", $this->update_local )
-               ->update( [ "status" => "processed" ] );
+        Product::whereIn( column: "id", value: $this->update_local )
+               ->update( values: [ "status" => "processed" ] );
     }
 
     /**
@@ -322,7 +293,7 @@ class ProcessProducts extends Command
     {
         try
         {
-            $wc_product = $this->searchProduct( $product->sku );
+            $wc_product = $this->searchProduct( id: $product->sku );
 
             if ( $product->action === "disable" )
             {
@@ -334,7 +305,7 @@ class ProcessProducts extends Command
 
                 $this->update_wc[ "update" ][] = [ "id" => $wc_product->id, "stock_status" => "outofstock" ];
 
-                $this->updateWcProduct( $wc_product->id, [ "stock_status" => "outofstock" ] );
+                $this->updateWcProduct( id: $wc_product->id, data: [ "stock_status" => "outofstock" ] );
 
                 return;
             }
@@ -346,11 +317,11 @@ class ProcessProducts extends Command
                 if ( empty( $wc_product ) || ( !$data[ "PriceModified" ] && !$data[ "StockModified" ] ) )
                     return;
 
-                $data = $this->getProductData( $wc_product->id, $product->sku );
+                $data = $this->getProductData( wc_id: $wc_product->id, sku: $product->sku );
 
                 $this->update_wc[ "update" ][] = $data;
 
-                $this->updateWcProduct( $wc_product->id, $data );
+                $this->updateWcProduct( id: $wc_product->id, data: $data );
 
                 return;
             }
@@ -360,12 +331,12 @@ class ProcessProducts extends Command
                 if ( !empty( $wc_product ) )
                     return;
 
-                $data = $this->getProductData( 0, $product->sku, true );
+                $data = $this->getProductData( wc_id: 0, sku: $product->sku, create: true );
 
                 if ( empty( $data ) )
                     return;
 
-                $data = vtex_product_to_mkt( $data[ "context" ], $data[ "simulate" ] );
+                $data = vtex_product_to_mkt( data: $data[ "context" ], simulate: $data[ "simulate" ] );
 
                 $this->update_wc[ "create" ][] = $data;
 
@@ -376,7 +347,7 @@ class ProcessProducts extends Command
         }
         catch ( Exception $e )
         {
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
         }
     }
 
@@ -387,7 +358,7 @@ class ProcessProducts extends Command
      */
     private function searchProduct( string $id ) : mixed
     {
-        $product = $this->wc_products->filter( function ( $product ) use ( $id )
+        $product = $this->wc_products->filter( callback: function ( $product ) use ( $id )
         {
             return $product->metadata_id == $id;
         } );
@@ -405,7 +376,7 @@ class ProcessProducts extends Command
     {
         if ( $id == 0 )
         {
-            DB::table( "marketplace_product_skus" )->insert( [
+            DB::table( table: "marketplace_product_skus" )->insert( values: [
                 "store_id"      => $this->store_id,
                 "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
                 "product_sku"   => $data[ "sku"           ],
@@ -416,7 +387,7 @@ class ProcessProducts extends Command
         }
         else
         {
-            DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
+            DB::table( table: "marketplace_product_skus" )->where( column: "id", value: $id )->update( values: $data );
         }
     }
 
@@ -428,8 +399,8 @@ class ProcessProducts extends Command
      */
     private function getProductData( int $wc_id, string $sku, bool $create = false )
     {
-        $context = $this->getSkuContext( $sku );
-        $data    = $this->getSkuData( $sku );
+        $context = $this->getSkuContext( sku: $sku );
+        $data    = $this->getSkuData( sku: $sku );
 
         if ( ( !$context || !$data ) && !$create )
             return [ "id" => $wc_id, "stock_status" => "outofstock" ];
@@ -437,7 +408,7 @@ class ProcessProducts extends Command
         if ( ( !$context || !$data ) && $create )
             return null;
 
-        $simulate = $this->getSimulate( $data[ "Id" ] );
+        $simulate = $this->getSimulate( id: $data[ "Id" ] );
 
         if ( ( !$simulate || !isset( $simulate[ "items" ] ) ) && !$create )
             return [ "id" => $wc_id, "stock_status" => "outofstock" ];
@@ -449,8 +420,8 @@ class ProcessProducts extends Command
             return [ "context" => $context, "simulate" => $simulate ];
 
         return [
-            "regular_price" => convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ),
-            "sale_price"    => convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ),
+            "regular_price" => convert_price( price: $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ),
+            "sale_price"    => convert_price( price: $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ),
             "stock_status"  => ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock",
         ];
     }
@@ -464,7 +435,7 @@ class ProcessProducts extends Command
     {
         try
         {
-            $response = $this->product_service->getSkuContext( $sku );
+            $response = $this->product_service->getSkuContext( sku: $sku );
 
             if ( $response[ 0 ] != 200 )
                 return null;
@@ -494,7 +465,7 @@ class ProcessProducts extends Command
     {
         try
         {
-            $response = $this->product_service->getSkuData( $sku );
+            $response = $this->product_service->getSkuData( sku: $sku );
 
             if ( $response[ 0 ] != 200 )
                 return null;
@@ -534,7 +505,7 @@ class ProcessProducts extends Command
                 "selectedSla" => "Normal",
             ];
 
-            $response = $this->simulation_service->simulate( $data );
+            $response = $this->simulation_service->simulate( data: $data );
 
             if ( $response[ 0 ] != 200 )
                 return null;
@@ -562,9 +533,22 @@ class ProcessProducts extends Command
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
 
             return null;
         }
+    }
+
+    /**
+     * Log message
+     *
+     * @param   string  $message
+     * @param   string  $type
+     * @return  void
+     */
+    private function log_message( string $message, string $type = "info" ) : void
+    {
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->$type( string: $message );
     }
 }
