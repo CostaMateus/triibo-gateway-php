@@ -163,6 +163,12 @@ class ProcessProducts extends Command
             $this->update_local[] = $product->id;
         }
 
+        $this->updateMarketplaceProduct();
+        $this->deleteProcessed();
+
+        $this->updateLocalWcProducts();
+        $this->updateLocalProducts();
+
         $message                  = "Products: Finished data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
@@ -191,6 +197,84 @@ class ProcessProducts extends Command
         $message           = "Products: {$count} products loaded...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function updateMarketplaceProduct() : void
+    {
+        $message = "Products: Updating marketplace products...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        try
+        {
+            WC_Product::batch( $this->update_wc );
+        }
+        catch ( Throwable $e )
+        {
+            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            {
+                log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
+                $this->error( $e->getMessage() );
+            }
+        }
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function deleteProcessed() : void
+    {
+        $message = "Products: Deleting completed processes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        Product::where( "status", "processed" )->delete();
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function updateLocalWcProducts() : void
+    {
+        $message = "Products: Updating local products...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $created = $this->update_wc[ "create" ];
+
+        foreach ( $created as $product )
+        {
+            $wc_product    = WC_Product::where( "sku", $product[ "sku" ] )->first();
+
+            if ( empty( $wc_product ) )
+                continue;
+
+            $local_product = DB::table( "marketplace_product_skus" )
+                               ->where( "sku", $product[ "sku" ] )
+                               ->whereNull( "product_id" )
+                               ->first();
+
+            if ( empty( $local_product ) )
+                continue;
+
+            $this->updateWcProduct( $loca_product->id, [ "product_id" => $wc_product->id ] );
+        }
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function updateLocalProducts() : void
+    {
+        Product::whereIn( "id", $this->update_local )
+               ->update( [ "status" => "processed" ] );
     }
 
     /**
@@ -273,6 +357,31 @@ class ProcessProducts extends Command
         } );
 
         return $product->isEmpty() ? null : $product->first();
+    }
+
+    /**
+     *
+     * @param   integer     $id
+     * @param   array       $data
+     * @return  void
+     */
+    private function updateWcProduct( int $id = 0, array $data = [] ) : void
+    {
+        if ( $id == 0 )
+        {
+            DB::table( "marketplace_product_skus" )->insert( [
+                "metadata_id"   => $data[ "meta_data" ][ 0 ][ "value" ],
+                "store_id"      => $this->store_id,
+                "product_sku"   => $data[ "sku"           ],
+                "regular_price" => $data[ "regular_price" ],
+                "sale_price"    => $data[ "sale_price"    ],
+                "stock_status"  => $data[ "stock_status"  ],
+            ] );
+        }
+        else
+        {
+            DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
+        }
     }
 
     /**
