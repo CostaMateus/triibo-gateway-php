@@ -70,22 +70,22 @@ class Kernel extends ConsoleKernel
             ### Marketplace ################
             ################################
             // Delete duplicate SKUs
-            $schedule->command( "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" )->runInBackground();
+            $schedule->command( "mkt:delete_duplicate_sku" )->dailyAt( "01:00" )->runInBackground();
 
             // Change status of products without images
-            $schedule->command( "mkt:product_private_without_img"          )->dailyAt( "02:15" )->runInBackground();
+            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:15" )->runInBackground();
 
             // Remove FS products without SKU
-            $schedule->command( "mkt:delete_product_without_sku"           )->dailyAt( "05:00" )->runInBackground();
+            $schedule->command( "mkt:delete_product_without_sku" )->dailyAt( "05:00" )->runInBackground();
 
             // Get Products - weekly on sunday, tuesday, thursday
-            $schedule->command( "mkt:get_products"                         )->dailyAt( "05:30" )->days( [ 0, 2, 4 ] )->runInBackground();
+            $schedule->command( "mkt:get_products" )->dailyAt( "05:30" )->days( [ 0, 2, 4 ] )->runInBackground();
 
             // Get Categories - weekly on monday
-            $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->runInBackground();
+            $schedule->command( "mkt:get_categories" )->weeklyOn( 1, "06:00" )->runInBackground();
 
             // Process product informations FS
-            $schedule->command( "vtex:process_products --seller=fast_shop" )->hourlyAt( "15" )->between( "7:00", "23:30" )->runInBackground();
+            $schedule->command( "vtex:process_products --seller=fastshopbrqa2" )->hourlyAt( "15" )->between( "7:00", "23:30" )->withoutOverlapping()->runInBackground();
 
             // $schedule->command( "vtex:get-product-category-list" )->dailyAt( "15:25" )->runInBackground();
             // $schedule->command( "vtex:get-product-list"          )->dailyAt( "00:25" )->runInBackground();
