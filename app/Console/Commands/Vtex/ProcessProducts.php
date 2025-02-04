@@ -181,45 +181,16 @@ class ProcessProducts extends Command
      */
     private function loadWcProducts() : void
     {
-        $page = 1;
+        $message           = "Products: Loading marketplace products...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
 
-        try
-        {
-            do
-            {
-                $products = WC_Product::all( [
-                    // "exclude_meta_key" => "_fs_product_id", // produtos FS da integração antiga
-                    "status"       => "publish",
-                    "manage_stock" => false,
-                    "per_page"     => 100,
-                    "page"         => $page,
-                ] )->toArray();
+        $this->wc_products = DB::table( "marketplace_product_skus" )->where( "store_id", $this->store_id )->get();
 
-                $count    = count( $products );
-
-                foreach ( $products as $key => $product )
-                {
-                    if ( $product->store->id != $this->store_id )
-                    {
-                        unset( $products[ $key ] );
-                        continue;
-                    }
-                }
-
-                if ( ( $c = count( $products ) ) != 0 )
-                {
-                    $this->info( "Products: {$c} loaded" );
-                    $this->wc_products = array_merge( $this->wc_products, $products );
-                }
-
-                $page++;
-            }
-            while ( $count == 100 );
-        }
-        catch ( Throwable $e )
-        {
-            dd( $e->getMessage() );
-        }
+        $count             = count( $this->wc_products );
+        $message           = "Products: {$count} products loaded...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
     }
 
     /**
@@ -231,77 +202,77 @@ class ProcessProducts extends Command
     {
         try
         {
-            $this->delete_local[] = $product->id;
+            $wc_product = $this->searchProduct( $product->sku );
 
             if ( $product->action === "disable" )
             {
-                $wc_product = $this->searchProduct( $product->sku );
-
                 if ( empty( $wc_product ) )
                     return;
-
-                $wc_product = reset( $wc_product );
 
                 if ( $wc_product->stock_status == "outofstock" )
                     return;
 
                 $this->update_wc[ "update" ][] = [ "id" => $wc_product->id, "stock_status" => "outofstock" ];
+
+                $this->updateWcProduct( $wc_product->id, [ "stock_status" => "outofstock" ] );
+
                 return;
             }
 
             if ( $product->action === "update" )
             {
-                $wc_product = $this->searchProduct( $product->sku );
-                $data       = json_decode( $product->meta, true );
+                $data = json_decode( $product->meta, true );
 
                 if ( empty( $wc_product ) || ( !$data[ "PriceModified" ] && !$data[ "StockModified" ] ) )
                     return;
 
-                $wc_product = reset( $wc_product );
+                $data = $this->getProductData( $wc_product->id, $product->sku );
 
-                $this->update_wc[ "update" ][] = $this->getProductData( $wc_product->id, $product->sku );
+                $this->update_wc[ "update" ][] = $data;
+
+                $this->updateWcProduct( $wc_product->id, $data );
+
                 return;
             }
 
             if ( $product->action === "create" )
             {
-                $wc_product = $this->searchProduct( $product->sku );
-
                 if ( !empty( $wc_product ) )
                     return;
 
-                $data       = $this->getProductData( 0, $product->sku, true );
+                $data = $this->getProductData( 0, $product->sku, true );
 
                 if ( empty( $data ) )
                     return;
 
-                $this->update_wc[ "create" ][] = vtex_product_to_mkt( $data[ "context" ], $data[ "simulate" ] );
+                $data = vtex_product_to_mkt( $data[ "context" ], $data[ "simulate" ] );
+
+                $this->update_wc[ "create" ][] = $data;
+
+                $this->updateWcProduct( data: $data );
+
                 return;
             }
         }
         catch ( Exception $e )
         {
-            dd( $e->getMessage() );
+            $this->error( $e->getMessage() );
         }
     }
 
     /**
      *
      * @param   string  $id
-     * @return  object|false
+     * @return  object|null
      */
-    private function searchProduct( string $id )
+    private function searchProduct( string $id ) : mixed
     {
-        return array_filter( $this->wc_products, function ( $wc_product ) use ( $id )
+        $product = $this->wc_products->filter( function ( $product ) use ( $id )
         {
-            foreach ( $wc_product->meta_data as $meta )
-            {
-                if ( $meta->key === '_fs_product_id' && $meta->value == $id )
-                    return true;
-            }
-
-            return false;
+            return $product->metadata_id == $id;
         } );
+
+        return $product->isEmpty() ? null : $product->first();
     }
 
     /**
