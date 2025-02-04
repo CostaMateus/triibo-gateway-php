@@ -5,10 +5,10 @@ namespace App\Console\Commands\Vtex;
 use Throwable;
 use App\Models\Vtex\Product;
 use Illuminate\Console\Command;
-use App\Services\Vtex\ProductService;
-use App\Services\Vtex\ConnectorService;
-use App\Services\Vtex\FulfillmentService;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
+use App\Services\Vtex\{ ProductService, ConnectorService, FulfillmentService };
 
 class ProcessProducts extends Command
 {
@@ -52,9 +52,9 @@ class ProcessProducts extends Command
 
     /**
      *
-     * @var     array
+     * @var     Collection
      */
-    protected $wc_products        = [];
+    protected $wc_products        = null;
 
     /**
      *
@@ -66,7 +66,7 @@ class ProcessProducts extends Command
      *
      * @var     array
      */
-    protected $delete_local       = [];
+    protected $update_local       = [];
 
     /**
      *
@@ -94,12 +94,12 @@ class ProcessProducts extends Command
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return  int
      */
-    public function handle()
+    public function handle() : int
     {
         $start                    = now();
-        $message                  = "Products: Starting process FS data...";
+        $message                  = "Products: Starting process Vtex data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
@@ -108,37 +108,32 @@ class ProcessProducts extends Command
         if ( !isset( $this->allowed_sellers[ $seller ] ) )
         {
             $message = "Products: Seller not allowed...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             $diff    = $start->diffInMinutes( now() );
             $message = "Products: Runtime {$diff} minutes...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
-            return;
+
+            return 1;
         }
 
         $origin                   = $this->allowed_sellers[ $seller ];
-        $products                 = Product::where( "status", "unprocessed" )
-                                        //    ->where( "action", "create" )
-                                           ->where( "origin", $origin )
-                                           ->get();
+        $products                 = Product::where( "status", "unprocessed" )->where( "origin", $origin )->get();
 
         if ( $products->count() == 0 )
         {
             $message = "Products: No products to process...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             $diff    = $start->diffInMinutes( now() );
             $message = "Products: Runtime {$diff} minutes...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
-            return;
+
+            return 1;
         }
 
         $env                      = config( "vtex.partners.{$seller}.env"                  );
@@ -153,15 +148,22 @@ class ProcessProducts extends Command
 
         $this->loadWcProducts();
 
+        $message                  = "Products: Processing Vtex notifications...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
         foreach ( $products as $product )
         {
+            $message              = "Products: SKU {$product->sku}...";
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
+
             $this->processProduct( $product );
 
-            $product->status = "processed";
-            $product->save();
+            $this->update_local[] = $product->id;
         }
 
-        $message                  = "Products: Finished FS data process...";
+        $message                  = "Products: Finished data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
@@ -169,6 +171,8 @@ class ProcessProducts extends Command
         $message                  = "Products: Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
+
+        return 1;
     }
 
     /**
