@@ -1,15 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\UserController;
-use Codexshaper\WooCommerce\Facades\Order;
-use Codexshaper\WooCommerce\Facades\Customer;
-use Codexshaper\WooCommerce\Facades\Product;
-use Codexshaper\WooCommerce\Facades\Subscription;
-use Codexshaper\WooCommerce\Facades\Product as WC_Product;
+use Illuminate\Support\Facades\{ Auth, Route, Artisan };
+use App\Http\Controllers\{ HomeController, UserController };
+use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
 
 /*
 |--------------------------------------------------------------------------
@@ -42,18 +35,6 @@ Route::get( "/clear-caches", function()
 Route::group( [ "middleware" => "auth" ], function() {
 
     Route::get( "/home", [ HomeController::class, "index" ] )->name( "home" );
-
-    // Route::get( "/update-stages", function()
-    // {
-    //     MauticIntegration::updateStages();
-    //     return view( "welcome", [ "showToast" => true,"message" => __( "marketplace.update.all.stages" )] );
-    // } )->name( "update.stages" );
-    //
-    // Route::get( "/sync-ids", function()
-    // {
-    //     MauticIntegration::syncIdsMauticPipe();
-    //     return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.sync.id" ) ] );
-    // } )->name( "sync.ids" );
 
     Route::resource( "users", UserController::class );
 
@@ -94,23 +75,45 @@ Route::prefix( "mkt" )->group( function ()
             "status"               => "on-hold",
             "payment_method"       => "triibo_assinaturas",
             "payment_method_title" => "Recorrente",
-            "meta_data"            => [
-                [
-                    "key"   => "_triibo_id",
-                    "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
-                ],[
-                    "key"   => "_billing_cellphone",
-                    "value" => "+5511949289507"
-                ],[
-                    "key"   => "_billing_phone",
-                    "value" => "+5511949289507"
-                ],[
-                    "key"   => "_triibo_phone",
-                    "value" => "+5511949289507"
-                ]
+            // "meta_data"            => [
+            //     [
+            //         "key"   => "_triibo_id",
+            //         "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
+            //     ],[
+            //         "key"   => "_billing_cellphone",
+            //         "value" => "+5511949289507"
+            //     ],[
+            //         "key"   => "_billing_phone",
+            //         "value" => "+5511949289507"
+            //     ],[
+            //         "key"   => "_triibo_phone",
+            //         "value" => "+5511949289507"
+            //     ]
+            // ],
+            'billing'              => [
+                'first_name' => 'John',
+                'last_name'  => 'Doe',
+                'address_1'  => '969 Market',
+                'address_2'  => '',
+                'city'       => 'San Francisco',
+                'state'      => 'CA',
+                'postcode'   => '94103',
+                'country'    => 'US',
+                'email'      => 'john.doe@example.com',
+                'phone'      => '(555) 555-5555',
+            ],
+            'shipping'             => [
+                'first_name' => 'John',
+                'last_name'  => 'Doe',
+                'address_1'  => '969 Market',
+                'address_2'  => '',
+                'city'       => 'San Francisco',
+                'state'      => 'CA',
+                'postcode'   => '94103',
+                'country'    => 'US',
             ],
             "line_items"           => [ [
-                "product_id" => 986791,
+                "product_id" => 1021687,
                 "quantity"   => 1
             ] ],
         ];
@@ -265,256 +268,7 @@ Route::prefix( "mkt" )->group( function ()
     } );
 } );
 
-Route::get( "/fs", function () {
-
-    // $parent = null;
-    // $data   = Order::all( [ "parent" => 968447 ] );
-
-    // if ( $data->count() != 0 )
-    // {
-    //     $parent = Order::find( 968447 );
-    // }
-    // else
-    // {
-    //     $data   = [ Order::find( 968447 ) ];
-
-    //     if ( ( $id = $data[ 0 ][ "parent_id" ] ) != 0 )
-    //     {
-    //         $parent = Order::find( $id );
-
-    //         do
-    //         {
-    //             $has_parent = $parent[ "parent_id" ] != 0;
-
-    //             if ( $has_parent )
-    //             {
-    //                 $parent = Order::find( $parent[ "parent_id" ] );
-    //             }
-    //         }
-    //         while ( $has_parent );
-    //     }
-    // }
-
-    // $data = [
-    //     "order"  => json_decode( json_encode( $data   ), true ),
-    //     "parent" => json_decode( json_encode( $parent ), true )
-    // ];
-
-    // // retira os pedidos que não são da FastShop
-    // foreach ( $data[ "order" ] as $key => $order )
-    // {
-    //     // id da FS no dev-marketplace
-    //     $id = config( "fastshop.production.wc.storeId" );
-
-    //     if ( $order[ "store" ][ "id" ] != $id )
-    //         unset( $data[ "order" ][ $key ] );
-    // }
-
-    // $data[ "order" ] = $data[ "order" ][ key( $data[ "order" ] ) ];
-
-    // $c = new FastshopController();
-
-    // // 960724
-    // // 954047
-    // // 950362
-    // // 955957
-    // // 949305
-
-    // // 968493
-    // // 968496
-
-    // $data = $c->getFsOrder( "968496" );
-
-    // $data[ "order" ] = $c->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
-
-    // $body = DataTranslator::translate( "newOrderFs", $data );
-
-    // dd( $data, $body  );
-
-
-    // $db          = Firebase::database();
-    // $fbRef       = $db->getReference( "/Store" );
-    // $fbPromos    = $fbRef->getValue();
-
-    // foreach ( $fbPromos as $key => $fbPromo )
-    // {
-    //     foreach ( $fbPromo as $fbKey => $fbValue )
-    //     {
-    //         if ( $fbKey == "tags" )
-    //             dd( $key, $fbPromo );
-    //     }
-    // }
-
-    // dd( "not found" );
-
-
-    // ============================================================
-
-
-    // $data   = Storage::get( "firebase_gateway_token_hml.json" );
-    // $origin = "https://dev-marketplace.triibo.com.br";
-    // $data   = json_decode( $data, true );
-    // $new    = [];
-
-    // foreach ( $data as $value )
-    // {
-    //     foreach ( $value[ "tokens" ] as &$tokens )
-    //         foreach ( $tokens as &$token )
-    //             $token[ "origin" ] = $origin;
-
-    //     foreach( $value[ "payments" ] as $gateway => $payments )
-    //     {
-    //         $newPays = [];
-
-    //         foreach( $payments as $payment )
-    //             $newPays[ $payment[ "id" ] ] = $payment;
-
-    //         $value[ "payments" ][ $gateway ] = $newPays;
-    //     }
-
-    //     $new[ $value[ "uId" ] ] = $value;
-    // }
-
-    // dd( ( $new ) );
-
-
-    // ============================================================
-
-
-    // $coupons = Coupon::all();
-    // dd( $coupons );
-
-    // $data  = [
-    //     "payment_method"   => "triibo_assinaturas",
-    //     "set_paid"         => true,
-    //     "customer_id"      => 1717,
-    //     "line_items"           => [
-    //         [
-    //             "product_id" => 330551,
-    //             "quantity"   => 1,
-    //             "subtotal"   => "10.00",
-    //             "total"      => "10.00",
-    //         ],
-    //     ],
-    // ];
-
-    // $order = Order::create( $data );
-
-    // $data[ "parent_id"         ] = $order[ "id" ];
-    // $data[ "status"            ] = "active";
-    // $data[ "billing_period"    ] = "month";
-    // $data[ "billing_interval"  ] = 1;
-    // $data[ "start_date"        ] = "2023-07-14 17:00:00";
-    // $data[ "next_payment_date" ] = "2023-08-14 17:00:00";
-    // $data[ "meta_data"         ] = [
-    //     [
-    //         "key"   => "_triibo_assinatura_payment_token",
-    //         "value" => 12,
-    //     ]
-    // ];
-    // $data[ "coupon_lines"      ] = [
-    //     [
-    //         "code" => "teste-290"
-    //     ]
-    // ];
-
-    // $sub   = Subscription::create( $data );
-
-    // $coup  = [
-    //     "coupon_lines" => [
-    //         [
-    //             "code" => "teste-290"
-    //         ]
-    //     ]
-    // ];
-
-    // $order = Order::update( $order[ "id" ], $coup );
-
-    // dd( $order, $sub );
-
-
-
-    // $products = Storage::get( "1-fs-data.json" );
-    // $products = json_decode( $products, true );
-
-    // dump( $products[4], $products[5] );
-
-    // $s0     = json_encode( $products[4] );
-    // $s1     = json_encode( $products[5] );
-
-    // dump( $s0, $s1 );
-
-    // similar_text( $s0, $s1, $perc );
-
-    // dd( $perc );
-
-
-
-    // $fsData  = $products[0];
-    // $sku     = ( $fsData[ "ProductId" ] == $fsData[ "SellerStockKeepingUnitId" ] ) ? $fsData[ "ProductId" ] : $fsData[ "SellerStockKeepingUnitId" ];
-
-    // $founded = DB::table( "fastshop_products" )->where( "product_sku", "FS-{$sku}" )->first();
-
-    // if ( !$founded )
-    // {
-    //     unset( $fsData[ "Pricing" ], $fsData[ "AvailableQuantity" ] );
-
-    //     $data  = [
-    //         "product_sku" => "FS-" . $sku,
-    //         "action"      => "create",
-    //         "status"      => "unprocessed",
-    //         "data"        => json_encode( $fsData ),
-    //         "created_at"  => now(),
-    //         "updated_at"  => now(),
-    //     ];
-
-    //     $saved = DB::table( "fastshop_products" )->insert( $data );
-
-    //     if ( !$saved ) throw new Exception( "Unable to save the product data" );
-
-    //     dd( $saved );
-    // }
-    // else
-    // {
-    //     $fsData[ "Width" ] = 97000;
-    //     $fsDataEnc         = json_encode( $fsData );
-
-    //     similar_text( $fsDataEnc, $founded->data, $perc );
-
-    //     if ( $perc != 100 )
-    //     {
-    //         $updated = DB::table( "fastshop_products" )
-    //                     ->where( "id", $founded->id )
-    //                     ->update( [
-    //                         "action"     => "update",
-    //                         "status"     => "unprocessed",
-    //                         "data"       => json_encode( $fsData ),
-    //                         "updated_at" => now()
-    //                     ] );
-
-    //         dd( $fsData, $updated );
-    //     }
-    // }
-
-    // dd( "ok" );
-
-    // ==================
-
-    // $order = Order::find( 959232 );
-
-    // $control         = new FastshopController();
-    // $data            = $control->getFsOrder( 959232 );
-
-    // $data[ "order" ] = $control->getOrderFreight( $data[ "order" ][ key( $data[ "order" ] ) ] );
-
-    // $body            = DataTranslator::translate( "newOrderFs", $data );
-
-    // dd( $body );
-
+Route::get( "/fs", function ()
+{
+    // teste FS
 } );
-
-
-// add_filter('rest_request_before_callbacks', function ($response, $handler, $request) {
-//     error_log("Método: " . $request->get_method() . " | Rota: " . $request->get_route());
-//     return $response;
-// }, 10, 3);

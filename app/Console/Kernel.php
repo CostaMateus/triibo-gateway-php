@@ -69,17 +69,20 @@ class Kernel extends ConsoleKernel
             ################################
             ### Marketplace ################
             ################################
-            // Delete duplicate SKUs - diariamente as 1h00
-            $schedule->command( "mkt:delete_duplicate_sku"        )->dailyAt( "01:00" )->runInBackground();
+            // Delete duplicate SKUs
+            $schedule->command( "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" )->runInBackground();
 
-            // Remove FS products without SKU - diariamente as 5h
-            $schedule->command( "mkt:delete_product_without_sku"  )->dailyAt( "05:00" )->runInBackground();
+            // Change status of products without images
+            $schedule->command( "mkt:product_private_without_img"          )->dailyAt( "02:15" )->runInBackground();
 
-            // Get Categories - semanalmente, na segunda-feira as 6h
-            $schedule->command( "mkt:get_categories"              )->weeklyOn( 1, "06:00" )->runInBackground();
+            // Remove FS products without SKU
+            $schedule->command( "mkt:delete_product_without_sku"           )->dailyAt( "05:00" )->runInBackground();
 
-            // Change status of products without images - diariamente as 2h15
-            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:15" )->runInBackground();
+            // Get Products - weekly on sunday, tuesday, thursday
+            $schedule->command( "mkt:get_products"                         )->dailyAt( "05:30" )->days( [ 0, 2, 4 ] )->runInBackground();
+
+            // Get Categories - weekly on monday
+            $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->runInBackground();
 
             // Process product informations FS
             $schedule->command( "vtex:process_products --seller=fast_shop" )->hourlyAt( "15" )->between( "7:00", "23:30" )->runInBackground();
