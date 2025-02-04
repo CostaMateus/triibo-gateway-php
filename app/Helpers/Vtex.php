@@ -57,10 +57,10 @@ if ( !function_exists( "get_categories_ids" ) )
                 if ( $search->isNotEmpty() )
                 {
                     $new = [
-                        "id"     => $search->id,
-                        "slug"   => $search->slug,
-                        "name"   => $search->name,
-                        "parent" => $search->parent,
+                        "id"     => $search[ "id"     ],
+                        "slug"   => $search[ "slug"   ],
+                        "name"   => $search[ "name"   ],
+                        "parent" => $search[ "parent" ],
                     ];
                 }
                 else
@@ -207,7 +207,7 @@ if ( !function_exists( "get_wc_order" ) )
 
         $store_id = config( "woocommerce.partners.{$seller_id}.store_id" );
 
-        if ( $order[ "store" ][ "id" ] != $store_id )
+        if ( !$order || $order[ "store" ][ "id" ] != $store_id )
             return [ null, null ];
 
         return [ $parent, $order ];
@@ -693,10 +693,11 @@ if ( !function_exists( "vtex_get_order" ) )
 
                 if ( isset( $response[ 1 ][ "data" ] ) )
                 {
-                    $data = [
-                        "error_code" => $response[ 1 ][ "data" ][ "code"    ],
-                        "message"    => $response[ 1 ][ "data" ][ "message" ],
-                        "data"       => $response[ 1 ][ "data" ],
+                    $error = $response[ 1 ][ "data" ][ "error" ] ?? $response[ 1 ][ "data" ][ "code" ];
+                    $data  = [
+                        "error_code" => $error[ "code"    ],
+                        "message"    => $error[ "message" ],
+                        "data"       => $error,
                     ];
                 }
 
