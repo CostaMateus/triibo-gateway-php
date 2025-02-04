@@ -84,11 +84,8 @@ class Kernel extends ConsoleKernel
             // Get Categories - weekly on monday
             $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->runInBackground();
 
-            // Process product informations FS
-            $schedule->command( "vtex:process_products --seller=fast_shop" )->hourlyAt( "15" )->between( "7:00", "23:30" )->withoutOverlapping()->runInBackground();
-
-            // $schedule->command( "vtex:get-product-category-list" )->dailyAt( "15:25" )->runInBackground();
-            // $schedule->command( "vtex:get-product-list"          )->dailyAt( "00:25" )->runInBackground();
+            // Process product informations FS - every five minutes
+            $schedule->command( "vtex:process_products --seller=fast_shop" )->everyFiveMinutes()->between( "6:00", "23:59" )->withoutOverlapping()->runInBackground();
         }
     }
 
