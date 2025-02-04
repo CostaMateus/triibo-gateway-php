@@ -215,14 +215,15 @@ class GetProductInfosFastShop extends Command
                 }
                 else
                 {
-                    $new = Category::all( [ "slug" => $slug ] );
+                    $new = Category::all( [ "slug" => $slug ] )->first();
 
-                    if ( $new->first() )
+                    if ( $new->isNotEmpty() )
                     {
-                        $new = $new->first();
                         $new = [
-                            "id"   => $new->id,
-                            "slug" => $new->slug
+                            "id"     => $new->id,
+                            "slug"   => $new->slug,
+                            "name"   => $new->name,
+                            "parent" => $new->parent,
                         ];
                     }
                     else
@@ -236,8 +237,10 @@ class GetProductInfosFastShop extends Command
                     $cats[] = $new[ "id" ];
 
                     $insert = [
-                        "cat_id"   => $new[ "id"   ],
-                        "cat_slug" => $new[ "slug" ]
+                        "cat_id"     => $new[ "id"     ],
+                        "cat_slug"   => $new[ "slug"   ],
+                        "cat_name"   => $new[ "name"   ],
+                        "cat_parent" => $new[ "parent" ],
                     ];
 
                     DB::table( "marketplace_product_categories" )->insert( $insert );
