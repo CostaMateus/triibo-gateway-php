@@ -186,20 +186,23 @@ if ( !function_exists( "get_wc_order" ) )
         }
         catch ( Throwable $e )
         {
-            // Log the exception for debugging purposes.
-            log_exception(
-                channel : $channel,
-                message : $e->getMessage(),
-                method  : "get_wc_order",
-                type    : "Throwable",
-                e       : $e
-            );
+            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            {
+                // Log the exception for debugging purposes.
+                log_exception(
+                    channel : $channel,
+                    message : $e->getMessage(),
+                    method  : "get_wc_order",
+                    type    : "Throwable",
+                    e       : $e
+                );
 
-            $order = [ "id" => $order_id ];
+                $order = [ "id" => $order_id ];
 
-            send_notification( null, $order, "error_mkt_order" );
+                send_notification( null, $order, "error_mkt_order" );
 
-            return [ false, false ];
+                return [ false, false ];
+            }
         }
 
         $store_id = config( "woocommerce.partners.{$seller_id}.store_id" );

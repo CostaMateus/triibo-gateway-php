@@ -40,50 +40,51 @@ class GetCategories extends Command
      */
     public function handle()
     {
-        try
+        $page       = 1;
+        $categories = [];
+        $data       = [];
+
+        do
         {
-            $page       = 1;
-            $categories = [];
-            $data       = [];
+            $this->info( "Searching for categories in the marketplace, page {$page}" );
 
-            do
+            try
             {
-                $this->info( "Searching for categories in the marketplace, page {$page}" );
-
-                $response   = Category::all( [
-                    "per_page" => 100,
-                    "page"     => $page,
-                ] );
-
-                $categories = array_merge( $response->toArray(), $categories );
-
-                $page++;
+                $response = Category::all( [ "per_page" => 100, "page" => $page, ] );
             }
-            while ( $response->count() == 100 );
-
-            $this->info( "Loaded categories" );
-
-            foreach ( $categories as $category )
+            catch ( Throwable $e )
             {
-                $data[] = [
-                    "cat_id"     => $category->id,
-                    "cat_slug"   => $category->slug,
-                    "cat_name"   => $category->name,
-                    "cat_parent" => $category->parent,
-                ];
+                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
+                    $this->error( $e->getMessage() );
+                    break;
+                }
             }
 
-            $this->info( "Truncate table: marketplace_product_categories" );
-            DB::table( "marketplace_product_categories" )->truncate();
+            $categories = array_merge( $response->toArray(), $categories );
 
-            $this->info( "Inserting in table: marketplace_product_categories" );
-            DB::table( "marketplace_product_categories" )->insert( $data );
-
-            $this->info( "Finished" );
+            $page++;
         }
-        catch ( Throwable $e )
+        while ( $response->count() == 100 );
+
+        $this->info( "Loaded categories" );
+
+        foreach ( $categories as $category )
         {
-            $this->error( $e->getMessage() );
+            $data[] = [
+                "cat_id"     => $category->id,
+                "cat_slug"   => $category->slug,
+                "cat_name"   => $category->name,
+                "cat_parent" => $category->parent,
+            ];
         }
+
+        $this->info( "Truncate table: marketplace_product_categories" );
+        DB::table( "marketplace_product_categories" )->truncate();
+
+        $this->info( "Inserting in table: marketplace_product_categories" );
+        DB::table( "marketplace_product_categories" )->insert( $data );
+
+        $this->info( "Finished" );
     }
 }
