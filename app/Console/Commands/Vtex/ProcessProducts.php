@@ -275,9 +275,20 @@ class ProcessProducts extends Command
 
         foreach ( $created as $product )
         {
-            $wc_product    = WC_Product::where( "sku", $product[ "sku" ] )->first();
+            try
+            {
+                $wc_product = WC_Product::where( "sku", $product[ "sku" ] )->first();
+            }
+            catch ( Throwable $e )
+            {
+                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
+                    log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
+                    $this->error( $e->getMessage() );
+                }
+            }
 
-            if ( empty( $wc_product ) )
+            if ( !$wc_product )
                 continue;
 
             $local_product = DB::table( "marketplace_product_skus" )
@@ -285,10 +296,10 @@ class ProcessProducts extends Command
                                ->whereNull( "product_id" )
                                ->first();
 
-            if ( empty( $local_product ) )
+            if ( !$local_product )
                 continue;
 
-            $this->updateWcProduct( $local_product[ "id" ], [ "product_id" => $wc_product->id ] );
+            $this->updateWcProduct( $local_product->id, [ "product_id" => $wc_product[ "id" ] ] );
         }
     }
 
