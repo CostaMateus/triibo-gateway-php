@@ -152,22 +152,27 @@ class ProcessProducts extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        foreach ( $products as $product )
+        $products_chunk           = $products->chunk( 100 );
+
+        foreach ( $products_chunk as $products )
         {
-            $message              = "Products: SKU {$product->sku}...";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            foreach ( $products as $product )
+            {
+                $message              = "Products: SKU {$product->sku}...";
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->info( $message );
 
-            $this->processProduct( $product );
+                $this->processProduct( $product );
 
-            $this->update_local[] = $product->id;
+                $this->update_local[] = $product->id;
+            }
+
+            $this->updateMarketplaceProduct();
+            $this->deleteProcessed();
+
+            $this->updateLocalWcProducts();
+            $this->updateLocalProducts();
         }
-
-        $this->updateMarketplaceProduct();
-        $this->deleteProcessed();
-
-        $this->updateLocalWcProducts();
-        $this->updateLocalProducts();
 
         $message                  = "Products: Finished data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
@@ -225,6 +230,9 @@ class ProcessProducts extends Command
 
         foreach ( $chunks as $chunk )
         {
+            if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) )
+                continue;
+
             try
             {
                 WC_Product::batch( $chunk );
@@ -267,9 +275,20 @@ class ProcessProducts extends Command
 
         foreach ( $created as $product )
         {
-            $wc_product    = WC_Product::where( "sku", $product[ "sku" ] )->first();
+            try
+            {
+                $wc_product = WC_Product::where( "sku", $product[ "sku" ] )->first();
+            }
+            catch ( Throwable $e )
+            {
+                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
+                    log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
+                    $this->error( $e->getMessage() );
+                }
+            }
 
-            if ( empty( $wc_product ) )
+            if ( !$wc_product )
                 continue;
 
             $local_product = DB::table( "marketplace_product_skus" )
@@ -277,10 +296,10 @@ class ProcessProducts extends Command
                                ->whereNull( "product_id" )
                                ->first();
 
-            if ( empty( $local_product ) )
+            if ( !$local_product )
                 continue;
 
-            $this->updateWcProduct( $local_product->id, [ "product_id" => $wc_product->id ] );
+            $this->updateWcProduct( $local_product->id, [ "product_id" => $wc_product[ "id" ] ] );
         }
     }
 
