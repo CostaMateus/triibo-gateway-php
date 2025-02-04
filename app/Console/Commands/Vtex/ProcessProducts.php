@@ -152,22 +152,27 @@ class ProcessProducts extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        foreach ( $products as $product )
+        $products_chunk           = $products->chunk( 100 );
+
+        foreach ( $products_chunk as $products )
         {
-            $message              = "Products: SKU {$product->sku}...";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            foreach ( $products as $product )
+            {
+                $message              = "Products: SKU {$product->sku}...";
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->info( $message );
 
-            $this->processProduct( $product );
+                $this->processProduct( $product );
 
-            $this->update_local[] = $product->id;
+                $this->update_local[] = $product->id;
+            }
+
+            $this->updateMarketplaceProduct();
+            $this->deleteProcessed();
+
+            $this->updateLocalWcProducts();
+            $this->updateLocalProducts();
         }
-
-        $this->updateMarketplaceProduct();
-        $this->deleteProcessed();
-
-        $this->updateLocalWcProducts();
-        $this->updateLocalProducts();
 
         $message                  = "Products: Finished data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
@@ -225,6 +230,9 @@ class ProcessProducts extends Command
 
         foreach ( $chunks as $chunk )
         {
+            if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) )
+                continue;
+
             try
             {
                 WC_Product::batch( $chunk );
@@ -280,7 +288,7 @@ class ProcessProducts extends Command
             if ( empty( $local_product ) )
                 continue;
 
-            $this->updateWcProduct( $local_product->id, [ "product_id" => $wc_product->id ] );
+            $this->updateWcProduct( $local_product[ "id" ], [ "product_id" => $wc_product->id ] );
         }
     }
 
