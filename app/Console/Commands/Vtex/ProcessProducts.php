@@ -60,7 +60,7 @@ class ProcessProducts extends Command
      *
      * @var     array
      */
-    protected $allowed_sellers    = [ "fast_shop" => "fastshopbrqa2", ];
+    protected $allowed_sellers    = [ "fast_shop" => "fastshopbr", ];
 
     /**
      *
