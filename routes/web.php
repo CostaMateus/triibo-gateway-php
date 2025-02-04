@@ -1,14 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\UserController;
-use Codexshaper\WooCommerce\Facades\Order;
-use Codexshaper\WooCommerce\Facades\Customer;
-use Codexshaper\WooCommerce\Facades\Product;
-use Codexshaper\WooCommerce\Facades\Subscription;
+use Illuminate\Support\Facades\{ Auth, Route, Artisan };
+use App\Http\Controllers\{ HomeController, UserController };
+use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
 
 /*
 |--------------------------------------------------------------------------
@@ -41,18 +35,6 @@ Route::get( "/clear-caches", function()
 Route::group( [ "middleware" => "auth" ], function() {
 
     Route::get( "/home", [ HomeController::class, "index" ] )->name( "home" );
-
-    // Route::get( "/update-stages", function()
-    // {
-    //     MauticIntegration::updateStages();
-    //     return view( "welcome", [ "showToast" => true,"message" => __( "marketplace.update.all.stages" )] );
-    // } )->name( "update.stages" );
-    //
-    // Route::get( "/sync-ids", function()
-    // {
-    //     MauticIntegration::syncIdsMauticPipe();
-    //     return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.sync.id" ) ] );
-    // } )->name( "sync.ids" );
 
     Route::resource( "users", UserController::class );
 
@@ -93,23 +75,45 @@ Route::prefix( "mkt" )->group( function ()
             "status"               => "on-hold",
             "payment_method"       => "triibo_assinaturas",
             "payment_method_title" => "Recorrente",
-            "meta_data"            => [
-                [
-                    "key"   => "_triibo_id",
-                    "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
-                ],[
-                    "key"   => "_billing_cellphone",
-                    "value" => "+5511949289507"
-                ],[
-                    "key"   => "_billing_phone",
-                    "value" => "+5511949289507"
-                ],[
-                    "key"   => "_triibo_phone",
-                    "value" => "+5511949289507"
-                ]
+            // "meta_data"            => [
+            //     [
+            //         "key"   => "_triibo_id",
+            //         "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
+            //     ],[
+            //         "key"   => "_billing_cellphone",
+            //         "value" => "+5511949289507"
+            //     ],[
+            //         "key"   => "_billing_phone",
+            //         "value" => "+5511949289507"
+            //     ],[
+            //         "key"   => "_triibo_phone",
+            //         "value" => "+5511949289507"
+            //     ]
+            // ],
+            'billing'              => [
+                'first_name' => 'John',
+                'last_name'  => 'Doe',
+                'address_1'  => '969 Market',
+                'address_2'  => '',
+                'city'       => 'San Francisco',
+                'state'      => 'CA',
+                'postcode'   => '94103',
+                'country'    => 'US',
+                'email'      => 'john.doe@example.com',
+                'phone'      => '(555) 555-5555',
+            ],
+            'shipping'             => [
+                'first_name' => 'John',
+                'last_name'  => 'Doe',
+                'address_1'  => '969 Market',
+                'address_2'  => '',
+                'city'       => 'San Francisco',
+                'state'      => 'CA',
+                'postcode'   => '94103',
+                'country'    => 'US',
             ],
             "line_items"           => [ [
-                "product_id" => 986791,
+                "product_id" => 1021687,
                 "quantity"   => 1
             ] ],
         ];
