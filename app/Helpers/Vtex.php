@@ -1,5 +1,6 @@
 <?php
 
+use Throwable;
 use App\Models\User;
 use Illuminate\Support\Str;
 use Illuminate\Http\JsonResponse;
@@ -52,35 +53,53 @@ if ( !function_exists( "get_categories_ids" ) )
             }
             else
             {
-                $search = Category::where( "slug", $slug )->first();
-
-                if ( $search->isNotEmpty() )
+                try
                 {
-                    $new = [
-                        "id"     => $search[ "id"     ],
-                        "slug"   => $search[ "slug"   ],
-                        "name"   => $search[ "name"   ],
-                        "parent" => $search[ "parent" ],
-                    ];
-                }
-                else
-                {
-                    $parent = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
+                    $search = Category::where( "slug", $slug )->first();
 
-                    $new    = Category::create( [
-                        "name"   => $names[ $vtex_category_id ],
-                        "parent" => $parent,
+                    if ( $search->isNotEmpty() )
+                    {
+                        $new = [
+                            "id"     => $search[ "id"     ],
+                            "slug"   => $search[ "slug"   ],
+                            "name"   => $search[ "name"   ],
+                            "parent" => $search[ "parent" ],
+                        ];
+                    }
+                    else
+                    {
+                        $parent = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
+
+                        $new    = Category::create( [
+                            "name"   => $names[ $vtex_category_id ],
+                            "parent" => $parent,
+                        ] );
+                    }
+
+                    $categories[] = $new[ "id" ];
+
+                    DB::table( "marketplace_product_categories" )->insert( [
+                        "cat_id"     => $new[ "id"     ],
+                        "cat_slug"   => $new[ "slug"   ],
+                        "cat_name"   => $new[ "name"   ],
+                        "cat_parent" => $new[ "parent" ],
                     ] );
                 }
-
-                $categories[] = $new[ "id" ];
-
-                DB::table( "marketplace_product_categories" )->insert( [
-                    "cat_id"     => $new[ "id"     ],
-                    "cat_slug"   => $new[ "slug"   ],
-                    "cat_name"   => $new[ "name"   ],
-                    "cat_parent" => $new[ "parent" ],
-                ] );
+                catch ( Throwable $e )
+                {
+                    if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                    {
+                        log_message(
+                            channel : $channel,
+                            level   : "error",
+                            message : "VTEX - vtex_get_order 1",
+                            context : [
+                                "seller"   => $seller,
+                                "response" => $response,
+                            ]
+                        );
+                    }
+                }
             }
         }
 
