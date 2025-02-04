@@ -280,7 +280,7 @@ class ProcessProducts extends Command
             if ( empty( $local_product ) )
                 continue;
 
-            $this->updateWcProduct( $loca_product->id, [ "product_id" => $wc_product->id ] );
+            $this->updateWcProduct( $local_product->id, [ "product_id" => $wc_product->id ] );
         }
     }
 
