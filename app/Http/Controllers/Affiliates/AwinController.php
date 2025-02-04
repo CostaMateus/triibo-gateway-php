@@ -346,6 +346,9 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
+            // TODO verificar se o que de alteração é apenas 'cashbackDefault'
+            // TODO se sim, não enviar para curadoria, alterar direto
+
             // Add edit approval request in Firebase.
             $db->getReference( "/Estabelecimento-Aprovacoes/{$local_establishment[ "push_id" ]}" )
                ->set( [
