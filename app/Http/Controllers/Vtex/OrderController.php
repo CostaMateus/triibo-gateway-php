@@ -130,19 +130,22 @@ class OrderController extends VtexController
         }
         catch ( Throwable $e )
         {
-            // Log the exception
-            log_exception(
-                channel : parent::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : "VTEX - invoiceNotification 3",
-                type    : "Throwable",
-                e       : $e
-            );
+            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            {
+                // Log the exception
+                log_exception(
+                    channel : parent::LOG_CHANNEL,
+                    message : $e->getMessage(),
+                    method  : "VTEX - invoiceNotification 3",
+                    type    : "Throwable",
+                    e       : $e
+                );
 
-            return response()->json( [
-                "error_code" => "5000", // 5000 - falha generica
-                "message"    => "Something wrong when receiving invoice notification",
-            ], 400 );
+                return response()->json( [
+                    "error_code" => "5000", // 5000 - falha generica
+                    "message"    => "Something wrong when receiving invoice notification",
+                ], 400 );
+            }
         }
     }
 
