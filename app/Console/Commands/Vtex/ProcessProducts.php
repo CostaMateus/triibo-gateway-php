@@ -205,20 +205,37 @@ class ProcessProducts extends Command
      */
     private function updateMarketplaceProduct() : void
     {
-        $message = "Products: Updating marketplace products...";
+        $message       = "Products: Updating marketplace products...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        try
+        $chunks        = [];
+        $create_chunks = array_chunk( $this->update_wc[ "create" ], 50 );
+        $update_chunks = array_chunk( $this->update_wc[ "update" ], 50 );
+
+        $max_chunks    = max( count( $create_chunks ), count( $update_chunks ) );
+
+        foreach ( range( 0, $max_chunks ) as $i )
         {
-            WC_Product::batch( $this->update_wc );
+            $chunks[] = [
+                "create" => $create_chunks[ $i ] ?? [],
+                "update" => $update_chunks[ $i ] ?? [],
+            ];
         }
-        catch ( Throwable $e )
+
+        foreach ( $chunks as $chunk )
         {
-            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            try
             {
-                log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
-                $this->error( $e->getMessage() );
+                WC_Product::batch( $chunk );
+            }
+            catch ( Throwable $e )
+            {
+                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
+                    log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
+                    $this->error( $e->getMessage() );
+                }
             }
         }
     }
@@ -256,7 +273,7 @@ class ProcessProducts extends Command
                 continue;
 
             $local_product = DB::table( "marketplace_product_skus" )
-                               ->where( "sku", $product[ "sku" ] )
+                               ->where( "product_sku", $product[ "sku" ] )
                                ->whereNull( "product_id" )
                                ->first();
 
@@ -370,8 +387,8 @@ class ProcessProducts extends Command
         if ( $id == 0 )
         {
             DB::table( "marketplace_product_skus" )->insert( [
-                "metadata_id"   => $data[ "meta_data" ][ 0 ][ "value" ],
                 "store_id"      => $this->store_id,
+                "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
                 "product_sku"   => $data[ "sku"           ],
                 "regular_price" => $data[ "regular_price" ],
                 "sale_price"    => $data[ "sale_price"    ],
