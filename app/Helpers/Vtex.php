@@ -693,10 +693,11 @@ if ( !function_exists( "vtex_get_order" ) )
 
                 if ( isset( $response[ 1 ][ "data" ] ) )
                 {
-                    $data = [
-                        "error_code" => $response[ 1 ][ "data" ][ "code"    ],
-                        "message"    => $response[ 1 ][ "data" ][ "message" ],
-                        "data"       => $response[ 1 ][ "data" ],
+                    $error = $response[ 1 ][ "data" ][ "error" ] ?? $response[ 1 ][ "data" ][ "code" ];
+                    $data  = [
+                        "error_code" => $error[ "code"    ],
+                        "message"    => $error[ "message" ],
+                        "data"       => $error,
                     ];
                 }
 
