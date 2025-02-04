@@ -57,10 +57,10 @@ if ( !function_exists( "get_categories_ids" ) )
                 if ( $search->isNotEmpty() )
                 {
                     $new = [
-                        "id"     => $search->id,
-                        "slug"   => $search->slug,
-                        "name"   => $search->name,
-                        "parent" => $search->parent,
+                        "id"     => $search[ "id"     ],
+                        "slug"   => $search[ "slug"   ],
+                        "name"   => $search[ "name"   ],
+                        "parent" => $search[ "parent" ],
                     ];
                 }
                 else
