@@ -5,10 +5,10 @@ namespace App\Console\Commands\Vtex;
 use Throwable;
 use App\Models\Vtex\Product;
 use Illuminate\Console\Command;
-use App\Services\Vtex\ProductService;
-use App\Services\Vtex\ConnectorService;
-use App\Services\Vtex\FulfillmentService;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
+use App\Services\Vtex\{ ProductService, ConnectorService, FulfillmentService };
 
 class ProcessProducts extends Command
 {
@@ -52,9 +52,9 @@ class ProcessProducts extends Command
 
     /**
      *
-     * @var     array
+     * @var     Collection
      */
-    protected $wc_products        = [];
+    protected $wc_products        = null;
 
     /**
      *
@@ -66,7 +66,7 @@ class ProcessProducts extends Command
      *
      * @var     array
      */
-    protected $delete_local       = [];
+    protected $update_local       = [];
 
     /**
      *
@@ -94,12 +94,12 @@ class ProcessProducts extends Command
     /**
      * Execute the console command.
      *
-     * @return int
+     * @return  int
      */
-    public function handle()
+    public function handle() : int
     {
         $start                    = now();
-        $message                  = "Products: Starting process FS data...";
+        $message                  = "Products: Starting process Vtex data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
@@ -108,37 +108,32 @@ class ProcessProducts extends Command
         if ( !isset( $this->allowed_sellers[ $seller ] ) )
         {
             $message = "Products: Seller not allowed...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             $diff    = $start->diffInMinutes( now() );
             $message = "Products: Runtime {$diff} minutes...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
-            return;
+
+            return 1;
         }
 
         $origin                   = $this->allowed_sellers[ $seller ];
-        $products                 = Product::where( "status", "unprocessed" )
-                                        //    ->where( "action", "create" )
-                                           ->where( "origin", $origin )
-                                           ->get();
+        $products                 = Product::where( "status", "unprocessed" )->where( "origin", $origin )->get();
 
         if ( $products->count() == 0 )
         {
             $message = "Products: No products to process...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             $diff    = $start->diffInMinutes( now() );
             $message = "Products: Runtime {$diff} minutes...";
-
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
-            return;
+
+            return 1;
         }
 
         $env                      = config( "vtex.partners.{$seller}.env"                  );
@@ -153,15 +148,28 @@ class ProcessProducts extends Command
 
         $this->loadWcProducts();
 
+        $message                  = "Products: Processing Vtex notifications...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
         foreach ( $products as $product )
         {
+            $message              = "Products: SKU {$product->sku}...";
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
+
             $this->processProduct( $product );
 
-            $product->status = "processed";
-            $product->save();
+            $this->update_local[] = $product->id;
         }
 
-        $message                  = "Products: Finished FS data process...";
+        $this->updateMarketplaceProduct();
+        $this->deleteProcessed();
+
+        $this->updateLocalWcProducts();
+        $this->updateLocalProducts();
+
+        $message                  = "Products: Finished data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
@@ -169,6 +177,8 @@ class ProcessProducts extends Command
         $message                  = "Products: Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
+
+        return 1;
     }
 
     /**
@@ -177,45 +187,94 @@ class ProcessProducts extends Command
      */
     private function loadWcProducts() : void
     {
-        $page = 1;
+        $message           = "Products: Loading marketplace products...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $this->wc_products = DB::table( "marketplace_product_skus" )->where( "store_id", $this->store_id )->get();
+
+        $count             = count( $this->wc_products );
+        $message           = "Products: {$count} products loaded...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function updateMarketplaceProduct() : void
+    {
+        $message = "Products: Updating marketplace products...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
 
         try
         {
-            do
-            {
-                $products = WC_Product::all( [
-                    // "exclude_meta_key" => "_fs_product_id", // produtos FS da integração antiga
-                    "status"       => "publish",
-                    "manage_stock" => false,
-                    "per_page"     => 100,
-                    "page"         => $page,
-                ] )->toArray();
-
-                $count    = count( $products );
-
-                foreach ( $products as $key => $product )
-                {
-                    if ( $product->store->id != $this->store_id )
-                    {
-                        unset( $products[ $key ] );
-                        continue;
-                    }
-                }
-
-                if ( ( $c = count( $products ) ) != 0 )
-                {
-                    $this->info( "Products: {$c} loaded" );
-                    $this->wc_products = array_merge( $this->wc_products, $products );
-                }
-
-                $page++;
-            }
-            while ( $count == 100 );
+            WC_Product::batch( $this->update_wc );
         }
         catch ( Throwable $e )
         {
-            dd( $e->getMessage() );
+            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            {
+                log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
+                $this->error( $e->getMessage() );
+            }
         }
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function deleteProcessed() : void
+    {
+        $message = "Products: Deleting completed processes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        Product::where( "status", "processed" )->delete();
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function updateLocalWcProducts() : void
+    {
+        $message = "Products: Updating local products...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $created = $this->update_wc[ "create" ];
+
+        foreach ( $created as $product )
+        {
+            $wc_product    = WC_Product::where( "sku", $product[ "sku" ] )->first();
+
+            if ( empty( $wc_product ) )
+                continue;
+
+            $local_product = DB::table( "marketplace_product_skus" )
+                               ->where( "sku", $product[ "sku" ] )
+                               ->whereNull( "product_id" )
+                               ->first();
+
+            if ( empty( $local_product ) )
+                continue;
+
+            $this->updateWcProduct( $loca_product->id, [ "product_id" => $wc_product->id ] );
+        }
+    }
+
+    /**
+     *
+     * @return  void
+     */
+    private function updateLocalProducts() : void
+    {
+        Product::whereIn( "id", $this->update_local )
+               ->update( [ "status" => "processed" ] );
     }
 
     /**
@@ -227,77 +286,102 @@ class ProcessProducts extends Command
     {
         try
         {
-            $this->delete_local[] = $product->id;
+            $wc_product = $this->searchProduct( $product->sku );
 
             if ( $product->action === "disable" )
             {
-                $wc_product = $this->searchProduct( $product->sku );
-
                 if ( empty( $wc_product ) )
                     return;
-
-                $wc_product = reset( $wc_product );
 
                 if ( $wc_product->stock_status == "outofstock" )
                     return;
 
                 $this->update_wc[ "update" ][] = [ "id" => $wc_product->id, "stock_status" => "outofstock" ];
+
+                $this->updateWcProduct( $wc_product->id, [ "stock_status" => "outofstock" ] );
+
                 return;
             }
 
             if ( $product->action === "update" )
             {
-                $wc_product = $this->searchProduct( $product->sku );
-                $data       = json_decode( $product->meta, true );
+                $data = json_decode( $product->meta, true );
 
                 if ( empty( $wc_product ) || ( !$data[ "PriceModified" ] && !$data[ "StockModified" ] ) )
                     return;
 
-                $wc_product = reset( $wc_product );
+                $data = $this->getProductData( $wc_product->id, $product->sku );
 
-                $this->update_wc[ "update" ][] = $this->getProductData( $wc_product->id, $product->sku );
+                $this->update_wc[ "update" ][] = $data;
+
+                $this->updateWcProduct( $wc_product->id, $data );
+
                 return;
             }
 
             if ( $product->action === "create" )
             {
-                $wc_product = $this->searchProduct( $product->sku );
-
                 if ( !empty( $wc_product ) )
                     return;
 
-                $data       = $this->getProductData( 0, $product->sku, true );
+                $data = $this->getProductData( 0, $product->sku, true );
 
                 if ( empty( $data ) )
                     return;
 
-                $this->update_wc[ "create" ][] = vtex_product_to_mkt( $data[ "context" ], $data[ "simulate" ] );
+                $data = vtex_product_to_mkt( $data[ "context" ], $data[ "simulate" ] );
+
+                $this->update_wc[ "create" ][] = $data;
+
+                $this->updateWcProduct( data: $data );
+
                 return;
             }
         }
         catch ( Exception $e )
         {
-            dd( $e->getMessage() );
+            $this->error( $e->getMessage() );
         }
     }
 
     /**
      *
      * @param   string  $id
-     * @return  object|false
+     * @return  object|null
      */
-    private function searchProduct( string $id )
+    private function searchProduct( string $id ) : mixed
     {
-        return array_filter( $this->wc_products, function ( $wc_product ) use ( $id )
+        $product = $this->wc_products->filter( function ( $product ) use ( $id )
         {
-            foreach ( $wc_product->meta_data as $meta )
-            {
-                if ( $meta->key === '_fs_product_id' && $meta->value == $id )
-                    return true;
-            }
-
-            return false;
+            return $product->metadata_id == $id;
         } );
+
+        return $product->isEmpty() ? null : $product->first();
+    }
+
+    /**
+     *
+     * @param   integer     $id
+     * @param   array       $data
+     * @return  void
+     */
+    private function updateWcProduct( int $id = 0, array $data = [] ) : void
+    {
+        if ( $id == 0 )
+        {
+            DB::table( "marketplace_product_skus" )->insert( [
+                "metadata_id"   => $data[ "meta_data" ][ 0 ][ "value" ],
+                "store_id"      => $this->store_id,
+                "product_sku"   => $data[ "sku"           ],
+                "regular_price" => $data[ "regular_price" ],
+                "sale_price"    => $data[ "sale_price"    ],
+                "stock_status"  => $data[ "stock_status"  ],
+            ] );
+        }
+        else
+        {
+            DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
+        }
     }
 
     /**

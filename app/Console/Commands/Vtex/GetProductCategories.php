@@ -210,17 +210,25 @@ class GetProductCategories extends Command
                     try
                     {
                         $slug     = Str::slug( $names[ $id ], "-" );
-                        $category = DB::table( "marketplace_product_categories" )->where( "cat_slug", $slug )->first();
+                        $category = DB::table( "marketplace_product_categories" )
+                                      ->where( "cat_slug", $slug )
+                                      ->first();
 
-                        if ( $category == null )
+                        if ( $category )
+                        {
+                            $categories[] = $category->cat_id;
+                        }
+                        else
                         {
                             $search = Category::where( "slug", $slug )->first();
 
                             if ( $search->isNotEmpty() )
                             {
                                 $new = [
-                                    "id"   => $search[ "id"   ],
-                                    "slug" => $search[ "slug" ],
+                                    "id"     => $search->id,
+                                    "slug"   => $search->slug,
+                                    "name"   => $search->name,
+                                    "parent" => $search->parent,
                                 ];
                             }
                             else
@@ -236,13 +244,11 @@ class GetProductCategories extends Command
                             $categories[] = $new[ "id" ];
 
                             DB::table( "marketplace_product_categories" )->insert( [
-                                "cat_id"   => $new[ "id"   ],
-                                "cat_slug" => $new[ "slug" ]
+                                "cat_id"     => $new[ "id"     ],
+                                "cat_slug"   => $new[ "slug"   ],
+                                "cat_name"   => $new[ "name"   ],
+                                "cat_parent" => $new[ "parent" ],
                             ] );
-                        }
-                        else
-                        {
-                            $categories[] = $category->cat_id;
                         }
                     }
                     catch ( Throwable $e )

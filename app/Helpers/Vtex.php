@@ -48,7 +48,7 @@ if ( !function_exists( "get_categories_ids" ) )
 
             if ( $category )
             {
-                $categories[] = [ "id" => $category->cat_id ];
+                $categories[] = $category->cat_id;
             }
             else
             {
@@ -56,26 +56,30 @@ if ( !function_exists( "get_categories_ids" ) )
 
                 if ( $search->isNotEmpty() )
                 {
-                    $new_category = [
-                        "id"   => $search[ "id"   ],
-                        "slug" => $search[ "slug" ],
+                    $new = [
+                        "id"     => $search->id,
+                        "slug"   => $search->slug,
+                        "name"   => $search->name,
+                        "parent" => $search->parent,
                     ];
                 }
                 else
                 {
-                    $parent       = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
+                    $parent = ( $index == 0 ) ? 0 : $categories[ $index - 1 ];
 
-                    $new_category = Category::create( [
+                    $new    = Category::create( [
                         "name"   => $names[ $vtex_category_id ],
                         "parent" => $parent,
                     ] );
                 }
 
-                $categories[] = [ "id" => $new_category[ "id" ] ];
+                $categories[] = $new[ "id" ];
 
                 DB::table( "marketplace_product_categories" )->insert( [
-                    "cat_id"   => $new_category[ "id"   ],
-                    "cat_slug" => $new_category[ "slug" ]
+                    "cat_id"     => $new[ "id"     ],
+                    "cat_slug"   => $new[ "slug"   ],
+                    "cat_name"   => $new[ "name"   ],
+                    "cat_parent" => $new[ "parent" ],
                 ] );
             }
         }
