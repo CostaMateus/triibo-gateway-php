@@ -6,19 +6,21 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "@popperjs/core": "^2.11.6",
-        "axios": "^1.6.4",
-        "bootstrap": "^5.2.3",
-        "bootstrap-icons": "^1.7.2",
+        "@popperjs/core": "^2.11.8",
+        "axios": "^1.7.9",
+        "bootstrap": "^5.3.3",
         "laravel-vite-plugin": "^1.2.0",
-        "sass": "^1.56.1",
-        "vite": "^6.0.11"
+        "lodash": "^4.17.21",
+        "postcss": "^8.5.1",
+        "sass": "^1.83.4",
+        "vite": "^6.1.0"
     },
     "dependencies": {
+        "bootstrap-icons": "^1.11.3",
         "icheck-bootstrap": "^3.0.1",
         "jquery": "^3.7.1",
         "jquery-mask-plugin": "^1.14.16",
-        "overlayscrollbars": "^2.10.0",
+        "overlayscrollbars": "^2.10.1",
         "tablesort": "^5.3.0"
     }
 }

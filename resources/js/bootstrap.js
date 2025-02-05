@@ -1,17 +1,18 @@
-import * as bootstrap from 'bootstrap';
-window.bootstrap = bootstrap;
+import _              from 'lodash';
+window._              = _;
 
-import axios from 'axios';
-window.axios = axios;
+import * as bootstrap from 'bootstrap';
+window.bootstrap      = bootstrap;
+
+import axios          from 'axios';
+window.axios          = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
-import $ from 'jquery';
-window.$ = $;
-window.jQuery = $;
-window.jquery = $;
+import $              from 'jquery';
+window.$              = $;
 
-import Tablesort from 'tablesort';
-window.Tablesort = Tablesort;
+import Tablesort      from 'tablesort';
+window.Tablesort      = Tablesort;
 
 import * as OverlayScrollbarsGlobal from 'overlayscrollbars';
 window.OverlayScrollbarsGlobal = OverlayScrollbarsGlobal;
