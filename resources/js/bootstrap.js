@@ -1,15 +1,15 @@
 import _              from 'lodash';
 window._              = _;
 
+import $              from 'jquery';
+window.$              = $;
+
 import * as bootstrap from 'bootstrap';
 window.bootstrap      = bootstrap;
 
 import axios          from 'axios';
 window.axios          = axios;
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
-
-import $              from 'jquery';
-window.$              = $;
 
 import Tablesort      from 'tablesort';
 window.Tablesort      = Tablesort;
@@ -20,7 +20,7 @@ window.OverlayScrollbarsGlobal = OverlayScrollbarsGlobal;
 import 'bootstrap-icons/font/bootstrap-icons';
 import 'jquery-mask-plugin';
 
-jquery( function ()
+$( function ()
 {
     import ( "tablesort/src/sorts/tablesort.number" );
     import ( "tablesort/src/sorts/tablesort.date"   );
