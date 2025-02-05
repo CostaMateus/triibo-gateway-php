@@ -4,6 +4,16 @@
     --bs-triibo-rgb: 110, 50, 150;
 }
 
+table tr td {
+    vertical-align: middle!important;
+}
+
+.bg-dots {
+    background-image: radial-gradient( #C7C7C7 1px, transparent 0 );
+    background-size: 25px 25px;
+    background-position: -8px -8px;
+}
+
 .btn-triibo {
     color: #fff;
     background-color: #6E3296;
