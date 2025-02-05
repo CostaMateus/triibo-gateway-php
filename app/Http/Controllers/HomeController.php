@@ -15,4 +15,14 @@ class HomeController extends Controller
     {
         return view( "home" );
     }
+
+    /**
+     * Show the documentation.
+     *
+     * @return  Renderable
+     */
+    public function documentation()
+    {
+        return view( "documentation" );
+    }
 }
