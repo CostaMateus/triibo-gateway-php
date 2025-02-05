@@ -1,8 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\{ Auth, Route, Artisan };
-use App\Http\Controllers\{ HomeController, UserController };
+use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
+use App\Http\Controllers\{ HomeController, MarketplaceController, UserController };
 
 /*
 |--------------------------------------------------------------------------
@@ -17,28 +18,24 @@ use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
 
 Auth::routes( [ "register" => false ] );
 
-Route::get( "/", function ()
-{
-    return view( "welcome", [
-        "showToast" => false,
-        "message"   => ""
-    ] );
-} )->name( "welcome" );
-
-Route::get( "/clear-caches", function()
-{
-    Artisan::call( "optimize:clear" );
-    return view( "welcome", [ "showToast" => true, "message" => __( "marketplace.cache" ) ] );
-
-} )->name( "clear.caches" );
+Route::get( "/",            [ HomeController::class, "welcome"    ] )->name( "welcome"     );
+Route::get( "/clear-cache", [ HomeController::class, "clearCache" ] )->name( "clear.cache" );
 
 Route::group( [ "middleware" => "auth" ], function() {
 
-    Route::get( "/home", [ HomeController::class, "index" ] )->name( "home" );
+    Route::get( "/home",         [ HomeController::class, "index"         ] )->name( "home"          );
+    Route::get( "/documentacao", [ HomeController::class, "documentation" ] )->name( "documentation" );
 
     Route::resource( "users", UserController::class );
 
+    Route::prefix( "marketplace" )->name( "mkt." )->group( function ()
+    {
+        Route::get( "/pedidos", [ MarketplaceController::class, "orders" ] )->name( "orders" );
+    } );
 } );
+
+
+
 
 
 
@@ -268,7 +265,108 @@ Route::prefix( "mkt" )->group( function ()
     } );
 } );
 
-Route::get( "/fs", function ()
+Route::prefix( "fs" )->group( function ()
 {
-    // teste FS
+    Route::get( "/get-order/{id}", function( $id )
+    {
+        $response = vtex_get_order( "marketplace", "fast_shop", $id );
+
+        dd( $response );
+    } );
+
+    Route::get( "/get-freight", function()
+    {
+        $seller    = "fast_shop";
+        $connector = new ConnectorService( $seller );
+        $service   = new FulfillmentService( $connector );
+
+        $req_data  = [
+            "items" => [
+                [
+                    "id"       => "15695",
+                    "quantity" => 1,
+                    "seller"   => "1",
+                ]
+            ],
+            "isCheckedIn" => false,
+            "country"     => "BRA",
+            "selectedSla" => "Normal",
+            "postalCode"  => "01218-011",
+        ];
+
+        $response  = $service->simulate( $req_data );
+
+        if ( $response[ 0 ] != 200 )
+            dd( $response );
+
+        $translated = vtex_freight_to_woo( $response[ 1 ][ "data" ] );
+        dd( $translated );
+    } );
+
+
+    Route::get( "/create-order", function()
+    {
+        $data = [
+            "customer_id"          => 1717,
+            "set_paid"             => true,
+            "status"               => "processing",
+            "payment_method"       => "triibo_payments_billet",
+            "payment_method_title" => "Triibo Boleto",
+            "billing"              => [
+                "first_name"   => "Empresa",
+                "last_name"    => "LTDA",
+                "company"      => "Empresa LTDA",
+                "email"        => "email@empresa.com",
+                "phone"        => "+5511900000000",
+                "cpf"          => "",
+                "cnpj"         => "12.345.678/0001-99",
+                "ie"           => "123.456.789.000",
+                "postcode"     => "01234-000",
+                "address_1"    => "Av Pacaembu, 1000",
+                "number"       => "1000",
+                "address_2"    => "Sala 110",
+                "neighborhood" => "Pacaembu",
+                "city"         => "São Paulo",
+                "state"        => "SP",
+                "country"      => "BR",
+            ],
+            "shipping"             => [
+                "first_name"   => "John",
+                "last_name"    => "Doe",
+                "company"      => "",
+                "email"        => "email@cliente.com",
+                "phone"        => "+5511999999999",
+                "cpf"          => "009.876.543-21",
+                "cnpj"         => "",
+                "ie"           => "",
+                "postcode"     => "01218-011",
+                "address_1"    => "Rua Fulano, 1000",
+                "number"       => "1000",
+                "address_2"    => "Apto 123A",
+                "neighborhood" => "Pacaembu",
+                "city"         => "São Paulo",
+                "state"        => "SP",
+                "country"      => "BR",
+            ],
+            "line_items"           => [ [
+                "product_id" => 1021687, // buscar o _fs_product_id (15695)
+                "quantity"   => 1
+            ] ],
+            "shipping_lines"       => [ [
+                "method_id"    => "triibo-fast-shop-shipping",
+                "method_title" => "Fast Shop",
+                "total"        => "20.72"
+            ] ]
+        ];
+
+        $order = Order::create( $data );
+
+        dd( $data, $order );
+    } );
+
+    // recuperar produto no marketplace
+    // consultar e validar frete
+    // criar pedido com frete no marketplace
+    // criar pedido na fast shop
+    // aprovar pedido na fast shop
 } );
