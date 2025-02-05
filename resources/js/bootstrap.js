@@ -13,8 +13,11 @@ window.jquery = $;
 import Tablesort from 'tablesort';
 window.Tablesort = Tablesort;
 
+import * as OverlayScrollbarsGlobal from 'overlayscrollbars';
+window.OverlayScrollbarsGlobal = OverlayScrollbarsGlobal;
+
+import 'bootstrap-icons/font/bootstrap-icons';
 import 'jquery-mask-plugin';
-import 'overlayscrollbars';
 
 jquery( function ()
 {
