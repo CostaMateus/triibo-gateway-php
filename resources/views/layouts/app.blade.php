@@ -10,10 +10,13 @@
             <meta name="robots" content="noindex" />
         @endif
 
-        {{-- Title --}}
-        <title>{{ config( "app.name", "Triibo" ) }}</title>
+        {{-- <!-- Title --> --}}
+        <title>@yield( "title" ) | Triibo</title>
 
-        {{-- CSS/JS --}}
+        {{-- <!-- Fonts --> --}}
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" >
+
+        {{-- <!-- CSS/Scripts --> --}}
         @vite( [
             "resources/sass/app.scss",
             "resources/css/app.css",

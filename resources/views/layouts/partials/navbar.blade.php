@@ -16,16 +16,16 @@
                 <!-- Authentication Links -->
                 @guest
                     @if ( Route::has( "login" ) )
-                        <li class="nav-item" ><a class="nav-link" href="{{ route( "login"    ) }}" >{{ __( "Login"    ) }}</a></li>
+                        <li class="nav-item" ><a class="nav-link" href="{{ route( "login"    ) }}" >Login</a></li>
                     @endif
 
                     @if ( Route::has( "register" ) )
-                        <li class="nav-item" ><a class="nav-link" href="{{ route( "register" ) }}" >{{ __( "Register" ) }}</a></li>
+                        <li class="nav-item" ><a class="nav-link" href="{{ route( "register" ) }}" >Registrar</a></li>
                     @endif
                 @else
 
-                    <li><a class="nav-link" href="{{ route( "users.index"      ) }}" >{{ __( "common.user.management" ) }}</a></li>
-                    <li><a class="nav-link" href="{{ route( "log-viewer.index" ) }}" >{{ __( "common.logs"            ) }}</a></li>
+                    <li><a class="nav-link" href="{{ route( "users.index"      ) }}" >Usuários</a></li>
+                    <li><a class="nav-link" href="{{ route( "log-viewer.index" ) }}" >Logs    </a></li>
 
                     <li class="nav-item dropdown" >
                         <a id="navbarDropdown" class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" v-pre>
@@ -33,10 +33,7 @@
                         </a>
 
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown" >
-                            <a class="dropdown-item" href="{{ route( "logout" ) }}" onclick="event.preventDefault(); document.getElementById( 'logout-form' ).submit();" >
-                                {{ __( "Logout" ) }}
-                            </a>
-
+                            <a class="dropdown-item" href="{{ route( "logout" ) }}" onclick="event.preventDefault(); document.getElementById( 'logout-form' ).submit();" >Sair</a>
                             <form id="logout-form" action="{{ route( "logout" ) }}" method="POST" class="d-none" > @csrf </form>
                         </div>
                     </li>
