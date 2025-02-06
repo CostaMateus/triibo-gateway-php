@@ -53,11 +53,9 @@
                             <div class="col-6 ps-2" >
                                 <select id="orders-status" class="form-select" >
                                     <option value="" >Selecione um status...</option>
-                                    <option value="all"           @if ( $status == "all"           ) selected @endif >Todos</option>
-                                    <option value="not_processed" @if ( $status == "not_processed" ) selected @endif >Não processados</option>
-                                    <option value="processed"     @if ( $status == "processed"     ) selected @endif >Processados</option>
-                                    <option value="approved"      @if ( $status == "approved"      ) selected @endif >Aprovados</option>
-                                    <option value="canceled"      @if ( $status == "canceled"      ) selected @endif >Cancelados</option>
+                                    @foreach ( $statuses as $key => $value )
+                                        <option value="{{ $key }}" @if ( $key == $status ) selected @endif >{{ $value }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                         </div>
@@ -88,7 +86,7 @@
                                         <th class="text-center text-nowrap" >Status</th>
                                         <th class="text-center text-nowrap" >Preço máximo</th>
                                         <th class="text-center text-nowrap" >ID produto</th>
-                                        <th class="text-center text-nowrap" >Qntt produto</th>
+                                        <th class="text-center text-nowrap" >Quantidade</th>
                                         <th class="text-center text-nowrap" >Nome produto</th>
                                         <th class="text-center text-nowrap" >Endereço fatura</th>
                                         <th class="text-center text-nowrap" >Endereço entrega</th>
@@ -283,17 +281,17 @@
                 if ( action == "create"  )
                 {
                     route   = "{{ route( 'mkt.order.create'  ) }}";
-                    message = `Deseja criar o pedido ID: ${ord_id}`;
+                    message = `Deseja criar o pedido ID: ${ord_id}?\nO pedido será criado no marketplace e enviado a Fast Shop!`;
                 }
                 else if ( action == "approve" )
                 {
                     route   = "{{ route( 'mkt.order.approve' ) }}";
-                    message = `Deseja aprovar o pedido ID: ${ord_id}`;
+                    message = `Deseja aprovar o pedido ID: ${ord_id}?\nO pedido será aprovado para a Fast Shop!`;
                 }
                 else if ( action == "cancel"  )
                 {
                     route   = "{{ route( 'mkt.order.cancel'  ) }}";
-                    message = `Deseja cancelar o pedido ID: ${ord_id}`;
+                    message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será na Fast Shop e no marketplace!`;
                 }
 
                 $( "#order-form input[name='ord_id']"    ).val( ord_id    );
