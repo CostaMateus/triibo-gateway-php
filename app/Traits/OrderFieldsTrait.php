@@ -82,22 +82,36 @@ trait OrderFieldsTrait
     {
         return match ( $status )
         {
-            "not_processed" => [
+            "not_processed"     => [
                 "name"  => "Não Processado",
-                "color" => "text-bg-secondary",
+                "color" => "text-white text-bg-secondary",
             ],
-            "processed"     => [
+            "processed"         => [
                 "name"  => "Processado",
-                "color" => "text-bg-info",
+                "color" => "text-white text-bg-info",
             ],
-            "approved"      => [
+            "approved"          => [
                 "name"  => "Aprovado",
-                "color" => "text-bg-success",
+                "color" => "text-white text-bg-success",
             ],
-            "canceled"      => [
+            "canceled"          => [
                 "name"  => "Cancelado",
-                "color" => "text-bg-danger",
-            ]
+                "color" => "text-white text-bg-danger",
+            ],
+
+            "product_not_found" => [
+                "name"  => "Produto não encontrado",
+                "color" => "text-dark text-bg-warning",
+            ],
+            "over_max"          => [
+                "name"  => "Preço acima do limite",
+                "color" => "text-dark text-bg-warning",
+            ],
+
+            default             => [
+                "name"  => "Não definido",
+                "color" => "text-white text-bg-primary",
+            ],
         };
     }
 
@@ -109,11 +123,14 @@ trait OrderFieldsTrait
     private function getAllOrderStatus() : array
     {
         return [
-            "all"           => "Todos",
-            "not_processed" => "Não Processado",
-            "processed"     => "Processado",
-            "approved"      => "Aprovado",
-            "canceled"      => "Cancelado",
+            "all"               => "Todos",
+            "not_processed"     => "Não Processado",
+            "processed"         => "Processado",
+            "approved"          => "Aprovado",
+            "canceled"          => "Cancelado",
+
+            "product_not_found" => "Produto não encontrado",
+            "over_max"          => "Preço acima do limite",
         ];
     }
 }
