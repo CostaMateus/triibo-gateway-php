@@ -116,7 +116,7 @@ class ProcessProducts extends Command
         }
 
         $origin   = $this->allowed_sellers[ $seller ];
-        $products = Product::where( column: "status", value: "unprocessed" )->where( column: "origin", value: $origin )->get();
+        $products = Product::where( "status", "unprocessed" )->where( "origin", $origin )->get();
 
         if ( $products->count() == 0 )
         {
@@ -252,25 +252,25 @@ class ProcessProducts extends Command
             try
             {
                 $wc_product = WC_Product::where( column: "sku", value: $product[ "sku" ] )->first();
+
+                if ( !$wc_product )
+                    continue;
+
+                $local_product = DB::table( table: "marketplace_product_skus" )
+                                   ->where( column: "product_sku", value: $product[ "sku" ] )
+                                   ->whereNull( columns: "product_id" )
+                                   ->first();
+
+                if ( !$local_product )
+                    continue;
+
+                $this->updateWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
             }
             catch ( Throwable $e )
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                     $this->log_message( message: $e->getMessage(), type: "error" );
             }
-
-            if ( !$wc_product )
-                continue;
-
-            $local_product = DB::table( table: "marketplace_product_skus" )
-                               ->where( column: "product_sku", value: $product[ "sku" ] )
-                               ->whereNull( columns: "product_id" )
-                               ->first();
-
-            if ( !$local_product )
-                continue;
-
-            $this->updateWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
         }
     }
 
@@ -280,8 +280,7 @@ class ProcessProducts extends Command
      */
     private function updateLocalProducts() : void
     {
-        Product::whereIn( column: "id", value: $this->update_local )
-               ->update( values: [ "status" => "processed" ] );
+        Product::whereIn( "id", $this->update_local )->update( [ "status" => "processed" ] );
     }
 
     /**

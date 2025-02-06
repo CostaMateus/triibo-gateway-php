@@ -43,6 +43,7 @@ class GetCategories extends Command
         $page       = 1;
         $categories = [];
         $data       = [];
+        $count      = 100;
 
         do
         {
@@ -50,7 +51,11 @@ class GetCategories extends Command
 
             try
             {
-                $response = Category::all( [ "per_page" => 100, "page" => $page, ] );
+                $response   = Category::all( [ "per_page" => 100, "page" => $page, ] );
+                $count      = $response->count();
+                $categories = array_merge( $response->toArray(), $categories );
+
+                $page++;
             }
             catch ( Throwable $e )
             {
@@ -60,12 +65,8 @@ class GetCategories extends Command
                     break;
                 }
             }
-
-            $categories = array_merge( $response->toArray(), $categories );
-
-            $page++;
         }
-        while ( $response->count() == 100 );
+        while ( $count == 100 );
 
         $this->info( "Loaded categories" );
 

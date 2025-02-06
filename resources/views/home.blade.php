@@ -1,33 +1,36 @@
 @extends( "layouts.app" )
 
-@section( "content"     )
-<div class="container" >
-    <div class="row justify-content-center" >
+@section( "title", "Dashboard" )
 
-        <div class="col-md-8" >
-            <h2 class="text-left" >Documentação</h2>
-        </div>
-        <div class="col-md-8" >
+@section( "content" )
+    <div class="app-content" >
+        <div class="container-fluid" >
+            <div class="row justify-content-center" >
 
-            <div class="accordion accordion-flush" id="accordionTriibo" >
-
-                @include( "doc_parts.chatguru" )
-                @include( "doc_parts.awin"     )
-                @include( "doc_parts.cofry"    )
-                @include( "doc_parts.fastshop" )
-                @include( "doc_parts.mautic"   )
-
-                @include( "doc_parts.plugin-triibo-api-services" )
-                @include( "doc_parts.plugin-triibo-assinaturas"  )
-                @include( "doc_parts.plugin-triibo-auth"         )
-                @include( "doc_parts.plugin-triibo-eventos"      )
-                @include( "doc_parts.plugin-triibo-fastshop"     )
-                @include( "doc_parts.plugin-triibo-payments"     )
+                <div class="col-12 col-sm-6 col-lg-4 text-center mb-3" >
+                    <div class="card bg-white" >
+                        <div class="card-body" >
+                            <a class="text-decoration-none" href="{{ route( "documentation" ) }}" >
+                                <p class="h4 my-3 text-black-50" >
+                                    <i class="bi bi-folder2-open" ></i> Documentação
+                                </p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-4 text-center mb-3" >
+                    <div class="card bg-white" >
+                        <div class="card-body" >
+                            <a class="text-decoration-none" href="{{ route( "mkt.orders" ) }}" >
+                                <p class="h4 my-3 text-black-50" >
+                                    <i class="bi bi-cart" ></i> Pedidos marketplace
+                                </p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
 
             </div>
-
         </div>
-
     </div>
-</div>
 @endsection

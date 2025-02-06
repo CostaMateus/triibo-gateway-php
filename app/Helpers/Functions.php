@@ -5,9 +5,10 @@
 
 use App\Models\User;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Log;
+use App\Models\Marketplace\Order;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
+use Illuminate\Support\Facades\{ DB, Log };
 
 if ( !function_exists( "log_message" ) )
 {
@@ -691,5 +692,119 @@ if ( !function_exists( "get_cashback" ) )
 
         // Format the cashback value with one decimal place and return as a float.
         return ( float ) number_format( $cashback, 1, ".", "" );
+    }
+}
+
+if ( !function_exists( "process_csv_file" ) )
+{
+    /**
+     *
+     * @param   mixed   $file
+     * @return  bool
+     */
+    function process_csv_file( mixed $file )
+    {
+        $message = "";
+
+        try
+        {
+            $file_name   = date( "ymdHis" ) . "_" . $file->getClientOriginalName();
+
+            // Save csv file and get file path
+            $csv_path    = $file->storeAs( "mkt-orders", $file_name, "local" );
+
+            // Get csv content
+            $csv_content = Storage::disk( "local" )->get( $csv_path );
+
+            // Convert csv to array
+            $csv_array   = array_map( function( $line )
+            {
+                return str_getcsv( $line, ",", '"' );
+            }, explode( "\n", $csv_content ) );
+
+            // Clean empty lines
+            $csv_array = array_filter( $csv_array, function( $row )
+            {
+                return !empty( array_filter( $row ) );
+            } );
+
+            // Get headers
+            $headers     = array_shift( $csv_array );
+
+            DB::beginTransaction();
+
+            try
+            {
+                foreach ( $csv_array as $i => $row )
+                {
+                    if ( count( $row ) === count( $headers ) )
+                    {
+                        $order    = [];
+                        $billing  = [];
+                        $shipping = [];
+
+                        foreach ( $headers as $index => $header )
+                        {
+                            $value = $row[ $index ];
+
+                            if ( Str::startsWith( $header, "billing_" ) )
+                                $billing[ Str::after( $header, "billing_" ) ] = $value;
+
+                            elseif ( Str::startsWith( $header, "shipping_" ) )
+                                $shipping[ Str::after( $header, "shipping_" ) ] = $value;
+
+                            elseif ( $header === "ord_id" )
+                                $order[ $header ] = "ORD_" . $i + 1;
+
+                            elseif ( $header === "ord_status" )
+                                $order[ $header ] = "not_processed";
+
+                            else
+                                $order[ $header ] = $value;
+                        }
+
+                        $order[ "billing"      ] = $billing;
+                        $order[ "shipping"     ] = $shipping;
+
+                        $order[ "max_price"    ] = ( float ) $order[ "max_price"    ];
+                        $order[ "product_id"   ] = ( int   ) $order[ "product_id"   ];
+                        $order[ "product_qntt" ] = ( int   ) $order[ "product_qntt" ];
+
+                        $order[ "file_name"    ] = $file_name;
+
+                        Order::updateOrCreate(
+                            [
+                                "file_name" => $order[ "file_name" ],
+                                "ord_id"    => $order[ "ord_id"    ]
+                            ],
+                            $order
+                        );
+                    }
+                }
+
+                DB::commit();
+
+                return true;
+            }
+            catch ( Throwable $e )
+            {
+                DB::rollBack();
+
+                $message = $e->getMessage();
+            }
+        }
+        catch ( Throwable $e )
+        {
+            $message = $e->getMessage();
+        }
+
+        $context = [
+            "file"    => $file->getClientOriginalName(),
+            "message" => $message,
+        ];
+
+        log_message( channel: "triibo", message: "Falha ao processar arquivo CSV", level: "error", context: $context );
+
+        return false;
     }
 }
