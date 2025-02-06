@@ -26,13 +26,16 @@
         @yield( "css" )
     </head>
     <body class="bg-dots" >
+
         <div class="app-wrapper" >
+            {{-- Loading --}}
+            @include( "layouts.partials.load"    )
+
             @include( "layouts.partials.navbar"  )
 
             <main class="app-main py-4" >
                 @yield( "content" )
             </main>
-
         </div>
 
         @yield( "js" )

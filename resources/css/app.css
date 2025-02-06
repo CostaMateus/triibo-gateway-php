@@ -4,7 +4,7 @@
     --bs-triibo-rgb: 110, 50, 150;
 }
 
-table tr td {
+i, table tr td {
     vertical-align: middle!important;
 }
 
@@ -111,4 +111,43 @@ table tr td {
 .bg-triibo {
     --bs-bg-opacity: 1;
     background-color: rgba(var(--bs-triibo-rgb), var(--bs-bg-opacity)) !important;
+}
+
+.circle {
+    width:60px;
+    height:60px;
+    margin:0 auto;
+    border:5px solid #F2F2F2;
+    border-top:5px solid #6E3296;
+    border-radius:50%;
+    -webkit-animation:spin 1s linear infinite;
+    animation:spin 1s linear infinite;
+}
+.back-black {
+    top:0;
+    left:0;
+    margin:0!important;
+    width:100vw!important;
+    height:100vh!important;
+    display:block;
+    overflow:auto!important;
+    position:fixed;
+    z-index:99999999;
+    background-color:rgba(0,0,0,.3)!important;
+}
+.base-load {
+    top:50%!important;
+    left:50%!important;
+    margin:0!important;
+    position:fixed!important;
+    -ms-transform:translate(-50%,-50%);
+    transform:translate(-50%,-50%)
+}
+@-webkit-keyframes spin {
+    0%   { -webkit-transform:rotate(0)     }
+    100% {-webkit-transform:rotate(360deg) }
+}
+@keyframes spin {
+    0%   { transform:rotate(0)      }
+    100% { transform:rotate(360deg) }
 }
