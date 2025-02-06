@@ -100,4 +100,20 @@ trait OrderFieldsTrait
             ]
         };
     }
+
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    private function getAllOrderStatus() : array
+    {
+        return [
+            "all"           => "Todos",
+            "not_processed" => "Não Processado",
+            "processed"     => "Processado",
+            "approved"      => "Aprovado",
+            "canceled"      => "Cancelado",
+        ];
+    }
 }
