@@ -27,6 +27,7 @@ class Order extends Model
         "product_id",
         "product_qntt",
         "product_name",
+        "customer_id",
         "billing",
         "shipping",
     ];

@@ -24,6 +24,7 @@ return new class extends Migration
             $table->integer( "product_id"   );
             $table->integer( "product_qntt" );
             $table->string(  "product_name" );
+            $table->string(  "customer_id"  )->nullable();
             $table->json(    "billing"      );
             $table->json(    "shipping"     );
 
