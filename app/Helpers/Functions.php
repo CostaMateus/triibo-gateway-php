@@ -850,3 +850,59 @@ if ( !function_exists( "reorganize_fields" ) )
         return $result;
     }
 }
+
+if ( !function_exists( "get_billing_fields_order" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_billing_fields_order() : array
+    {
+        return [
+            "company",
+            "email",
+            "phone",
+            "cnpj",
+            "ie",
+            "postcode",
+            "address_1",
+            "number",
+            "address_2",
+            "neighborhood",
+            "city",
+            "state",
+            "country",
+            "first_name",
+            "last_name",
+        ];
+    }
+}
+
+if ( !function_exists( "get_shipping_fields_order" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_shipping_fields_order() : array
+    {
+        return [
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "cpf",
+            "postcode",
+            "address_1",
+            "number",
+            "address_2",
+            "neighborhood",
+            "city",
+            "state",
+            "country",
+        ];
+    }
+}
