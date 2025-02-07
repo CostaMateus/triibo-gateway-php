@@ -294,6 +294,58 @@ class MarketplaceController extends Controller
             );
         }
 
+        $order = Order::where( "file_name",  $request->file_name )
+                      ->where( "ord_id",     $request->ord_id    )
+                      ->where( "ord_status", "processed"         )
+                      ->first();
+
+        if ( !$order )
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "{$request->ord_id}: Pedido com status diferente de 'Processado'."
+            );
+        }
+
+        if ( !$order->mkt_id )
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
+            );
+        }
+
+        $vtex     = new VtexOrderController();
+        $request  = new Request();
+
+        $request->headers->set( "seller",    self::SELLER                          );
+        $request->headers->set( "api-key",   config( "woocommerce.plugins.key"   ) );
+        $request->headers->set( "api-token", config( "woocommerce.plugins.token" ) );
+
+        $response = $vtex->orderApproval( $request, $order->mkt_id );
+
+        if ( $response->status() != 200 )
+        {
+            $data = $response->getData();
+
+            $order->ord_status = "fs_approve_error";
+            $order->save();
+
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
+            );
+        }
+
+        $order->ord_status = "approved";
+        $order->save();
+
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
             route   : self::ROUTE,
