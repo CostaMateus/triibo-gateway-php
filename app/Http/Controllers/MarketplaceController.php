@@ -260,7 +260,7 @@ class MarketplaceController extends Controller
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : "{$order->ord_id} #{$wc_order[ "id" ]}: Erro ao criar pedido na Fast Shop."
+                message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
             );
         }
 
@@ -270,7 +270,7 @@ class MarketplaceController extends Controller
             channel : self::LOG_CHANNEL,
             route   : self::ROUTE,
             type    : self::SUCCESS,
-            message : "{$order->ord_id} #{$wc_order[ "id" ]}: Pedido criado com sucesso."
+            message : "{$order->ord_id} #{$order->mkt_id}: Pedido criado com sucesso."
         );
     }
 
@@ -283,11 +283,21 @@ class MarketplaceController extends Controller
     public function orderApprove( Request $request ) : RedirectResponse
     {
         if ( !$request->ord_id || !$request->file_name )
-            return redirect()->route( "mkt.orders" )->with( [ "error" => "Dados inválidos." ] );
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "Dados inválidos."
+            );
+        }
 
-        $message = [ "success" => "Pedido aprovado com sucesso." ];
-
-        return redirect()->route( "mkt.orders" )->with( $message );
+        return log_and_redirect(
+            channel : self::LOG_CHANNEL,
+            route   : self::ROUTE,
+            type    : self::SUCCESS,
+            message : "{$order->ord_id} #{$order->mkt_id}: Pedido aprovado com sucesso."
+        );
     }
 
     /**
@@ -299,10 +309,20 @@ class MarketplaceController extends Controller
     public function orderCancel( Request $request ) : RedirectResponse
     {
         if ( !$request->ord_id || !$request->file_name )
-            return redirect()->route( "mkt.orders" )->with( [ "error" => "Dados inválidos." ] );
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "Dados inválidos."
+            );
+        }
 
-        $message = [ "success" => "Pedido cancelado com sucesso." ];
-
-        return redirect()->route( "mkt.orders" )->with( $message );
+        return log_and_redirect(
+            channel : self::LOG_CHANNEL,
+            route   : self::ROUTE,
+            type    : self::SUCCESS,
+            message : "{$order->ord_id} #{$order->mkt_id}: Pedido cancelado com sucesso."
+        );
     }
 }
