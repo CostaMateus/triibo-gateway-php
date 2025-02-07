@@ -58,20 +58,30 @@ class MarketplaceController extends Controller
     {
         $request->validate( [ "csv_file" => "required|file|mimes:csv,txt|max:2048" ] );
 
-        $message = [ "error" => "Arquivo inválido." ];
+        $type    = self::ERROR;
+        $message = "Arquivo inválido.";
 
         if ( $request->file( "csv_file" )->isValid() )
         {
             $processed = process_csv_file( $request->file( "csv_file" ) );
 
             if ( $processed )
-                $message = [ "success" => "Arquivo importado com sucesso." ];
-
+            {
+                $type    = self::SUCCESS;
+                $message = "Arquivo importado com sucesso.";
+            }
             else
-                $message = [ "error"   => "Falha ao processar arquivo."    ];
+            {
+                $message = "Falha ao processar arquivo.";
+            }
         }
 
-        return redirect()->route( "mkt.orders" )->with( $message );
+        return log_and_redirect(
+            channel : self::LOG_CHANNEL,
+            route   : self::ROUTE,
+            type    : $type,
+            message : $message
+        );
     }
 
     /**
