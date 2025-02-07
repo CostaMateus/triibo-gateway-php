@@ -105,8 +105,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $seller   = "fast_shop";
-        $store_id = config( key: "woocommerce.partners.{$seller}.store_id" );
+        $store_id = config( key: "woocommerce.partners." . self::SELLER . ".store_id" );
 
         $order    = Order::where( "file_name",  $request->file_name )
                          ->where( "ord_id",     $request->ord_id    )
@@ -119,7 +118,7 @@ class MarketplaceController extends Controller
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : "{$request->ord_id}: Produto não encontrado."
+                message : "{$request->ord_id}: Pedido com status diferente de 'Não processado'."
             );
         }
 
@@ -252,11 +251,11 @@ class MarketplaceController extends Controller
         $order->mkt_id     = $wc_order[ "id" ];
         $order->ord_status = "processed";
 
-        $response          = vtex_new_order_exec( "triibo", $seller, $freight[ "data" ], $wc_order );
+        $response          = vtex_new_order_exec( "triibo", self::SELLER, $freight[ "data" ], $wc_order );
 
         if ( $response[ "error_code" ] !== null )
         {
-            $order->ord_status = "fs_error";
+            $order->ord_status = "fs_create_error";
             $order->save();
 
             return log_and_redirect(
