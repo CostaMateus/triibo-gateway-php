@@ -979,3 +979,57 @@ if ( !function_exists( "get_all_order_status" ) )
         ];
     }
 }
+
+if ( !function_exists( "search_product_meta" ) )
+{
+    /**
+     *
+     * @param   array   $metas
+     * @param   string  $key
+     * @return  mixed
+     */
+    function search_product_meta( array $metas, string $key = "_fs_product_id" ) : mixed
+    {
+        foreach ( $metas as $meta )
+            if ( $meta->key == $key )
+                return $meta->value;
+
+        return null;
+    }
+}
+
+if ( !function_exists( "get_freight_vtex" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param integer $product_id
+     * @return  mixed
+     */
+    function get_freight_vtex( int $product_id, string $postcode ) : mixed
+    {
+        $connector = new ConnectorService( "fast_shop" );
+        $service   = new FulfillmentService( $connector );
+
+        $req_data  = [
+            "items" => [
+                [
+                    "id"       => $product_id,
+                    "quantity" => 1,
+                    "seller"   => "1",
+                ]
+            ],
+            "isCheckedIn" => false,
+            "country"     => "BRA",
+            "selectedSla" => "Normal",
+            "postalCode"  => $postcode,
+        ];
+
+        $response  = $service->simulate( $req_data );
+
+        if ( $response[ 0 ] != 200 )
+            return false;
+
+        return $response[ 1 ];
+    }
+}
