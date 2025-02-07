@@ -264,7 +264,7 @@ if ( !function_exists( "create_order_note" ) )
 
         log_exception(
             channel : $channel,
-            message : $e->getMessage(),
+            message : "Error trying to create note: '{$message}'",
             method  : "create_order_note",
             type    : "Throwable",
             e       : $e ?? null
@@ -315,11 +315,12 @@ if ( !function_exists( "update_order_meta" ) )
     /**
      * Updates the metadata for a specific order.
      *
+     * @param   string  $channel    The logging channel to use for error logging.
      * @param   string  $order_id   The ID of the order whose metadata will be updated.
      * @param   array   $data       An associative array of metadata to update.
      * @return  void
      */
-    function update_order_meta( string $order_id, array $data ) : void
+    function update_order_meta( string $channel, string $order_id, array $data ) : void
     {
         $retry  = 0;
         $failed = false;
@@ -338,6 +339,14 @@ if ( !function_exists( "update_order_meta" ) )
             }
         }
         while ( $failed && $retry < 3 );
+
+        log_exception(
+            channel : $channel,
+            message : "Error trying to update order: #{$order_id} " . json_encode( $data ),
+            method  : "create_order_note",
+            type    : "Throwable",
+            e       : $e ?? null
+        );
     }
 }
 
