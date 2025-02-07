@@ -13,21 +13,22 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
-        \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
-        \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
-        \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
-
         \App\Console\Commands\Log\ClearLogFile::class,
+
+        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+
+        // \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
+        // \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
+        // \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
 
         \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
         \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
 
-        \App\Console\Commands\Triibo\SyncIdsMP::class,
-        \App\Console\Commands\Triibo\UnsetUpdateDate::class,
-        \App\Console\Commands\Triibo\UnsetVouchers::class,
+        // \App\Console\Commands\Triibo\SyncIdsMP::class,
+        // \App\Console\Commands\Triibo\UnsetUpdateDate::class,
+        // \App\Console\Commands\Triibo\UnsetVouchers::class,
 
         \App\Console\Commands\Vtex\ProcessProducts::class,
     ];
@@ -45,10 +46,10 @@ class Kernel extends ConsoleKernel
             // Clear Logs - sunday at 00h00
             $schedule->command( "log:clear" )->weekly()->runInBackground();
 
-
-            ################################
-            ### Awin Triibo Integration ####
-            ################################
+            // ################################
+            // ### Awin Triibo Integration ####
+            // ################################
+            // ! MOVIDO PARA O AIRFLOW - TODO adicionar o dia
             // Lojas, promoções e imagens - segunda a sexta às 03h
             $schedule->command( "awin:process --option=all"     )->weekdays()->at( "03:00" )->runInBackground();
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
@@ -57,13 +58,13 @@ class Kernel extends ConsoleKernel
 
             // ################################
             // ### Cofry Triibo Integration ###
-            // ### desativado 17/12/2024    ###
             // ################################
-            // // Lojas e promoções - Diariamente às 02 e às 14h
+            // ! desativado 17/12/2024
+            // Lojas e promoções - Diariamente às 02 e às 14h
             // $schedule->command( "cofry:process_sp --option=all" )->twiceDaily( 2, 14 )->runInBackground();
-            // // Imagens - Diariamente às 02h05
+            // Imagens - Diariamente às 02h05
             // $schedule->command( "cofry:delete_images"           )->dailyAt( "02:30" )->runInBackground();
-            // // Imagens - Diariamente às 02h10
+            // Imagens - Diariamente às 02h10
             // $schedule->command( "cofry:process_images"          )->dailyAt( "02:40" )->runInBackground();
 
             ################################

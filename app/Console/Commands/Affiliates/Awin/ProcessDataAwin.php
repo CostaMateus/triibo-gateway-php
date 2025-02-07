@@ -32,7 +32,7 @@ class ProcessDataAwin extends Command
      * @var     array
      */
     protected $allowed_options = [
-        "populate",
+        // "populate",
         "establishments",
         "promotions",
         "images",
@@ -57,148 +57,31 @@ class ProcessDataAwin extends Command
      */
     public function handle()
     {
-        // echo "Establishments ============================================================\n";
-        // // Establishments
-        // $db                       = Firebase::database();
-        // $establishments_reference = $db->getReference( "/Estabelecimento-v2"            );
-        // $e_approvals_reference    = $db->getReference( "/Estabelecimento-Aprovacoes"    );
-        // $e_changes_reference      = $db->getReference( "/Establishment-changes-request" );
-
-        // $establishments           = $establishments_reference->getValue();
-        // $e_approvals              = $e_approvals_reference->getValue();
-        // $e_changes                = $e_changes_reference->getValue();
-
-        // echo "Approvals =================================================================\n";
-
-        // foreach ( $e_approvals as $ea_push => $e_approval )
-        // {
-        //     if ( !isset( $e_approval[ "id"          ] ) ) continue;
-        //     if ( !isset( $e_approval[ "status"      ] ) ) continue;
-        //     if ( !isset( $e_approval[ "origin"      ] ) ) continue;
-        //     if ( !isset( $e_approval[ "requesterId" ] ) ) continue;
-
-        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $e_approval[ "requesterId" ] ) continue;
-
-        //     if ( !isset( $establishments[ $e_approval[ "id" ] ]             ) ) continue;
-        //     if ( !isset( $establishments[ $e_approval[ "id" ] ][ "origin" ] ) ) continue;
-
-        //     if ( "awin" != $e_approval[ "origin" ] ) continue;
-
-        //     if ( "awin" != $establishments[ $e_approval[ "id" ] ][ "origin" ] ) continue;
-
-        //     echo "{$ea_push} | {$e_approval[ "id" ]} | {$establishments[ $e_approval[ "id" ] ][ "nome" ]}\n";
-
-        //     $e_approvals_reference->update( [ $ea_push => null ] );
-        // }
-
-        // echo "Changes ===================================================================\n";
-
-        // foreach ( $e_changes as $ec_push => $e_change )
-        // {
-        //     if ( !isset( $e_change[ "id"              ] ) ) continue;
-        //     if ( !isset( $e_change[ "type"            ] ) ) continue;
-        //     if ( !isset( $e_change[ "requesterUid"    ] ) ) continue;
-        //     if ( !isset( $e_change[ "establishmentId" ] ) ) continue;
-
-        //     if ( !isset( $establishments[ $e_change[ "establishmentId" ] ] ) ) continue;
-
-        //     if ( !isset( $establishments[ $e_change[ "establishmentId" ] ][ "origin" ] ) ) continue;
-
-        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $e_change[ "requesterUid" ] ) continue;
-
-        //     if ( "awin" != $establishments[ $e_change[ "establishmentId" ] ][ "origin" ] ) continue;
-
-        //     echo "{$ec_push} | {$e_change[ "establishmentId" ]} | {$establishments[ $e_change[ "establishmentId" ] ][ "nome" ]}\n";
-
-        //     $e_changes_reference->update( [ $ec_push => null ] );
-        // }
-
-        // echo "===========================================================================\n";
-        // echo "===========================================================================\n";
-        // echo "Promotions ================================================================\n";
-        // // Promotions
-        // $db                    = Firebase::database();
-        // $promotions_reference  = $db->getReference( "/Store"                 );
-        // $p_approvals_reference = $db->getReference( "/Store-Aprovacoes"      );
-        // $p_changes_reference   = $db->getReference( "/Store-changes-request" );
-
-        // $promotions            = $promotions_reference->getValue();
-        // $p_approvals           = $p_approvals_reference->getValue();
-        // $p_changes             = $p_changes_reference->getValue();
-
-        // echo "Approvals =================================================================\n";
-
-        // foreach ( $p_approvals as $pa_push => $p_approval )
-        // {
-        //     if ( !isset( $p_approval[ "id"                ] ) ) continue;
-        //     if ( !isset( $p_approval[ "status"            ] ) ) continue;
-        //     if ( !isset( $p_approval[ "origin"            ] ) ) continue;
-        //     if ( !isset( $p_approval[ "requesterId"       ] ) ) continue;
-        //     if ( !isset( $p_approval[ "establishmentId"   ] ) ) continue;
-        //     // if ( !isset( $p_approval[ "establishmentName" ] ) ) continue;
-
-        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $p_approval[ "requesterId" ] ) continue;
-
-        //     if ( !isset( $promotions[ $p_approval[ "id" ] ]             ) ) continue;
-        //     if ( !isset( $promotions[ $p_approval[ "id" ] ][ "origin" ] ) ) continue;
-
-        //     if ( "awin" != $p_approval[ "origin" ] ) continue;
-
-        //     if ( "awin" != $promotions[ $p_approval[ "id" ] ][ "origin" ] ) continue;
-
-        //     echo "{$pa_push} | {$promotions[ $p_approval[ "id" ] ][ "establishmentName" ]}\n";
-
-        //     $p_approvals_reference->update( [ $pa_push => null ] );
-        // }
-
-        // echo "Changes ===================================================================\n";
-
-        // foreach ( $p_changes as $pc_push => $p_change )
-        // {
-        //     if ( !isset( $p_change[ "id"                ] ) ) continue;
-        //     if ( !isset( $p_change[ "type"              ] ) ) continue;
-        //     if ( !isset( $p_change[ "requesterUid"      ] ) ) continue;
-        //     if ( !isset( $p_change[ "storeId"           ] ) ) continue;
-        //     if ( !isset( $p_change[ "establishmentId"   ] ) ) continue;
-        //     if ( !isset( $p_change[ "establishmentName" ] ) ) continue;
-
-        //     if ( !isset( $promotions[ $p_change[ "storeId" ] ] ) ) continue;
-
-        //     if ( !isset( $promotions[ $p_change[ "storeId" ] ][ "origin" ] ) ) continue;
-
-        //     if ( "J4NjCHtvxuRojrXb29whbsNPAy33" != $p_change[ "requesterUid" ] ) continue;
-
-        //     if ( "awin" != $promotions[ $p_change[ "storeId" ] ][ "origin" ] ) continue;
-
-        //     echo "{$pc_push} | {$p_change[ "storeId" ]} | {$p_change[ "establishmentName" ]}\n";
-
-        //     $p_changes_reference->update( [ $pc_push => null ] );
-        // }
-
-        // dd( "ok" );
-        // =============================================
-        // =============================================
-
         // Get the option from the command line argument
         $option = $this->option( key: "option" );
 
         // Check if the option is valid
         if ( !in_array( $option, $this->allowed_options ) )
         {
-            $this->printMessage( message: "Invalid option: Terminating process!" );
+            $message = "Invalid option: Terminating process!";
+            log_message( channel: "awin", message: $message );
+            $this->info( string: $message );
+
             return 0;
         }
 
-        // If the option is "populate", populate the database with establishments and promotions
-        if ( $option == "populate" )
-        {
-            // Create a new AwinIntegration instance
-            $integration = new AwinIntegration( loadEstablishments: true );
+        // // If the option is "populate", populate the database with establishments and promotions
+        // if ( $option == "populate" )
+        // {
+        //     // Create a new AwinIntegration instance
+        //     $integration = new AwinIntegration( loadEstablishments: true );
+        //
+        //     $this->populate( type: "establishments", integration: $integration );
+        //     $this->populate( type: "promotions",     integration: $integration );
+        //     return 1;
+        // }
 
-            $this->populate( type: "establishments", integration: $integration );
-            $this->populate( type: "promotions",     integration: $integration );
-            return 1;
-        }
+        $start   = now();
 
         // Determine the options to process based on the provided option
         $options = ( $option == "all" )
@@ -207,6 +90,10 @@ class ProcessDataAwin extends Command
 
         // Process the selected options
         $this->processOptions( options: $options );
+
+        $diff    = $start->diffInMinutes( date: now() );
+        $this->info( string: "Products: Runtime {$diff} minutes..." );
+
         return 1;
     }
 
@@ -263,11 +150,11 @@ class ProcessDataAwin extends Command
         // Check if the affiliates_{$type} table is already populated
         if ( 0 != DB::table( "affiliates_{$type}" )->count() )
         {
-            $this->printMessage( message: "Populate: DB already populated, terminating process!" );
+            $this->info( string: "Populate: DB already populated, terminating process!" );
             return;
         }
 
-        $this->printMessage( message: "Populate: Start processing of {$type}" );
+        $this->info( string: "Populate: Start processing of {$type}" );
 
         $now           = now();
 
@@ -318,7 +205,7 @@ class ProcessDataAwin extends Command
             if ( $index !== false )
             {
                 $local_data[ $index ][ "push_id" ] = $push;
-                $this->printMessage( message: "Populate: {$search_id} : {$index} : {$push}" );
+                $this->info( string: "Populate: {$search_id} : {$index} : {$push}" );
             }
         }
 
@@ -335,7 +222,7 @@ class ProcessDataAwin extends Command
         Storage::put( path: "{$type}_firebase.json", contents: json_encode( $firebase_data ) );
         Storage::put( path: "{$type}_local.json",    contents: json_encode( $local_data    ) );
 
-        $this->printMessage( message: "Populate: End {$type} processing" );
+        $this->info( string: "Populate: End {$type} processing" );
 
         // Dump the counts of the data
         dump(
@@ -441,16 +328,5 @@ class ProcessDataAwin extends Command
         $fields    = [ "establishmentId", "partnerPromotionId", "origin" ];
 
         return filter_data( data: $reference->getValue(), blacklist: $blacklist, fields: $fields, origin: "awin" );
-    }
-
-    /**
-     * Print a message to the console and log it.
-     *
-     * @param   string $message
-     * @return  void
-     */
-    private function printMessage( string $message )
-    {
-        echo "{$message}\n";
     }
 }
