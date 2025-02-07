@@ -63,7 +63,10 @@ class ProcessDataAwin extends Command
         // Check if the option is valid
         if ( !in_array( $option, $this->allowed_options ) )
         {
-            $this->info( string: "Invalid option: Terminating process!" );
+            $message = "Invalid option: Terminating process!";
+            log_message( channel: "awin", message: $message );
+            $this->info( string: $message );
+
             return 0;
         }
 
