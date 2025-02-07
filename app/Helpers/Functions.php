@@ -6,9 +6,11 @@
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\Marketplace\Order;
+use Illuminate\Http\RedirectResponse;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
 use Illuminate\Support\Facades\{ DB, Log };
+use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 
 if ( !function_exists( "log_message" ) )
 {
