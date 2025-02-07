@@ -810,3 +810,43 @@ if ( !function_exists( "process_csv_file" ) )
         return false;
     }
 }
+
+if ( !function_exists( "log_and_redirect" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $channel
+     * @param   string  $route
+     * @param   string  $type
+     * @param   string  $message
+     * @return  RedirectResponse
+     */
+    function log_and_redirect( string $channel, string $route, string $type, string $message ) : RedirectResponse
+    {
+        log_message( channel: $channel, message: $message );
+
+        return redirect()->route( route: $route )->with( key: $type, value: $message );
+    }
+}
+
+if ( !function_exists( "reorganize_fields" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $data
+     * @param   array   $order
+     * @return  void
+     */
+    function reorganize_fields( array $data, array $order ) : array
+    {
+        $result = [];
+
+        foreach ( $order as $field )
+            if ( isset( $data[ $field ] ) )
+                $result[ $field ] = $data[ $field ];
+
+        return $result;
+    }
+}
