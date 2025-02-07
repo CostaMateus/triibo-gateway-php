@@ -102,8 +102,8 @@ class FastshopController extends Controller
             Log::invalidCredentials( $app_key, $app_token );
 
             return response()->json( [
-                "errorCode" => "400",
-                "message"   => "invalid credentials"
+                "error_code" => "400",
+                "message"    => "invalid credentials"
             ], 400 );
         }
 
@@ -120,9 +120,9 @@ class FastshopController extends Controller
     {
         return match ( $code )
         {
-            200     => response()->json( [ "errorCode" => 200, "message" => $message, ], 200 ),
-            400     => response()->json( [ "errorCode" => 400, "message" => $message, ], 400 ),
-            default => response()->json( [ "errorCode" => 500, "message" => $message, ], 500 ),
+            200     => response()->json( [ "error_code" => 200, "message" => $message, ], 200 ),
+            400     => response()->json( [ "error_code" => 400, "message" => $message, ], 400 ),
+            default => response()->json( [ "error_code" => 500, "message" => $message, ], 500 ),
         };
     }
 
