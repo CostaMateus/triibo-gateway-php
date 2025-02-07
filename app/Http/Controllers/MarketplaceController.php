@@ -2,14 +2,21 @@
 
 namespace App\Http\Controllers;
 
-use App\Traits\OrderFieldsTrait;
 use App\Models\Marketplace\Order;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\{ Request, RedirectResponse };
+use Codexshaper\WooCommerce\Facades\Order as WC_Order;
+use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 
 class MarketplaceController extends Controller
 {
-    use OrderFieldsTrait;
+    const LOG_CHANNEL = "triibo";
+
+    const ROUTE       = "mkt.orders";
+
+    const ERROR       = "error";
+    const SUCCESS     = "success";
+    const WARNING     = "warning";
 
     /**
      * Show the marketplace orders.
