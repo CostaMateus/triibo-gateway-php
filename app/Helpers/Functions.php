@@ -944,8 +944,17 @@ if ( !function_exists( "get_order_status" ) )
                 "name"  => "Preço acima do limite",
                 "color" => "text-dark text-bg-warning",
             ],
-            "fs_error"          => [
+
+            "fs_create_error"   => [
                 "name"  => "Falha ao criar na Fast Shop",
+                "color" => "text-white text-bg-danger",
+            ],
+            "fs_approve_error"  => [
+                "name"  => "Falha ao aprovar na Fast Shop",
+                "color" => "text-white text-bg-danger",
+            ],
+            "fs_cancel_error"   => [
+                "name"  => "Falha ao cancelar na Fast Shop",
                 "color" => "text-white text-bg-danger",
             ],
 
@@ -975,7 +984,9 @@ if ( !function_exists( "get_all_order_status" ) )
 
             "product_not_found" => "Produto não encontrado",
             "over_max"          => "Preço acima do limite",
-            "fs_error"          => "Falha ao criar na Fast Shop",
+            "fs_create_error"   => "Falha ao criar na Fast Shop",
+            "fs_approve_error"  => "Falha ao aprovar na Fast Shop",
+            "fs_cancel_error"   => "Falha ao cancelar na Fast Shop",
         ];
     }
 }
