@@ -7,12 +7,15 @@ use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\{ Request, RedirectResponse };
 use Codexshaper\WooCommerce\Facades\Order as WC_Order;
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
+use App\Http\Controllers\Vtex\OrderController as VtexOrderController;
 
 class MarketplaceController extends Controller
 {
     const LOG_CHANNEL = "triibo";
 
     const ROUTE       = "mkt.orders";
+
+    const SELLER      = "fast_shop";
 
     const ERROR       = "error";
     const SUCCESS     = "success";
