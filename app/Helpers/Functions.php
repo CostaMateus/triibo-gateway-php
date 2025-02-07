@@ -6,9 +6,11 @@
 use App\Models\User;
 use Illuminate\Support\Str;
 use App\Models\Marketplace\Order;
+use Illuminate\Http\RedirectResponse;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
 use Illuminate\Support\Facades\{ DB, Log };
+use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 
 if ( !function_exists( "log_message" ) )
 {
@@ -806,5 +808,302 @@ if ( !function_exists( "process_csv_file" ) )
         log_message( channel: "triibo", message: "Falha ao processar arquivo CSV", level: "error", context: $context );
 
         return false;
+    }
+}
+
+if ( !function_exists( "log_and_redirect" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $channel
+     * @param   string  $route
+     * @param   string  $type
+     * @param   string  $message
+     * @return  RedirectResponse
+     */
+    function log_and_redirect( string $channel, string $route, string $type, string $message ) : RedirectResponse
+    {
+        log_message( channel: $channel, message: $message );
+
+        return redirect()->route( route: $route )->with( key: $type, value: $message );
+    }
+}
+
+if ( !function_exists( "reorganize_fields" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $data
+     * @param   array   $order
+     * @return  void
+     */
+    function reorganize_fields( array $data, array $order ) : array
+    {
+        $result = [];
+
+        foreach ( $order as $field )
+            if ( isset( $data[ $field ] ) )
+                $result[ $field ] = $data[ $field ];
+
+        return $result;
+    }
+}
+
+if ( !function_exists( "get_billing_fields_order" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_billing_fields_order() : array
+    {
+        return [
+            "company",
+            "email",
+            "phone",
+            "cnpj",
+            "ie",
+            "postcode",
+            "address_1",
+            "number",
+            "address_2",
+            "neighborhood",
+            "city",
+            "state",
+            "country",
+            "first_name",
+            "last_name",
+        ];
+    }
+}
+
+if ( !function_exists( "get_shipping_fields_order" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_shipping_fields_order() : array
+    {
+        return [
+            "first_name",
+            "last_name",
+            "email",
+            "phone",
+            "cpf",
+            "postcode",
+            "address_1",
+            "number",
+            "address_2",
+            "neighborhood",
+            "city",
+            "state",
+            "country",
+        ];
+    }
+}
+
+if ( !function_exists( "get_order_status" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $status
+     * @return  array
+     */
+    function get_order_status( string $status ) : array
+    {
+        return match ( $status )
+        {
+            "not_processed"     => [
+                "name"  => "Não Processado",
+                "color" => "text-white text-bg-secondary",
+            ],
+            "processed"         => [
+                "name"  => "Processado",
+                "color" => "text-white text-bg-info",
+            ],
+            "approved"          => [
+                "name"  => "Aprovado",
+                "color" => "text-white text-bg-success",
+            ],
+            "canceled"          => [
+                "name"  => "Cancelado",
+                "color" => "text-white text-bg-danger",
+            ],
+
+            "product_not_found" => [
+                "name"  => "Produto não encontrado",
+                "color" => "text-dark text-bg-warning",
+            ],
+            "over_max"          => [
+                "name"  => "Preço acima do limite",
+                "color" => "text-dark text-bg-warning",
+            ],
+
+            "fs_create_error"   => [
+                "name"  => "Falha ao criar na Fast Shop",
+                "color" => "text-white text-bg-danger",
+            ],
+            "fs_approve_error"  => [
+                "name"  => "Falha ao aprovar na Fast Shop",
+                "color" => "text-white text-bg-danger",
+            ],
+            "fs_cancel_error"   => [
+                "name"  => "Falha ao cancelar na Fast Shop",
+                "color" => "text-white text-bg-danger",
+            ],
+
+            default             => [
+                "name"  => "Não definido",
+                "color" => "text-white text-bg-primary",
+            ],
+        };
+    }
+}
+
+if ( !function_exists( "get_all_order_status" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_all_order_status() : array
+    {
+        return [
+            "all"               => "Todos",
+            "not_processed"     => "Não Processado",
+            "processed"         => "Processado",
+            "approved"          => "Aprovado",
+            "canceled"          => "Cancelado",
+
+            "product_not_found" => "Produto não encontrado",
+            "over_max"          => "Preço acima do limite",
+            "fs_create_error"   => "Falha ao criar na Fast Shop",
+            "fs_approve_error"  => "Falha ao aprovar na Fast Shop",
+            "fs_cancel_error"   => "Falha ao cancelar na Fast Shop",
+        ];
+    }
+}
+
+if ( !function_exists( "search_product_meta" ) )
+{
+    /**
+     *
+     * @param   array   $metas
+     * @param   string  $key
+     * @return  mixed
+     */
+    function search_product_meta( array $metas, string $key = "_fs_product_id" ) : mixed
+    {
+        foreach ( $metas as $meta )
+            if ( $meta->key == $key )
+                return $meta->value;
+
+        return null;
+    }
+}
+
+if ( !function_exists( "get_freight_vtex" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param integer $product_id
+     * @return  mixed
+     */
+    function get_freight_vtex( int $product_id, string $postcode ) : mixed
+    {
+        $connector = new ConnectorService( "fast_shop" );
+        $service   = new FulfillmentService( $connector );
+
+        $req_data  = [
+            "items" => [
+                [
+                    "id"       => $product_id,
+                    "quantity" => 1,
+                    "seller"   => "1",
+                ]
+            ],
+            "isCheckedIn" => false,
+            "country"     => "BRA",
+            "selectedSla" => "Normal",
+            "postalCode"  => $postcode,
+        ];
+
+        $response  = $service->simulate( $req_data );
+
+        if ( $response[ 0 ] != 200 )
+            return false;
+
+        return $response[ 1 ];
+    }
+}
+
+if ( !function_exists( "get_delivery_price" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $data
+     * @return  mixed
+     */
+    function get_delivery_price( int $product_id, array $freight ) : mixed
+    {
+        $data = vtex_freight_to_woo( $freight );
+
+        if ( empty( $data ) || ( isset( $data[ "code" ] ) && $data[ "code" ] != null ) )
+            return false;
+
+        return $data[ $product_id ][ "delivery_price" ];
+    }
+}
+
+if ( !function_exists( "marketplace_new_order_prepare" ) )
+{
+    /**
+     * Prepare order data for the marketplace.
+     *
+     * @param   Order   $order          The order data.
+     * @param   string  $product_id     The product ID.
+     * @param   string  $freight        The freight of order.
+     * @return  array                   The prepared order data.
+     */
+    function marketplace_new_order_prepare( Order $order, string $product_id, string $freight ) : array
+    {
+        $data = [
+            "customer_id"          => $order[ "customer_id" ] ?? 1717,
+            "set_paid"             => true,
+            "status"               => "processing",
+            "payment_method"       => "triibo_payments_billet",
+            "payment_method_title" => "Triibo Boleto",
+            "billing"              => reorganize_fields( $order->billing,  get_billing_fields_order()  ),
+            "shipping"             => reorganize_fields( $order->shipping, get_shipping_fields_order() ),
+            "line_items"           => [ [
+                "product_id" => $product_id,
+                "quantity"   => $order->product_qntt,
+            ] ],
+            "shipping_lines"       => [ [
+                "method_id"    => "triibo-fast-shop-shipping",
+                "method_title" => "Fast Shop",
+                "total"        => $freight
+            ] ],
+            "meta_data"            => [
+                [ "key" => "_shipping_number",       "value" => $order->shipping[ "number"       ], ],
+                [ "key" => "_shipping_neighborhood", "value" => $order->shipping[ "neighborhood" ], ],
+                [ "key" => "_billing_number",        "value" => $order->billing [ "number"       ], ],
+                [ "key" => "_billing_neighborhood",  "value" => $order->billing [ "neighborhood" ], ],
+                [ "key" => "_billing_cnpj",          "value" => $order->billing [ "cnpj"         ], ],
+                [ "key" => "_billing_ie",            "value" => $order->billing [ "ie"           ], ],
+                [ "key" => "_billing_persontype",    "value" => 2, ] // J - pessoa juridica
+            ]
+        ];
+
+        return $data;
     }
 }

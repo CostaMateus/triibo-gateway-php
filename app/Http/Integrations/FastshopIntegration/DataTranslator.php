@@ -545,7 +545,7 @@ class DataTranslator
      */
     private static function newOrderFsError( array $data )
     {
-        $code    = $data[ "errorCode" ];
+        $code    = $data[ "error_code" ];
         $message = "ERROR FS";
 
         // Mapping of error codes to messages.

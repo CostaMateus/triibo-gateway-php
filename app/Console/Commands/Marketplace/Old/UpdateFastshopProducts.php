@@ -149,9 +149,9 @@ class UpdateFastshopProducts extends Command
                         if ( !$response->successful() )
                         {
                             $data = [
-                                "errorCode" => "5001",
-                                "message"   => "Something wrong when consulting the delivery price",
-                                "data"      => $wcData[ "items" ][ 0 ]
+                                "error_code" => "5001",
+                                "message"    => "Something wrong when consulting the delivery price",
+                                "data"       => $wcData[ "items" ][ 0 ]
                             ];
                         }
                         else
@@ -166,14 +166,14 @@ class UpdateFastshopProducts extends Command
                             unset( $aWcData[ "code" ], $aWcData[ "message" ] );
 
                             $data = [
-                                "errorCode" => $code,
-                                "message"   => $message,
-                                "data"      => $aWcData,
+                                "error_code" => $code,
+                                "message"    => $message,
+                                "data"       => $aWcData,
                             ];
                         }
 
                         // handling data
-                        if ( $data[ "errorCode" ] != null )
+                        if ( $data[ "error_code" ] != null )
                         {
                             $value = "-";
                             $class = "fast-shop";

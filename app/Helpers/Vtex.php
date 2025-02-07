@@ -264,7 +264,7 @@ if ( !function_exists( "create_order_note" ) )
 
         log_exception(
             channel : $channel,
-            message : $e->getMessage(),
+            message : "Error trying to create note: '{$message}'",
             method  : "create_order_note",
             type    : "Throwable",
             e       : $e ?? null
@@ -315,11 +315,12 @@ if ( !function_exists( "update_order_meta" ) )
     /**
      * Updates the metadata for a specific order.
      *
+     * @param   string  $channel    The logging channel to use for error logging.
      * @param   string  $order_id   The ID of the order whose metadata will be updated.
      * @param   array   $data       An associative array of metadata to update.
      * @return  void
      */
-    function update_order_meta( string $order_id, array $data ) : void
+    function update_order_meta( string $channel, string $order_id, array $data ) : void
     {
         $retry  = 0;
         $failed = false;
@@ -338,6 +339,14 @@ if ( !function_exists( "update_order_meta" ) )
             }
         }
         while ( $failed && $retry < 3 );
+
+        log_exception(
+            channel : $channel,
+            message : "Error trying to update order: #{$order_id} " . json_encode( $data ),
+            method  : "create_order_note",
+            type    : "Throwable",
+            e       : $e ?? null
+        );
     }
 }
 
@@ -624,8 +633,9 @@ if ( !function_exists( "vtex_map_client_data" ) )
     function vtex_map_client_data( array $data ) : array
     {
         // Determine if the order is from a corporate entity based on the person type.
-        $is_corporate  = isset( $data[ "persontype" ] ) && $data[ "persontype" ] === "J";
-        $state_inscrpt = ( $is_corporate && isset( $data[ "state_inscription" ] ) ) ? $data[ "state_inscription" ] : null;
+        $is_corporate = isset( $data[ "persontype" ] ) && $data[ "persontype" ] === "J";
+        // Determine if the order is from a corporate entity based on documents field.
+        $is_corporate = $is_corporate || ( empty( $data[ "cpf" ] ) && !empty( $data[ "cnpj" ] ) );
 
         return [
             "email"             => $data[ "email"      ],
@@ -637,7 +647,7 @@ if ( !function_exists( "vtex_map_client_data" ) )
             "corporatePhone"    => $is_corporate ? $data[ "phone"   ] : null,
             "corporateName"     => $is_corporate ? $data[ "company" ] : null,
             "tradeName"         => $is_corporate ? $data[ "company" ] : null,
-            "stateInscription"  => $state_inscrpt,
+            "stateInscription"  => $is_corporate && isset( $data[ "ie" ] ) ? $data[ "ie" ] : null,
         ];
     }
 }
@@ -834,9 +844,6 @@ if ( !function_exists( "vtex_new_order_prepare" ) )
 
         if ( config( "app.env" ) == "local" )
             $url = str_replace( "http://127.0.0.1:8000/", "http://php.triibo.com.br/", $url );
-
-        // Extract the VTEX information from the order data.
-        $info      = $freight[ "logisticsInfo" ];
 
         // Retrieve the discount
         $discount  = ( empty( $order[ "coupon_lines" ] ) )
@@ -1327,10 +1334,10 @@ if ( !function_exists( "vtex_freight_to_woo"  ) )
      */
     function vtex_freight_to_woo( array $data ) : array
     {
+        $logistics = [];
+
         if ( !empty( $data[ "logisticsInfo" ] ) && !empty( $data[ "items" ] ) )
         {
-            $logistics = [];
-
             foreach ( $data[ "logisticsInfo" ] as $log_info )
             {
                 $deliveryChannel = current( array_filter( $log_info[ "deliveryChannels" ], function ( $channel )
@@ -1340,7 +1347,6 @@ if ( !function_exists( "vtex_freight_to_woo"  ) )
 
                 $slas            = current( array_filter( $log_info[ "slas" ], function ( $sla )
                 {
-                    // TODO ? em prod pode mudar isso bem aqui
                     return strtolower( $sla[ "id" ] ) === "normal";
                 } ) );
 

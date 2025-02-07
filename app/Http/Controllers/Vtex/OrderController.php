@@ -70,7 +70,7 @@ class OrderController extends VtexController
 
                 create_order_note( parent::LOG_CHANNEL, $order_id, $message );
 
-                update_order_meta( $order_id, [
+                update_order_meta( parent::LOG_CHANNEL, $order_id, [
                     "meta_data" => [ [
                         "key"   => "_has_fs_invoice",
                         "value" => "yes"
@@ -86,7 +86,7 @@ class OrderController extends VtexController
 
                 create_order_note( parent::LOG_CHANNEL, $order_id, $message );
 
-                update_order_meta( $order_id, [
+                update_order_meta( parent::LOG_CHANNEL, $order_id, [
                     "meta_data" => [ [
                         "key"   => "_has_fs_tracking",
                         "value" => "yes"
@@ -104,7 +104,7 @@ class OrderController extends VtexController
 
                     create_order_note( parent::LOG_CHANNEL, $order_id, $message );
 
-                    update_order_meta( $order_id, [
+                    update_order_meta( parent::LOG_CHANNEL, $order_id, [
                         "status"    => "completed",
                         "meta_data" => [ [
                             "key"   => "_has_fs_finished",
@@ -123,6 +123,7 @@ class OrderController extends VtexController
                     context : [ "order_id" => $order_id, "invoice" => $data ],
                 );
 
+                // TODO confirmar se precisa reativar essas notificações
                 // send_notification( $parent, $order, "invoice_error" );
             }
 
@@ -314,7 +315,7 @@ class OrderController extends VtexController
             }
 
             // Update order metadata with VTEX order ID
-            update_order_meta( $order_id, [
+            update_order_meta( parent::LOG_CHANNEL, $order_id, [
                 "meta_data" => [ [
                     "key"   => "_fastshop_order_id",
                     "value" => $response[ "data" ][ "operationId" ]
@@ -411,7 +412,7 @@ class OrderController extends VtexController
             }
 
             // Update order metadata to mark as approved
-            update_order_meta( $order_id, [
+            update_order_meta( parent::LOG_CHANNEL, $order_id, [
                 "meta_data" => [ [
                     "key"   => "_fastshop_order_approved",
                     "value" => "yes"

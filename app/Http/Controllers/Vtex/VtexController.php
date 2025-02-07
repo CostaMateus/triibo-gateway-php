@@ -38,8 +38,8 @@ class VtexController extends Controller
             );
 
             return response()->json( [
-                "errorCode" => "400",
-                "message"   => "invalid credentials"
+                "error_code" => "400",
+                "message"    => "invalid credentials"
             ], 400 );
         }
         else
