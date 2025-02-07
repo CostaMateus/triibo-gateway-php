@@ -123,6 +123,7 @@ class OrderController extends VtexController
                     context : [ "order_id" => $order_id, "invoice" => $data ],
                 );
 
+                // TODO confirmar se precisa reativar essas notificações
                 // send_notification( $parent, $order, "invoice_error" );
             }
 
