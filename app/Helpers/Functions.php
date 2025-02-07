@@ -906,3 +906,76 @@ if ( !function_exists( "get_shipping_fields_order" ) )
         ];
     }
 }
+
+if ( !function_exists( "get_order_status" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $status
+     * @return  array
+     */
+    function get_order_status( string $status ) : array
+    {
+        return match ( $status )
+        {
+            "not_processed"     => [
+                "name"  => "Não Processado",
+                "color" => "text-white text-bg-secondary",
+            ],
+            "processed"         => [
+                "name"  => "Processado",
+                "color" => "text-white text-bg-info",
+            ],
+            "approved"          => [
+                "name"  => "Aprovado",
+                "color" => "text-white text-bg-success",
+            ],
+            "canceled"          => [
+                "name"  => "Cancelado",
+                "color" => "text-white text-bg-danger",
+            ],
+
+            "product_not_found" => [
+                "name"  => "Produto não encontrado",
+                "color" => "text-dark text-bg-warning",
+            ],
+            "over_max"          => [
+                "name"  => "Preço acima do limite",
+                "color" => "text-dark text-bg-warning",
+            ],
+            "fs_error"          => [
+                "name"  => "Falha ao criar na Fast Shop",
+                "color" => "text-white text-bg-danger",
+            ],
+
+            default             => [
+                "name"  => "Não definido",
+                "color" => "text-white text-bg-primary",
+            ],
+        };
+    }
+}
+
+if ( !function_exists( "get_all_order_status" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_all_order_status() : array
+    {
+        return [
+            "all"               => "Todos",
+            "not_processed"     => "Não Processado",
+            "processed"         => "Processado",
+            "approved"          => "Aprovado",
+            "canceled"          => "Cancelado",
+
+            "product_not_found" => "Produto não encontrado",
+            "over_max"          => "Preço acima do limite",
+            "fs_error"          => "Falha ao criar na Fast Shop",
+        ];
+    }
+}
