@@ -13,21 +13,22 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
-        \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
-        \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
-        \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
-
         \App\Console\Commands\Log\ClearLogFile::class,
+
+        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+
+        // \App\Console\Commands\Affiliates\Cofry\DeleteImages::class,
+        // \App\Console\Commands\Affiliates\Cofry\ProcessImages::class,
+        // \App\Console\Commands\Affiliates\Cofry\ProcessStoresPromos::class,
 
         \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
         \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
 
-        \App\Console\Commands\Triibo\SyncIdsMP::class,
-        \App\Console\Commands\Triibo\UnsetUpdateDate::class,
-        \App\Console\Commands\Triibo\UnsetVouchers::class,
+        // \App\Console\Commands\Triibo\SyncIdsMP::class,
+        // \App\Console\Commands\Triibo\UnsetUpdateDate::class,
+        // \App\Console\Commands\Triibo\UnsetVouchers::class,
 
         \App\Console\Commands\Vtex\ProcessProducts::class,
     ];
