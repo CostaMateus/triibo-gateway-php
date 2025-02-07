@@ -151,7 +151,7 @@
                                             <td class="text-nowrap"          >{{ $order->product_name }}</td>
                                             <td class="text-nowrap"          >{{ $order->customer_id  }}</td>
                                             <td class="text-nowrap" >
-                                                <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->billing ), 30 ) }}</p>
+                                                <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->billing ), 20 ) }}</p>
                                                 <div class="address-full d-none" >
                                                     @foreach ( $order->billing as $key => $value )
                                                         <p class="mb-0" >{{ $value }}</p>
@@ -162,7 +162,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-nowrap" >
-                                                <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->shipping ), 30 ) }}</p>
+                                                <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->shipping ), 20 ) }}</p>
                                                 <div class="address-full d-none" >
                                                     @foreach ( $order->shipping as $key => $value )
                                                         <p class="mb-0" >{{ $value }}</p>
