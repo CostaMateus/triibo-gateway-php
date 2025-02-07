@@ -1033,3 +1033,66 @@ if ( !function_exists( "get_freight_vtex" ) )
         return $response[ 1 ];
     }
 }
+
+if ( !function_exists( "get_delivery_price" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $data
+     * @return  mixed
+     */
+    function get_delivery_price( int $product_id, array $freight ) : mixed
+    {
+        $data = vtex_freight_to_woo( $freight );
+
+        if ( empty( $data ) || ( isset( $data[ "code" ] ) && $data[ "code" ] != null ) )
+            return false;
+
+        return $data[ $product_id ][ "delivery_price" ];
+    }
+}
+
+if ( !function_exists( "marketplace_new_order_prepare" ) )
+{
+    /**
+     * Prepare order data for the marketplace.
+     *
+     * @param   Order   $order          The order data.
+     * @param   string  $product_id     The product ID.
+     * @param   string  $freight        The freight of order.
+     * @return  array                   The prepared order data.
+     */
+    function marketplace_new_order_prepare( Order $order, string $product_id, string $freight ) : array
+    {
+        $data = [
+            "customer_id"          => $order[ "customer_id" ] ?? 1717,
+            "set_paid"             => true,
+            "status"               => "processing",
+            "payment_method"       => "triibo_payments_billet",
+            "payment_method_title" => "Triibo Boleto",
+            "billing"              => reorganize_fields( $order->billing,  get_billing_fields_order()  ),
+            "shipping"             => reorganize_fields( $order->shipping, get_shipping_fields_order() ),
+            "line_items"           => [ [
+                "product_id" => $product_id,
+                "quantity"   => $order->product_qntt,
+            ] ],
+            "shipping_lines"       => [ [
+                "method_id"    => "triibo-fast-shop-shipping",
+                "method_title" => "Fast Shop",
+                "total"        => $freight
+            ] ],
+            "meta_data"            => [
+                [ "key" => "_shipping_number",       "value" => $order->shipping[ "number"       ], ],
+                [ "key" => "_shipping_neighborhood", "value" => $order->shipping[ "neighborhood" ], ],
+                [ "key" => "_billing_number",        "value" => $order->billing [ "number"       ], ],
+                [ "key" => "_billing_neighborhood",  "value" => $order->billing [ "neighborhood" ], ],
+                [ "key" => "_billing_cnpj",          "value" => $order->billing [ "cnpj"         ], ],
+                [ "key" => "_billing_ie",            "value" => $order->billing [ "ie"           ], ],
+                [ "key" => "_billing_persontype",    "value" => 2, ] // J - pessoa juridica
+            ]
+        ];
+
+        return $data;
+    }
+}
