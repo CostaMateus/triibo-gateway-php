@@ -25,26 +25,26 @@ class MarketplaceController extends Controller
      */
     public function orders( Request $request ) : Renderable
     {
-        $files  = Order::select( "file_name" )->distinct()->orderBy( "file_name", "DESC" )->pluck( "file_name" );
-        $file   = $request->query( "file" ) ?? $files->first();
+        $statuses = get_all_order_status();
 
-        $status = $request->query( "status" ) ?? "all";
+        $files    = Order::select( "file_name" )->distinct()->orderBy( "file_name", "DESC" )->pluck( "file_name" );
+        $file     = $request->query( "file" ) ?? $files->first();
 
-        $query  = Order::where( "file_name", $file );
+        $status   = $request->query( "status" ) ?? "all";
+
+        $query    = Order::where( "file_name", $file );
 
         if ( $status != "all" )
             $query->where( "ord_status", $status );
 
-        $orders  = $query->get()->map( function ( $order )
+        $orders   = $query->get()->map( function ( $order )
         {
-            $order->billing  = $this->reorganizeFields( $order->billing,  $this->getBillingFieldsOrder()  );
-            $order->shipping = $this->reorganizeFields( $order->shipping, $this->getShippingFieldsOrder() );
-            $order->status   = $this->getOrderStatus( $order->ord_status );
+            $order->billing  = reorganize_fields( $order->billing,  get_billing_fields_order()  );
+            $order->shipping = reorganize_fields( $order->shipping, get_shipping_fields_order() );
+            $order->status   = get_order_status( $order->ord_status );
 
             return $order;
         } );
-
-        $statuses = $this->getAllOrderStatus();
 
         return view( "marketplace.orders", compact( "file", "files", "orders", "status", "statuses" ) );
     }
