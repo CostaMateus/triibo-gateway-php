@@ -46,24 +46,33 @@ class GetProducts extends Command
      */
     public function handle()
     {
-        $start   = now();
-        $message = "Products: Starting process WC data...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        Cache::put( "mkt:get_products_running", true, now()->addMinutes( 30 ) );
 
-        $this->info( "Truncate table: marketplace_product_skus" );
-        DB::table( "marketplace_product_skus" )->truncate();
+        try
+        {
+            $start   = now();
+            $message = "Products: Starting process WC data...";
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
 
-        $this->processProducts();
+            $this->info( "Truncate table: marketplace_product_skus" );
+            DB::table( "marketplace_product_skus" )->truncate();
 
-        $message = "Products: Finished WC data process...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+            $this->processProducts();
 
-        $diff    = $start->diffInMinutes( now() );
-        $message = "Products: Runtime {$diff} minutes...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+            $message = "Products: Finished WC data process...";
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
+
+            $diff    = $start->diffInMinutes( now() );
+            $message = "Products: Runtime {$diff} minutes...";
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->info( $message );
+        }
+        finally
+        {
+            Cache::forget( "mkt:get_products_running" );
+        }
     }
 
     /**
