@@ -2,7 +2,9 @@
 
 namespace App\Console;
 
+use DateTimeZone;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -37,24 +39,24 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
+     * @param   Schedule    $schedule
+     * @return  void
      */
     protected function schedule( Schedule $schedule )
     {
         if ( config( "app.env" ) == "production" )
         {
             // Clear Logs - sunday at 00h00
-            $schedule->command( "log:clear" )->weekly()->runInBackground();
+            $this->scheduleCommand( $schedule, "log:clear" )->weekly();
 
             // ################################
             // ### Awin Triibo Integration ####
             // ################################
             // ! MOVIDO PARA O AIRFLOW - TODO adicionar o dia
             // Lojas, promoções e imagens - segunda a sexta às 03h
-            $schedule->command( "awin:process --option=all"     )->weekdays()->at( "03:00" )->runInBackground();
+            $this->scheduleCommand( $schedule, "awin:process --option=all"     )->weekdays()->at( "03:00" );
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
-            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:30" )->runInBackground();
+            $this->scheduleCommand( $schedule, "awin:process --option=reports" )->dailyAt( "01:30" );
 
 
             // ################################
@@ -72,36 +74,36 @@ class Kernel extends ConsoleKernel
             ### Marketplace ################
             ################################
             // Delete duplicate SKUs
-            $schedule->command( "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" )->runInBackground();
+            $this->scheduleCommand( $schedule, "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" );
 
             // Change status of products without images
-            $schedule->command( "mkt:product_private_without_img"          )->dailyAt( "02:15" )->runInBackground();
+            $this->scheduleCommand( $schedule, "mkt:product_private_without_img"          )->dailyAt( "02:15" );
 
             // Remove FS products without SKU
-            $schedule->command( "mkt:delete_product_without_sku"           )->dailyAt( "05:00" )->runInBackground();
+            $this->scheduleCommand( $schedule, "mkt:delete_product_without_sku"           )->dailyAt( "05:00" );
 
             // Get Products - weekly on sunday, tuesday, thursday
-            $schedule->command( "mkt:get_products"                         )->dailyAt( "05:30" )->days( [ 0, 2, 4 ] )->runInBackground();
+            $this->scheduleCommand( $schedule, "mkt:get_products"                         )->dailyAt( "05:30" )->days( [ 0, 2, 4 ] );
 
             // Get Categories - weekly on monday
-            $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->runInBackground();
+            $this->scheduleCommand( $schedule, "mkt:get_categories"                       )->weeklyOn( 1, "06:00" );
 
             // Process product informations FS - every five minutes
-            $schedule->command( "vtex:process_products --seller=fast_shop" )
+            $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )
                     ->everyFiveMinutes()
                     ->between( "6:00", "23:59" )
-                    ->withoutOverlapping()
-                    ->runInBackground()
                     ->skip( function () { return Process::running( "mkt:get_products" ); } );
+
+            $this->scheduleCommand( $schedule, 'mkt:process_products') ->everyFiveMinutes();
         }
     }
 
     /**
      * Register the commands for the application.
      *
-     * @return void
+     * @return  void
      */
-    protected function commands()
+    protected function commands() : void
     {
         $this->load( __DIR__ . "/Commands" );
 
@@ -111,10 +113,18 @@ class Kernel extends ConsoleKernel
     /**
      * Get the timezone that should be used by default for scheduled events.
      *
-     * @return \DateTimeZone|string|null
+     * @return  DateTimeZone|string|null
      */
-    protected function scheduleTimezone()
+    protected function scheduleTimezone() : mixed
     {
         return "America/Sao_Paulo";
+    }
+
+    /**
+     * @return  Event
+     */
+    protected function scheduleCommand( Schedule $schedule, string $command ) : Event
+    {
+        return $schedule->command( $command )->withoutOverlapping()->runInBackground();
     }
 }
