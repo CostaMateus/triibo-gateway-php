@@ -104,6 +104,9 @@ class GetProducts extends Command
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
+                    $error = true;
+
+                    log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
                     $this->error( $e->getMessage() );
                     break;
                 }
@@ -113,7 +116,7 @@ class GetProducts extends Command
 
         if ( $error )
         {
-            $this->info( "Error while loading products" );
+            $this->error( "Error while loading products" );
             return;
         }
 
