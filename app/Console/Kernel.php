@@ -3,9 +3,8 @@
 namespace App\Console;
 
 use DateTimeZone;
-use Illuminate\Support\Facades\Process;
-use Illuminate\Console\Scheduling\Event;
-use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Console\Scheduling\{ Event, Schedule };
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel

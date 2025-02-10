@@ -4,8 +4,8 @@ namespace App\Console\Commands\Marketplace;
 
 use Throwable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Product;
+use Illuminate\Support\Facades\{ DB, Cache };
 
 class GetProducts extends Command
 {
