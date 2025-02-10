@@ -95,7 +95,7 @@ class Kernel extends ConsoleKernel
                         return Cache::has( "mkt:get_products_running" );
                     } );
 
-            $this->scheduleCommand( $schedule, 'mkt:process_products') ->everyFiveMinutes();
+            $this->scheduleCommand( $schedule, "mkt:get_products" ) ->everyFiveMinutes();
         }
     }
 
