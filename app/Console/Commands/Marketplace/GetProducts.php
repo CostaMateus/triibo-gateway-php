@@ -78,6 +78,8 @@ class GetProducts extends Command
 
         do
         {
+            $count = 0;
+
             try
             {
                 $wc_products = Product::all( [ "per_page" => 100, "page" => $page, ] )->toArray();
