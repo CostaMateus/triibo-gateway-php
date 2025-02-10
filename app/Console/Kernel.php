@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use Illuminate\Support\Facades\Process;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -86,7 +87,12 @@ class Kernel extends ConsoleKernel
             $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->runInBackground();
 
             // Process product informations FS - every five minutes
-            $schedule->command( "vtex:process_products --seller=fast_shop" )->everyFiveMinutes()->between( "6:00", "23:59" )->withoutOverlapping()->runInBackground();
+            $schedule->command( "vtex:process_products --seller=fast_shop" )
+                    ->everyFiveMinutes()
+                    ->between( "6:00", "23:59" )
+                    ->withoutOverlapping()
+                    ->runInBackground()
+                    ->skip( function () { return Process::running( "mkt:get_products" ); } );
         }
     }
 
