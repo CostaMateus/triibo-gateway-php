@@ -84,30 +84,14 @@ class GetProducts extends Command
         $page     = 1;
         $products = [];
         $error    = false;
+        $count    = 100;
 
         do
         {
-            $count = 0;
-
             try
             {
-                $wc_products = Product::all( [ "per_page" => 100, "page" => $page, ] )->toArray();
-
-                $count       = count( $wc_products );
-
-                if ( ( $c = count( $wc_products ) ) != 0 )
-                {
-                    $this->info( "Products: {$c} loaded" );
-                    $products = array_merge( $products, $wc_products );
-                }
-
-                $page++;
-
-                if ( count( $products ) > 500 )
-                {
-                    $this->insertProducts( $products );
-                    $products = [];
-                }
+                $response = Product::all( [ "per_page" => 100, "page" => $page ] );
+                $count    = $response->count();
             }
             catch ( Throwable $e )
             {
@@ -120,6 +104,20 @@ class GetProducts extends Command
                     break;
                 }
             }
+
+            if ( $count != 0 )
+            {
+                $this->info( "Products: {$count} loaded" );
+                $products = array_merge( $response->toArray(), $products );
+            }
+
+            $page++;
+
+            if ( count( $products ) > 500 )
+            {
+                $this->insertProducts( $products );
+                $products = [];
+            }
         }
         while ( $count == 100 );
 
@@ -130,10 +128,7 @@ class GetProducts extends Command
         }
 
         if ( count( $products ) > 0 )
-        {
             $this->insertProducts( $products );
-            $products = [];
-        }
     }
 
     /**
