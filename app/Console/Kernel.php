@@ -51,11 +51,11 @@ class Kernel extends ConsoleKernel
             // ################################
             // ### Awin Triibo Integration ####
             // ################################
-            // ! MOVIDO PARA O AIRFLOW - TODO adicionar o dia
+            // ! MOVIDO PARA O AIRFLOW - 12/02/2025
             // Lojas, promoções e imagens - segunda a sexta às 03h
-            $this->scheduleCommand( $schedule, "awin:process --option=all"     )->weekdays()->at( "03:00" );
+            // $this->scheduleCommand( $schedule, "awin:process --option=all"     )->weekdays()->at( "03:00" );
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
-            $this->scheduleCommand( $schedule, "awin:process --option=reports" )->dailyAt( "01:30" );
+            // $this->scheduleCommand( $schedule, "awin:process --option=reports" )->dailyAt( "01:30" );
 
 
             // ################################
