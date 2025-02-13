@@ -49,7 +49,7 @@ class MarketplaceController extends Controller
             return $order;
         } );
 
-        return view( "marketplace.orders", compact( "file", "files", "orders", "status", "statuses" ) );
+        return view( "marketplace.index", compact( "file", "files", "orders", "status", "statuses" ) );
     }
 
     /**
