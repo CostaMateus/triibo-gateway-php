@@ -92,6 +92,14 @@ class GetProducts extends Command
             {
                 $response = Product::all( [ "per_page" => 100, "page" => $page ] );
                 $count    = $response->count();
+
+                if ( $count != 0 )
+                {
+                    $this->info( "Products: {$count} loaded" );
+                    $products = array_merge( $response->toArray(), $products );
+                }
+
+                $page++;
             }
             catch ( Throwable $e )
             {
@@ -104,14 +112,6 @@ class GetProducts extends Command
                     break;
                 }
             }
-
-            if ( $count != 0 )
-            {
-                $this->info( "Products: {$count} loaded" );
-                $products = array_merge( $response->toArray(), $products );
-            }
-
-            $page++;
 
             if ( count( $products ) > 500 )
             {

@@ -23,14 +23,14 @@ Route::get( "/clear-cache", [ HomeController::class, "clearCache" ] )->name( "cl
 
 Route::group( [ "middleware" => "auth" ], function() {
 
-    Route::get( "/home",         [ HomeController::class, "index"         ] )->name( "home"          );
-    Route::get( "/documentacao", [ HomeController::class, "documentation" ] )->name( "documentation" );
+    Route::get( "/home",         [ HomeController::class, "index"         ] )->name( "home"       );
+    Route::get( "/documentacao", [ HomeController::class, "documentation" ] )->name( "docs.index" );
 
     Route::resource( "users", UserController::class );
 
     Route::prefix( "marketplace" )->name( "mkt." )->group( function ()
     {
-        Route::get(  "/pedidos",         [ MarketplaceController::class, "orders"       ] )->name( "orders"        );
+        Route::get(  "/pedidos",         [ MarketplaceController::class, "orders"       ] )->name( "index"         );
         Route::post( "/importar",        [ MarketplaceController::class, "importOrders" ] )->name( "orders.import" );
 
         Route::post( "/pedido/criar",    [ MarketplaceController::class, "orderCreate"  ] )->name( "order.create"  );

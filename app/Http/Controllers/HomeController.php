@@ -46,6 +46,6 @@ class HomeController extends Controller
      */
     public function documentation()
     {
-        return view( "documentation" );
+        return view( "doc_parts.index" );
     }
 }
