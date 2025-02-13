@@ -18,7 +18,7 @@ class AuthServiceProvider extends ServiceProvider
     ];
 
     protected $allowedDomains = [
-        'triibo.com.br'
+        "triibo.com.br"
     ];
 
     /**
@@ -30,10 +30,13 @@ class AuthServiceProvider extends ServiceProvider
     {
         $this->registerPolicies();
 
-        Validator::extend('allowed_domain', function($attribute, $value, $parameters, $validator) {
-            return in_array(explode('@', $value)[1], $this->allowedDomains);
-        }, __('validation.custom.allowed_domain') );
+        Validator::extend( "allowed_domain", function( $attribute, $value, $parameters, $validator ) {
+            return in_array( explode( "@", $value )[ 1 ], $this->allowedDomains );
+        }, __( "validation.custom.allowed_domain" ) );
 
-        //
+        Gate::define( "viewLogViewer", function ( ?User $user )
+        {
+            return true;
+        } );
     }
 }

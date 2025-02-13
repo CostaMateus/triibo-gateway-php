@@ -79,8 +79,7 @@ return [
         \Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
         \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
     ],
-    // "api_stateful_domains" => env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ? explode( ",", env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ) : null,
-    "api_stateful_domains" => [ "php.triib.com.br" ],
+    "api_stateful_domains" => env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ? explode( ",", env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ) : null,
 
     /*
     |--------------------------------------------------------------------------
@@ -128,6 +127,8 @@ return [
     'include_files' => [
         '*.log',
         '**/*.log',
+
+        "/var/log/laravel-deploy.log",
 
         // You can include paths to other log types as well, such as apache, nginx, and more.
         '/var/log/httpd/*',
