@@ -128,6 +128,8 @@ return [
         '*.log',
         '**/*.log',
 
+        "/var/log/laravel-deploy.log",
+
         // You can include paths to other log types as well, such as apache, nginx, and more.
         '/var/log/httpd/*',
         '/var/log/nginx/*',
