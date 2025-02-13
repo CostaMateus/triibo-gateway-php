@@ -269,7 +269,10 @@ class ProcessProducts extends Command
             catch ( Throwable $e )
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
-                    $this->log_message( message: $e->getMessage(), type: "error" );
+                {
+                    $this->log_message( message: $e->getMessage(),    type: "error" );
+                    $this->log_message( message: print_r( $e, true ), type: "error" );
+                }
             }
         }
     }
@@ -547,7 +550,8 @@ class ProcessProducts extends Command
      */
     private function log_message( string $message, string $type = "info" ) : void
     {
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        log_message( channel: self::LOG_CHANNEL, message: $message, level: $type );
+
         $this->$type( string: $message );
     }
 }
