@@ -144,8 +144,9 @@ class ProcessProducts extends Command
         $this->log_message( message: "VTEX Products: Processing Vtex notifications..." );
 
         $products_chunk           = $products->chunk( 100 );
+        $count                    = count( $products_chunk );
 
-        foreach ( $products_chunk as $products )
+        foreach ( $products_chunk as $key => $products )
         {
             try
             {
@@ -167,9 +168,15 @@ class ProcessProducts extends Command
                     $this->deleteProcessed();
 
                 if ( $success )
+                {
                     DB::commit();
+                    $this->log_message( message: "VTEX Products: Processed {$key} of {$count} notifications" );
+                }
                 else
+                {
                     DB::rollBack();
+                    $this->log_message( message: "VTEX Products: Fail processing {$key} of {$count} notifications" );
+                }
             }
             catch ( \Throwable $e )
             {
@@ -231,7 +238,7 @@ class ProcessProducts extends Command
         {
             $group = ( $key + 1 ) . " of {$total_count}";
 
-            $this->log_message( message: "VTEX Products: Updating marketplace products, {$group}..." );
+            $this->log_message( message: "VTEX Products: Updating marketplace products, {$group}" );
 
             if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) )
                 continue;
