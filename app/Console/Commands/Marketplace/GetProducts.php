@@ -51,7 +51,7 @@ class GetProducts extends Command
         try
         {
             $start   = now();
-            $message = "Products: Starting process WC data...";
+            $message = "MKT Products: Starting process WC data...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
@@ -60,12 +60,12 @@ class GetProducts extends Command
 
             $this->processProducts();
 
-            $message = "Products: Finished WC data process...";
+            $message = "MKT Products: Finished WC data process...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             $diff    = $start->diffInMinutes( now() );
-            $message = "Products: Runtime {$diff} minutes...";
+            $message = "MKT Products: Runtime {$diff} minutes...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
         }
@@ -171,7 +171,7 @@ class GetProducts extends Command
         }
 
         $count   = count( $products );
-        $message = "Inserting {$count} products in table: marketplace_product_skus";
+        $message = "MKT Inserting {$count} products in table: marketplace_product_skus";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
