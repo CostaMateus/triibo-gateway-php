@@ -99,18 +99,18 @@ class ProcessProducts extends Command
     public function handle() : int
     {
         $start    = now();
-        $this->log_message( message: "=======================================" );
-        $this->log_message( message: "Products: Starting process Vtex data..." );
+        $this->log_message( message: "============================================" );
+        $this->log_message( message: "VTEX Products: Starting process Vtex data..." );
 
         $seller   = $this->option( key: "seller" );
 
         if ( !isset( $this->allowed_sellers[ $seller ] ) )
         {
-            $this->log_message( message: "Products: Seller not allowed..." );
+            $this->log_message( message: "VTEX Products: Seller not allowed..." );
 
             $diff = $start->diffInMinutes( date: now() );
 
-            $this->log_message( message: "Products: Runtime {$diff} minutes..." );
+            $this->log_message( message: "VTEX Products: Runtime {$diff} minutes..." );
 
             return 0;
         }
@@ -120,11 +120,11 @@ class ProcessProducts extends Command
 
         if ( $products->count() == 0 )
         {
-            $this->log_message( message: "Products: No products to process..." );
+            $this->log_message( message: "VTEX Products: No products to process..." );
 
             $diff    = $start->diffInMinutes( date: now() );
 
-            $this->log_message( message: "Products: Runtime {$diff} minutes..." );
+            $this->log_message( message: "VTEX Products: Runtime {$diff} minutes..." );
 
             return 0;
         }
@@ -141,7 +141,7 @@ class ProcessProducts extends Command
 
         $this->loadWcProducts();
 
-        $this->log_message( message: "Products: Processing Vtex notifications..." );
+        $this->log_message( message: "VTEX Products: Processing Vtex notifications..." );
 
         $products_chunk           = $products->chunk( 100 );
 
@@ -149,7 +149,7 @@ class ProcessProducts extends Command
         {
             foreach ( $products as $product )
             {
-                // $this->log_message( message: "Products: SKU {$product->sku}..." );
+                // $this->log_message( message: "VTEX Products: SKU {$product->sku}..." );
 
                 $this->processProduct( product: $product );
 
@@ -163,11 +163,11 @@ class ProcessProducts extends Command
             $this->updateLocalProducts();
         }
 
-        $this->log_message( message: "Products: Finished data process..." );
+        $this->log_message( message: "VTEX Products: Finished data process..." );
 
         $diff = $start->diffInMinutes( date: now() );
 
-        $this->log_message( message: "Products: Runtime {$diff} minutes..." );
+        $this->log_message( message: "VTEX Products: Runtime {$diff} minutes..." );
 
         return 0;
     }
@@ -178,13 +178,13 @@ class ProcessProducts extends Command
      */
     private function loadWcProducts() : void
     {
-        $this->log_message( message: "Products: Loading marketplace products..." );
+        $this->log_message( message: "VTEX Products: Loading marketplace products..." );
 
         $this->wc_products = DB::table( table: "marketplace_product_skus" )->where( column: "store_id", value: $this->store_id )->get();
 
         $count             = count( $this->wc_products );
 
-        $this->log_message( message: "Products: {$count} products loaded..." );
+        $this->log_message( message: "VTEX Products: {$count} products loaded..." );
     }
 
     /**
@@ -193,7 +193,7 @@ class ProcessProducts extends Command
      */
     private function updateMarketplaceProduct() : void
     {
-        $this->log_message( message: "Products: Updating marketplace products..." );
+        $this->log_message( message: "VTEX Products: Updating marketplace products..." );
 
         $chunks        = [];
         $create_chunks = array_chunk( $this->update_wc[ "create" ], 50 );
@@ -232,7 +232,7 @@ class ProcessProducts extends Command
      */
     private function deleteProcessed() : void
     {
-        $this->log_message( message: "Products: Deleting completed processes..." );
+        $this->log_message( message: "VTEX Products: Deleting completed processes..." );
 
         Product::where( column: "status", value: "processed" )->delete();
     }
@@ -243,7 +243,7 @@ class ProcessProducts extends Command
      */
     private function updateLocalWcProducts() : void
     {
-        $this->log_message( message: "Products: Updating local products..." );
+        $this->log_message( message: "VTEX Products: Updating local products..." );
 
         $created = $this->update_wc[ "create" ];
 
