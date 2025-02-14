@@ -102,6 +102,8 @@ class GetProducts extends Command
             }
             catch ( \Throwable $e )
             {
+                Log::error( print_r( $e, true ) );
+
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
                     $error = true;
