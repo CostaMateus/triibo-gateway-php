@@ -24,6 +24,12 @@ class GetCategories extends Command
     protected $description = "Get marketplace product categories";
 
     /**
+     *
+     * @var     string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -45,6 +51,9 @@ class GetCategories extends Command
         $data       = [];
         $count      = 100;
 
+        $start      = now();
+        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: Starting process WC data..." );
+
         do
         {
             $this->info( "Searching for categories in the marketplace, page {$page}" );
@@ -61,6 +70,7 @@ class GetCategories extends Command
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
+                    log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
                     $this->error( $e->getMessage() );
                     break;
                 }
@@ -68,7 +78,8 @@ class GetCategories extends Command
         }
         while ( $count == 100 );
 
-        $this->info( "Loaded categories" );
+        $count      = count( $categories );
+        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: {$count} loaded..." );
 
         foreach ( $categories as $category )
         {
@@ -80,12 +91,31 @@ class GetCategories extends Command
             ];
         }
 
-        $this->info( "Truncate table: marketplace_product_categories" );
+        $this->log_message( channel: self::LOG_CHANNEL, message: "Truncate table: marketplace_product_categories" );
+
         DB::table( "marketplace_product_categories" )->truncate();
 
-        $this->info( "Inserting in table: marketplace_product_categories" );
+        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Inserting {$count} categories in table: marketplace_product_categories" );
+
         DB::table( "marketplace_product_categories" )->insert( $data );
 
-        $this->info( "Finished" );
+        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: Finished WC data process..." );
+
+        $diff       = $start->diffInMinutes( now() );
+        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: Runtime {$diff} minutes..." );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param   string  $channel
+     * @param   string  $message
+     * @param   string  $level
+     * @return  void
+     */
+    private function log_message( string $channel, string $message, string $level = "info" ) : void
+    {
+        log_message( channel: $channel, message: $message, level: $level );
+        $this->{$level}( $message );
     }
 }
