@@ -52,7 +52,7 @@ class GetCategories extends Command
         $count      = 100;
 
         $start      = now();
-        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: Starting process WC data..." );
+        $this->log_message( message: "MKT Categories: Starting process WC data..." );
 
         do
         {
@@ -71,7 +71,7 @@ class GetCategories extends Command
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
-                    $this->error( $e->getMessage() );
+                    $this->log_message( message: $e->getMessage(), level: "error" );
                     break;
                 }
             }
@@ -79,7 +79,7 @@ class GetCategories extends Command
         while ( $count == 100 );
 
         $count      = count( $categories );
-        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: {$count} loaded..." );
+        $this->log_message( message: "MKT Categories: {$count} loaded..." );
 
         foreach ( $categories as $category )
         {
@@ -91,18 +91,18 @@ class GetCategories extends Command
             ];
         }
 
-        $this->log_message( channel: self::LOG_CHANNEL, message: "Truncate table: marketplace_product_categories" );
+        $this->log_message( message: "Truncate table: marketplace_product_categories" );
 
         DB::table( "marketplace_product_categories" )->truncate();
 
-        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Inserting {$count} categories in table: marketplace_product_categories" );
+        $this->log_message( message: "MKT Inserting {$count} categories in table: marketplace_product_categories" );
 
         DB::table( "marketplace_product_categories" )->insert( $data );
 
-        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: Finished WC data process..." );
+        $this->log_message( message: "MKT Categories: Finished WC data process..." );
 
         $diff       = $start->diffInMinutes( now() );
-        $this->log_message( channel: self::LOG_CHANNEL, message: "MKT Categories: Runtime {$diff} minutes..." );
+        $this->log_message( message: "MKT Categories: Runtime {$diff} minutes..." );
     }
 
     /**
@@ -113,9 +113,9 @@ class GetCategories extends Command
      * @param   string  $level
      * @return  void
      */
-    private function log_message( string $channel, string $message, string $level = "info" ) : void
+    private function log_message( string $message, string $level = "info" ) : void
     {
-        log_message( channel: $channel, message: $message, level: $level );
+        log_message( channel: self::LOG_CHANNEL, message: $message, level: $level );
         $this->{$level}( $message );
     }
 }
