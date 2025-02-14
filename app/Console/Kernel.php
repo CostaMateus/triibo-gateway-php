@@ -94,8 +94,6 @@ class Kernel extends ConsoleKernel
                     ->skip( function () {
                         return Cache::has( "mkt:get_products_running" );
                     } );
-
-            $this->scheduleCommand( $schedule, "mkt:get_products" ) ->everyFiveMinutes();
         }
     }
 
