@@ -180,7 +180,7 @@ class ProcessProducts extends Command
     {
         $this->log_message( message: "VTEX Products: Loading marketplace products..." );
 
-        $this->wc_products = DB::table( table: "marketplace_product_skus" )->where( column: "store_id", value: $this->store_id )->get();
+        $this->wc_products = DB::table( "marketplace_product_skus" )->where( "store_id", $this->store_id )->get();
 
         $count             = count( $this->wc_products );
 
@@ -216,7 +216,7 @@ class ProcessProducts extends Command
 
             try
             {
-                WC_Product::batch( data: $chunk );
+                WC_Product::batch( $chunk );
             }
             catch ( Throwable $e )
             {
@@ -234,7 +234,7 @@ class ProcessProducts extends Command
     {
         $this->log_message( message: "VTEX Products: Deleting completed processes..." );
 
-        Product::where( column: "status", value: "processed" )->delete();
+        Product::where( "status", "processed" )->delete();
     }
 
     /**
@@ -251,14 +251,14 @@ class ProcessProducts extends Command
         {
             try
             {
-                $wc_product = WC_Product::where( column: "sku", value: $product[ "sku" ] )->first();
+                $wc_product = WC_Product::where( "sku", $product[ "sku" ] )->first();
 
                 if ( !$wc_product )
                     continue;
 
-                $local_product = DB::table( table: "marketplace_product_skus" )
-                                   ->where( column: "product_sku", value: $product[ "sku" ] )
-                                   ->whereNull( columns: "product_id" )
+                $local_product = DB::table( "marketplace_product_skus" )
+                                   ->where( "product_sku", $product[ "sku" ] )
+                                   ->whereNull( "product_id" )
                                    ->first();
 
                 if ( !$local_product )
@@ -378,7 +378,7 @@ class ProcessProducts extends Command
     {
         if ( $id == 0 )
         {
-            DB::table( table: "marketplace_product_skus" )->insert( values: [
+            DB::table( "marketplace_product_skus" )->insert( [
                 "store_id"      => $this->store_id,
                 "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
                 "product_sku"   => $data[ "sku"           ],
@@ -389,7 +389,7 @@ class ProcessProducts extends Command
         }
         else
         {
-            DB::table( table: "marketplace_product_skus" )->where( column: "id", value: $id )->update( values: $data );
+            DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
         }
     }
 
