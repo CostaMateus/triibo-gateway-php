@@ -67,7 +67,7 @@ class ProcessDataAwin extends Command
             log_message( channel: "awin", message: $message );
             $this->info( string: $message );
 
-            return 0;
+            return 1;
         }
 
         // // If the option is "populate", populate the database with establishments and promotions
@@ -94,7 +94,7 @@ class ProcessDataAwin extends Command
         $diff    = $start->diffInMinutes( date: now() );
         $this->info( string: "Products: Runtime {$diff} minutes..." );
 
-        return 1;
+        return 0;
     }
 
     /**
