@@ -105,8 +105,6 @@ class GetProducts extends Command
             }
             catch ( \Throwable $e )
             {
-                Log::error( print_r( $e, true ) );
-
                 $errors = [
                     "JSON ERROR: Syntax error",
                     "Undefined property: stdClass::\$message",
@@ -114,7 +112,7 @@ class GetProducts extends Command
 
                 if ( !in_array( $e->getMessage(), $errors ) )
                 {
-                    // $error = true;
+                    report( $e );
 
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
                     $this->error( $e->getMessage() );
