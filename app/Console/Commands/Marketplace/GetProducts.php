@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Throwable;
 use Illuminate\Console\Command;
 use Codexshaper\WooCommerce\Facades\Product;
 use Illuminate\Support\Facades\{ DB, Cache };
@@ -101,7 +100,7 @@ class GetProducts extends Command
 
                 $page++;
             }
-            catch ( Throwable $e )
+            catch ( \Throwable $e )
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
                 {
@@ -113,7 +112,7 @@ class GetProducts extends Command
                 }
             }
 
-            if ( count( $products ) > 500 )
+            if ( count( $products ) >= 500 )
             {
                 $this->insertProducts( $products );
                 $products = [];
@@ -157,8 +156,23 @@ class GetProducts extends Command
 
         foreach ( $products as $product )
         {
+            $founded     = false;
+            $metadata_id = $this->searchMetadata( $product->meta_data );
+
+            foreach ( $data as $value )
+            {
+                if ( $value[ "metadata_id" ] == $metadata_id )
+                {
+                    $founded = true;
+                    break;
+                }
+            }
+
+            if ( $founded )
+                continue;
+
             $data[] = [
-                "metadata_id"   => $this->searchMetadata( $product->meta_data ),
+                "metadata_id"   => $metadata_id,
                 "store_id"      => $product->store?->id     ?: null,
                 "product_id"    => $product->id             ?: null,
                 "product_sku"   => $product->sku            ?: null,
@@ -170,7 +184,7 @@ class GetProducts extends Command
             ];
         }
 
-        $count   = count( $products );
+        $count   = count( $data );
         $message = "MKT Inserting {$count} products in table: marketplace_product_skus";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
