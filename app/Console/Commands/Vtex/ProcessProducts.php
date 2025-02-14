@@ -147,20 +147,36 @@ class ProcessProducts extends Command
 
         foreach ( $products_chunk as $products )
         {
-            foreach ( $products as $product )
+            try
             {
-                // $this->log_message( message: "VTEX Products: SKU {$product->sku}..." );
+                DB::beginTransaction();
 
-                $this->processProduct( product: $product );
+                foreach ( $products as $product )
+                {
+                    $this->processProduct( product: $product );
 
-                $this->update_local[] = $product->id;
+                    $this->update_local[] = $product->id;
+                }
+
+                $success = $this->updateMarketplaceProduct();
+
+                if ( $success )
+                    $success = $this->createLocalWcProducts();
+
+                if ( $success )
+                    $this->deleteProcessed();
+
+                if ( $success )
+                    DB::commit();
+                else
+                    DB::rollBack();
             }
+            catch ( \Throwable $e )
+            {
+                DB::rollBack();
 
-            $this->updateMarketplaceProduct();
-            $this->deleteProcessed();
-
-            $this->updateLocalWcProducts();
-            $this->updateLocalProducts();
+                $this->log_message( message: $e->getMessage(), type: "error" );
+            }
         }
 
         $this->log_message( message: "VTEX Products: Finished data process..." );
@@ -189,9 +205,9 @@ class ProcessProducts extends Command
 
     /**
      *
-     * @return  void
+     * @return  bool
      */
-    private function updateMarketplaceProduct() : void
+    private function updateMarketplaceProduct() : bool
     {
         $this->log_message( message: "VTEX Products: Updating marketplace products..." );
 
@@ -209,8 +225,14 @@ class ProcessProducts extends Command
             ];
         }
 
-        foreach ( $chunks as $chunk )
+        $total_count   = count( $chunks );
+
+        foreach ( $chunks as $key => $chunk )
         {
+            $group = ( $key + 1 ) . " of {$total_count}";
+
+            $this->log_message( message: "VTEX Products: Updating marketplace products, {$group}..." );
+
             if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) )
                 continue;
 
@@ -221,9 +243,15 @@ class ProcessProducts extends Command
             catch ( Throwable $e )
             {
                 if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                {
                     $this->log_message( message: $e->getMessage(), type: "error" );
+
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
     /**
@@ -234,16 +262,16 @@ class ProcessProducts extends Command
     {
         $this->log_message( message: "VTEX Products: Deleting completed processes..." );
 
-        Product::where( "status", "processed" )->delete();
+        Product::whereIn( "id", $this->update_local )->delete();
     }
 
     /**
      *
-     * @return  void
+     * @return  bool
      */
-    private function updateLocalWcProducts() : void
+    private function createLocalWcProducts() : bool
     {
-        $this->log_message( message: "VTEX Products: Updating local products..." );
+        $this->log_message( message: "VTEX Products: Creating local WC products..." );
 
         $created = $this->update_wc[ "create" ];
 
@@ -264,7 +292,7 @@ class ProcessProducts extends Command
                 if ( !$local_product )
                     continue;
 
-                $this->updateWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
+                $this->createOrUpdateLocalWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
             }
             catch ( Throwable $e )
             {
@@ -272,18 +300,13 @@ class ProcessProducts extends Command
                 {
                     $this->log_message( message: $e->getMessage(),    type: "error" );
                     $this->log_message( message: print_r( $e, true ), type: "error" );
+
+                    return false;
                 }
             }
         }
-    }
 
-    /**
-     *
-     * @return  void
-     */
-    private function updateLocalProducts() : void
-    {
-        Product::whereIn( "id", $this->update_local )->update( [ "status" => "processed" ] );
+        return true;
     }
 
     /**
@@ -291,66 +314,55 @@ class ProcessProducts extends Command
      * @param   Product     $product
      * @return  void
      */
-    private function processProduct( Product $product )
+    private function processProduct( Product $product ) : void
     {
-        try
+        $wc_product = $this->searchProduct( id: $product->sku );
+
+        if ( $product->action === "disable" )
         {
-            $wc_product = $this->searchProduct( id: $product->sku );
-
-            if ( $product->action === "disable" )
-            {
-                if ( empty( $wc_product ) )
-                    return;
-
-                if ( $wc_product->stock_status == "outofstock" )
-                    return;
-
-                $this->update_wc[ "update" ][] = [ "id" => $wc_product->id, "stock_status" => "outofstock" ];
-
-                $this->updateWcProduct( id: $wc_product->id, data: [ "stock_status" => "outofstock" ] );
-
+            if ( empty( $wc_product ) )
                 return;
-            }
 
-            if ( $product->action === "update" )
-            {
-                $data = json_decode( $product->meta, true );
-
-                if ( empty( $wc_product ) || ( !$data[ "PriceModified" ] && !$data[ "StockModified" ] ) )
-                    return;
-
-                $data = $this->getProductData( wc_id: $wc_product->id, sku: $product->sku );
-
-                $this->update_wc[ "update" ][] = $data;
-
-                $this->updateWcProduct( id: $wc_product->id, data: $data );
-
+            if ( $wc_product->stock_status == "outofstock" )
                 return;
-            }
 
-            if ( $product->action === "create" )
-            {
-                if ( !empty( $wc_product ) )
-                    return;
+            $this->update_wc[ "update" ][] = [ "id" => $wc_product->id, "stock_status" => "outofstock" ];
 
-                $data = $this->getProductData( wc_id: 0, sku: $product->sku, create: true );
-
-                if ( empty( $data ) )
-                    return;
-
-                $data = vtex_product_to_mkt( data: $data[ "context" ], simulate: $data[ "simulate" ] );
-
-                $this->update_wc[ "create" ][] = $data;
-
-                $this->updateWcProduct( data: $data );
-
-                return;
-            }
+            $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: [ "stock_status" => "outofstock" ] );
         }
-        catch ( Exception $e )
+
+        elseif ( $product->action === "update" )
         {
-            $this->log_message( message: $e->getMessage(), type: "error" );
+            $data = json_decode( $product->meta, true );
+
+            if ( empty( $wc_product ) || ( !$data[ "PriceModified" ] && !$data[ "StockModified" ] ) )
+                return;
+
+            $data = $this->getProductData( wc_id: $wc_product->id, sku: $product->sku );
+
+            $this->update_wc[ "update" ][] = $data;
+
+            $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: $data );
         }
+
+        elseif ( $product->action === "create" )
+        {
+            if ( !empty( $wc_product ) )
+                return;
+
+            $data = $this->getProductData( wc_id: 0, sku: $product->sku, create: true );
+
+            if ( empty( $data ) )
+                return;
+
+            $data = vtex_product_to_mkt( data: $data[ "context" ], simulate: $data[ "simulate" ] );
+
+            $this->update_wc[ "create" ][] = $data;
+
+            $this->createOrUpdateLocalWcProduct( data: $data );
+        }
+
+        return;
     }
 
     /**
@@ -374,7 +386,7 @@ class ProcessProducts extends Command
      * @param   array       $data
      * @return  void
      */
-    private function updateWcProduct( int $id = 0, array $data = [] ) : void
+    private function createOrUpdateLocalWcProduct( int $id = 0, array $data = [] ) : void
     {
         if ( $id == 0 )
         {
@@ -452,8 +464,18 @@ class ProcessProducts extends Command
 
             return $product;
         }
-        catch( Throwable $e )
+        catch( \Throwable $e )
         {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSimulate",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->log_message( message: $e->getMessage(), type: "error" );
+
             return null;
         }
     }
@@ -479,8 +501,18 @@ class ProcessProducts extends Command
 
             return $product;
         }
-        catch( Throwable $e )
+        catch( \Throwable $e )
         {
+            log_exception(
+                channel: self::LOG_CHANNEL,
+                message : $e->getMessage(),
+                method  : "getSimulate",
+                type    : "Throwable",
+                e       : $e
+            );
+
+            $this->log_message( message: $e->getMessage(), type: "error" );
+
             return null;
         }
     }
@@ -525,7 +557,7 @@ class ProcessProducts extends Command
                 ARRAY_FILTER_USE_BOTH
             );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             log_exception(
                 channel: self::LOG_CHANNEL,
