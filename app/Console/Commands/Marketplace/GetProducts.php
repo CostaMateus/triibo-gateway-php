@@ -83,7 +83,7 @@ class GetProducts extends Command
     {
         $page     = 1;
         $products = [];
-        $error    = false;
+        // $error    = false;
         $count    = 100;
 
         do
@@ -95,8 +95,10 @@ class GetProducts extends Command
 
                 if ( $count != 0 )
                 {
-                    $this->info( "Products: {$count} loaded" );
-                    $products = array_merge( $response->toArray(), $products );
+                    $this->info( "MKT Products: {$count} loaded" );
+                    $products = $response->toArray();
+
+                    $this->insertProducts( $products );
                 }
 
                 $page++;
@@ -105,29 +107,28 @@ class GetProducts extends Command
             {
                 Log::error( print_r( $e, true ) );
 
-                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                $errors = [
+                    "JSON ERROR: Syntax error",
+                    "Undefined property: stdClass::\$message",
+                ];
+
+                if ( !in_array( $e->getMessage(), $errors ) )
                 {
-                    $error = true;
+                    // $error = true;
 
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
                     $this->error( $e->getMessage() );
-                    break;
+                    continue;
                 }
-            }
-
-            if ( count( $products ) >= 500 )
-            {
-                $this->insertProducts( $products );
-                $products = [];
             }
         }
         while ( $count == 100 );
 
-        if ( $error )
-        {
-            $this->error( "Error while loading products" );
-            return;
-        }
+        // if ( $error )
+        // {
+        //     $this->error( "MKT Products: Error while loading products" );
+        //     return;
+        // }
 
         if ( count( $products ) > 0 )
             $this->insertProducts( $products );
