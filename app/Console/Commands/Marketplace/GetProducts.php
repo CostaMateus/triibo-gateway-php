@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Marketplace;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 use Illuminate\Support\Facades\{ DB, Cache };
 
