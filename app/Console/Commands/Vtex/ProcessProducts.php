@@ -148,6 +148,8 @@ class ProcessProducts extends Command
 
         foreach ( $products_chunk as $key => $products )
         {
+            $i = $key + 1;
+
             try
             {
                 DB::beginTransaction();
@@ -170,12 +172,12 @@ class ProcessProducts extends Command
                 if ( $success )
                 {
                     DB::commit();
-                    $this->log_message( message: "VTEX Products: Processed {$key} of {$count} notifications" );
+                    $this->log_message( message: "VTEX Products: Processed {$i} of {$count} notifications" );
                 }
                 else
                 {
                     DB::rollBack();
-                    $this->log_message( message: "VTEX Products: Fail processing {$key} of {$count} notifications" );
+                    $this->log_message( message: "VTEX Products: Fail processing {$i} of {$count} notifications" );
                 }
             }
             catch ( \Throwable $e )
