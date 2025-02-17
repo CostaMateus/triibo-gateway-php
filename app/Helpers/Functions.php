@@ -26,7 +26,7 @@ if ( !function_exists( "log_message" ) )
     function log_message( string $channel, string $message, string $level = "info", array $context = [] ) : void
     {
         // Log the message using the specified log channel and level.
-        Log::channel( channel: $channel )->$level( message: $message, context: $context );
+        Log::channel( channel: $channel )->$level( message: trim( $message ), context: $context );
     }
 }
 
@@ -54,7 +54,7 @@ if ( !function_exists( "log_exception" ) )
         ];
 
         // Log the message using the specified log channel and level.
-        Log::channel( channel: $channel )->$level( message: $message, context: $context );
+        Log::channel( channel: $channel )->$level( message: trim( $message ), context: $context );
 
         // Send an email notification about the exception.
         send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
