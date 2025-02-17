@@ -154,39 +154,6 @@ class AwinIntegration
      */
     public function getReports( bool $isUpdate = false )
     {
-        // TODO remove
-        // if ( false )
-        // {
-        //     $firebase_cashback     = Firebase::database()->getReference( "/Triibo-Purchases-Cashback" );
-        //     $firebase_reports_cash = $firebase_cashback->getValue();
-
-        //     // Loop through each report in the "Triibo-Purchases-Cashback" node.
-        //     foreach ( $firebase_reports_cash as $push_cash => $fb_cash )
-        //     {
-        //         if ( $fb_cash[ "commissionClient" ] != 1 )
-        //             continue;
-
-        //         $data   = $this->searchReports_fix( $isUpdate, $fb_cash[ "transactionId" ] );
-
-        //         if ( !$data[ "success" ] )
-        //             continue;
-
-        //         $report = $data[ "data" ][ 0 ][ "metaData" ];
-
-        //         $diff   = array_diff_assoc_recursive( $report, $fb_cash );
-
-        //         foreach ( $diff as $key => $value )
-        //             if ( $value !== null )
-        //                 $fb_cash[ $key ] = $value;
-
-        //         $firebase_cashback->update( [ $push_cash => $fb_cash ] );
-
-        //         dump( "Reports: Updated Cash transactions ID {$push_cash}" );
-        //     }
-
-        //     dd( "DONE" );
-        // }
-
         return $this->searchReports( $isUpdate );
     }
 

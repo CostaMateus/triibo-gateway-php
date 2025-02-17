@@ -8,7 +8,7 @@ return [
         "fast_shop" => [
             "env"            => env( key: "FS_VTEX_ENV", default: "local" ),
 
-            "connector_name" => "Marketplace Triibo", // TODO fastshop precisa confirmar
+            "connector_name" => "Marketplace Triibo",
 
             "local"          => [
                 "sales_channel" => 8,
