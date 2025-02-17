@@ -334,8 +334,25 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            // TODO verificar se o que de alteração é apenas 'cashbackDefault'
-            // TODO se sim, não enviar para curadoria, alterar direto
+            if ( count( $diff ) == 1 && isset( $diff[ "cashbackDefault" ] ) )
+            {
+
+                $push_id                            = $local_establishment[ "push_id" ];
+                $establishment                      = $firebase_establishments[ $push_id ];
+
+                // Update establishment cashbackDefault.
+                $establishment[ "cashbackDefault" ] = $diff[ "cashbackDefault" ];
+                $establishment_reference->update( [ $push_id => $firebase_stablishment ] );
+
+                // Update the local establishment with new cashbackDefault.
+                DB::table( "affiliates_establishments" )
+                    ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
+                    ->update( [ "data" => json_encode( $awin_establishment ) ] );
+
+                echo $message = "Establishments: Edited ID = {$local_establishment[ "push_id" ]} | Cashback changed: {$data_establishment[ "cashbackDefault" ]} to {$diff[ "cashbackDefault" ]}\n";
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                continue;
+            }
 
             // Add edit approval request in Firebase.
             $db->getReference( "/Estabelecimento-Aprovacoes/{$local_establishment[ "push_id" ]}" )
