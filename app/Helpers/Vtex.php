@@ -506,8 +506,6 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
     {
         $specifications = array_map( function ( $attr, $key )
         {
-            // TODO possível ajuste qnd em prod
-
             $field_value = strip_tags( $attr[ "FieldValues" ][ 0 ] );
 
             $field_value = $field_value === "true" ? "SIM" : $attr[ "FieldValues" ][ 0 ];
@@ -603,7 +601,6 @@ if ( !function_exists( "vtex_map_logistics_info" ) )
             // Search for the index of the SLA that corresponds to the "normal delivery" delivery channel.
             $sla          = current( array_filter( $item[ "slas" ], function ( $sla )
             {
-                // TODO ? em prod pode mudar isso bem aqui
                 return strtolower( $sla[ "id" ] ) === "normal";
             } ) );
 
@@ -1294,9 +1291,14 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
             "sku"               => "FS-" . $data[ "ProductRefId" ],
             "regular_price"     => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ) : 0,
             "sale_price"        => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ) : 0,
-            "manage_stock"      => false,                                                                                     // TODO ?
-            // "stock_quantity"    => 0,                                                                                      // TODO ?
-            "stock_status"      => isset( $simulate[ "items" ] ) ? ( ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock" ) : "outofstock", // TODO ?
+
+            // TODO ?
+            // "stock_quantity"    => 0,
+            // TODO ?
+            "manage_stock"      => false,
+            // TODO ?
+            "stock_status"      => isset( $simulate[ "items" ] ) ? ( ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock" ) : "outofstock",
+
             "backorders"        => "no",
             "sold_individually" => false,
             "weight"            => ( string ) $data[ "Dimension" ][ "weight" ],
