@@ -128,11 +128,10 @@ return [
         '*.log',
         '**/*.log',
 
-        "/var/log/*",
-
         // You can include paths to other log types as well, such as apache, nginx, and more.
-        // '/var/log/httpd/*',
-        // '/var/log/nginx/*',
+        '/var/log/apache2/*.log',
+        '/var/log/mysql/*.log',
+        "/var/log/*.log",
 
         // // MacOS Apple Silicon logs
         // '/opt/homebrew/var/log/nginx/*',
