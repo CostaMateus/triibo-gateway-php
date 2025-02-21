@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Affiliates;
 use DB;
 use DateTime;
 use Throwable;
-use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\File;
 use Kreait\Firebase\Database\Reference;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Kreait\Firebase\Exception\FirebaseException;
+use App\Console\Commands\Affiliates\Awin\ProcessDataAwin;
 use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
 
 class AwinController extends Controller
@@ -25,16 +25,16 @@ class AwinController extends Controller
     /**
      * Undocumented variable
      *
+     * @var     ProcessDataAwin
+     */
+    protected $logger;
+
+    /**
+     * Undocumented variable
+     *
      * @var     AwinIntegration
      */
     protected $integration;
-
-    /**
-     * Define a class constant for the log channel.
-     *
-     * @var     string
-     */
-    private const LOG_CHANNEL   = "awin";
 
     /**
      * Define the types establishments and promotions
@@ -104,17 +104,19 @@ class AwinController extends Controller
     /**
      * Constructor
      *
-     * @param   boolean     $loadEstablishments     Load establishments from Awin, default true
+     * @param   ProcessDataAwin     $logger     Logger instance for logging data processing.
+     * @param   boolean             $load       Load establishments from Awin, default true.
      * @return  void
      */
-    public function __construct( bool $loadEstablishments = true )
+    public function __construct( ProcessDataAwin $logger, bool $load = true )
     {
-        $this->integration = new AwinIntegration( $loadEstablishments );
+        $this->logger      = $logger;
+        $this->integration = new AwinIntegration( logger: $logger, load: $load );
 
         self::initDate();
 
         foreach ( self::TYPES as $type )
-            File::ensureDirectoryExists( path: public_path ( path: self::LC_BASE_PATH . "/{$type}" ) );
+            File::ensureDirectoryExists( path: public_path( path: self::LC_BASE_PATH . "/{$type}" ) );
     }
 
     /**
@@ -132,7 +134,7 @@ class AwinController extends Controller
             $date       = new DateTime();
 
             // Set the enable date as a Unix timestamp in milliseconds.
-            self::$date = ( int ) $date->format( "Uv" );
+            self::$date = ( int ) $date->format( format: "Uv" );
         }
     }
 
@@ -147,6 +149,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * Process promotions by invoking the Firebase operation for promotions.
      *
      * @return void
@@ -157,6 +160,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * Process reports by invoking the Firebase operation for reports.
      *
      * @return  void
@@ -167,6 +171,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * Upload images related to establishments and promotions.
      * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
      *
@@ -206,20 +211,27 @@ class AwinController extends Controller
             // Attempt to call the Firebase operation method.
             $this->{$operation_method}();
 
-            echo $message = "{$operation_name}: Sent successfully\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "{$operation_name}: Sent successfully" );
         }
         catch ( FirebaseException $e )
         {
             // Handle Firebase-specific exceptions.
-            echo $message = "{$operation_name}: Firebase process error - aborted\n";
-            log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
+            $this->logger->log_exception(
+                message : "{$operation_name}: Firebase process error - aborted",
+                method  : $operation_method,
+                type    : "FirebaseException",
+                e       : $e
+            );
         }
         catch ( Throwable $e )
         {
             // Handle general exceptions.
-            echo $message = "{$operation_name}: Unexpected error - aborted\n";
-            log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+            $this->logger->log_exception(
+                message : "{$operation_name}: Unexpected error - aborted",
+                method  : $operation_method,
+                type    : "Throwable",
+                e       : $e
+            );
         }
     }
 
@@ -240,8 +252,7 @@ class AwinController extends Controller
      */
     private function insertEstablishmentsFirebase()
     {
-        echo $message            = "Establishments: Searching ...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Establishments: Searching ..." );
 
         // Delete the existing establishments directory.
         $local_path              = public_path( path: self::LC_BASE_PATH . "/establishments" );
@@ -251,18 +262,25 @@ class AwinController extends Controller
 
         // Initialize Firebase database references
         $db                      = Firebase::database();
-        $establishment_reference = $db->getReference( "/Estabelecimento-v2"            );
-        $approval_reference      = $db->getReference( "/Estabelecimento-Aprovacoes"    );
-        $changes_reference       = $db->getReference( "/Establishment-changes-request" );
+        $establishment_reference = $db->getReference( path: "/Estabelecimento-v2"            );
+        $approval_reference      = $db->getReference( path: "/Estabelecimento-Aprovacoes"    );
+        $changes_reference       = $db->getReference( path: "/Establishment-changes-request" );
 
-        // Retrieve establishments from Firebase and local sources.
-        $firebase_establishments = $this->filterEstablishments( $establishment_reference );
+        $this->logger->log_message( message: "Establishments: Filtering firebase..." );
+        // Retrieve establishments from Firebase.
+        $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
+        $this->logger->log_message( message: "Establishments: " . count( $firebase_establishments ) . " filtered from firebase..." );
+
+        // Retrieve establishments from Awin.
         $awin_establishments     = $this->integration->getEstablishments();
+        $this->logger->log_message( message: "Establishments: " . count( $awin_establishments ) . " filtered from awin..." );
+
+        // Retrieve establishments from local.
         $local_establishments    = DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_establishments    = json_decode( json_encode( $local_establishments ), true );
+        $this->logger->log_message( message: "Establishments: " . count( $local_establishments ) . " filtered from local..." );
 
-        echo $message            = "Establishments: Validating ...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Establishments: Validating..." );
 
         // Disable Firebase establishments not present in Awin establishments.
         foreach ( $firebase_establishments as $push => $firebase_stablishment )
@@ -271,11 +289,11 @@ class AwinController extends Controller
             {
                 if ( $firebase_stablishment[ "isPublished" ] )
                 {
-                    // Disable the establishment.
+                    $this->logger->log_message( message: "Establishments: Disabling ID {$push}" );
                     $firebase_stablishment[ "isPublished" ] = false;
-                    $establishment_reference->update( [ $push => $firebase_stablishment ] );
+                    $establishment_reference->update( values: [ $push => $firebase_stablishment ] );
 
-                    $approval_establishment = $db->getReference( "/Estabelecimento-Aprovacoes/{$push}" )->getValue();
+                    $approval_establishment = $db->getReference( path: "/Estabelecimento-Aprovacoes/{$push}" )->getValue();
 
                     if ( $approval_establishment )
                     {
@@ -283,14 +301,9 @@ class AwinController extends Controller
                         $approval_establishment[ "comment"      ] = "Estabelecimento desativado, aprovação fechada pelo sistema.";
                         $approval_establishment[ "approvalDate" ] = self::$date;
 
-                        $approval_reference->update( [ $push => $approval_establishment ] );
+                        $this->logger->log_message( message: "Establishments: Canceling open curatorship of ID {$push}" );
+                        $approval_reference->update( values: [ $push => $approval_establishment ] );
                     }
-
-                    echo $message           = "Establishments: Disabled ID {$push}\n";
-                    log_message( channel: self::LOG_CHANNEL, message: $message );
-
-                    // // Remove the establishment from the list.
-                    // unset( $firebase_establishments[ $push ] );
                 }
             }
         }
@@ -302,11 +315,11 @@ class AwinController extends Controller
             {
                 // Add new establishment to local data array.
                 $local_data[] = [
-                    "origin"       => $awin_establishment[ "origin" ],
                     "origin_id"    => $id,
+                    "origin"       => $awin_establishment[ "origin" ],
                     "affiliate_id" => $awin_establishment[ "origin" ] . $id,
-                    "push_id"      => null,
                     "name"         => $awin_establishment[ "nome"   ],
+                    "push_id"      => null,
                     "data"         => json_encode( $awin_establishment ),
                     "created_at"   => now(),
                     "updated_at"   => now(),
@@ -336,27 +349,34 @@ class AwinController extends Controller
 
             if ( count( $diff ) == 1 && isset( $diff[ "cashbackDefault" ] ) )
             {
-
                 $push_id                            = $local_establishment[ "push_id" ];
                 $establishment                      = $firebase_establishments[ $push_id ];
 
                 // Update establishment cashbackDefault.
                 $establishment[ "cashbackDefault" ] = $diff[ "cashbackDefault" ];
-                $establishment_reference->update( [ $push_id => $firebase_stablishment ] );
+                $establishment_reference->update( values: [ $push_id => $firebase_stablishment ] );
 
                 // Update the local establishment with new cashbackDefault.
                 DB::table( "affiliates_establishments" )
                     ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
                     ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
-                echo $message = "Establishments: Edited ID = {$local_establishment[ "push_id" ]} | Cashback changed: {$data_establishment[ "cashbackDefault" ]} to {$diff[ "cashbackDefault" ]}\n";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->logger->log_message(
+                    message : "Establishments: Edited ID = " . $local_establishment[ "push_id" ],
+                    context : [
+                        "Only cashback changed",
+                        "from " . $data_establishment[ "cashbackDefault" ],
+                        "to "   . $diff[ "cashbackDefault" ]
+                    ]
+                );
                 continue;
             }
 
+            $this->logger->log_message( message: "Establishments: Has changes ID " . $local_establishment[ "push_id" ] );
+
             // Add edit approval request in Firebase.
-            $db->getReference( "/Estabelecimento-Aprovacoes/{$local_establishment[ "push_id" ]}" )
-               ->set( [
+            $db->getReference( path: "/Estabelecimento-Aprovacoes/{$local_establishment[ "push_id" ]}" )
+               ->set( value: [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $local_establishment[ "push_id" ],
                 "establishmentName" => $local_establishment[ "name"    ],
@@ -368,11 +388,16 @@ class AwinController extends Controller
             ] );
 
             // Get pending changes
-            $past_diffs       = invalidate_past_establishment_changes( $changes_reference, $local_establishment[ "push_id" ] );
+            $past_diffs       = invalidate_past_establishment_changes( reference: $changes_reference, push_id: $local_establishment[ "push_id" ] );
+
+            if ( !empty( $past_diffs ) )
+                $this->logger->log_message( message: "Establishments: Invalidating past changes ID " . $local_establishment[ "push_id" ] );
+
+            $current_changes  = array_merge( $past_diffs, $diff );
 
             // Add edit change request in Firebase.
             $new_push_changes = $changes_reference->push()->getKey();
-            $changes_reference->update( [ $new_push_changes => [
+            $changes_reference->update( values: [ $new_push_changes => [
                 "id"                => $new_push_changes,
                 "createDate"        => self::$date,
                 // "updateDate"        => "",
@@ -383,7 +408,7 @@ class AwinController extends Controller
                 // "validatorUid"      => "",
                 // "comment"           => "",
                 "type"              => "validation",
-                "changedFields"     => array_merge( $past_diffs, $diff ),
+                "changedFields"     => $current_changes,
             ] ] );
 
             // Update the local establishment with the new data.
@@ -391,8 +416,13 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
-            echo $message     = "Establishments: Edited ID = {$local_establishment[ "push_id" ]} | Need approval ID = {$local_establishment[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message(
+                message : "Establishments: Edited ID " . $local_establishment[ "push_id" ],
+                context : [
+                    "Need approval ID "  . $local_establishment[ "push_id" ],
+                    "Change Request ID " . $new_push_changes,
+                ]
+            );
         }
 
         // Insert new establishments into the local database if any.
@@ -408,11 +438,11 @@ class AwinController extends Controller
                 $aux[ "id"          ]   = $new_push_establishment;
                 $aux[ "isPublished" ]   = false;
 
-                $establishment_reference->update( [ $new_push_establishment => $aux ] );
+                $establishment_reference->update( values: [ $new_push_establishment => $aux ] );
 
                 // Add create approval request in Firebase.
-                $db->getReference( "/Estabelecimento-Aprovacoes/{$new_push_establishment}" )
-                   ->set( [
+                $db->getReference( path: "/Estabelecimento-Aprovacoes/{$new_push_establishment}" )
+                   ->set( value: [
                     "requesterId"       => self::REQUESTER_ID,
                     "id"                => $new_push_establishment,
                     "establishmentName" => $establishment[ "name" ],
@@ -423,8 +453,10 @@ class AwinController extends Controller
                     "origin"            => "awin",
                 ] );
 
-                echo $message               = "Establishments: Created ID = {$new_push_establishment} | Need approval ID = {$new_push_establishment}\n";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->logger->log_message(
+                    message : "Establishments: Created ID = " . $new_push_establishment,
+                    context : [ "Need approval ID = " . $new_push_establishment ]
+                );
 
                 $establishment[ "push_id" ] = $new_push_establishment;
                 $establishment[ "data"    ] = json_encode( $aux );
@@ -432,20 +464,19 @@ class AwinController extends Controller
                 DB::table( "affiliates_establishments" )->insert( $establishment );
             }
 
-            echo $message = "Establishments: Added " . count( $local_data ) . " new establishments in the local table\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Establishments: Added " . count( $local_data ) . " new establishments in the local table" );
         }
     }
 
     /**
+     * TODO fix code
      * Update and create promotions on Firebase
      *
      * @return  void
      */
     private function insertPromotionsFirebase()
     {
-        echo $message            = "Promotions: Searching ...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Promotions: Searching ..." );
 
         // Delete the existing promotions directory.
         $local_path              = public_path( path: self::LC_BASE_PATH . "/promotions" );
@@ -461,14 +492,19 @@ class AwinController extends Controller
         $changes_reference       = $db->getReference( "/Store-changes-request" );
 
         // Retrieve promotions from Firebase and local sources.
-        $firebase_establishments = $this->filterEstablishments( $establishment_reference );
+        $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
         $firebase_promotions     = $this->filterPromotions( $promotions_reference );
         $awin_promotions         = $this->integration->getPromotions();
-        $local_promotions        = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
+
+        $local_promotions        = DB::table( "affiliates_promotions" )
+                                     ->where( "origin", "awin" )
+                                     ->get()
+                                     ->keyBy( "origin_id" )
+                                     ->toArray();
+
         $local_promotions        = json_decode( json_encode( $local_promotions ), true );
 
-        echo $message            = "Promotions: Validating ...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Promotions: Validating ..." );
 
         // Disable Firebase promotions not present in Awin promotions.
         foreach ( $firebase_promotions as $push => $firebase_promotion )
@@ -492,11 +528,7 @@ class AwinController extends Controller
                         $approval_reference->update( [ $push => $approval_promotion ] );
                     }
 
-                    echo $message = "Promotions: Disabled ID {$push}\n";
-                    log_message( channel: self::LOG_CHANNEL, message: $message );
-
-                    // Remove the promotion from the list.
-                    unset( $firebase_promotions[ $push ] );
+                    $this->logger->log_message( message: "Promotions: Disabled ID = {$push}" );
                 }
             }
         }
@@ -587,8 +619,13 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $local_promotion[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
-            echo $message     = "Promotions: Edited ID {$local_promotion[ "push_id" ]} | Need approval ID = {$local_promotion[ "push_id" ]} | Change Request ID = {$new_push_changes}\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $messages = [
+                "Promotions: Edited ID = " . $local_promotion[ "push_id" ],
+                "Need approval ID = "      . $local_promotion[ "push_id" ],
+                "Change Request ID = "     . $new_push_changes,
+            ];
+
+            $this->logger->log_message( message: implode( " | ", $messages ) );
         }
 
         // Insert new promotions into the local database if any.
@@ -630,8 +667,12 @@ class AwinController extends Controller
                     "dueDate"           => $aux[ "dueDate" ],
                 ] );
 
-                echo $message           = "Promotions: Created ID = {$new_push_promotion} | Need approval ID = {$new_push_promotion}\n";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $messages = [
+                    "Promotions: Created ID = " . $new_push_promotion,
+                    "Need approval ID = "       . $new_push_promotion,
+                ];
+
+                $this->logger->log_message( message: implode( " | ", $messages ) );
 
                 $promotion[ "push_id" ] = $new_push_promotion;
                 $promotion[ "data"    ] = json_encode( $aux );
@@ -639,12 +680,12 @@ class AwinController extends Controller
                 DB::table( "affiliates_promotions" )->insert( $promotion );
             }
 
-            echo $message = "Promotions: Added " . count( $local_data ) . " new promotions in the local table\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Promotions: Added " . count( $local_data ) . " new promotions in the local table" );
         }
     }
 
     /**
+     * TODO fix code
      * Send and update reports to Firebase.
      *
      * Handles the insertion and updating of reports in Firebase.
@@ -654,8 +695,7 @@ class AwinController extends Controller
      */
     private function insertReportsFirebase()
     {
-        echo $message      = "Reports: Searching for new...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Reports: Searching for new..." );
 
         // Get a reference to the "Triibo-Purchases-Awin" node in Firebase.
         $firebase_awin     = Firebase::database()->getReference( "/Triibo-Purchases-Awin"     );
@@ -669,8 +709,7 @@ class AwinController extends Controller
         // If new reports are available and not empty.
         if ( $new_reports[ "success" ] && !empty( $new_reports[ "data" ] ) )
         {
-            echo $message = "Reports: Sending new transactions to Firebase ...\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Reports: Sending new transactions to Firebase ..." );
 
             // Loop through each new report.
             foreach ( $new_reports[ "data" ] as $report )
@@ -686,18 +725,15 @@ class AwinController extends Controller
                 $push_cash = $firebase_cashback->push()->getKey();
                 $firebase_cashback->update( [ $push_cash => $report[ "metaData" ] ] );
 
-                echo $message = "Reports: New transaction ID = {$push_awin} | {$push_cash}\n";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->logger->log_message( message: "Reports: New transaction awin ID = {$push_awin} | cashback ID {$push_cash}" );
             }
         }
         else
         {
-            echo $message = "Reports: No new transactions ...\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Reports: No new transactions ..." );
         }
 
-        echo $message    = "Reports: Searching for updated ...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Reports: Searching for updated ..." );
 
         // Retrieve updated reports from the integration.
         $updated_reports = $this->integration->getReports( true );
@@ -709,8 +745,7 @@ class AwinController extends Controller
             $firebase_reports_awin = $firebase_awin->getValue();
             $firebase_reports_cash = $firebase_cashback->getValue();
 
-            echo $message          = "Reports: Sending updated transactions for updated ...\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Reports: Sending updated transactions for updated ..." );
 
             // Loop through each report in the "Triibo-Purchases-Awin" node.
             foreach ( $firebase_reports_awin as $push_awin => $firebase_report_awin )
@@ -744,8 +779,7 @@ class AwinController extends Controller
                 // Update the report in the "Triibo-Purchases-Awin" node.
                 $firebase_awin->update( [ $push_awin => $firebase_report_awin ] );
 
-                echo $message = "Reports: Updated Awin transactions ID {$push_awin}\n";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->logger->log_message( message: "Reports: Updated transaction | awin ID = {$push_awin}" );
             }
 
             // Loop through each report in the "Triibo-Purchases-Cashback" node.
@@ -773,14 +807,12 @@ class AwinController extends Controller
                 // Update the report in the "Triibo-Purchases-Cashback" node.
                 $firebase_cashback->update( [ $push_cash => $firebase_report_cash ] );
 
-                echo $message = "Reports: Updated Cash transactions ID {$push_cash}\n";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->logger->log_message( message: "Reports: Updated transaction | cashback ID = {$push_cash}" );
             }
         }
         else
         {
-            echo $message = "Reports: No transactions for update ...\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Reports: No transactions for update ..." );
         }
     }
 
@@ -799,6 +831,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * Filter Promotions Awin
      *
      * @param   Reference   $reference
@@ -813,6 +846,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * Copies default images to specific locations within the application.
      *
      * @return  void
@@ -838,6 +872,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * This method handles the uploading process of images by first checking for existing files,
      * generating them if necessary, and then executing the upload to Firebase.
      *
@@ -854,13 +889,11 @@ class AwinController extends Controller
         // Check if there are no files found in the local directory.
         if ( empty( $files ) )
         {
-            echo $message = "Images: No images to upload - {$type}...\n";
-            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->logger->log_message( message: "Images: No images to upload - {$type}..." );
             return;
         }
 
-        echo $message = "Images: Capturing names of {$type}...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Images: Capturing names of {$type}..." );
 
         // Get the file names from the list of files.
         $file_names   = get_files_name( files: $files );
@@ -870,6 +903,7 @@ class AwinController extends Controller
     }
 
     /**
+     * TODO fix code
      * Send images to Firebase Storage
      *
      * This function uploads a set of images to Firebase Storage.
@@ -888,21 +922,20 @@ class AwinController extends Controller
         $storage      = Firebase::storage();
         $bucket       = $storage->getBucket();
 
-        echo $message = "Images: Sending to Firebase - {$type}...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Images: Sending to Firebase - {$type}..." );
 
         // Iterate over each image and upload it to Firebase.
         foreach ( $images as $img )
         {
             // Create a resumable uploader instance for the current image.
             $uploader = $bucket->getResumableUploader(
-                data: fopen( "{$local_path}/{$img}", "r" ),
-                options: [ "name" => "{$firebase_path}/{$img}" ]
+                data    : fopen( "{$local_path}/{$img}", "r" ),
+                options : [ "name" => "{$firebase_path}/{$img}" ]
             );
 
             try
             {
-                echo "Images: ID {$img}";
+                $this->logger->info( string: "Images: ID {$img}" );
 
                 // Perform the upload.
                 $uploader->upload();
@@ -910,14 +943,22 @@ class AwinController extends Controller
             catch ( FirebaseException $e )
             {
                 // Handle Firebase-specific exceptions.
-                echo $message = "Images : An error has occurred while working with the Firebase SDK\n";
-                log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "FirebaseException", e: $e );
+                $this->logger->log_exception(
+                    message : "Images : An error has occurred while working with the Firebase SDK",
+                    method  : $operation_method,
+                    type    : "FirebaseException",
+                    e       : $e
+                );
             }
-            catch (Throwable $e)
+            catch ( Throwable $e )
             {
                 // Handle general exceptions.
-                echo $message = "Images : Unexpected error\n";
-                log_exception( channel: self::LOG_CHANNEL, message: $message, method: $operation_method, type: "Throwable", e: $e );
+                $this->logger->log_exception(
+                    message : "Images : Unexpected error",
+                    method  : $operation_method,
+                    type    : "Throwable",
+                    e       : $e
+                );
             }
             finally
             {
@@ -927,8 +968,7 @@ class AwinController extends Controller
             }
         }
 
-        echo $message = "Images: Sending finished - {$type}...\n";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->logger->log_message( message: "Images: Sending finished - {$type}..." );
 
         File::deleteDirectory( directory: $local_path, preserve: true );
     }
