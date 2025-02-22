@@ -3,7 +3,10 @@
  * Helper functions for various tasks in the application.
  */
 
+use DateTime;
+use DateInterval;
 use App\Models\User;
+use DateTimeImmutable;
 use Illuminate\Support\Str;
 use App\Models\Marketplace\Order;
 use Illuminate\Http\RedirectResponse;
@@ -1107,5 +1110,41 @@ if ( !function_exists( "marketplace_new_order_prepare" ) )
         ];
 
         return $data;
+    }
+}
+
+if ( !function_exists( "get_date_time_unix" ) )
+{
+    /**
+     * Get datetime ms
+     *
+     * @param   string  $format
+     * @param   bool    $immutable
+     * @return  int
+     */
+    function get_date_time_unix( string $format = "Y-m-d H:i:s.u", bool $immutable = false ) : int
+    {
+        $date = ( !$immutable ) ? new DateTime( date( $format ) ) : new DateTimeImmutable( $format );
+        $date = ( int ) $date->format( "Uv" );
+
+        return $date;
+    }
+}
+
+if ( !function_exists( "get_date_time_unix_interval" ) )
+{
+    /**
+     * Get datetime ms, with some interval
+     *
+     * @param   string  $interval
+     * @return  int
+     */
+    function get_date_time_unix_interval( string $interval ) : int
+    {
+        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $date = $date->add( new DateInterval( $interval ) );
+        $date = ( int ) $date->format( "Uv" );
+
+        return $date;
     }
 }

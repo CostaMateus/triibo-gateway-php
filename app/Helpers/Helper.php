@@ -229,39 +229,6 @@ class Helper
     }
 
     /**
-     * Get datetime ms
-     *
-     * @param   string  $format
-     * @param   bool    $immutable
-     * @return  int
-     */
-    public static function getDateTimeUnix( string $format = "Y-m-d H:i:s.u", bool $immutable = false )
-    {
-        $date = ( !$immutable )
-                    ? new DateTime( date( $format ) )
-                    : new DateTimeImmutable( $format );
-
-        $date = ( int ) $date->format( "Uv" );
-
-        return $date;
-    }
-
-    /**
-     * Get datetime ms, with some interval
-     *
-     * @param   string  $interval
-     * @return  int
-     */
-    public static function getDateTimeUnixInterval( string $interval )
-    {
-        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $date = $date->add( new DateInterval( $interval ) );
-        $date = ( int ) $date->format( "Uv" );
-
-        return $date;
-    }
-
-    /**
      * Generates a short description for a product based on its full description, name, and attributes.
      *
      * It includes the voltage attribute if present and formats the description to a maximum length.
