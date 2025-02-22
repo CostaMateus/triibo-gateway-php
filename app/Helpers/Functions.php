@@ -3,7 +3,10 @@
  * Helper functions for various tasks in the application.
  */
 
+use DateTime;
+use DateInterval;
 use App\Models\User;
+use DateTimeImmutable;
 use Illuminate\Support\Str;
 use App\Models\Marketplace\Order;
 use Illuminate\Http\RedirectResponse;
@@ -41,16 +44,18 @@ if ( !function_exists( "log_exception" ) )
      * @param   string          $method     The method that threw the exception.
      * @param   string          $type       The type of exception that was thrown.
      * @param   Throwable|null  $e          The exception object.
+     * @param   array|null      $context    Additional context data to include with the log entry.
      * @return  void
      */
-    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null ) : void
+    function log_exception( string $channel, string $message, string $level = "critical", string $method = "", string $type = "", ?Throwable $e = null, ?array $context = null ) : void
     {
         $context   = [
             "error_code" => $e?->getCode(),
             "message"    => $e?->getMessage(),
             "method"     => $method,
             "type"       => $type,
-            "exception"  => $e
+            "exception"  => $e,
+            "context"    => $context,
         ];
 
         // Log the message using the specified log channel and level.
@@ -1105,5 +1110,41 @@ if ( !function_exists( "marketplace_new_order_prepare" ) )
         ];
 
         return $data;
+    }
+}
+
+if ( !function_exists( "get_date_time_unix" ) )
+{
+    /**
+     * Get datetime ms
+     *
+     * @param   string  $format
+     * @param   bool    $immutable
+     * @return  int
+     */
+    function get_date_time_unix( string $format = "Y-m-d H:i:s.u", bool $immutable = false ) : int
+    {
+        $date = ( !$immutable ) ? new DateTime( date( $format ) ) : new DateTimeImmutable( $format );
+        $date = ( int ) $date->format( "Uv" );
+
+        return $date;
+    }
+}
+
+if ( !function_exists( "get_date_time_unix_interval" ) )
+{
+    /**
+     * Get datetime ms, with some interval
+     *
+     * @param   string  $interval
+     * @return  int
+     */
+    function get_date_time_unix_interval( string $interval ) : int
+    {
+        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $date = $date->add( new DateInterval( $interval ) );
+        $date = ( int ) $date->format( "Uv" );
+
+        return $date;
     }
 }

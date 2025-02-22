@@ -129,9 +129,9 @@ return [
         '**/*.log',
 
         // You can include paths to other log types as well, such as apache, nginx, and more.
-        '/var/log/apache2/*.log',
         '/var/log/mysql/*.log',
-        "/var/log/*.log",
+        '/var/log/apache2/*.log',
+        "/var/log/laravel-deploy.log",
 
         // // MacOS Apple Silicon logs
         // '/opt/homebrew/var/log/nginx/*',
