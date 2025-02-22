@@ -175,7 +175,6 @@ class AwinIntegration
     }
 
     /**
-     * TODO fix code
      * Get and translate, Awin promotions
      *
      * Awin promotion == Triibo Store (firebase) / Promotion
@@ -185,19 +184,21 @@ class AwinIntegration
     public function getPromotions()
     {
         $origins        = $this->getEstablishments( without_translate: true );
-        $promotions     = $this->translatePromotionDefault( $origins );
+        $promotions     = $this->translatePromotionDefault( data: $origins );
 
         $establishments = $this->getEstablishments();
 
         foreach ( $establishments as $establishment )
         {
-            $this->logger->log_message( message: "Promotions: Loading promotions for establishment: " . $establishment[ "partnerEstablishmentId" ] );
+            $id         = $establishment[ "partnerEstablishmentId" ];
 
-            $promos     = $this->searchPromotions( $establishment[ "partnerEstablishmentId" ] );
+            $this->logger->log_message( message: "Promotions: Loading for establishment ID {$id}" );
+
+            $promos     = $this->searchPromotions( id: $id );
 
             if ( empty( $promos[ "data" ] ) ) continue;
 
-            $promos     = $this->translatePromotions( $promos[ "data" ], $establishment[ "cashbackDefault" ] );
+            $promos     = $this->translatePromotions( data: $promos[ "data" ], cashback: $establishment[ "cashbackDefault" ] );
             $promotions = $promotions + $promos;
         }
 
@@ -228,13 +229,13 @@ class AwinIntegration
         try
         {
             $response = retry(
-                3,
-                function () use ( $url )
+                times: 3,
+                sleepMilliseconds: 10000,
+                callback: function () use ( $url )
                 {
                     return Http::withToken( token: $this->token )->get( url: $url );
                 },
-                10000,
-                function ( $e ) use ( $url )
+                when: function ( $e ) use ( $url )
                 {
                     $this->logger->log_exception(
                         message : "Establishments: Fail searchEstablishments(). Retry in 10 seconds.",
@@ -300,8 +301,9 @@ class AwinIntegration
         try
         {
             $response = retry(
-                4,
-                function () use ( $url, $id )
+                times: 4,
+                sleepMilliseconds: 10000,
+                callback: function () use ( $url, $id )
                 {
                     $response_2 = Http::withToken( $this->token )->get( $url );
 
@@ -319,8 +321,7 @@ class AwinIntegration
 
                     return $response_2;
                 },
-                10000,
-                function ( Throwable $e ) use ( $url, $id )
+                when: function ( Throwable $e ) use ( $url, $id )
                 {
                     if ( $e->getMessage() !== "request.limit.exceeded" )
                     {
@@ -360,7 +361,6 @@ class AwinIntegration
     }
 
     /**
-     * TODO fix code
      * Get Awin promotions (promotions)
      *
      * Awin promotion == Triibo Store (firebase) / Default promotion
@@ -370,8 +370,9 @@ class AwinIntegration
      */
     private function searchPromotions( int $id )
     {
-        $data  = [];
+        $this->logger->log_message( message: "Promotions: Start search promotions for ID {$id}" );
 
+        $data  = [];
         $page  = 1;
         $ended = false;
 
@@ -386,74 +387,106 @@ class AwinIntegration
             ]
         ];
 
-        try
+        while ( !$ended )
         {
-            do
+            $this->logger->log_message( message: "Promotions: Loading page {$page} for ID {$id}" );
+
+            $body[ "pagination" ] = [ "page" => $page ];
+
+            try
             {
-                $body[ "pagination" ] = [ "page" => $page ];
-
-                $response = Http::withToken( $this->token )
-                                ->withBody( json_encode( $body ), "application/json" )
-                                ->post( $this->url_promotions );
-
-                if ( !$response->successful() )
-                {
-                    $err = json_decode( $response->body(), true );
-
-                    if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
+                $response = retry(
+                    times: 3,
+                    sleepMilliseconds: 1000,
+                    callback: function () use ( $body )
                     {
-                        echo "Promotions: Retry in 10 seconds\n";
-                        sleep( 10 );
-                    }
-                    else
+                        $response_2 = Http::withToken( token: $this->token )
+                                          ->withBody( content: json_encode( $body ), contentType: "application/json" )
+                                          ->post( url: $this->url_promotions );
+
+                        if ( !$response_2->successful() )
+                        {
+                            $err = json_decode( $response_2->body(), true );
+
+                            if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
+                            {
+                                $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds" );
+
+                                throw new Exception( "request.limit.exceeded" );
+                            }
+                        }
+
+                        return $response_2;
+                    },
+                    when: function ( Throwable $e ) use ( $body, $id )
                     {
-                        return [
-                            "success" => false,
-                            "code"    => 4001,
-                            "data"    => $data
-                        ];
+                        if ( $e->getMessage() !== "request.limit.exceeded" )
+                        {
+                            $this->logger->log_exception(
+                                message: "Promotions: Fail searchPromotions ID = {$id}. Retry.",
+                                method: "searchPromotions",
+                                type: "Throwable",
+                                e: $e,
+                                context: [
+                                    "page" => $page,
+                                    "body" => $body
+                                ]
+                            );
+                        }
+
+                        return true;
                     }
-                }
-                else
-                {
-                    $page++;
-
-                    $resp = $response->json();
-
-                    if ( !empty( $resp[ "data" ] ) )
-                    {
-                        $data = array_merge( $data, $resp[ "data" ] );
-                    }
-
-                    $pagination = $resp[ "pagination" ];
-
-                    if ( empty( $resp[ "data" ] ) || $pagination[ "total" ] < $page || $pagination[ "total" ] == $page )
-                        $ended = true;
-                }
+                );
             }
-            while ( !$ended );
+            catch ( Throwable $e )
+            {
+                $this->logger->log_exception(
+                    message: "Promotions: Fail searchPromotions ID = {$id}. Catch.",
+                    method: "searchPromotions",
+                    type: "Throwable",
+                    e: $e,
+                    context: [
+                        "page" => $page,
+                        "body" => $body
+                    ]
+                );
 
-            return [
-                "success" => true,
-                "code"    => 0,
-                "data"    => $data,
-            ];
-        }
-        catch ( Throwable $e )
-        {
-            $this->logger->log_exception(
-                message : "Promotions: Fail searchPromotions(). Retry.",
-                method  : "searchPromotions",
-                type    : "Throwable",
-                e       : $e,
-                context : [
-                    "url"  => $this->url_promotions,
-                    "body" => $body
-                ],
-            );
+                return [
+                    "success" => false,
+                    "code"    => 4002,
+                    "data"    => $data,
+                ];
+            }
 
-            return $this->searchPromotions( $id );
+            if ( !$response->successful() )
+            {
+                return [
+                    "success" => false,
+                    "code"    => 4001,
+                    "data"    => $data,
+                ];
+            }
+
+            $page++;
+
+            $response_data = $response->json();
+
+            if ( !empty( $response_data[ "data" ] ) )
+                $data = array_merge( $data, $response_data[ "data" ] );
+
+            $pagination    = $response_data[ "pagination" ] ?? [];
+
+            if ( empty( $response_data[ "data" ] ) || ( isset( $pagination[ "total" ] ) && $pagination[ "total" ] <= $page ) )
+                $ended = true;
         }
+
+        $this->logger->log_message( message: "Promotions: End search promotions for ID {$id}" );
+
+        return [
+            "success" => true,
+            "code"    => 0,
+            "data"    => $data,
+        ];
     }
 
     /**
@@ -537,10 +570,10 @@ class AwinIntegration
 
                 $status               = Helper::awinReportStatus( $report[ "commissionStatus" ] );
 
-                $transaction_date     = Helper::getDateTimeUnix( $report[ "transactionDate" ], true );
+                $transaction_date     = get_date_time_unix( $report[ "transactionDate" ], true );
 
                 $update_date          = ( !$is_update && $status == "pending" ) ? $report[ "transactionDate" ] : $report[ "validationDate"  ];
-                $update_date          = Helper::getDateTimeUnix( $update_date, true );
+                $update_date          = get_date_time_unix( $update_date, true );
 
                 $total_order          = ( float ) $report[ "saleAmount"       ][ "amount" ];
                 $commission           = ( float ) $report[ "commissionAmount" ][ "amount" ];
@@ -593,10 +626,10 @@ class AwinIntegration
     private function translateEstablishments( array $data )
     {
         $establishments = [];
-        $date_en        = Helper::getDateTimeUnix();
-        $date_dis       = Helper::getDateTimeUnixInterval( interval: "P7Y" );
+        $date_en        = get_date_time_unix();
+        $date_dis       = get_date_time_unix_interval( interval: "P7Y" );
 
-        $this->logger->log_message( message: "Establishments: Translating awin establishments ..." );
+        $this->logger->log_message( message: "Establishments: Start translating awin establishments..." );
 
         foreach ( $data as $establishment )
         {
@@ -650,11 +683,12 @@ class AwinIntegration
             );
         }
 
+        $this->logger->log_message( message: "Establishments: End translating awin establishments..." );
+
         return $establishments;
     }
 
     /**
-     * TODO fix code
      * Translates Awin establishments into Triibo promotions default
      *
      * @param   array   $data     Establishments data
@@ -663,19 +697,21 @@ class AwinIntegration
     private function translatePromotionDefault( array $data )
     {
         $promotions = [];
-        $date_en    = Helper::getDateTimeUnix();
-        $date_dis   = Helper::getDateTimeUnixInterval( "P7Y" );
+        $date_en    = get_date_time_unix();
+        $date_dis   = get_date_time_unix_interval( interval: "P7Y" );
+
+        $this->logger->log_message( message: "Promotions: Start translating awin promotions default..." );
 
         foreach ( $data as $establishment )
         {
             $name              = explode( " BR", $establishment[ "name" ] )[ 0 ];
 
-            $id                = $establishment[ "id" ] . strtolower( str_replace( " ", "", Str::slug( $name, "" ) ) );
+            $id                = $establishment[ "id" ] . strtolower( str_replace( " ", "", Str::slug( title: $name, separator: "" ) ) );
 
             $cashback          = "";
 
             if ( isset( $establishment[ "commissionRange" ] ) )
-                $cashback = get_cashback( $establishment[ "commissionRange" ] );
+                $cashback = get_cashback( data: $establishment[ "commissionRange" ] );
 
             $title             = "Ganhe {$cashback}% de volta!";
 
@@ -687,7 +723,7 @@ class AwinIntegration
                 "Ganhe {$points} pontos a cada R\${$this->base} em compras.",
             ];
 
-            $url               = $this->urlTracking( $establishment[ "id" ], $establishment[ "displayUrl" ] );
+            $url               = $this->urlTracking( id: $establishment[ "id" ], url: $establishment[ "displayUrl" ] );
 
             $promotions[ $id ] = [
                 "partnerEstablishmentId" => $establishment[ "id" ],
@@ -717,13 +753,19 @@ class AwinIntegration
                 "buttonLabel"            => "Conferir",
                 "id"                     => "",
             ];
+
+            $this->logger->log_message(
+                message : "Promotions: Translated promotion default ID {$id}",
+                context : $promotions[ $id ],
+            );
         }
+
+        $this->logger->log_message( message: "Promotions: Start translating awin promotions default..." );
 
         return $promotions;
     }
 
     /**
-     * TODO fix code
      * Translates Awin promotions into Triibo promotions
      *
      * @param   array   $data       Promotions data
@@ -734,6 +776,8 @@ class AwinIntegration
     {
         $promotions = [];
 
+        $this->logger->log_message( message: "Promotions: Start translating awin promotions..." );
+
         foreach ( $data as $promotion )
         {
             $id                = $promotion[ "advertiser" ][ "id" ] . $promotion[ "promotionId" ];
@@ -741,12 +785,10 @@ class AwinIntegration
             $name              = explode( " BR", $promotion[ "advertiser" ][ "name" ] )[ 0 ];
 
             $date              = str_replace( "T", " ", $promotion[ "startDate" ] );
-            $date              = new DateTime( date( $date ) );
-            $date_en           = ( int ) $date->format( "U" ) * 1000;
+            $date_en           = get_date_time_unix( format: $date );
 
-            $date              = str_replace( "T", " ", $promotion[ "endDate" ] );
-            $date              = new DateTime( date( $date ) );
-            $date_dis          = ( int ) $date->format( "U" ) * 1000;
+            $date              = str_replace( "T", " ", $promotion[ "endDate"   ] );
+            $date_dis          = get_date_time_unix( format: $date );
 
             $cashback          = str_replace( ",", ".", $cashback );
             $points            = $this->base * $this->rate * ( $cashback / 100 );
@@ -763,9 +805,9 @@ class AwinIntegration
             if ( $promotion[ "type" ] == "voucher" )
                 $details_descrip[] = "Utilize o código de desconto " . $promotion[ "voucher" ][ "code" ] . " no fechamento da compra.";
 
-            $details_descrip[] = "Válido até " . convert_date( $promotion[ "endDate" ], true );
+            $details_descrip[] = "Válido até " . convert_date( date: $promotion[ "endDate" ] );
 
-            $url               = $this->urlTracking( $promotion[ "advertiser" ][ "id" ], $promotion[ "url" ] );
+            $url               = $this->urlTracking( id: $promotion[ "advertiser" ][ "id" ], url: $promotion[ "url" ] );
 
             $promotions[ $id ] = [
                 "partnerEstablishmentId" => $promotion[ "advertiser" ][ "id" ],
@@ -803,7 +845,14 @@ class AwinIntegration
                 $promotions[ $id ][ "photo"        ] = "awin_common_coupon.webp";
                 $promotions[ $id ][ "thumbnail"    ] = "awin_common_coupon.webp";
             }
+
+            $this->logger->log_message(
+                message : "Promotions: Translated promotion ID {$id}",
+                context : $promotions[ $id ],
+            );
         }
+
+        $this->logger->log_message( message: "Promotions: End translating awin promotions..." );
 
         return $promotions;
     }
@@ -855,18 +904,17 @@ class AwinIntegration
     }
 
     /**
-     * TODO fix code
      * Generates url to track clicks
      *
-     * @param   integer     $establishment_id    Establishment id
-     * @param   string      $url                Destination url
+     * @param   integer     $id     Establishment id
+     * @param   string      $url    Destination url
      * @return  string
      */
-    private function urlTracking( int $establishment_id, string $url )
+    private function urlTracking( int $id, string $url )
     {
-        $body     = [
+        $body = [
             "shorten"        => false,
-            "advertiserId"   => $establishment_id,
+            "advertiserId"   => $id,
             "destinationUrl" => $url,
             "parameters"     => [
                 "clickref" => "{uid}",
@@ -875,46 +923,66 @@ class AwinIntegration
 
         try
         {
-            $response = Http::withToken( $this->token )
-                            ->withBody( json_encode( $body ), "application/json" )
-                            ->post( $this->url_linkbuilder );
+            $response = retry(
+                times: 4,
+                sleepMilliseconds: 10000,
+                callback: function () use ( $body )
+                {
+                    $response_2 = Http::withToken( token: $this->token )
+                                      ->withBody( content: json_encode( $body ), contentType: "application/json" )
+                                      ->post( url: $this->url_linkbuilder );
+
+                    if ( !$response_2->successful() )
+                    {
+                        $err = json_decode( $response_2->body(), true );
+
+                        if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
+                        {
+                            $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds" );
+
+                            throw new Exception( "request.limit.exceeded" );
+                        }
+                    }
+
+                    return $response_2;
+                },
+                when: function ( Throwable $e ) use ( $body, $id )
+                {
+                    if ( $e->getMessage() !== "request.limit.exceeded" )
+                    {
+                        $this->logger->log_exception(
+                            message: "Promotions: Fail urlTracking ID = {$id}. Retry.",
+                            method: "urlTracking",
+                            type: "Throwable",
+                            e: $e,
+                            context: [ "body" => $body ]
+                        );
+                    }
+
+                    return true;
+                }
+            );
         }
         catch ( Throwable $e )
         {
             $this->logger->log_exception(
-                message : "Promotions: Fail urlTracking(). Retry.",
-                method  : "urlTracking",
-                type    : "Throwable",
-                e       : $e,
-                context : [
-                    "url"  => $this->url_linkbuilder,
-                    "body" => $body,
-                ]
+                message: "Promotions: Fail urlTracking ID = {$id}. Catch.",
+                method: "urlTracking",
+                type: "Throwable",
+                e: $e,
+                context: [ "body" => $body ]
             );
-
-            return $this->urlTracking( $establishment_id, $url );
-        }
-
-        if ( !$response->successful() )
-        {
-            $err = json_decode( $response->body(), true );
-
-            if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
-            {
-                sleep( 10 );
-                return $this->urlTracking( $establishment_id, $url );
-            }
 
             return $url;
         }
 
-        $response = $response->json();
+        if ( !$response->successful() )
+            return $url;
 
-        return parse_url_awin( $response[ "url" ] );
+        return parse_url_awin( url: $response->json()[ "url" ] );
     }
 
     /**
-     * TODO fix code
      * Get Awin establishments
      *
      * @return  array

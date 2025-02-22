@@ -137,7 +137,6 @@ class ProcessDataAwin extends Command
             level   : $level,
             context : $context ?? null,
         );
-    
     }
 
     /**

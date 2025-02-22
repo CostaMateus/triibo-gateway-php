@@ -41,35 +41,35 @@ class AwinController extends Controller
      *
      * @var     array
      */
-    private const TYPES         = [ "establishments", "promotions" ];
+    private const TYPES               = [ "establishments", "promotions" ];
 
     /**
      * Define LOCAL base path for establishments and promotions.
      *
      * @var     string
      */
-    private const LC_BASE_PATH  = "images/affiliates/awin";
+    private const LC_BASE_PATH        = "images/affiliates/awin";
 
     /**
      * Define FIREBASE path for establishments.
      *
      * @var     string
      */
-    private const FB_ESTAB_PATH = "estabelecimento";
+    private const FB_ESTAB_PATH       = "estabelecimento";
 
     /**
      * Define FIREBASE path for promotions.
      *
      * @var     string
      */
-    private const FB_PROMO_PATH = "promocao";
+    private const FB_PROMO_PATH       = "promocao";
 
     /**
      * Sistema Triibo +5510999991477.
      *
      * @var     string
      */
-    private const REQUESTER_ID  = "J4NjCHtvxuRojrXb29whbsNPAy33";
+    private const REQUESTER_ID        = "J4NjCHtvxuRojrXb29whbsNPAy33";
 
     /**
      * Establishment fields to ignore.
@@ -149,7 +149,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Process promotions by invoking the Firebase operation for promotions.
      *
      * @return void
@@ -375,7 +374,7 @@ class AwinController extends Controller
             $this->logger->log_message( message: "Establishments: Has changes ID " . $local_establishment[ "push_id" ] );
 
             // Add edit approval request in Firebase.
-            $db->getReference( path: "/Estabelecimento-Aprovacoes/{$local_establishment[ "push_id" ]}" )
+            $db->getReference( path: "/Estabelecimento-Aprovacoes/" . $local_establishment[ "push_id" ] )
                ->set( value: [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $local_establishment[ "push_id" ],
@@ -421,6 +420,7 @@ class AwinController extends Controller
                 context : [
                     "Need approval ID "  . $local_establishment[ "push_id" ],
                     "Change Request ID " . $new_push_changes,
+                    $current_changes
                 ]
             );
         }
@@ -469,8 +469,17 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Update and create promotions on Firebase
+     *
+     * This PHP method is responsible for synchronizing promotion data between a local database and Firebase.
+     * It performs the following operations:
+     * - Deletes the existing promotions directory.
+     * - Retrieves promotions from Firebase and the local database.
+     * - Disables promotions in Firebase that are not present in the Awin list.
+     * - Adds new promotions from Awin to the local database and Firebase.
+     * - Requests approval for any changes to existing promotions.
+     * - Updates the local database with changes from Awin.
+     * - Logs actions and outputs status messages to the console.
      *
      * @return  void
      */
@@ -486,23 +495,29 @@ class AwinController extends Controller
 
         // Initialize Firebase database references
         $db                      = Firebase::database();
-        $establishment_reference = $db->getReference( "/Estabelecimento-v2"    );
-        $promotions_reference    = $db->getReference( "/Store"                 );
-        $approval_reference      = $db->getReference( "/Store-Aprovacoes"      );
-        $changes_reference       = $db->getReference( "/Store-changes-request" );
+        $establishment_reference = $db->getReference( path: "/Estabelecimento-v2"    );
+        $promotions_reference    = $db->getReference( path: "/Store"                 );
+        $approval_reference      = $db->getReference( path: "/Store-Aprovacoes"      );
+        $changes_reference       = $db->getReference( path: "/Store-changes-request" );
 
-        // Retrieve promotions from Firebase and local sources.
+        $this->logger->log_message( message: "Promotions: Filtering establishments firebase..." );
+        // Retrieve establishments from Firebase.
         $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
-        $firebase_promotions     = $this->filterPromotions( $promotions_reference );
+        $this->logger->log_message( message: "Promotions: " . count( $firebase_establishments ) . " establishments filtered from firebase..." );
+
+        $this->logger->log_message( message: "Promotions: Filtering promotions firebase..." );
+        // Retrieve promotions from Firebase.
+        $firebase_promotions     = $this->filterPromotions( reference: $promotions_reference );
+        $this->logger->log_message( message: "Promotions: " . count( $firebase_promotions ) . " promotions filtered from firebase..." );
+
+        // Retrieve promotions from Awin.
         $awin_promotions         = $this->integration->getPromotions();
+        $this->logger->log_message( message: "Promotions: " . count( $awin_promotions ) . " filtered from awin..." );
 
-        $local_promotions        = DB::table( "affiliates_promotions" )
-                                     ->where( "origin", "awin" )
-                                     ->get()
-                                     ->keyBy( "origin_id" )
-                                     ->toArray();
-
+        // Retrieve promotions from local.
+        $local_promotions        = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_promotions        = json_decode( json_encode( $local_promotions ), true );
+        $this->logger->log_message( message: "Promotions: " . count( $local_promotions ) . " filtered from local..." );
 
         $this->logger->log_message( message: "Promotions: Validating ..." );
 
@@ -513,11 +528,11 @@ class AwinController extends Controller
             {
                 if ( $firebase_promotion[ "isPublished" ] )
                 {
-                    // Disable the promotion.
+                    $this->logger->log_message( message: "Promotions: Disabling ID {$push}" );
                     $firebase_promotion[ "isPublished" ] = false;
-                    $promotions_reference->update( [ $push => $firebase_promotion ] );
+                    $promotions_reference->update( values: [ $push => $firebase_promotion ] );
 
-                    $approval_promotion = $db->getReference( "/Store-Aprovacoes/{$push}" )->getValue();
+                    $approval_promotion = $db->getReference( path: "/Store-Aprovacoes/{$push}" )->getValue();
 
                     if ( $approval_promotion && $approval_promotion[ "status" ] == "aberto" )
                     {
@@ -525,10 +540,9 @@ class AwinController extends Controller
                         $approval_promotion[ "comment"      ] = "Promoção desativada, aprovação fechada pelo sistema.";
                         $approval_promotion[ "approvalDate" ] = self::$date;
 
-                        $approval_reference->update( [ $push => $approval_promotion ] );
+                        $this->logger->log_message( message: "Promotions: Canceling open curatorship of ID {$push}" );
+                        $approval_reference->update( values: [ $push => $approval_promotion ] );
                     }
-
-                    $this->logger->log_message( message: "Promotions: Disabled ID = {$push}" );
                 }
             }
         }
@@ -540,8 +554,8 @@ class AwinController extends Controller
             {
                 // Add new promotion to local data array.
                 $local_data[] = [
-                    "origin"       => $awin_promotion[ "origin" ],
                     "origin_id"    => $id,
+                    "origin"       => $awin_promotion[ "origin" ],
                     "affiliate_id" => $awin_promotion[ "origin" ] . $id,
                     "push_id"      => null,
                     "data"         => json_encode( $awin_promotion ),
@@ -578,9 +592,11 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
+            $this->logger->log_message( message: "Promotions: Has changes ID " . $local_promotion[ "push_id" ] );
+
             // Add edit approval request in Firebase.
-            $db->getReference( "/Store-Aprovacoes/{$local_promotion[ "push_id" ]}" )
-               ->update( [
+            $db->getReference( path: "/Store-Aprovacoes/" . $local_promotion[ "push_id" ] )
+               ->update( values: [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $local_promotion[ "push_id" ],
                 "establishmentId"   => $establishment_id,
@@ -595,11 +611,16 @@ class AwinController extends Controller
             ] );
 
             // Get pending changes
-            $past_diffs       = invalidate_past_promotion_changes( $changes_reference, $local_promotion[ "push_id" ] );
+            $past_diffs       = invalidate_past_promotion_changes( reference: $changes_reference, push_id: $local_promotion[ "push_id" ] );
+
+            if ( !empty( $past_diffs ) )
+                $this->logger->log_message( message: "Promotions: Invalidating past changes ID " . $local_promotion[ "push_id" ] );
+
+            $current_changes  = array_merge( $past_diffs, $diff );
 
             // Add edit change request in Firebase.
             $new_push_changes = $changes_reference->push()->getKey();
-            $changes_reference->update( [ $new_push_changes => [
+            $changes_reference->update( values: [ $new_push_changes => [
                 "id"                => $new_push_changes,
                 "createDate"        => self::$date,
                 // "updateDate"        => "",
@@ -611,7 +632,7 @@ class AwinController extends Controller
                 // "validatorUid"      => "",
                 // "comment"           => "",
                 "type"              => "validation",
-                "changedFields"     => array_merge( $past_diffs, $diff ),
+                "changedFields"     => $current_changes,
             ] ] );
 
             // Update the local promotion with the new data.
@@ -619,13 +640,14 @@ class AwinController extends Controller
                 ->where( "affiliate_id", $local_promotion[ "affiliate_id" ] )
                 ->update( [ "data" => json_encode( $awin_promotion ) ] );
 
-            $messages = [
-                "Promotions: Edited ID = " . $local_promotion[ "push_id" ],
-                "Need approval ID = "      . $local_promotion[ "push_id" ],
-                "Change Request ID = "     . $new_push_changes,
-            ];
-
-            $this->logger->log_message( message: implode( " | ", $messages ) );
+            $this->logger->log_message(
+                message : "Promotions: Edited ID " . $local_promotion[ "push_id" ],
+                context : [
+                    "Need approval ID "  . $local_promotion[ "push_id" ],
+                    "Change Request ID " . $new_push_changes,
+                    $current_changes
+                ]
+            );
         }
 
         // Insert new promotions into the local database if any.
@@ -649,11 +671,11 @@ class AwinController extends Controller
 
                 unset( $aux[ "partnerEstablishmentId" ] );
 
-                $promotions_reference->update( [ $new_push_promotion => $aux ] );
+                $promotions_reference->update( values: [ $new_push_promotion => $aux ] );
 
                 // Add create approval request in Firebase.
-                $db->getReference( "/Store-Aprovacoes/{$new_push_promotion}" )
-                   ->set( [
+                $db->getReference( path: "/Store-Aprovacoes/{$new_push_promotion}" )
+                   ->set( value: [
                     "requesterId"       => self::REQUESTER_ID,
                     "id"                => $new_push_promotion,
                     "establishmentId"   => $aux[ "establishmentId"   ],
@@ -667,12 +689,10 @@ class AwinController extends Controller
                     "dueDate"           => $aux[ "dueDate" ],
                 ] );
 
-                $messages = [
-                    "Promotions: Created ID = " . $new_push_promotion,
-                    "Need approval ID = "       . $new_push_promotion,
-                ];
-
-                $this->logger->log_message( message: implode( " | ", $messages ) );
+                $this->logger->log_message(
+                    message : "Promotions: Created ID = " . $new_push_promotion,
+                    context : [ "Need approval ID = " . $new_push_promotion ]
+                );
 
                 $promotion[ "push_id" ] = $new_push_promotion;
                 $promotion[ "data"    ] = json_encode( $aux );
@@ -831,7 +851,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Filter Promotions Awin
      *
      * @param   Reference   $reference
