@@ -111,7 +111,6 @@ class AwinIntegration
      */
     public function __construct( ProcessDataAwin $logger, bool $load = true )
     {
-        // TODO descomentar
         $env                        = config( key: "awin.env"                 );
         $url                        = config( key: "awin.{$env}.url"          );
         $p_id                       = config( key: "awin.{$env}.publisher_id" );
@@ -206,7 +205,6 @@ class AwinIntegration
     }
 
     /**
-     * TODO fix code
      * Get Awin reports
      *
      * @param   boolean $is_update   Get only reports has dateType == 'validation', default false
@@ -214,7 +212,7 @@ class AwinIntegration
      */
     public function getReports( bool $is_update = false )
     {
-        return $this->searchReports( $is_update );
+        return $this->searchReports( is_update: $is_update );
     }
 
     /**
@@ -313,7 +311,7 @@ class AwinIntegration
 
                         if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
                         {
-                            $this->logger->log_message( message: "Establishments: Request limit exceeded. Retry ID {$id} in 10 seconds" );
+                            $this->logger->log_message( message: "Establishments: Request limit exceeded. Retry ID {$id} in 10 seconds..." );
 
                             throw new Exception( "request.limit.exceeded" );
                         }
@@ -410,7 +408,7 @@ class AwinIntegration
 
                             if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
                             {
-                                $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds" );
+                                $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds..." );
 
                                 throw new Exception( "request.limit.exceeded" );
                             }
@@ -490,7 +488,6 @@ class AwinIntegration
     }
 
     /**
-     * TODO fix code
      * Get Awin reports
      *
      * @param   boolean     $is_update   Get only reports has dateType == 'validation', default false
@@ -507,73 +504,103 @@ class AwinIntegration
         $query .= "&timezone=" . self::TZ;
         $query .= ( $is_update ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
+        $this->logger->log_message( message: "Reports: Start search reports..." );
+
         try
         {
-            $response = Http::withToken( $this->token )->get( "{$this->url_transactions}/{$query}" );
+            $response = retry(
+                times: 3,
+                sleepMilliseconds: 1000,
+                callback: function () use ( $query )
+                {
+                    $response_2 = Http::withToken( token: $this->token )->get( url: "{$this->url_transactions}/{$query}");
+
+                    if ( !$response_2->successful() )
+                    {
+                        $err = json_decode( $response_2->body(), true );
+
+                        if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
+                        {
+                            $this->logger->log_message( message: "Reports: Request limit exceeded. Retry in 10 seconds..." );
+
+                            throw new Exception( "request.limit.exceeded" );
+                        }
+                    }
+
+                    return $response_2;
+                },
+                when: function ( Throwable $e ) use ( $query )
+                {
+                    if ( $e->getMessage() !== "request.limit.exceeded" )
+                    {
+                        $this->logger->log_exception(
+                            message: "Reports: Fail searchReports. Retry.",
+                            method: "searchReports",
+                            type: "Throwable",
+                            e: $e,
+                            context: [ "query" => $query ]
+                        );
+                    }
+
+                    return true;
+                }
+            );
         }
         catch ( Throwable $e )
         {
             $this->logger->log_exception(
-                message : "Reports: Fail searchReports(). Retry.",
-                method  : "searchReports",
-                type    : "Throwable",
-                e       : $e,
-                context : [
-                    "url"   => $this->url_transactions,
-                    "query" => $query
-                ],
+                message: "Reports: Fail searchReports. Catch.",
+                method: "searchReports",
+                type: "Throwable",
+                e: $e,
+                context: [ "query" => $query ]
             );
 
-            return $this->searchReports( $is_update );
+            return [
+                "success" => false,
+                "code"    => 4001,
+                "data"    => null,
+            ];
         }
 
         if ( !$response->successful() )
         {
-            $err = json_decode( $response->body(), true );
-
-            if ( isset( $err[ "error" ] ) && $err[ "error" ] == "request.limit.exceeded" )
-            {
-                sleep( 10 );
-
-                $data = $this->searchReports( $is_update );
-            }
-            else
-            {
-                $data = [
-                    "success" => false,
-                    "code"    => 4001,
-                    "data"    => null
-                ];
-            }
-        }
-        else
-        {
-            $data = [
-                "success" => true,
-                "code"    => 0,
-                "data"    => $response->json()
+            return [
+                "success" => false,
+                "code"    => 4001,
+                "data"    => null,
             ];
         }
 
+        $this->logger->log_message( message: "Reports: End search reports..." );
+
+        $data = [
+            "success" => true,
+            "code"    => 0,
+            "data"    => $response->json(),
+        ];
+
         if ( !empty( $data[ "data" ] ) )
         {
+            $this->logger->log_message( message: "Reports: Start translating awin reports..." );
+
             foreach ( $data[ "data" ] as &$report )
             {
                 $id                   = $report[ "advertiserId" ];
                 $name                 = explode( " BR", $info[ "programmeInfo" ][ "name" ] )[ 0 ];
-                $info                 = $this->searchEstablishmentsDetails( $id, true );
-                $cashback             = get_cashback( $info[ "commissionRange" ][ 0 ] );
+                $info                 = $this->searchEstablishmentsDetails( id: $id, all_info: true );
+                $cashback             = get_cashback( data: $info[ "commissionRange" ][ 0 ] );
 
                 $has_click_ref        = isset( $report[ "clickRefs" ] ) && isset( $report[ "clickRefs" ][ "clickRef" ] );
 
                 $uid                  = ( $has_click_ref ) ? $report[ "clickRefs" ][ "clickRef" ] : null;
 
-                $status               = Helper::awinReportStatus( $report[ "commissionStatus" ] );
+                $status               = Helper::awinReportStatus( status: $report[ "commissionStatus" ] );
 
-                $transaction_date     = get_date_time_unix( $report[ "transactionDate" ], true );
+                $transaction_date     = get_date_time_unix( format: $report[ "transactionDate" ], immutable: true );
 
                 $update_date          = ( !$is_update && $status == "pending" ) ? $report[ "transactionDate" ] : $report[ "validationDate"  ];
-                $update_date          = get_date_time_unix( $update_date, true );
+                $update_date          = get_date_time_unix( format: $update_date, immutable: true );
 
                 $total_order          = ( float ) $report[ "saleAmount"       ][ "amount" ];
                 $commission           = ( float ) $report[ "commissionAmount" ][ "amount" ];
@@ -611,7 +638,14 @@ class AwinIntegration
                     "commissionTriibo"  => $commission_triibo,
                     "commissionPartner" => null,
                 ];
+
+                $this->logger->log_message(
+                    message : "Reports: Translated report",
+                    context : $report[ "metaData" ],
+                );
             }
+
+            $this->logger->log_message( message: "Reports: End translating awin reports..." );
         }
 
         return $data;
@@ -858,7 +892,6 @@ class AwinIntegration
     }
 
     /**
-     * TODO fix code
      * Saves images from Awin
      *
      * @param   string  $path           Folder to save image
@@ -868,17 +901,46 @@ class AwinIntegration
      */
     private static function saveImage( string $path, string $image_name, string $url )
     {
-        $full_path = public_path( "images/affiliates/awin/{$path}" ) . "/{$image_name}";
+        $full_path = public_path( path: "images/affiliates/awin/{$path}" ) . "/{$image_name}";
 
         try
         {
-            $response = Http::get( $url );
+            $response = retry(
+                times: 3,
+                sleepMilliseconds: 1000,
+                callback: function () use ( $url )
+                {
+                    $response_2 = Http::get( url: $url );
+
+                    if ( !$response_2->successful() )
+                        throw new \Exception( "request.failed" );
+
+                    return $response_2;
+                },
+                when: function ( Throwable $e ) use ( $url, $full_path, $image_name )
+                {
+                    log_exception(
+                        channel : self::LOG_CHANNEL,
+                        message : "Images: Fail saveImage. Retry.",
+                        method  : "saveImage",
+                        type    : "Throwable",
+                        e       : $e,
+                        context : [
+                            "url"        => $url,
+                            "path"       => $full_path,
+                            "image_name" => $image_name,
+                        ]
+                    );
+
+                    return true;
+                }
+            );
         }
         catch ( Throwable $e )
         {
             log_exception(
                 channel : self::LOG_CHANNEL,
-                message : "Establishments: Fail saveImage(). Retry.",
+                message : "Images: Fail saveImage. Catch.",
                 method  : "saveImage",
                 type    : "Throwable",
                 e       : $e,
@@ -889,16 +951,17 @@ class AwinIntegration
                 ]
             );
 
-            return self::saveImage( $path, $image_name, $url );
+            return false;
         }
 
-        if ( !$response->successful() ) return false;
+        if ( !$response->successful() )
+            return false;
 
         file_put_contents( $full_path, $response->body() );
 
-        $handle = Image::open( $full_path );
-        $handle->resize( 200, 150, "#FFF" );
-        $handle->save( $full_path );
+        $handle = Image::open( file: $full_path );
+        $handle->resize( width: 200, height: 150, background: "#FFF" );
+        $handle->save( file: $full_path );
 
         return true;
     }
@@ -938,7 +1001,7 @@ class AwinIntegration
 
                         if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
                         {
-                            $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds" );
+                            $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds..." );
 
                             throw new Exception( "request.limit.exceeded" );
                         }

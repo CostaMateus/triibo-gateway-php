@@ -159,7 +159,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Process reports by invoking the Firebase operation for reports.
      *
      * @return  void
@@ -170,7 +169,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Upload images related to establishments and promotions.
      * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
      *
@@ -705,7 +703,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Send and update reports to Firebase.
      *
      * Handles the insertion and updating of reports in Firebase.
@@ -718,10 +715,10 @@ class AwinController extends Controller
         $this->logger->log_message( message: "Reports: Searching for new..." );
 
         // Get a reference to the "Triibo-Purchases-Awin" node in Firebase.
-        $firebase_awin     = Firebase::database()->getReference( "/Triibo-Purchases-Awin"     );
+        $firebase_awin     = Firebase::database()->getReference( path: "/Triibo-Purchases-Awin"     );
 
         // Get a reference to the "Triibo-Purchases-Cashback" node in Firebase.
-        $firebase_cashback = Firebase::database()->getReference( "/Triibo-Purchases-Cashback" );
+        $firebase_cashback = Firebase::database()->getReference( path: "/Triibo-Purchases-Cashback" );
 
         // Retrieve new reports from the integration.
         $new_reports       = $this->integration->getReports();
@@ -735,15 +732,15 @@ class AwinController extends Controller
             foreach ( $new_reports[ "data" ] as $report )
             {
                 // Set empty strings in the report to an empty string.
-                $report    = set_empty_string( $report );
+                $report    = set_empty_string( data: $report );
 
                 // Push the report to the "Triibo-Purchases-Awin" node and get the generated key.
                 $push_awin = $firebase_awin->push()->getKey();
-                $firebase_awin->update( [ $push_awin => $report ] );
+                $firebase_awin->update( values: [ $push_awin => $report ] );
 
                 // Push the report's metadata to the "Triibo-Purchases-Cashback" node and get the generated key.
                 $push_cash = $firebase_cashback->push()->getKey();
-                $firebase_cashback->update( [ $push_cash => $report[ "metaData" ] ] );
+                $firebase_cashback->update( values: [ $push_cash => $report[ "metaData" ] ] );
 
                 $this->logger->log_message( message: "Reports: New transaction awin ID = {$push_awin} | cashback ID {$push_cash}" );
             }
@@ -756,7 +753,7 @@ class AwinController extends Controller
         $this->logger->log_message( message: "Reports: Searching for updated ..." );
 
         // Retrieve updated reports from the integration.
-        $updated_reports = $this->integration->getReports( true );
+        $updated_reports = $this->integration->getReports( is_update: true );
 
         // If updated reports are available and not empty.
         if ( $updated_reports[ "success" ] && !empty( $updated_reports[ "data" ] ) )
@@ -777,7 +774,7 @@ class AwinController extends Controller
                     if ( !isset( $firebase_report_awin[ "id" ] ) || !isset( $firebase_report_awin[ "advertiserId" ] ) ) continue;
 
                     // Set empty strings in the updated report to an empty string.
-                    $updated_report = set_empty_string( $updated_report );
+                    $updated_report = set_empty_string( data: $updated_report );
 
                     // Check if the id and advertiserId match the current report.
                     $id             = $firebase_report_awin[ "id"           ] == $updated_report[ "id"           ];
@@ -797,7 +794,7 @@ class AwinController extends Controller
                 }
 
                 // Update the report in the "Triibo-Purchases-Awin" node.
-                $firebase_awin->update( [ $push_awin => $firebase_report_awin ] );
+                $firebase_awin->update( values: [ $push_awin => $firebase_report_awin ] );
 
                 $this->logger->log_message( message: "Reports: Updated transaction | awin ID = {$push_awin}" );
             }
@@ -825,7 +822,7 @@ class AwinController extends Controller
                 }
 
                 // Update the report in the "Triibo-Purchases-Cashback" node.
-                $firebase_cashback->update( [ $push_cash => $firebase_report_cash ] );
+                $firebase_cashback->update( values: [ $push_cash => $firebase_report_cash ] );
 
                 $this->logger->log_message( message: "Reports: Updated transaction | cashback ID = {$push_cash}" );
             }
@@ -865,7 +862,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Copies default images to specific locations within the application.
      *
      * @return  void
@@ -891,7 +887,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * This method handles the uploading process of images by first checking for existing files,
      * generating them if necessary, and then executing the upload to Firebase.
      *
@@ -922,7 +917,6 @@ class AwinController extends Controller
     }
 
     /**
-     * TODO fix code
      * Send images to Firebase Storage
      *
      * This function uploads a set of images to Firebase Storage.
