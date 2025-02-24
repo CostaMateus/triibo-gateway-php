@@ -155,17 +155,24 @@ class AwinIntegration
 
             $count    = count( $response[ "data" ] );
 
-            return collect( $response[ "data" ] )
-                    // ->take( 2 )
-                    ->map( function ( $establishment, $index ) use ( $count )
-                    {
-                        $this->logger->log_message( message: "Establishments: Loading establishment " . ++$index . " of {$count} | ID " . $establishment[ "id" ] );
+            $data     = collect( $response[ "data" ] )
+                        // ->take( 2 )
+                        ->map( function ( $establishment, $index ) use ( $count )
+                        {
+                            $this->logger->log_message( message: "Establishments: Loading establishment " . ++$index . " of {$count} | ID " . $establishment[ "id" ] );
 
-                        $establishment[ "commissionRange" ] = $this->searchEstablishmentsDetails( id: $establishment[ "id" ] );
+                            $establishment[ "commissionRange" ] = $this->searchEstablishmentsDetails( id: $establishment[ "id" ] );
 
-                        return $establishment;
-                    } )
-                    ->toArray();
+                            return $establishment;
+                        } )
+                        ->toArray();
+
+            $this->logger->log_message(
+                message : "Establishments: Loaded...",
+                context : $data,
+            );
+
+            return $data;
         }
 
         return $without_translate
