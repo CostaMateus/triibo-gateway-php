@@ -156,7 +156,7 @@ class AwinIntegration
             $count    = count( $response[ "data" ] );
 
             return collect( $response[ "data" ] )
-                    ->take( 2 )
+                    // ->take( 2 )
                     ->map( function ( $establishment, $index ) use ( $count )
                     {
                         $this->logger->log_message( message: "Establishments: Loading establishment " . ++$index . " of {$count} | ID " . $establishment[ "id" ] );
