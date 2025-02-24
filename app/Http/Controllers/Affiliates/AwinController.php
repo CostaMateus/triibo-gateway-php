@@ -82,7 +82,7 @@ class AwinController extends Controller
         "listaFotos",
         "enableDate",
         "disableDate",
-        "isPublished",
+        // "isPublished",
         "dataInclusao",
         "dataAlteracao",
     ];
