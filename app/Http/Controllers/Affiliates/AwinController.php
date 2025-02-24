@@ -372,6 +372,29 @@ class AwinController extends Controller
                         "to "   . $diff[ "cashbackDefault" ]
                     ]
                 );
+
+                continue;
+            }
+
+            if ( count( $diff ) == 1 && isset( $diff[ "isPublished" ] ) )
+            {
+                $push_id                        = $local_establishment[ "push_id" ];
+                $establishment                  = $firebase_establishments[ $push_id ];
+
+                // Update establishment isPublished.
+                $establishment[ "isPublished" ] = $diff[ "isPublished" ];
+                $establishment_reference->update( values: [ $push_id => $firebase_stablishment ] );
+
+                // Update the local establishment with new isPublished.
+                DB::table( "affiliates_establishments" )
+                    ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
+                    ->update( [ "data" => json_encode( $awin_establishment ) ] );
+
+                $this->logger->log_message(
+                    message : "Establishments: Edited ID = " . $local_establishment[ "push_id" ],
+                    context : [ "isPublished changed from false to true" ]
+                );
+
                 continue;
             }
 
