@@ -352,20 +352,21 @@ class AwinController extends Controller
 
             if ( count( $diff ) == 1 && isset( $diff[ "cashbackDefault" ] ) )
             {
-                $push_id                            = $local_establishment[ "push_id" ];
+                $push_id                            = $local_establishment[ "push_id"      ];
+                $affiliate_id                       = $local_establishment[ "affiliate_id" ];
                 $establishment                      = $firebase_establishments[ $push_id ];
 
                 // Update establishment cashbackDefault.
                 $establishment[ "cashbackDefault" ] = $diff[ "cashbackDefault" ];
-                $establishment_reference->update( values: [ $push_id => $firebase_stablishment ] );
+                $establishment_reference->update( values: [ $push_id => $establishment ] );
 
                 // Update the local establishment with new cashbackDefault.
                 DB::table( "affiliates_establishments" )
-                    ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
+                    ->where( "affiliate_id", $affiliate_id )
                     ->update( [ "data" => json_encode( $awin_establishment ) ] );
 
                 $this->logger->log_message(
-                    message : "Establishments: Edited ID = " . $local_establishment[ "push_id" ],
+                    message : "Establishments: Edited ID = " . $push_id,
                     context : [
                         "Only cashback changed",
                         "from " . $data_establishment[ "cashbackDefault" ],
@@ -376,27 +377,15 @@ class AwinController extends Controller
                 continue;
             }
 
-            if ( count( $diff ) == 1 && isset( $diff[ "isPublished" ] ) )
-            {
-                $push_id                        = $local_establishment[ "push_id" ];
-                $establishment                  = $firebase_establishments[ $push_id ];
-
-                // Update establishment isPublished.
-                $establishment[ "isPublished" ] = $diff[ "isPublished" ];
-                $establishment_reference->update( values: [ $push_id => $firebase_stablishment ] );
-
-                // Update the local establishment with new isPublished.
-                DB::table( "affiliates_establishments" )
-                    ->where( "affiliate_id", $local_establishment[ "affiliate_id" ] )
-                    ->update( [ "data" => json_encode( $awin_establishment ) ] );
-
-                $this->logger->log_message(
-                    message : "Establishments: Edited ID = " . $local_establishment[ "push_id" ],
-                    context : [ "isPublished changed from false to true" ]
-                );
-
-                continue;
-            }
+            // TODO remover
+            $this->updateIsPublished(
+                reference    : $establishment_reference,
+                push_id      : $local_establishment[ "push_id"      ],
+                affiliate_id : $local_establishment[ "affiliate_id" ],
+                awin_data    : $awin_establishment,
+                fb_data      : $firebase_establishments[ $local_establishment[ "push_id" ] ]
+            );
+            // ============
 
             $this->logger->log_message( message: "Establishments: Has changes ID " . $local_establishment[ "push_id" ] );
 
@@ -1018,5 +1007,26 @@ class AwinController extends Controller
         $this->logger->log_message( message: "Images: Sending finished - {$type}..." );
 
         File::deleteDirectory( directory: $local_path, preserve: true );
+    }
+
+
+    private function updateIsPublished( $reference, $push_id, $affiliate_id, $awin_data, $fb_data )
+    {
+        // Update establishment isPublished.
+        $fb_data[ "isPublished" ] = true;
+        $reference->update( values: [ $push_id => $fb_data ] );
+
+        // Update the local establishment with new isPublished.
+        DB::table( "affiliates_establishments" )
+            ->where( "affiliate_id", $affiliate_id )
+            ->update( [ "data" => json_encode( $awin_data ) ] );
+
+        $this->logger->log_message(
+            message : "Establishments: Edited ID = {$push_id}",
+            context : [
+                "isPublished changed from false to true",
+                $fb_data
+           ]
+        );
     }
 }
