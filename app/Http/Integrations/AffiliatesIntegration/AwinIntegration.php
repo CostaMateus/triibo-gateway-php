@@ -156,7 +156,7 @@ class AwinIntegration
             $count    = count( $response[ "data" ] );
 
             return collect( $response[ "data" ] )
-                    // ->take( 5 )
+                    // ->slice( 0, 10 )
                     ->map( function ( $establishment, $index ) use ( $count )
                     {
                         $this->logger->log_message( message: "Establishments: Loading establishment " . ++$index . " of {$count} | ID " . $establishment[ "id" ] );
@@ -1001,7 +1001,7 @@ class AwinIntegration
 
                         if ( isset( $err[ "error" ] ) && $err[ "error" ] === "request.limit.exceeded" )
                         {
-                            $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds..." );
+                            $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry in 10 seconds..." );
 
                             throw new Exception( "request.limit.exceeded" );
                         }
