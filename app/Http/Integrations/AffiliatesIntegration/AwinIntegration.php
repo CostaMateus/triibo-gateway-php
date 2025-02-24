@@ -227,7 +227,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 6,
+                times: 7,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $url )
                 {
@@ -236,7 +236,7 @@ class AwinIntegration
                 when: function ( $e ) use ( $url )
                 {
                     $this->logger->log_exception(
-                        message : "Establishments: Fail searchEstablishments(). Retry in 10 seconds.",
+                        message : "Establishments: Fail searchEstablishments(). Retry in 10 seconds...",
                         method  : "searchEstablishments",
                         type    : "Throwable",
                         e       : $e,
@@ -299,7 +299,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 6,
+                times: 7,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $url, $id )
                 {
@@ -394,7 +394,7 @@ class AwinIntegration
             try
             {
                 $response = retry(
-                    times: 6,
+                    times: 7,
                     sleepMilliseconds: 10000,
                     callback: function () use ( $body )
                     {
@@ -509,7 +509,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 6,
+                times: 7,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $query )
                 {
@@ -906,7 +906,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 6,
+                times: 7,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $url )
                 {
@@ -921,7 +921,7 @@ class AwinIntegration
                 {
                     log_exception(
                         channel : self::LOG_CHANNEL,
-                        message : "Images: Fail saveImage. Retry.",
+                        message : "Images: Fail saveImage. Retry in 10 seconds...",
                         method  : "saveImage",
                         type    : "Throwable",
                         e       : $e,
@@ -987,7 +987,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 6,
+                times: 7,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $body )
                 {
