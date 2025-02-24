@@ -3,10 +3,7 @@
  * Helper functions for various tasks in the application.
  */
 
-use DateTime;
-use DateInterval;
 use App\Models\User;
-use DateTimeImmutable;
 use Illuminate\Support\Str;
 use App\Models\Marketplace\Order;
 use Illuminate\Http\RedirectResponse;
@@ -447,7 +444,7 @@ if ( !function_exists( "convert_delivery_date" ) )
      */
     function convert_delivery_date( string $date_time ) : string
     {
-        return ( new DateTime( $date_time ) )->format( "d/m/Y \à\s H:i" );
+        return ( new \DateTime( $date_time ) )->format( "d/m/Y \à\s H:i" );
     }
 }
 
@@ -1124,7 +1121,7 @@ if ( !function_exists( "get_date_time_unix" ) )
      */
     function get_date_time_unix( string $format = "Y-m-d H:i:s.u", bool $immutable = false ) : int
     {
-        $date = ( !$immutable ) ? new DateTime( date( $format ) ) : new DateTimeImmutable( $format );
+        $date = ( !$immutable ) ? new \DateTime( date( $format ) ) : new \DateTimeImmutable( $format );
         $date = ( int ) $date->format( "Uv" );
 
         return $date;
@@ -1141,8 +1138,8 @@ if ( !function_exists( "get_date_time_unix_interval" ) )
      */
     function get_date_time_unix_interval( string $interval ) : int
     {
-        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $date = $date->add( new DateInterval( $interval ) );
+        $date = new \DateTime( date( "Y-m-d H:i:s.u" ) );
+        $date = $date->add( new \DateInterval( $interval ) );
         $date = ( int ) $date->format( "Uv" );
 
         return $date;
