@@ -249,8 +249,6 @@ class AwinController extends Controller
      */
     private function insertEstablishmentsFirebase()
     {
-        $this->logger->log_message( message: "Establishments: Searching ..." );
-
         // Delete the existing establishments directory.
         $local_path              = public_path( path: self::LC_BASE_PATH . "/establishments" );
         File::deleteDirectory( directory: $local_path, preserve: true );
@@ -263,19 +261,27 @@ class AwinController extends Controller
         $approval_reference      = $db->getReference( path: "/Estabelecimento-Aprovacoes"    );
         $changes_reference       = $db->getReference( path: "/Establishment-changes-request" );
 
-        $this->logger->log_message( message: "Establishments: Filtering firebase..." );
-        // Retrieve establishments from Firebase.
-        $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
-        $this->logger->log_message( message: "Establishments: " . count( $firebase_establishments ) . " filtered from firebase..." );
-
         // Retrieve establishments from Awin.
         $awin_establishments     = $this->integration->getEstablishments();
-        $this->logger->log_message( message: "Establishments: " . count( $awin_establishments ) . " filtered from awin..." );
+        $this->logger->log_message(
+            message : "Establishments: " . count( $awin_establishments ) . " filtered from awin...",
+            context : $awin_establishments,
+        );
+
+        // Retrieve establishments from Firebase.
+        $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
+        $this->logger->log_message(
+            message : "Establishments: " . count( $firebase_establishments ) . " filtered from firebase...",
+            context : $firebase_establishments,
+        );
 
         // Retrieve establishments from local.
         $local_establishments    = DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_establishments    = json_decode( json_encode( $local_establishments ), true );
-        $this->logger->log_message( message: "Establishments: " . count( $local_establishments ) . " filtered from local..." );
+        $this->logger->log_message(
+            message : "Establishments: " . count( $local_establishments ) . " filtered from local...",
+            context : $local_establishments,
+        );
 
         $this->logger->log_message( message: "Establishments: Validating..." );
 
@@ -483,8 +489,6 @@ class AwinController extends Controller
      */
     private function insertPromotionsFirebase()
     {
-        $this->logger->log_message( message: "Promotions: Searching ..." );
-
         // Delete the existing promotions directory.
         $local_path              = public_path( path: self::LC_BASE_PATH . "/promotions" );
         File::deleteDirectory( directory: $local_path, preserve: true );
@@ -498,24 +502,31 @@ class AwinController extends Controller
         $approval_reference      = $db->getReference( path: "/Store-Aprovacoes"      );
         $changes_reference       = $db->getReference( path: "/Store-changes-request" );
 
-        $this->logger->log_message( message: "Promotions: Filtering establishments firebase..." );
+        // Retrieve promotions from Awin.
+        $awin_promotions         = $this->integration->getPromotions();
+        $this->logger->log_message(
+            message : "Promotions: " . count( $awin_promotions ) . " filtered from awin...",
+            context : $awin_promotions,
+        );
+
         // Retrieve establishments from Firebase.
         $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
-        $this->logger->log_message( message: "Promotions: " . count( $firebase_establishments ) . " establishments filtered from firebase..." );
 
         $this->logger->log_message( message: "Promotions: Filtering promotions firebase..." );
         // Retrieve promotions from Firebase.
         $firebase_promotions     = $this->filterPromotions( reference: $promotions_reference );
-        $this->logger->log_message( message: "Promotions: " . count( $firebase_promotions ) . " promotions filtered from firebase..." );
-
-        // Retrieve promotions from Awin.
-        $awin_promotions         = $this->integration->getPromotions();
-        $this->logger->log_message( message: "Promotions: " . count( $awin_promotions ) . " filtered from awin..." );
+        $this->logger->log_message(
+            message : "Promotions: " . count( $firebase_promotions ) . " promotions filtered from firebase...",
+            context : $firebase_promotions,
+        );
 
         // Retrieve promotions from local.
         $local_promotions        = DB::table( "affiliates_promotions" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
         $local_promotions        = json_decode( json_encode( $local_promotions ), true );
-        $this->logger->log_message( message: "Promotions: " . count( $local_promotions ) . " filtered from local..." );
+        $this->logger->log_message(
+            message : "Promotions: " . count( $local_promotions ) . " filtered from local...",
+            context : $local_promotions,
+        );
 
         $this->logger->log_message( message: "Promotions: Validating ..." );
 
