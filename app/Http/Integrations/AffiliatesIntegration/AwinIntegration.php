@@ -227,7 +227,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 3,
+                times: 6,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $url )
                 {
@@ -299,7 +299,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 4,
+                times: 6,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $url, $id )
                 {
@@ -394,8 +394,8 @@ class AwinIntegration
             try
             {
                 $response = retry(
-                    times: 3,
-                    sleepMilliseconds: 1000,
+                    times: 6,
+                    sleepMilliseconds: 10000,
                     callback: function () use ( $body )
                     {
                         $response_2 = Http::withToken( token: $this->token )
@@ -509,8 +509,8 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 3,
-                sleepMilliseconds: 1000,
+                times: 6,
+                sleepMilliseconds: 10000,
                 callback: function () use ( $query )
                 {
                     $response_2 = Http::withToken( token: $this->token )->get( url: "{$this->url_transactions}/{$query}");
@@ -906,8 +906,8 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 3,
-                sleepMilliseconds: 1000,
+                times: 6,
+                sleepMilliseconds: 10000,
                 callback: function () use ( $url )
                 {
                     $response_2 = Http::get( url: $url );
@@ -987,7 +987,7 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 4,
+                times: 6,
                 sleepMilliseconds: 10000,
                 callback: function () use ( $body )
                 {
