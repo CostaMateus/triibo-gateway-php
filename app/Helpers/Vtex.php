@@ -477,6 +477,9 @@ if ( !function_exists( "vtex_append_voltage" ) )
      */
     function vtex_append_voltage( string $short_desc, array $attributes ) : string
     {
+        if ( Str::contains( Str::lower( $short_desc ), "<br><b>voltagem : " ) )
+            return $short_desc;
+
         // Find the voltage attribute, if it exists.
         $volt = current( array_filter( $attributes, function ( $attr )
         {
@@ -487,11 +490,15 @@ if ( !function_exists( "vtex_append_voltage" ) )
         if ( $volt )
         {
             $value = reset( $volt[ "options" ] );
-            $value = in_array( $value, [ "110", "220" ] )
-                        ? "<br><b>Voltagem : {$value}V</b>"
-                        : $value;
 
-            if ( $value !== "NA" ) $short_desc .= $value;
+            if ( in_array( $value, [ "110", "220" ] ) )
+                $value = "{$value}V";
+
+            if ( ( Str::lower( $value ) === "bivolt" ) )
+                $value = "bivolt";
+
+            if ( $value !== "NA" )
+                $short_desc .= "<br><b>Voltagem : {$value}</b>";
         }
 
         return $short_desc;
