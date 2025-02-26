@@ -108,15 +108,15 @@ class ProductController extends VtexController
      */
     public function getProductData( string $sku )
     {
-        $connector    = new ConnectorService( seller: "fast_shop" );
+        $connector  = new ConnectorService( seller: "fast_shop" );
         $connector->enableLogNotify( notify: false );
 
         $service_pr = new ProductService( connector: $connector );
         $service_sm = new FulfillmentService( connector: $connector );
 
-        $data     = $service_pr->getSkuData( sku: $sku );
-        $context  = $service_pr->getSkuContext( sku: $sku );
-        $simulate = $$service_sm->simulate( data: [
+        $data       = $service_pr->getSkuData( sku: $sku );
+        $context    = $service_pr->getSkuContext( sku: $sku );
+        $simulate   = $service_sm->simulate( data: [
             "items" => [ [
                 "id"       => $sku,
                 "quantity" => 1,
@@ -127,10 +127,27 @@ class ProductController extends VtexController
             "selectedSla" => "Normal",
         ] );
 
+        if ( $data[ 0 ] !== 200 || $context[ 0 ] !== 200 || $simulate[ 0 ] !== 200 )
+        {
+            dd( [
+                "data"     => $data,
+                "context"  => $context,
+                "simulate" => $simulate,
+                "mkt"      => null
+            ] );
+        }
+
+        $data        = $data    [ 1 ][ "data" ];
+        $context     = $context [ 1 ][ "data" ];
+        $simulate    = $simulate[ 1 ][ "data" ];
+
+        $mkt_product = vtex_product_to_mkt( $context, $simulate );
+
         dd( [
             "data"     => $data,
             "context"  => $context,
             "simulate" => $simulate,
+            "mkt"      => $mkt_product
         ] );
     }
 }
