@@ -6,6 +6,9 @@ use Throwable;
 use App\Models\Vtex\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Services\Vtex\ProductService;
+use App\Services\Vtex\ConnectorService;
+use App\Services\Vtex\FulfillmentService;
 use App\Http\Controllers\Vtex\VtexController;
 
 class ProductController extends VtexController
@@ -96,5 +99,38 @@ class ProductController extends VtexController
         }
 
         return response()->json( $data, $code );
+    }
+
+    /**
+     *
+     * @param   string  $sku
+     * @return  array
+     */
+    public function getProductData( string $sku )
+    {
+        $connector    = new ConnectorService( seller: "fast_shop" );
+        $connector->enableLogNotify( notify: false );
+
+        $service_pr = new ProductService( connector: $connector );
+        $service_sm = new FulfillmentService( connector: $connector );
+
+        $data     = $service_pr->getSkuData( sku: $sku );
+        $context  = $service_pr->getSkuContext( sku: $sku );
+        $simulate = $$service_sm->simulate( data: [
+            "items" => [ [
+                "id"       => $sku,
+                "quantity" => 1,
+                "seller"   => "1"
+            ] ],
+            "isCheckedIn" => false,
+            "country"     => "BRA",
+            "selectedSla" => "Normal",
+        ] );
+
+        dd( [
+            "data"     => $data,
+            "context"  => $context,
+            "simulate" => $simulate,
+        ] );
     }
 }

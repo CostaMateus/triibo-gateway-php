@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\{ Auth, Route, Artisan };
+use Illuminate\Support\Facades\{ Auth, Route };
+use App\Http\Controllers\Vtex\ProductController;
 use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
 use App\Http\Controllers\{ HomeController, MarketplaceController, UserController };
@@ -21,8 +22,8 @@ Auth::routes( [ "register" => false ] );
 Route::get( "/",            [ HomeController::class, "welcome"    ] )->name( "welcome"     );
 Route::get( "/clear-cache", [ HomeController::class, "clearCache" ] )->name( "clear.cache" );
 
-Route::group( [ "middleware" => "auth" ], function() {
-
+Route::group( [ "middleware" => "auth" ], function()
+{
     Route::get( "/home",         [ HomeController::class, "index"         ] )->name( "home"       );
     Route::get( "/documentacao", [ HomeController::class, "documentation" ] )->name( "docs.index" );
 
@@ -37,6 +38,9 @@ Route::group( [ "middleware" => "auth" ], function() {
         Route::post( "/pedido/aprovar",  [ MarketplaceController::class, "orderApprove" ] )->name( "order.approve" );
         Route::post( "/pedido/cancelar", [ MarketplaceController::class, "orderCancel"  ] )->name( "order.cancel"  );
     } );
+
+    Route::get( "/fast-shop/product/{sku}", [ ProductController::class, "getProductData" ] );
+
 } );
 
 
