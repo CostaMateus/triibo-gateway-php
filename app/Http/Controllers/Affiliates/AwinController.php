@@ -115,8 +115,8 @@ class AwinController extends Controller
 
         self::initDate();
 
-        foreach ( self::TYPES as $type )
-            File::ensureDirectoryExists( path: public_path( path: self::LC_BASE_PATH . "/{$type}" ) );
+        File::ensureDirectoryExists( path: public_path( path: "images/affiliates/awin/establishments" ) );
+        File::ensureDirectoryExists( path: public_path( path: "images/affiliates/awin/promotions"     ) );
     }
 
     /**
