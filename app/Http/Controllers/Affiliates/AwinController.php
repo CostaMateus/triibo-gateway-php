@@ -261,26 +261,13 @@ class AwinController extends Controller
         $changes_reference       = $db->getReference( path: "/Establishment-changes-request" );
 
         // Retrieve establishments from Awin.
-        $awin_establishments     = $this->integration->getEstablishments();
-        $this->logger->log_message(
-            message : "Establishments: " . count( $awin_establishments ) . " filtered from awin...",
-            context : $awin_establishments,
-        );
+        $awin_establishments     = $this->get_awin_establishments();
 
         // Retrieve establishments from Firebase.
-        $firebase_establishments = $this->filterEstablishments( reference: $establishment_reference );
-        $this->logger->log_message(
-            message : "Establishments: " . count( $firebase_establishments ) . " filtered from firebase...",
-            context : $firebase_establishments,
-        );
+        $firebase_establishments = $this->get_firebase_establishments( reference: $establishment_reference );
 
         // Retrieve establishments from local.
-        $local_establishments    = DB::table( "affiliates_establishments" )->where( "origin", "awin" )->get()->keyBy( "origin_id" )->toArray();
-        $local_establishments    = json_decode( json_encode( $local_establishments ), true );
-        $this->logger->log_message(
-            message : "Establishments: " . count( $local_establishments ) . " filtered from local...",
-            context : $local_establishments,
-        );
+        $local_establishments    = $this->get_local_establishments();
 
         $this->logger->log_message( message: "Establishments: Validating..." );
 
@@ -996,5 +983,55 @@ class AwinController extends Controller
         $this->logger->log_message( message: "Images: Sending finished - {$type}..." );
 
         File::deleteDirectory( directory: $local_path, preserve: true );
+    }
+
+    private function get_awin_establishments() : array
+    {
+        $establishments = $this->integration->getEstablishments();
+        $count          = count( $establishments );
+
+        $this->logger->log_message(
+            message : "Establishments: {$count} filtered from awin...",
+            context : $establishments,
+        );
+
+        return $establishments;
+    }
+
+    private function get_firebase_establishments( Reference $reference ) : array
+    {
+        $establishments = $this->filterEstablishments( reference: $reference );
+        $count          = count( $establishments );
+
+        $this->logger->log_message(
+            message : "Establishments: {$count} filtered from firebase...",
+            context : $establishments,
+        );
+
+        return $establishments;
+    }
+
+    private function get_local_establishments() : array
+    {
+        $establishments = DB::table( "affiliates_establishments" )
+                            ->where( "origin", "awin" )
+                            ->get( [ "origin_id", "affiliate_id", "push_id", "name", "data" ] )
+                            ->keyBy( "origin_id" )
+                            ->map( function ( $est )
+                            {
+                                $est->data = json_decode( $est->data, true );
+                                return $est;
+                            } );
+
+        $establishments = json_decode( $establishments, true );
+
+        $count          = count( $establishments );
+
+        $this->logger->log_message(
+            message : "Establishments: {$count} filtered from local...",
+            context : $establishments,
+        );
+
+        return $establishments;
     }
 }
