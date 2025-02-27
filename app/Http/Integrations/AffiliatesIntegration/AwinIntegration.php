@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use Gregwar\Image\Image;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use App\Console\Commands\Affiliates\Awin\ProcessDataAwin;
 
 class AwinIntegration
@@ -141,6 +142,30 @@ class AwinIntegration
      */
     public function getEstablishments( bool $without_translate = false ) : array
     {
+        if ( config( "app.env" ) === "local" )
+        {
+            if ( empty( $this->establishments ) )
+            {
+                // establishments in the awin format
+                $establishments = Storage::get( "awin/establishments_awin.json" );
+                $establishments = json_decode( $establishments,  true );
+
+                return $establishments;
+            }
+
+            if ( $without_translate )
+                return $this->establishments;
+
+            // establishments in the triibo format
+            $establishments = Storage::get( "awin/establishments_triibo.json" );
+            $establishments = json_decode( $establishments, true );
+
+            return $establishments;
+        }
+
+        // ==================================
+        // production
+
         if ( empty( $this->establishments ) )
         {
             $response = $this->searchEstablishments();
