@@ -261,14 +261,14 @@ class AwinController extends Controller
         $reference_changes       = $db->getReference( path: "/Establishment-changes-request" );
 
         // Retrieve establishments from Awin.
-        $establishments_awin     = $this->get_awin_establishments();
+        $establishments_awin     = $this->getAwinEstablishments();
 
         // Retrieve establishments from Firebase.
-        $establishments_firebase = $this->get_firebase_establishments( reference: $reference_establishment );
+        $establishments_firebase = $this->getFirebaseEstablishments( reference: $reference_establishment );
         $establishments_fb_aux   = [];
 
         // Retrieve establishments from local.
-        $establishments_local    = $this->get_local_establishments();
+        $establishments_local    = $this->getLocalEstablishments();
 
         $this->logger->log_message( message: "Establishments: Validating..." );
 
@@ -302,6 +302,9 @@ class AwinController extends Controller
                     $this->logger->log_message( message: "Establishments: Disabling ID {$push}" );
                 }
 
+                if ( $is_duplicate )
+                    unset( $establishments_firebase[ $push ] );
+
                 continue;
             }
 
@@ -309,141 +312,78 @@ class AwinController extends Controller
         }
 
         // Process Awin establishments for addition or update.
-        foreach ( $establishments_awin as $id => $establishment_aw )
+        foreach ( $establishments_awin as $partner_id => $establishment_aw )
         {
-            if ( !isset( $establishments_local[ $id ] ) )
-            {
-                // Add new establishment to local data array.
-                $local_data[] = [
-                    "origin_id"    => $id,
-                    "origin"       => $establishment_aw[ "origin" ],
-                    "affiliate_id" => $establishment_aw[ "origin" ] . $id,
-                    "name"         => $establishment_aw[ "nome"   ],
-                    "push_id"      => null,
-                    "data"         => json_encode( $establishment_aw ),
-                    "created_at"   => now(),
-                    "updated_at"   => now(),
-                ];
+            list( $firebase_est, $firebase_push ) = $this->checkFirebaseEstablishment( id: $partner_id, establishments: $establishments_firebase );
 
-                continue;
+            // verifica se a loja Awin existe no local
+            if ( !isset( $establishments_local[ $partner_id ] ) )
+            {
+                // loja não existe no firebase, criar pedido de criação de curadoria.
+                if ( $firebase_est === null )
+                {
+                    $this->processNewFirebase(
+                        id            : $partner_id,
+                        establishment : $establishment_aw,
+                        action        : "create"
+                    );
+                }
+
+                // loja existe no firebase, verificar diferenças e  criar registro local.
+                else
+                {
+                    $establishment_aw[ "id" ] = $firebase_push;
+
+                    $this->createOrUpdateLocalEstablishment(
+                        id            : $partner_id,
+                        push          : $firebase_push,
+                        establishment : $establishment_aw,
+                        action        : "create"
+                    );
+
+                    $this->processEditFirebase(
+                        push          : $firebase_push,
+                        establishment : $establishment_aw,
+                        compare       : $firebase_est,
+                        reference     : $reference_changes
+                    );
+                }
             }
 
-            $local_affiliate_id  = $establishments_local[ $id ][ "affiliate_id" ];
-            $local_push_id       = $establishments_local[ $id ][ "push_id"      ];
-            $local_name          = $establishments_local[ $id ][ "name"         ];
-
-            $establishment_local = json_decode( $establishments_local[ $id ][ "data" ], true );
-
-            if ( isset( $establishment_aw[ "cashbackDefault" ] ) )
-                $establishment_aw[ "cashbackDefault" ]    = ( float ) $establishment_aw[ "cashbackDefault" ];
-
-            if ( isset( $establishment_local[ "cashbackDefault" ] ) )
-                $establishment_local[ "cashbackDefault" ] = ( float ) $establishment_local[ "cashbackDefault" ];
-
-            // Compare Awin and local establishments and get differences.
-            $diff = array_diff_assoc_recursive( $establishment_aw, $establishment_local );
-
-            // Remove ignored fields from the differences.
-            foreach ( self::IGNORE_ESTAB_FIELDS as $field )
-                unset( $diff[ $field ] );
-
-            // Skip if there are no changes
-            if ( empty( $diff ) ) continue;
-
-            $this->logger->log_message( message: "Establishments: Has changes ID {$local_push_id}" );
-
-            // Add edit approval request in Firebase.
-            $db->getReference( path: "/Estabelecimento-Aprovacoes/{$local_push_id}" )
-               ->set( value: [
-                "requesterId"       => self::REQUESTER_ID,
-                "id"                => $local_push_id,
-                "establishmentName" => $local_name,
-                "lastModified"      => self::$date,
-                "requestDate"       => self::$date,
-                "status"            => "aberto",
-                "action"            => "edit",
-                "origin"            => "awin"
-            ] );
-
-            // Get pending changes
-            $past_diffs       = invalidate_past_establishment_changes( reference: $reference_changes, push_id: $local_push_id );
-
-            if ( !empty( $past_diffs ) )
-                $this->logger->log_message( message: "Establishments: Invalidating past changes ID " . $local_push_id );
-
-            $current_changes  = array_merge( $past_diffs, $diff );
-
-            // Add edit change request in Firebase.
-            $new_push_changes = $reference_changes->push()->getKey();
-            $reference_changes->update( values: [ $new_push_changes => [
-                "id"                => $new_push_changes,
-                "createDate"        => self::$date,
-                "establishmentId"   => $local_push_id,
-                "establishmentName" => $local_name,
-                "requesterUid"      => self::REQUESTER_ID,
-                "type"              => "validation",
-                "changedFields"     => $current_changes,
-            ] ] );
-
-            // Update the local establishment with the new data.
-            DB::table( "affiliates_establishments" )
-                ->where( "affiliate_id", $local_affiliate_id )
-                ->update( [ "data" => json_encode( $establishment_aw ) ] );
-
-            $this->logger->log_message(
-                message : "Establishments: Edited ID " . $local_push_id,
-                context : [
-                    "Need approval ID "  . $local_push_id,
-                    "Change Request ID " . $new_push_changes,
-                    $current_changes
-                ]
-            );
-        }
-
-        // Insert new establishments into the local database if any.
-        if ( !empty( $local_data ) )
-        {
-            // Add new establishments to Firebase and update local database with push IDs.
-            foreach ( $local_data as $establishment )
+            // loja existe no local
+            else
             {
-                // Add new establishment in Firebase.
-                $new_push             = $reference_establishment->push()->getKey();
+                $affiliate_id = $establishment_aw[ "origin" ] . $partner_id;
 
-                $aux                  = $establishments_awin[ $establishment[ "origin_id" ] ];
-                $aux[ "id"          ] = $new_push;
-                $aux[ "isPublished" ] = false;
+                // loja não existe no firebase, criar pedido de criação de curadoria.
+                if ( $firebase_est === null )
+                {
+                    $this->processNewFirebase(
+                        id            : $partner_id,
+                        establishment : $establishment_aw,
+                        action        : "update"
+                    );
+                }
 
-                $reference_establishment->update( values: [ $new_push => $aux ] );
+                // loja existe no firebase, verificar diferenças
+                else
+                {
+                    $establishment_lc         = json_decode( $establishment_lc[ "data" ], true );
 
-                // Add create approval request in Firebase.
-                $db->getReference( path: "/Estabelecimento-Aprovacoes/{$new_push}" )
-                   ->set( value: [
-                    "requesterId"       => self::REQUESTER_ID,
-                    "id"                => $new_push,
-                    "establishmentName" => $establishment[ "name" ],
-                    "lastModified"      => self::$date,
-                    "requestDate"       => self::$date,
-                    "status"            => "aberto",
-                    "action"            => "create",
-                    "origin"            => "awin",
-                ] );
+                    $establishment_lc[ "id" ] = $firebase_push;
+                    $establishment_aw[ "id" ] = $firebase_push;
+                    // $establishment_local[ "push_id" ] = $firebase_push;
 
-                $this->logger->log_message(
-                    message : "Establishments: Created ID = " . $new_push,
-                    context : [ "Need approval ID = " . $new_push ]
-                );
-
-                $establishment[ "push_id" ] = $new_push;
-                $establishment[ "data"    ] = json_encode( $aux );
-
-                DB::table( "affiliates_establishments" )->insert( $establishment );
+                    $this->processEditFirebase(
+                        push          : $firebase_push,
+                        establishment : $establishment_aw,
+                        compare       : $establishment_lc,
+                        reference     : $reference_changes,
+                        partner_id    : $partner_id,
+                    );
+                }
             }
-
-            $count = count( $local_data );
-
-            $this->logger->log_message( message: "Establishments: Added {$count} new establishments in the local table" );
         }
-
     }
 
     /**
@@ -476,18 +416,18 @@ class AwinController extends Controller
         $reference_changes       = $db->getReference( path: "/Store-changes-request" );
 
         // Retrieve promotions from Awin.
-        $promotions_awin         = $this->get_awin_promotions();
+        $promotions_awin         = $this->getAwinPromotions();
 
         // Retrieve establishments from Firebase.
-        $establishments_firebase = $this->get_firebase_establishments( reference: $reference_establishment );
+        $establishments_firebase = $this->getFirebaseEstablishments( reference: $reference_establishment );
 
         $this->logger->log_message( message: "Promotions: Filtering promotions firebase..." );
 
         // Retrieve promotions from Firebase.
-        $promotions_firebase     = $this->get_firebase_promotions( reference: $reference_promotions );
+        $promotions_firebase     = $this->getFirebasePromotions( reference: $reference_promotions );
 
         // Retrieve promotions from local.
-        $promotions_local        = $this->get_local_promotions();
+        $promotions_local        = $this->getLocalPromotions();
 
         $this->logger->log_message( message: "Promotions: Validating ..." );
 
@@ -960,7 +900,7 @@ class AwinController extends Controller
 
     // ============================================================================================================
 
-    private function get_awin_establishments() : array
+    private function getAwinEstablishments() : array
     {
         $establishments = $this->integration->getEstablishments();
         $count          = count( $establishments );
@@ -973,7 +913,7 @@ class AwinController extends Controller
         return $establishments;
     }
 
-    private function get_firebase_establishments( Reference $reference ) : array
+    private function getFirebaseEstablishments( Reference $reference ) : array
     {
         $establishments = $this->filterEstablishments( reference: $reference );
         $count          = count( $establishments );
@@ -986,7 +926,7 @@ class AwinController extends Controller
         return $establishments;
     }
 
-    private function get_local_establishments() : array
+    private function getLocalEstablishments() : array
     {
         $establishments = DB::table( "affiliates_establishments" )
                             ->where( "origin", "awin" )
@@ -1009,7 +949,7 @@ class AwinController extends Controller
         return $establishments;
     }
 
-    private function get_awin_promotions() : array
+    private function getAwinPromotions() : array
     {
         $promotions = $this->integration->getPromotions();
         $count      = count( $promotions );
@@ -1022,7 +962,7 @@ class AwinController extends Controller
         return $promotions;
     }
 
-    private function get_firebase_promotions( Reference $reference ) : array
+    private function getFirebasePromotions( Reference $reference ) : array
     {
         $promotions = $this->filterPromotions( reference: $reference );
         $count      = count( $promotions );
@@ -1035,7 +975,7 @@ class AwinController extends Controller
         return $promotions;
     }
 
-    private function get_local_promotions() : array
+    private function getLocalPromotions() : array
     {
         $promotions = DB::table( "affiliates_promotions" )
                         ->where("origin", "awin")
@@ -1056,5 +996,183 @@ class AwinController extends Controller
         );
 
         return $promotions;
+    }
+
+    private function checkFirebaseEstablishment( int $id, array $establishments ) : array
+    {
+        $firebase_est  = null;
+        $firebase_push = null;
+
+        // verifica se a loja Awin existe no firebase
+        foreach ( $establishments as $push => $estab )
+        {
+            if ( isset( $estab[ "partnerEstablishmentId" ] ) && $estab[ "partnerEstablishmentId" ] == $id )
+            {
+                $firebase_est  = $estab;
+                $firebase_push = $push;
+                break;
+            }
+        }
+
+        return [
+            $firebase_est,
+            $firebase_push,
+        ];
+    }
+
+
+
+    private function processNewFirebase( int $id, array $establishment, string $action )
+    {
+        // Add new establishment in Firebase.
+        $new_push = $this->createFirebaseEstablishment( establishment: $establishment );
+
+        // Add create approval request in Firebase.
+        $this->createApprovalRequest(
+            push   : $new_push,
+            name   : $establishment[ "nome" ],
+            action : "create"
+        );
+
+        $this->createOrUpdateLocalEstablishment(
+            id            : $id,
+            push          : $new_push,
+            establishment : $establishment,
+            action        : $action
+        );
+    }
+
+    private function processEditFirebase( string $push, array $establishment, array $compare, Reference $reference, int $partner_id = null )
+    {
+        // Compare Awin and local establishments and get differences.
+        $diff = array_diff_assoc_recursive( $establishment, $compare );
+
+        // Remove ignored fields from the differences.
+        foreach ( self::IGNORE_ESTAB_FIELDS as $field )
+            unset( $diff[ $field ] );
+
+        if ( !empty( $diff ) )
+        {
+            // Add edit approval request in Firebase.
+            $this->createApprovalRequest(
+                push   : $push,
+                name   : $establishment[ "nome" ],
+                action : "edit"
+            );
+
+            // Get pending changes
+            $past_diffs      = invalidate_past_establishment_changes( reference: $reference, push_id: $push );
+            $current_changes = array_merge( $past_diffs, $diff );
+
+            // Add edit change request in Firebase.
+            $this->createChangesRequest(
+                push    : $push,
+                name    : $establishment[ "nome" ],
+                changes : $current_changes
+            );
+
+            if ( $partner_id !== null )
+            {
+                $this->createOrUpdateLocalEstablishment(
+                    id            : $partner_id,
+                    push          : $push,
+                    establishment : $establishment,
+                    action        : "update"
+                );
+            }
+        }
+    }
+
+    private function createFirebaseEstablishment( array &$establishment ) : string
+    {
+        $reference = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
+        $new_push  = $reference->push()->getKey();
+
+        $establishment[ "id"          ] = $new_push;
+        $establishment[ "isPublished" ] = false;
+
+        $reference->update( values: [ $new_push => $establishment ] );
+
+        $this->logger->log_message( message : "Establishments: Created ID = {$new_push}" );
+
+        return $new_push;
+    }
+
+    private function createApprovalRequest( string $push, string $name, string $action ): void
+    {
+        Firebase::database()
+            ->getReference( path: "/Estabelecimento-Aprovacoes/{$push}" )
+            ->set( value: [
+                "requesterId"       => self::REQUESTER_ID,
+                "id"                => $push,
+                "establishmentName" => $name,
+                "lastModified"      => self::$date,
+                "requestDate"       => self::$date,
+                "status"            => "aberto",
+                "action"            => $action,
+                "origin"            => "awin"
+            ] );
+
+        $this->logger->log_message( message : "Establishments: Need approval ID = {$new_push}" );
+    }
+
+    private function createChangesRequest( string $push, string $name, array $changes ) : void
+    {
+        $reference = Firebase::database()->getReference( path: "//Establishment-changes-request" );
+        $new_push  = $reference->push()->getKey();
+
+        // Add edit change request in Firebase.
+        $reference->update( values: [
+            $new_push => [
+                "id"                => $new_push,
+                "createDate"        => self::$date,
+                "establishmentId"   => $push,
+                "establishmentName" => $name,
+                "requesterUid"      => self::REQUESTER_ID,
+                "type"              => "validation",
+                "changedFields"     => $changes,
+            ]
+        ] );
+
+        $this->logger->log_message(
+            message : "Establishments: Edited ID " . $push,
+            context : [
+                "Need approval ID "  . $push,
+                "Change Request ID " . $new_push,
+                $changes
+            ]
+        );
+    }
+
+    private function createOrUpdateLocalEstablishment( int $id, string $push, array $establishment, string $action ) : void
+    {
+        $affiliate_id = $establishment[ "origin" ] . $id;
+
+        $query = DB::table( "affiliates_establishments" );
+
+        if ( $action == "create" )
+        {
+            $query->insert( [
+                "origin_id"    => $id,
+                "origin"       => $establishment[ "origin" ],
+                "name"         => $establishment[ "nome"   ],
+                "affiliate_id" => $affiliate_id,
+                "push_id"      => $push,
+                "data"         => json_encode( $establishment ),
+                "created_at"   => now(),
+                "updated_at"   => now(),
+            ] );
+        }
+        elseif ( $action == "update" )
+        {
+            $query->where( "affiliate_id", $affiliate_id )
+                ->update( [
+                "origin_id" => $id,
+                "origin"    => $establishment[ "origin" ],
+                "name"      => $establishment[ "nome"   ],
+                "push_id"   => $push,
+                "data"      => json_encode( $establishment ),
+            ] );
+        }
     }
 }
