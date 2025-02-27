@@ -2,9 +2,6 @@
 
 namespace App\Http\Integrations\AffiliatesIntegration;
 
-use DateTime;
-use Exception;
-use Throwable;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
 use Illuminate\Support\Str;
@@ -247,7 +244,7 @@ class AwinIntegration
                 }
             );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             $this->logger->log_exception(
                 message : "Establishments: Fail searchEstablishments(). Catch.",
@@ -313,13 +310,13 @@ class AwinIntegration
                         {
                             $this->logger->log_message( message: "Establishments: Request limit exceeded. Retry ID {$id} in 10 seconds..." );
 
-                            throw new Exception( "request.limit.exceeded" );
+                            throw new \Exception( "request.limit.exceeded" );
                         }
                     }
 
                     return $response_2;
                 },
-                when: function ( Throwable $e ) use ( $url, $id )
+                when: function ( \Throwable $e ) use ( $url, $id )
                 {
                     if ( $e->getMessage() !== "request.limit.exceeded" )
                     {
@@ -336,7 +333,7 @@ class AwinIntegration
                 }
             );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             $this->logger->log_exception(
                 message: "Establishments: Fail searchEstablishmentsDetails ID = {$id}. Catch.",
@@ -410,13 +407,13 @@ class AwinIntegration
                             {
                                 $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry ID {$id} in 10 seconds..." );
 
-                                throw new Exception( "request.limit.exceeded" );
+                                throw new \Exception( "request.limit.exceeded" );
                             }
                         }
 
                         return $response_2;
                     },
-                    when: function ( Throwable $e ) use ( $body, $id )
+                    when: function ( \Throwable $e ) use ( $body, $id )
                     {
                         if ( $e->getMessage() !== "request.limit.exceeded" )
                         {
@@ -436,7 +433,7 @@ class AwinIntegration
                     }
                 );
             }
-            catch ( Throwable $e )
+            catch ( \Throwable $e )
             {
                 $this->logger->log_exception(
                     message: "Promotions: Fail searchPromotions ID = {$id}. Catch.",
@@ -523,13 +520,13 @@ class AwinIntegration
                         {
                             $this->logger->log_message( message: "Reports: Request limit exceeded. Retry in 10 seconds..." );
 
-                            throw new Exception( "request.limit.exceeded" );
+                            throw new \Exception( "request.limit.exceeded" );
                         }
                     }
 
                     return $response_2;
                 },
-                when: function ( Throwable $e ) use ( $query )
+                when: function ( \Throwable $e ) use ( $query )
                 {
                     if ( $e->getMessage() !== "request.limit.exceeded" )
                     {
@@ -546,7 +543,7 @@ class AwinIntegration
                 }
             );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             $this->logger->log_exception(
                 message: "Reports: Fail searchReports. Catch.",
@@ -673,6 +670,11 @@ class AwinIntegration
             if ( isset( $establishment[ "commissionRange" ] ) )
                 $cashback = get_cashback( data: $establishment[ "commissionRange" ] );
 
+            $name                  = $establishment[ "name" ];
+            $name                  = explode( "BR",       $name )[ 0 ];
+            $name                  = explode( "(Global)", $name )[ 0 ];
+            $name                  = explode( "Brazil",   $name )[ 0 ];
+
             $aux_name              = Str::slug( title: strtolower( $establishment[ "name" ] ) );
 
             $image_name            = "awin_{$id}_{$aux_name}.png";
@@ -693,7 +695,7 @@ class AwinIntegration
                 "endereco"               => "Brasil",
                 "lat"                    => -15.52047783763576,
                 "long"                   => -48.015408891158984,
-                "nome"                   => explode( " BR", $establishment[ "name" ] )[ 0 ],
+                "nome"                   => trim( $name ),
                 "descricao"              => $establishment[ "description" ],
                 "email"                  => "contato@triibo.com.br",
                 "contatos"               => [ "+55 (11) 94496-5799" ],
@@ -917,7 +919,7 @@ class AwinIntegration
 
                     return $response_2;
                 },
-                when: function ( Throwable $e ) use ( $url, $full_path, $image_name )
+                when: function ( \Throwable $e ) use ( $url, $full_path, $image_name )
                 {
                     log_exception(
                         channel : self::LOG_CHANNEL,
@@ -936,7 +938,7 @@ class AwinIntegration
                 }
             );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             log_exception(
                 channel : self::LOG_CHANNEL,
@@ -1003,13 +1005,13 @@ class AwinIntegration
                         {
                             $this->logger->log_message( message: "Promotions: Request limit exceeded. Retry in 10 seconds..." );
 
-                            throw new Exception( "request.limit.exceeded" );
+                            throw new \Exception( "request.limit.exceeded" );
                         }
                     }
 
                     return $response_2;
                 },
-                when: function ( Throwable $e ) use ( $body, $id )
+                when: function ( \Throwable $e ) use ( $body, $id )
                 {
                     if ( $e->getMessage() !== "request.limit.exceeded" )
                     {
@@ -1026,7 +1028,7 @@ class AwinIntegration
                 }
             );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             $this->logger->log_exception(
                 message: "Promotions: Fail urlTracking ID = {$id}. Catch.",
