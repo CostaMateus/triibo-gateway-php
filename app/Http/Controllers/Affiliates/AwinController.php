@@ -265,6 +265,7 @@ class AwinController extends Controller
 
         // Retrieve establishments from Firebase.
         $establishments_firebase = $this->get_firebase_establishments( reference: $reference_establishment );
+        $establishments_fb_aux   = [];
 
         // Retrieve establishments from local.
         $establishments_local    = $this->get_local_establishments();
@@ -274,14 +275,13 @@ class AwinController extends Controller
         // Disable Firebase establishments not present in Awin establishments.
         foreach ( $establishments_firebase as $push => $establishment_fb )
         {
-            if ( !isset( $establishments_awin[ $establishment_fb[ "partnerEstablishmentId" ] ] ) )
+            $partner_id   = $establishment_fb[ "partnerEstablishmentId" ];
+            $is_duplicate = in_array( $partner_id, $establishments_fb_aux );
+
+            if ( !isset( $establishments_awin[ $partner_id ] ) || $is_duplicate )
             {
                 if ( $establishment_fb[ "isPublished" ] )
                 {
-                    $establishment_fb[ "isPublished" ] = false;
-
-                    $reference_establishment->update( values: [ $push => $establishment_fb ] );
-
                     $approval = $db->getReference( path: "/Estabelecimento-Aprovacoes/{$push}" )->getValue();
 
                     if ( $approval )
@@ -295,14 +295,17 @@ class AwinController extends Controller
                         $this->logger->log_message( message: "Establishments: Canceling open curatorship of ID {$push}" );
                     }
 
+                    $establishment_fb[ "isPublished" ] = false;
+
+                    $reference_establishment->update( values: [ $push => $establishment_fb ] );
+
                     $this->logger->log_message( message: "Establishments: Disabling ID {$push}" );
                 }
+
+                continue;
             }
-            else
-            {
-                $establishment_fb[ "isPublished" ] = true;
-                $reference_establishment->update( values: [ $push => $establishment_fb ] );
-            }
+
+            $establishments_fb_aux[] = $partner_id;
         }
 
         // Process Awin establishments for addition or update.
@@ -332,13 +335,13 @@ class AwinController extends Controller
             $establishment_local = json_decode( $establishments_local[ $id ][ "data" ], true );
 
             if ( isset( $establishment_aw[ "cashbackDefault" ] ) )
-                $establishment_aw[ "cashbackDefault" ] = ( float ) $establishment_aw[ "cashbackDefault" ];
+                $establishment_aw[ "cashbackDefault" ]    = ( float ) $establishment_aw[ "cashbackDefault" ];
 
             if ( isset( $establishment_local[ "cashbackDefault" ] ) )
                 $establishment_local[ "cashbackDefault" ] = ( float ) $establishment_local[ "cashbackDefault" ];
 
             // Compare Awin and local establishments and get differences.
-            $diff                = array_diff_assoc_recursive( $establishment_aw, $establishment_local );
+            $diff = array_diff_assoc_recursive( $establishment_aw, $establishment_local );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_ESTAB_FIELDS as $field )
@@ -346,32 +349,6 @@ class AwinController extends Controller
 
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
-
-            if ( count( $diff ) == 1 && isset( $diff[ "cashbackDefault" ] ) )
-            {
-                $establishment = $establishments_firebase[ $local_push_id ];
-
-                // Update establishment cashbackDefault.
-                $establishment[ "cashbackDefault" ] = $diff[ "cashbackDefault" ];
-
-                $reference_establishment->update( values: [ $local_push_id => $establishment ] );
-
-                // Update the local establishment with new cashbackDefault.
-                DB::table( "affiliates_establishments" )
-                    ->where( "affiliate_id", $local_affiliate_id )
-                    ->update( [ "data" => json_encode( $establishment_aw ) ] );
-
-                $this->logger->log_message(
-                    message : "Establishments: Edited ID = " . $local_push_id,
-                    context : [
-                        "Only cashback changed",
-                        "from " . $establishment_local[ "cashbackDefault" ],
-                        "to "   . $diff[ "cashbackDefault" ]
-                    ]
-                );
-
-                continue;
-            }
 
             $this->logger->log_message( message: "Establishments: Has changes ID {$local_push_id}" );
 
@@ -466,6 +443,7 @@ class AwinController extends Controller
 
             $this->logger->log_message( message: "Establishments: Added {$count} new establishments in the local table" );
         }
+
     }
 
     /**
@@ -923,7 +901,7 @@ class AwinController extends Controller
      * @param   string  $type           A string indicating the type of upload.
      * @return  void
      */
-    private function insertImagesFirebase( array $images, string $local_path, string $firebase_path, string $type )
+    private function insertImagesFirebase( array $images, string $local_path, string $firebase_path, string $type ) : void
     {
         // Initialize Firebase storage and get the storage bucket.
         $storage      = Firebase::storage();
