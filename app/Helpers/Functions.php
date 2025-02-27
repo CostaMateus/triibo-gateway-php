@@ -1165,7 +1165,7 @@ if ( !function_exists( "clear_directory" ) )
 if ( !function_exists( "cashback_float" ) )
 {
     /**
-     * Undocumented function
+     * Convert cashback to float.
      *
      * @param   array   $establishment
      * @return  void
@@ -1174,5 +1174,26 @@ if ( !function_exists( "cashback_float" ) )
     {
         if ( isset( $establishment[ "cashbackDefault" ] ) )
             $establishment[ "cashbackDefault" ] = ( float ) $establishment[ "cashbackDefault" ];
+    }
+}
+
+if ( !function_exists( "update_local_establishment" ) )
+{
+    /**
+     * Updates the local establishment.
+     *
+     * @param   string  $affiliate_id
+     * @param   string  $push_id
+     * @param   array   $establishment
+     * @return  void
+     */
+    function update_local_establishment( string $affiliate_id, string $push_id, array $establishment ) : void
+    {
+        DB::table( "affiliates_establishments" )
+            ->where( "affiliate_id", $affiliate_id )
+            ->update( [
+                "push_id" => $push_id,
+                "data"    => json_encode( $establishment )
+            ] );
     }
 }
