@@ -1145,3 +1145,34 @@ if ( !function_exists( "get_date_time_unix_interval" ) )
         return $date;
     }
 }
+
+if ( !function_exists( "clear_directory" ) )
+{
+    /**
+     * Clear directory.
+     *
+     * @param   string  $path
+     * @return  void
+     */
+    function clear_directory( string $path ) : void
+    {
+        $directory = public_path( path: $path );
+
+        File::deleteDirectory( directory: $directory, preserve: true );
+    }
+}
+
+if ( !function_exists( "cashback_float" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   array   $establishment
+     * @return  void
+     */
+    function cashback_float( array &$establishment ) : void
+    {
+        if ( isset( $establishment[ "cashbackDefault" ] ) )
+            $establishment[ "cashbackDefault" ] = ( float ) $establishment[ "cashbackDefault" ];
+    }
+}
