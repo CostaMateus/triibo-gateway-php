@@ -368,8 +368,7 @@ class AwinController extends Controller
                 // loja existe no firebase, verificar diferenças
                 else
                 {
-                    $establishment_lc         = $establishments_local[ $partner_id ];
-                    $establishment_lc         = json_decode( $establishment_lc[ "data" ], true );
+                    $establishment_lc         = $establishments_local[ $partner_id ][ "data" ];
 
                     $establishment_lc[ "id" ] = $firebase_push;
                     $establishment_aw[ "id" ] = $firebase_push;
