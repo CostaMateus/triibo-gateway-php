@@ -156,11 +156,13 @@ class AwinIntegration
             if ( $without_translate )
                 return $this->establishments;
 
-            // establishments in the triibo format
-            $establishments = Storage::get( "awin/establishments_triibo.json" );
-            $establishments = json_decode( $establishments, true );
+            return $this->translateEstablishments( data: $this->establishments );
 
-            return $establishments;
+            // // establishments in the triibo format
+            // $establishments = Storage::get( "awin/establishments_triibo.json" );
+            // $establishments = json_decode( $establishments, true );
+
+            // return $establishments;
         }
 
         // ==================================
