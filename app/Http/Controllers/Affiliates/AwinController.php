@@ -1113,7 +1113,7 @@ class AwinController extends Controller
                 "origin"            => "awin"
             ] );
 
-        $this->logger->log_message( message : "Establishments: Need approval ID = {$new_push}" );
+        $this->logger->log_message( message : "Establishments: Need approval ID = {$push}" );
     }
 
     private function createChangesRequest( string $push, string $name, array $changes ) : void
