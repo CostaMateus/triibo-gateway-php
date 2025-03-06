@@ -1115,7 +1115,7 @@ class AwinController extends Controller
 
     private function createChangesRequest( string $push, string $name, array $changes ) : void
     {
-        $reference = Firebase::database()->getReference( path: "//Establishment-changes-request" );
+        $reference = Firebase::database()->getReference( path: "/Establishment-changes-request" );
         $new_push  = $reference->push()->getKey();
 
         // Add edit change request in Firebase.
