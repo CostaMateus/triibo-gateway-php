@@ -82,7 +82,7 @@ class AwinController extends Controller
         "listaFotos",
         "enableDate",
         "disableDate",
-        // "isPublished",
+        // "isPublished", // TODO validar
         "dataInclusao",
         "dataAlteracao",
     ];
@@ -97,7 +97,7 @@ class AwinController extends Controller
         "dueDate",
         "enableDate",
         "disableDate",
-        "isPublished",
+        "isPublished", // TODO validar
         "establishmentId",
     ];
 
@@ -252,8 +252,6 @@ class AwinController extends Controller
         // Delete the existing establishments directory.
         clear_directory( path: self::LC_BASE_PATH . "/establishments" );
 
-        $local_data              = [];
-
         // Initialize Firebase database references
         $db                      = Firebase::database();
         $reference_establishment = $db->getReference( path: "/Estabelecimento-v2"            );
@@ -316,10 +314,10 @@ class AwinController extends Controller
         {
             list( $firebase_est, $firebase_push ) = $this->checkFirebaseEstablishment( id: $partner_id, establishments: $establishments_firebase );
 
-            // verifica se a loja Awin existe no local
+            // Checks if the Awin establishment not exists in local.
             if ( !isset( $establishments_local[ $partner_id ] ) )
             {
-                // loja não existe no firebase, criar pedido de criação de curadoria.
+                // Establishment does not exist in firebase, create curation creation request.
                 if ( $firebase_est === null )
                 {
                     $this->processNewFirebase(
@@ -329,7 +327,7 @@ class AwinController extends Controller
                     );
                 }
 
-                // loja existe no firebase, verificar diferenças e  criar registro local.
+                // Establishment exists in firebase, check differences and create local record.
                 else
                 {
                     $establishment_aw[ "id" ] = $firebase_push;
@@ -350,12 +348,12 @@ class AwinController extends Controller
                 }
             }
 
-            // loja existe no local
+            // Awin establishment exist in local.
             else
             {
                 $affiliate_id = $establishment_aw[ "origin" ] . $partner_id;
 
-                // loja não existe no firebase, criar pedido de criação de curadoria.
+                // Establishment does not exist in firebase, create curation creation request.
                 if ( $firebase_est === null )
                 {
                     $this->processNewFirebase(
@@ -365,14 +363,13 @@ class AwinController extends Controller
                     );
                 }
 
-                // loja existe no firebase, verificar diferenças
+                // Establishment exists in firebase, check differences.
                 else
                 {
                     $establishment_lc         = $establishments_local[ $partner_id ][ "data" ];
 
                     $establishment_lc[ "id" ] = $firebase_push;
                     $establishment_aw[ "id" ] = $firebase_push;
-                    // $establishment_local[ "push_id" ] = $firebase_push;
 
                     $this->processEditFirebase(
                         push          : $firebase_push,
@@ -506,7 +503,7 @@ class AwinController extends Controller
 
             // Add edit approval request in Firebase.
             $db->getReference( path: "/Store-Aprovacoes/" . $local_promotion[ "push_id" ] )
-               ->update( values: [
+                ->update( values: [
                 "requesterId"       => self::REQUESTER_ID,
                 "id"                => $local_promotion[ "push_id" ],
                 "establishmentId"   => $establishment_id,
@@ -585,7 +582,7 @@ class AwinController extends Controller
 
                 // Add create approval request in Firebase.
                 $db->getReference( path: "/Store-Aprovacoes/{$new_push_promotion}" )
-                   ->set( value: [
+                    ->set( value: [
                     "requesterId"       => self::REQUESTER_ID,
                     "id"                => $new_push_promotion,
                     "establishmentId"   => $aux[ "establishmentId"   ],
@@ -1020,7 +1017,7 @@ class AwinController extends Controller
         ];
     }
 
-
+    // ============================================================================================================
 
     private function processNewFirebase( int $id, array $establishment, string $action )
     {
@@ -1042,7 +1039,7 @@ class AwinController extends Controller
         );
     }
 
-    private function processEditFirebase( string $push, array $establishment, array $compare, Reference $reference, int $partner_id = null )
+    private function processEditFirebase( string $push, array $establishment, array $compare, Reference $reference, ?int $partner_id = null )
     {
         // Compare Awin and local establishments and get differences.
         $diff = array_diff_assoc_recursive( $establishment, $compare );
