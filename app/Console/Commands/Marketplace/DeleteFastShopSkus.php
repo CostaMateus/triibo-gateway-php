@@ -22,6 +22,8 @@ class DeleteFastShopSkus extends Command
      */
     protected $description = "Delete Fast Shop skus in marketplace";
 
+    protected $prefix      = "MKT DEL Products:";
+
     /**
      *
      * @var     string
@@ -46,7 +48,7 @@ class DeleteFastShopSkus extends Command
     public function handle()
     {
         $start   = now();
-        $message = "MKT Products: Starting process WC data...";
+        $message = "{$this->prefix} Starting process WC data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
@@ -55,17 +57,18 @@ class DeleteFastShopSkus extends Command
         $this->info( "Truncate table: marketplace_product_skus" );
         DB::table( "marketplace_product_skus" )->truncate();
 
-        $message = "MKT Products: Finished WC data process...";
+        $message = "{$this->prefix} Finished WC data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
         $diff    = $start->diffInMinutes( now() );
-        $message = "MKT Products: Runtime {$diff} minutes...";
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
     }
 
     /**
+     * Search and delete products in mkt.
      *
      * @return  void
      */
@@ -84,7 +87,7 @@ class DeleteFastShopSkus extends Command
 
                 if ( $count != 0 )
                 {
-                    $this->info( "MKT Products: {$count} loaded" );
+                    $this->info( "{$this->prefix} {$count} loaded" );
                     $products = $response->toArray();
 
                     $this->deleteProducts( $products );
@@ -116,6 +119,7 @@ class DeleteFastShopSkus extends Command
     }
 
     /**
+     * Delete the product in mkt.
      *
      * @param   array   $products
      * @return  void
@@ -130,7 +134,7 @@ class DeleteFastShopSkus extends Command
             {
                 Product::delete( $product->id, [ "force" => true ] );
 
-                $message = "MKT Products: {$product->id} deleted";
+                $message = "{$this->prefix} {$product->id} deleted";
                 log_message( channel: self::LOG_CHANNEL, message: $message );
                 $this->info( $message );
             }
@@ -138,6 +142,7 @@ class DeleteFastShopSkus extends Command
     }
 
     /**
+     * Search metadata key.
      *
      * @param   array   $metas
      * @param   string  $key
