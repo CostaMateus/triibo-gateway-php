@@ -97,7 +97,7 @@ class AwinController extends Controller
         "dueDate",
         "enableDate",
         "disableDate",
-        "isPublished", // TODO validar
+        // "isPublished", // TODO validar
         "establishmentId",
     ];
 
@@ -320,7 +320,7 @@ class AwinController extends Controller
                 // Establishment does not exist in firebase, create curation creation request.
                 if ( $firebase_est === null )
                 {
-                    $this->processNewFirebase(
+                    $this->processNewEstablishmentFirebase(
                         id            : $partner_id,
                         establishment : $establishment_aw,
                         action        : "create"
@@ -339,7 +339,7 @@ class AwinController extends Controller
                         action        : "create"
                     );
 
-                    $this->processEditFirebase(
+                    $this->processEditEstablishmentFirebase(
                         push          : $firebase_push,
                         establishment : $establishment_aw,
                         compare       : $firebase_est,
@@ -356,7 +356,7 @@ class AwinController extends Controller
                 // Establishment does not exist in firebase, create curation creation request.
                 if ( $firebase_est === null )
                 {
-                    $this->processNewFirebase(
+                    $this->processNewEstablishmentFirebase(
                         id            : $partner_id,
                         establishment : $establishment_aw,
                         action        : "update"
@@ -371,7 +371,7 @@ class AwinController extends Controller
                     $establishment_lc[ "id" ] = $firebase_push;
                     $establishment_aw[ "id" ] = $firebase_push;
 
-                    $this->processEditFirebase(
+                    $this->processEditEstablishmentFirebase(
                         push          : $firebase_push,
                         establishment : $establishment_aw,
                         compare       : $establishment_lc,
@@ -474,8 +474,7 @@ class AwinController extends Controller
             }
 
             $local_promotion  = $promotions_local[ $id ];
-            $data_promotion   = json_decode( $local_promotion[ "data" ], true );
-            $establishment_id = $data_promotion[ "establishmentId" ] ?? "";
+            $establishment_id = $local_promotion[ "data" ][ "establishmentId" ] ?? "";
 
             if ( empty( $establishment_id ) )
             {
@@ -490,7 +489,7 @@ class AwinController extends Controller
             unset( $awin_promotion[ "partnerEstablishmentId" ] );
 
             // Compare Awin and local promotions and get differences.
-            $diff             = array_diff_assoc_recursive( $awin_promotion, $data_promotion );
+            $diff             = array_diff_assoc_recursive( $awin_promotion, $local_promotion[ "data" ] );
 
             // Remove ignored fields from the differences.
             foreach ( self::IGNORE_PROMO_FIELDS as $field )
@@ -1000,7 +999,7 @@ class AwinController extends Controller
         $firebase_est  = null;
         $firebase_push = null;
 
-        // verifica se a loja Awin existe no firebase
+        // Checks if the Awin establishment exists in firebase.
         foreach ( $establishments as $push => $estab )
         {
             if ( isset( $estab[ "partnerEstablishmentId" ] ) && $estab[ "partnerEstablishmentId" ] == $id )
@@ -1019,13 +1018,13 @@ class AwinController extends Controller
 
     // ============================================================================================================
 
-    private function processNewFirebase( int $id, array $establishment, string $action )
+    private function processNewEstablishmentFirebase( int $id, array $establishment, string $action )
     {
         // Add new establishment in Firebase.
         $new_push = $this->createFirebaseEstablishment( establishment: $establishment );
 
         // Add create approval request in Firebase.
-        $this->createApprovalRequest(
+        $this->createEstablishmentApprovalRequest(
             push   : $new_push,
             name   : $establishment[ "nome" ],
             action : "create"
@@ -1039,7 +1038,7 @@ class AwinController extends Controller
         );
     }
 
-    private function processEditFirebase( string $push, array $establishment, array $compare, Reference $reference, ?int $partner_id = null )
+    private function processEditEstablishmentFirebase( string $push, array $establishment, array $compare, Reference $reference, ?int $partner_id = null )
     {
         // Compare Awin and local establishments and get differences.
         $diff = array_diff_assoc_recursive( $establishment, $compare );
@@ -1051,7 +1050,7 @@ class AwinController extends Controller
         if ( !empty( $diff ) )
         {
             // Add edit approval request in Firebase.
-            $this->createApprovalRequest(
+            $this->createEstablishmentApprovalRequest(
                 push   : $push,
                 name   : $establishment[ "nome" ],
                 action : "edit"
@@ -1062,7 +1061,7 @@ class AwinController extends Controller
             $current_changes = array_merge( $past_diffs, $diff );
 
             // Add edit change request in Firebase.
-            $this->createChangesRequest(
+            $this->createEstablishmentChangesRequest(
                 push    : $push,
                 name    : $establishment[ "nome" ],
                 changes : $current_changes
@@ -1095,7 +1094,7 @@ class AwinController extends Controller
         return $new_push;
     }
 
-    private function createApprovalRequest( string $push, string $name, string $action ): void
+    private function createEstablishmentApprovalRequest( string $push, string $name, string $action ): void
     {
         Firebase::database()
             ->getReference( path: "/Estabelecimento-Aprovacoes/{$push}" )
@@ -1113,7 +1112,7 @@ class AwinController extends Controller
         $this->logger->log_message( message : "Establishments: Need approval ID = {$push}" );
     }
 
-    private function createChangesRequest( string $push, string $name, array $changes ) : void
+    private function createEstablishmentChangesRequest( string $push, string $name, array $changes ) : void
     {
         $reference = Firebase::database()->getReference( path: "/Establishment-changes-request" );
         $new_push  = $reference->push()->getKey();
