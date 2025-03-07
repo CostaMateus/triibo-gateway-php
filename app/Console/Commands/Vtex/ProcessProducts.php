@@ -364,7 +364,7 @@ class ProcessProducts extends Command
             if ( empty( $data ) )
                 return;
 
-            $data = vtex_product_to_mkt( data: $data[ "context" ], simulate: $data[ "simulate" ] );
+            $data = vtex_product_to_mkt( data: $data[ "data" ], context: $data[ "context" ], simulate: $data[ "simulate" ] );
 
             $this->update_wc[ "create" ][] = $data;
 

@@ -1329,47 +1329,44 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
      * Converts a Vtex product data structure to a WooCommerce product format.
      *
      * @param   array   $data       The product data from Vtex.
+     * @param   array   $context    The product context from Vtex.
      * @param   array   $simulate   The simulation data for pricing.
      * @return  array               The formatted WooCommerce product array.
      */
-    function vtex_product_to_mkt( array $data, array $simulate ) : array
+    function vtex_product_to_mkt( array $data, array $context, array $simulate ) : array
     {
         // Vtex categories to WooCommerce category format.
-        $categories = get_categories_ids( $data[ "ProductCategoryIds" ], $data[ "ProductCategories" ] );
+        $categories = get_categories_ids( $context[ "ProductCategoryIds" ], $context[ "ProductCategories" ] );
 
-        $images     = vtex_get_product_images( $data[ "Images" ] );
+        $images     = vtex_get_product_images( $context[ "Images" ] );
 
         // Get product attributes from Fast Shop data.
-        $attributes = vtex_get_product_attributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
+        $attributes = vtex_get_product_attributes( array_merge( $context[ "SkuSpecifications" ], $context[ "ProductSpecifications" ] ) );
 
-        $short_desc = strip_tags( $data[ "ProductDescription" ] );
+        $short_desc = strip_tags( $context[ "ProductDescription" ] );
         $short_desc = Str::limit( $short_desc, 140, " (...)" );
         $short_desc = vtex_append_voltage( short_desc: $short_desc, attributes: $attributes );
 
         // Return the WooCommerce product array.
         return [
-            "name"              => $data[ "ProductName" ],
-            "slug"              => Str::slug( $data[ "ProductName" ] ),
-            "description"       => $data[ "ProductDescription" ],
+            "name"              => $context[ "ProductName" ],
+            "slug"              => Str::slug( $context[ "ProductName" ] ),
+            "description"       => $context[ "ProductDescription" ],
             "short_description" => $short_desc,
-            "sku"               => "FS-" . $data[ "ProductRefId" ],
+            "sku"               => "FS-" . $data[ "RefId" ],
             "regular_price"     => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ) : 0,
             "sale_price"        => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ) : 0,
 
-            // TODO ?
-            // "stock_quantity"    => 0,
-            // TODO ?
             "manage_stock"      => false,
-            // TODO ?
             "stock_status"      => isset( $simulate[ "items" ] ) ? ( ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock" ) : "outofstock",
 
             "backorders"        => "no",
             "sold_individually" => false,
-            "weight"            => ( string ) $data[ "Dimension" ][ "weight" ],
+            "weight"            => ( string ) $context[ "Dimension" ][ "weight" ],
             "dimensions"        => [
-                "length" => ( string ) $data[ "Dimension" ][ "length" ],
-                "width"  => ( string ) $data[ "Dimension" ][ "width"  ],
-                "height" => ( string ) $data[ "Dimension" ][ "height" ]
+                "length" => ( string ) $context[ "Dimension" ][ "length" ],
+                "width"  => ( string ) $context[ "Dimension" ][ "width"  ],
+                "height" => ( string ) $context[ "Dimension" ][ "height" ]
             ],
             "shipping_class"    => "fast-shop-normal",
             "upsell_ids"        => [],
@@ -1383,7 +1380,7 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
             "meta_data"         => [
                 [
                     "key"   => "_fs_product_id",
-                    "value" => $data[ "Id" ],
+                    "value" => $context[ "Id" ],
                 ]
             ]
         ];

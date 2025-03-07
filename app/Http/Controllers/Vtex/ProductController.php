@@ -141,7 +141,7 @@ class ProductController extends VtexController
         $context     = $context [ 1 ][ "data" ];
         $simulate    = $simulate[ 1 ][ "data" ];
 
-        $mkt_product = vtex_product_to_mkt( $context, $simulate );
+        $mkt_product = vtex_product_to_mkt( data: $data, context: $context, simulate: $simulate );
 
         dd( [
             "data"     => $data,
