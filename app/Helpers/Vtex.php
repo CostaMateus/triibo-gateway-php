@@ -543,43 +543,51 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
      */
     function vtex_get_product_attributes( array $attributes ) : array
     {
-        $specifications = array_map( function ( $attr, $key )
-        {
-            $field_value = strip_tags( $attr[ "FieldValues" ][ 0 ] );
+        $specifications = array_map(
+            function ( $attr, $key )
+            {
+                $field_value   = strip_tags( $attr[ "FieldValues" ][ 0 ] );
 
-            $field_value = $field_value === "true" ? "SIM" : $attr[ "FieldValues" ][ 0 ];
-            $field_value = $field_value === "S"    ? "Sim" : $field_value;
-            $field_value = $field_value === "N"    ? "Não" : $field_value;
+                $field_value   = $field_value === "true" ? "SIM" : $attr[ "FieldValues" ][ 0 ];
+                $field_value   = $field_value === "S"    ? "Sim" : $field_value;
+                $field_value   = $field_value === "N"    ? "Não" : $field_value;
 
-            $field_name  = $attr[ "FieldName" ];
+                $field_name    = $attr[ "FieldName" ];
 
-            if ( $field_name === "CONT_ESPECIAL_DESKTOP" )
-                $visible = false;
+                $ignore_fields = [
+                    "NOME_MARCA",
+                    "CONT_ESPECIAL_DESKTOP",
+                    "CONT_ESPECIAL_MOBILE",
+                    "Parcelamento",
+                    "MARKETPLACESTORE",
+                    "meli_shipping_mode",
+                    "COMPONENTE_KIT",
+                    "Marketplace",
+                    "Garantia Produto",
+                    "Selo CONPET",
+                    "Tipo de Venda",
+                    "VIDEO_1",
+                    "VIDEO_1_IS_YOUTUBE",
+                    "VIDEO_2_IS_YOUTUBE"
+                ];
 
-            elseif ( $field_name === "CONT_ESPECIAL_MOBILE" )
-                $visible = false;
+                if ( in_array( $field_name, $ignore_fields ) )
+                    $visible = false;
+                else
+                    $visible = true;
 
-            elseif ( $field_name === "meli_shipping_mode"   )
-                $visible = false;
-
-            elseif ( $field_name === "MARKETPLACESTORE"     )
-                $visible = false;
-
-            elseif ( $field_name === "Parcelamento"         )
-                $visible = false;
-
-            else
-                $visible = true;
-
-            // Return the transformed attribute.
-            return [
-                "name"      => $field_name,
-                "position"  => $key,
-                "visible"   => $visible,
-                "variation" => true,
-                "options"   => [ $field_value ],
-            ];
-        }, $attributes, array_keys( $attributes ) );
+                // Return the transformed attribute.
+                return [
+                    "name"      => $field_name,
+                    "position"  => $key,
+                    "visible"   => $visible,
+                    "variation" => true,
+                    "options"   => [ $field_value ],
+                ];
+            },
+            $attributes,
+            array_keys( $attributes )
+        );
 
         return array_filter( $specifications );
     }
@@ -1450,8 +1458,7 @@ if ( !function_exists( "vtex_freight_to_woo"  ) )
             return $logistics;
         }
 
-        if ( empty( $logistics ) )
-            return vtex_freight_to_woo_failed( $data );
+        return vtex_freight_to_woo_failed( $data );
     }
 }
 
