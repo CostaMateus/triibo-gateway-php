@@ -1,6 +1,8 @@
 <?php
 
-use Illuminate\Support\Facades\{ Auth, Route, Artisan };
+use Kreait\Laravel\Firebase\Facades\Firebase;
+use Illuminate\Support\Facades\{ Auth, Route };
+use App\Http\Controllers\Vtex\ProductController;
 use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
 use App\Http\Controllers\{ HomeController, MarketplaceController, UserController };
@@ -21,8 +23,8 @@ Auth::routes( [ "register" => false ] );
 Route::get( "/",            [ HomeController::class, "welcome"    ] )->name( "welcome"     );
 Route::get( "/clear-cache", [ HomeController::class, "clearCache" ] )->name( "clear.cache" );
 
-Route::group( [ "middleware" => "auth" ], function() {
-
+Route::group( [ "middleware" => "auth" ], function()
+{
     Route::get( "/home",         [ HomeController::class, "index"         ] )->name( "home"       );
     Route::get( "/documentacao", [ HomeController::class, "documentation" ] )->name( "docs.index" );
 
@@ -37,6 +39,9 @@ Route::group( [ "middleware" => "auth" ], function() {
         Route::post( "/pedido/aprovar",  [ MarketplaceController::class, "orderApprove" ] )->name( "order.approve" );
         Route::post( "/pedido/cancelar", [ MarketplaceController::class, "orderCancel"  ] )->name( "order.cancel"  );
     } );
+
+    Route::get( "/fast-shop/product/{sku}", [ ProductController::class, "getProductData" ] );
+
 } );
 
 
@@ -374,4 +379,75 @@ Route::prefix( "fs" )->group( function ()
     // criar pedido com frete no marketplace
     // criar pedido na fast shop
     // aprovar pedido na fast shop
+} );
+
+Route::prefix( "fb" )->group( function ()
+{
+    Route::get( "/get", function()
+    {
+        // // Initialize Firebase database references
+        // $db             = Firebase::database();
+        // $establishments = $db->getReference( path: "/Estabelecimento-v2" );
+        // $blacklist      = [ "-awin", "-cofry", "-socialsoul"   ];
+        // $fields         = [ "partnerEstablishmentId", "origin" ];
+        // $establishments = filter_data( data: $establishments->getValue(), blacklist: $blacklist, fields: $fields, origin: "awin" );
+        // Storage::put( "awin/establishments_fb_prod.json", json_encode( $establishments ) );
+
+
+
+
+        $establis_split = Storage::get( "awin/establishments_fb_prod_split.json" );
+        $establis_split = json_decode( $establis_split, true );
+        $temp           = [];
+
+        foreach ( $establis_split[ "published" ] as $push_id => $estab )
+            if ( Str::contains( Str::lower( $estab[ "nome" ] ), "samsung" ) )
+                $temp[ $push_id ] = $estab;
+
+        dd( $temp );
+
+        // $establishments = Storage::get( "awin/establishments_fb_prod.json" );
+        // $establishments = json_decode( $establishments, true );
+        // $text           = "";
+        // foreach ( $establishments as $push_id => $estab )
+        // {
+        //     $p     = $estab[ "isPublished" ] ? "✅" : "❌";
+        //     $text .= "{$push_id} | {$p} | " . $estab[ "nome" ] . "\n";
+        // }
+        // dd( $text );
+
+
+
+
+
+
+
+
+
+        // $dd             = [];
+
+        // $false = 0;
+        // $true  = 0;
+
+        // foreach ( $establishments as $push_id => $estab )
+        // {
+        //     $dd[ $estab[ "nome" ] ][] = [
+        //         "push_id"     => $push_id,
+        //         "nome"        => $estab[ "nome"        ],
+        //         "orgin"       => $estab[ "origin"      ],
+        //         "isPublished" => $estab[ "isPublished" ],
+        //     ];
+
+        //     if ( $estab[ "isPublished" ] )
+        //         $true++;
+        //     else
+        //         $false++;
+        // }
+
+        // dd(
+        //     env( "TRIIBO_ENV" ),
+        //     "true = {$true} | false = {$false}",
+        //     $dd
+        // );
+    } );
 } );

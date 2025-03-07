@@ -466,6 +466,45 @@ if ( !function_exists( "save_file" ) )
     }
 }
 
+if ( !function_exists( "vtex_append_voltage" ) )
+{
+    /**
+     * Append voltage information to the short description.
+     *
+     * @param   string  $short_desc
+     * @param   array   $attributes
+     * @return  string
+     */
+    function vtex_append_voltage( string $short_desc, array $attributes ) : string
+    {
+        if ( Str::contains( Str::lower( $short_desc ), "<br><b>voltagem : " ) )
+            return $short_desc;
+
+        // Find the voltage attribute, if it exists.
+        $volt = current( array_filter( $attributes, function ( $attr )
+        {
+            return Str::lower( $attr[ "name" ] ) === "voltagem";
+        } ) );
+
+        // Append voltage information to the short description.
+        if ( $volt )
+        {
+            $value = reset( $volt[ "options" ] );
+
+            if ( in_array( $value, [ "110", "220" ] ) )
+                $value = "{$value}V";
+
+            if ( ( Str::lower( $value ) === "bivolt" ) )
+                $value = "bivolt";
+
+            if ( $value !== "NA" )
+                $short_desc .= "<br><b>Voltagem : {$value}</b>";
+        }
+
+        return $short_desc;
+    }
+}
+
 if ( !function_exists( "vtex_get_product_images" ) )
 {
     /**
@@ -514,7 +553,23 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
 
             $field_name  = $attr[ "FieldName" ];
 
-            $visible     = $field_name === "MARKETPLACESTORE" ? false : true;
+            if ( $field_name === "CONT_ESPECIAL_DESKTOP" )
+                $visible = false;
+
+            elseif ( $field_name === "CONT_ESPECIAL_MOBILE" )
+                $visible = false;
+
+            elseif ( $field_name === "meli_shipping_mode"   )
+                $visible = false;
+
+            elseif ( $field_name === "MARKETPLACESTORE"     )
+                $visible = false;
+
+            elseif ( $field_name === "Parcelamento"         )
+                $visible = false;
+
+            else
+                $visible = true;
 
             // Return the transformed attribute.
             return [
@@ -1281,6 +1336,7 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
 
         $short_desc = strip_tags( $data[ "ProductDescription" ] );
         $short_desc = Str::limit( $short_desc, 140, " (...)" );
+        $short_desc = vtex_append_voltage( short_desc: $short_desc, attributes: $attributes );
 
         // Return the WooCommerce product array.
         return [

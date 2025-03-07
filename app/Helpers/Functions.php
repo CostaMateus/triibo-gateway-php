@@ -1145,3 +1145,55 @@ if ( !function_exists( "get_date_time_unix_interval" ) )
         return $date;
     }
 }
+
+if ( !function_exists( "clear_directory" ) )
+{
+    /**
+     * Clear directory.
+     *
+     * @param   string  $path
+     * @return  void
+     */
+    function clear_directory( string $path ) : void
+    {
+        $directory = public_path( path: $path );
+
+        File::deleteDirectory( directory: $directory, preserve: true );
+    }
+}
+
+if ( !function_exists( "cashback_float" ) )
+{
+    /**
+     * Convert cashback to float.
+     *
+     * @param   array   $establishment
+     * @return  void
+     */
+    function cashback_float( array &$establishment ) : void
+    {
+        if ( isset( $establishment[ "cashbackDefault" ] ) )
+            $establishment[ "cashbackDefault" ] = ( float ) $establishment[ "cashbackDefault" ];
+    }
+}
+
+if ( !function_exists( "update_local_establishment" ) )
+{
+    /**
+     * Updates the local establishment.
+     *
+     * @param   string  $affiliate_id
+     * @param   string  $push_id
+     * @param   array   $establishment
+     * @return  void
+     */
+    function update_local_establishment( string $affiliate_id, string $push_id, array $establishment ) : void
+    {
+        DB::table( "affiliates_establishments" )
+            ->where( "affiliate_id", $affiliate_id )
+            ->update( [
+                "push_id" => $push_id,
+                "data"    => json_encode( $establishment )
+            ] );
+    }
+}
