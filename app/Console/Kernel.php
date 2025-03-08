@@ -98,26 +98,47 @@ class Kernel extends ConsoleKernel
                     ->skip( function () {
                         return Cache::has( "mkt:get_products_running" );
                     } );
+
+            $this->scheduleCommand( $schedule, "mkt:delete-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 22, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 22, 46 )->isFuture();
+
+                    return $is_pst && $is_ftr;
+                }
+            );
+            $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 23, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 23, 46 )->isFuture();
+
+                    return $is_pst && $is_ftr;
+                }
+            );
         }
+        else
+        {
+            $this->scheduleCommand( $schedule, "mkt:delete-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 21, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 21, 46 )->isFuture();
 
-        $this->scheduleCommand( $schedule, "mkt:delete-fs-skus" )->when(
-            function ()
-            {
-                $is_pst = Carbon::create( 2025, 3, 7, 21, 45 )->isPast();
-                $is_ftr = Carbon::create( 2025, 3, 7, 21, 46 )->isFuture();
+                    return $is_pst && $is_ftr;
+                }
+            );
+            $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 22, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 22, 46 )->isFuture();
 
-                return $is_pst && $is_ftr;
-            }
-        );
-        $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
-            function ()
-            {
-                $is_pst = Carbon::create( 2025, 3, 7, 22, 45 )->isPast();
-                $is_ftr = Carbon::create( 2025, 3, 7, 22, 46 )->isFuture();
-
-                return $is_pst && $is_ftr;
-            }
-        );
+                    return $is_pst && $is_ftr;
+                }
+            );
+        }
     }
 
     /**
