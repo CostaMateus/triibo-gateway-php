@@ -53,26 +53,40 @@ class InsertFastShopSkus extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $indexes     = range( 1, 23 );
-        $fs_products = [];
+        $indexes = range( 1, 23 );
 
         foreach ( $indexes as $i )
+            $this->process( $i );
+
+        $message = "{$this->prefix} Finished WC data process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $diff    = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+    }
+
+    /**
+     *
+     * @param   integer     $i
+     * @return  void
+     */
+    private function process( int $i ) : void
+    {
+        $raw_products = Storage::get( path: "fast-shop-products/fs-products-{$i}.json" );
+        $fs_products  = json_decode( $raw_products, true );
+
+        foreach ( $fs_products as $id => &$product )
         {
-            $raw_products = Storage::get( path: "fast-shop-products/fs-products-{$i}.json" );
-            $products     = json_decode( $raw_products, true );
-
-            foreach ( $products as $id => &$product )
+            if ( in_array( false, [ $product[ "data" ][ "IsActive" ], $product[ "context" ][ "IsActive" ] ] ) )
             {
-                if ( in_array( false, [ $product[ "data" ][ "IsActive" ], $product[ "context" ][ "IsActive" ] ] ) )
-                {
-                    unset( $products[ $id ] );
-                    continue;
-                }
-
-                $this->info( string: "Product ID: {$id}" );
+                unset( $fs_products[ $id ] );
+                continue;
             }
 
-            $fs_products = array_merge( $fs_products, $products );
+            $this->info( string: "Product ID: {$id}" );
         }
 
         $message     = "{$this->prefix} Translating data...";
@@ -95,15 +109,6 @@ class InsertFastShopSkus extends Command
 
         //
         $this->sendToMarketplace( wc_products: $wc_products, fs_products: $fs_products );
-
-        $message     = "{$this->prefix} Finished WC data process...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
-
-        $diff        = $start->diffInMinutes( now() );
-        $message     = "{$this->prefix} Runtime {$diff} minutes...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
     }
 
     /**
