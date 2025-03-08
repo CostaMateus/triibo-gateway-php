@@ -102,8 +102,8 @@ class Kernel extends ConsoleKernel
             $this->scheduleCommand( $schedule, "mkt:delete-fs-skus" )->when(
                 function ()
                 {
-                    $is_pst = Carbon::create( 2025, 3, 7, 22, 45 )->isPast();
-                    $is_ftr = Carbon::create( 2025, 3, 7, 22, 46 )->isFuture();
+                    $is_pst = Carbon::create( 2025, 3, 7, 23, 15 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 23, 16 )->isFuture();
 
                     return $is_pst && $is_ftr;
                 }
@@ -111,8 +111,8 @@ class Kernel extends ConsoleKernel
             $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
                 function ()
                 {
-                    $is_pst = Carbon::create( 2025, 3, 7, 23, 45 )->isPast();
-                    $is_ftr = Carbon::create( 2025, 3, 7, 23, 46 )->isFuture();
+                    $is_pst = Carbon::create( 2025, 3, 8, 1, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 8, 1, 46 )->isFuture();
 
                     return $is_pst && $is_ftr;
                 }
@@ -132,8 +132,8 @@ class Kernel extends ConsoleKernel
             $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
                 function ()
                 {
-                    $is_pst = Carbon::create( 2025, 3, 7, 22, 45 )->isPast();
-                    $is_ftr = Carbon::create( 2025, 3, 7, 22, 46 )->isFuture();
+                    $is_pst = Carbon::create( 2025, 3, 7, 23, 1 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 23, 2 )->isFuture();
 
                     return $is_pst && $is_ftr;
                 }
