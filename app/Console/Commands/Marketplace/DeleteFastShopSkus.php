@@ -126,19 +126,24 @@ class DeleteFastShopSkus extends Command
      */
     private function deleteProducts( array $products ) : void
     {
+        $ids = [];
+
         foreach ( $products as $product )
         {
             $has_fs_id = $this->searchMetadata( $product->meta_data );
 
             if ( $has_fs_id === true && $product->store?->id == 4265 )
             {
-                Product::delete( $product->id, [ "force" => true ] );
+                $ids[]   = $product->id;
 
                 $message = "{$this->prefix} {$product->id} deleted";
-                log_message( channel: self::LOG_CHANNEL, message: $message );
+                log_message(channel: self::LOG_CHANNEL, message: $message);
                 $this->info( $message );
             }
         }
+
+        if ( count( $ids ) > 0 )
+            Product::batch( [ "delete" => $ids ] );
     }
 
     /**
