@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Storage;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Illuminate\Support\Facades\{ Auth, Route };
 use App\Http\Controllers\Vtex\ProductController;
@@ -194,26 +195,56 @@ Route::prefix( "mkt" )->group( function ()
         dd( $data, $order );
     } );
 
-    Route::get( "/get-product/{id}", function( $id )
+    Route::get( "/get-product/{id}/{delete}", function( $id, $delete )
     {
-        $product = Product::find( $id );
+        if ( $delete === "true" )
+        {
+            // $product = Product::delete( $id, [ "force" => false ] );
+            // dd( $product );
 
-        dd( $product );
+            $products = Product::batch( [
+                "delete" => [
+                    1059027, // => [ "force" => true ],
+                    1058625, // => [ "force" => true ],
+                ]
+            ] );
 
-        $meta = [];
+            dd( $products );
+        }
+        else
+        {
+            $product = Product::find( $id );
+            dd( $product );
+        }
 
-        $keys = [
-            "_subscription_period",
-            "_subscription_period_interval",
-            "_subscription_length",
-            "_subscription_limit"
-        ];
+        // dd( $id, $delete );
 
-        foreach ( $product[ "meta_data" ] as $value )
-            if ( in_array( $value->key, $keys ) )
-                $meta[] = $value;
+        // $product_id = $id ;
+        // // $options = [];
+        // $options = ['force' => true];
+        // $product = Product::delete( $product_id, $options );
 
-        dd( $meta );
+        // dd( $product );
+
+        // $product = Product::batch( [ "delete" => [ $id ] ] );
+        // dd( $product );
+
+
+
+        // $meta = [];
+
+        // $keys = [
+        //     "_subscription_period",
+        //     "_subscription_period_interval",
+        //     "_subscription_length",
+        //     "_subscription_limit"
+        // ];
+
+        // foreach ( $product[ "meta_data" ] as $value )
+        //     if ( in_array( $value->key, $keys ) )
+        //         $meta[] = $value;
+
+        // dd( $meta );
     } );
 
     Route::get( "/create-product", function()
@@ -386,35 +417,76 @@ Route::prefix( "fb" )->group( function ()
     Route::get( "/get", function()
     {
         // // Initialize Firebase database references
-        // $db             = Firebase::database();
-        // $establishments = $db->getReference( path: "/Estabelecimento-v2" );
-        // $blacklist      = [ "-awin", "-cofry", "-socialsoul"   ];
-        // $fields         = [ "partnerEstablishmentId", "origin" ];
-        // $establishments = filter_data( data: $establishments->getValue(), blacklist: $blacklist, fields: $fields, origin: "awin" );
+        $db             = Firebase::database();
+        $establishments = $db->getReference( path: "/Estabelecimento-v2" );
+        $blacklist      = [ "-awin", "-cofry", "-socialsoul"   ];
+        $fields         = [ "partnerEstablishmentId", "origin" ];
+        $establishments = filter_data( data: $establishments->getValue(), blacklist: $blacklist, fields: $fields, origin: "awin" );
         // Storage::put( "awin/establishments_fb_prod.json", json_encode( $establishments ) );
 
+        // $establis_split = Storage::get( "awin/establishments_fb_prod_split.json" );
+        // $establis_split = json_decode( $establis_split, true );
+        // $temp           = [];
 
+        // foreach ( $establis_split[ "published" ] as $push_id => $estab )
+        //     if ( Str::contains( Str::lower( $estab[ "nome" ] ), "samsung" ) )
+        //         $temp[ $push_id ] = $estab;
 
-
-        $establis_split = Storage::get( "awin/establishments_fb_prod_split.json" );
-        $establis_split = json_decode( $establis_split, true );
-        $temp           = [];
-
-        foreach ( $establis_split[ "published" ] as $push_id => $estab )
-            if ( Str::contains( Str::lower( $estab[ "nome" ] ), "samsung" ) )
-                $temp[ $push_id ] = $estab;
-
-        dd( $temp );
+        // dd( $temp );
 
         // $establishments = Storage::get( "awin/establishments_fb_prod.json" );
         // $establishments = json_decode( $establishments, true );
-        // $text           = "";
-        // foreach ( $establishments as $push_id => $estab )
-        // {
-        //     $p     = $estab[ "isPublished" ] ? "✅" : "❌";
-        //     $text .= "{$push_id} | {$p} | " . $estab[ "nome" ] . "\n";
-        // }
-        // dd( $text );
+
+        $text  = "";
+        $count = [
+            0 => 0,
+            1 => 0,
+        ];
+
+        $disab = [];
+        $cur_disab = [];
+        $enab = [];
+        $cur_enab = [];
+
+        foreach ( $establishments as $push_id => $estab )
+        {
+            if ( $estab[ "isPublished" ] )
+            {
+                $p = "✅";
+                $count[ 1 ]++;
+                $enab[] = $push_id;
+            }
+            else
+            {
+                $p = "❌";
+                $count[ 0 ]++;
+                $disab[] = $push_id;
+            }
+
+            $p     = $estab[ "isPublished" ] ? "✅" : "❌";
+            $text .= "{$push_id} | {$p} | " . $estab[ "nome" ] . "\n";
+        }
+
+        foreach ( $disab as $push_id )
+        {
+            $approval = $db->getReference( path: "/Estabelecimento-Aprovacoes/{$push_id}" )->getValue();
+
+            if ( $approval && $approval[ "status" ] == "aberto" )
+                $cur_disab[ $push_id ] = $approval;
+        }
+
+        foreach ( $enab as $push_id )
+        {
+            $approval = $db->getReference( path: "/Estabelecimento-Aprovacoes/{$push_id}" )->getValue();
+
+            if ( $approval && $approval[ "status" ] == "aberto" )
+                $cur_enab[ $push_id ] = $approval;
+        }
+
+        Storage::put( "curadoria-disab.json", json_encode( $cur_disab ) );
+        Storage::put( "curadoria-enab.json", json_encode( $cur_enab ) );
+
+        dd( $text, $count, $cur_disab, $cur_enab );
 
 
 
