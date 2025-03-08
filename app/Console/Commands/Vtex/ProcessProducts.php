@@ -98,6 +98,8 @@ class ProcessProducts extends Command
      */
     public function handle() : int
     {
+        return 0;
+
         $start    = now();
         $this->log_message( message: "============================================" );
         $this->log_message( message: "VTEX Products: Starting process Vtex data..." );
