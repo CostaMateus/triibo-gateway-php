@@ -351,7 +351,7 @@ class GetProductList extends Command
                 $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
                 $this->info( "SKU: {$s} | " . $product[ "data" ][ "Name" ] );
 
-                $wc_data[] = vtex_product_to_mkt( $product[ "context" ], $product[ "simulate" ] );
+                $wc_data[] = vtex_product_to_mkt( $product[ "data" ], $product[ "context" ], $product[ "simulate" ] );
             }
 
             return $wc_data;

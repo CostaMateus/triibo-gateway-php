@@ -543,43 +543,51 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
      */
     function vtex_get_product_attributes( array $attributes ) : array
     {
-        $specifications = array_map( function ( $attr, $key )
-        {
-            $field_value = strip_tags( $attr[ "FieldValues" ][ 0 ] );
+        $specifications = array_map(
+            function ( $attr, $key )
+            {
+                $field_value   = strip_tags( $attr[ "FieldValues" ][ 0 ] );
 
-            $field_value = $field_value === "true" ? "SIM" : $attr[ "FieldValues" ][ 0 ];
-            $field_value = $field_value === "S"    ? "Sim" : $field_value;
-            $field_value = $field_value === "N"    ? "Não" : $field_value;
+                $field_value   = $field_value === "true" ? "SIM" : $attr[ "FieldValues" ][ 0 ];
+                $field_value   = $field_value === "S"    ? "Sim" : $field_value;
+                $field_value   = $field_value === "N"    ? "Não" : $field_value;
 
-            $field_name  = $attr[ "FieldName" ];
+                $field_name    = $attr[ "FieldName" ];
 
-            if ( $field_name === "CONT_ESPECIAL_DESKTOP" )
-                $visible = false;
+                $ignore_fields = [
+                    "NOME_MARCA",
+                    "CONT_ESPECIAL_DESKTOP",
+                    "CONT_ESPECIAL_MOBILE",
+                    "Parcelamento",
+                    "MARKETPLACESTORE",
+                    "meli_shipping_mode",
+                    "COMPONENTE_KIT",
+                    "Marketplace",
+                    "Garantia Produto",
+                    "Selo CONPET",
+                    "Tipo de Venda",
+                    "VIDEO_1",
+                    "VIDEO_1_IS_YOUTUBE",
+                    "VIDEO_2_IS_YOUTUBE"
+                ];
 
-            elseif ( $field_name === "CONT_ESPECIAL_MOBILE" )
-                $visible = false;
+                if ( in_array( $field_name, $ignore_fields ) )
+                    $visible = false;
+                else
+                    $visible = true;
 
-            elseif ( $field_name === "meli_shipping_mode"   )
-                $visible = false;
-
-            elseif ( $field_name === "MARKETPLACESTORE"     )
-                $visible = false;
-
-            elseif ( $field_name === "Parcelamento"         )
-                $visible = false;
-
-            else
-                $visible = true;
-
-            // Return the transformed attribute.
-            return [
-                "name"      => $field_name,
-                "position"  => $key,
-                "visible"   => $visible,
-                "variation" => true,
-                "options"   => [ $field_value ],
-            ];
-        }, $attributes, array_keys( $attributes ) );
+                // Return the transformed attribute.
+                return [
+                    "name"      => $field_name,
+                    "position"  => $key,
+                    "visible"   => $visible,
+                    "variation" => true,
+                    "options"   => [ $field_value ],
+                ];
+            },
+            $attributes,
+            array_keys( $attributes )
+        );
 
         return array_filter( $specifications );
     }
@@ -1321,47 +1329,44 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
      * Converts a Vtex product data structure to a WooCommerce product format.
      *
      * @param   array   $data       The product data from Vtex.
+     * @param   array   $context    The product context from Vtex.
      * @param   array   $simulate   The simulation data for pricing.
      * @return  array               The formatted WooCommerce product array.
      */
-    function vtex_product_to_mkt( array $data, array $simulate ) : array
+    function vtex_product_to_mkt( array $data, array $context, array $simulate ) : array
     {
         // Vtex categories to WooCommerce category format.
-        $categories = get_categories_ids( $data[ "ProductCategoryIds" ], $data[ "ProductCategories" ] );
+        $categories = get_categories_ids( $context[ "ProductCategoryIds" ], $context[ "ProductCategories" ] );
 
-        $images     = vtex_get_product_images( $data[ "Images" ] );
+        $images     = vtex_get_product_images( $context[ "Images" ] );
 
         // Get product attributes from Fast Shop data.
-        $attributes = vtex_get_product_attributes( array_merge( $data[ "SkuSpecifications" ], $data[ "ProductSpecifications" ] ) );
+        $attributes = vtex_get_product_attributes( array_merge( $context[ "SkuSpecifications" ], $context[ "ProductSpecifications" ] ) );
 
-        $short_desc = strip_tags( $data[ "ProductDescription" ] );
+        $short_desc = strip_tags( $context[ "ProductDescription" ] );
         $short_desc = Str::limit( $short_desc, 140, " (...)" );
         $short_desc = vtex_append_voltage( short_desc: $short_desc, attributes: $attributes );
 
         // Return the WooCommerce product array.
         return [
-            "name"              => $data[ "ProductName" ],
-            "slug"              => Str::slug( $data[ "ProductName" ] ),
-            "description"       => $data[ "ProductDescription" ],
+            "name"              => $context[ "ProductName" ],
+            "slug"              => Str::slug( $context[ "ProductName" ] ),
+            "description"       => $context[ "ProductDescription" ],
             "short_description" => $short_desc,
-            "sku"               => "FS-" . $data[ "ProductRefId" ],
+            "sku"               => "FS-" . $data[ "RefId" ],
             "regular_price"     => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ) : 0,
             "sale_price"        => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ) : 0,
 
-            // TODO ?
-            // "stock_quantity"    => 0,
-            // TODO ?
             "manage_stock"      => false,
-            // TODO ?
             "stock_status"      => isset( $simulate[ "items" ] ) ? ( ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock" ) : "outofstock",
 
             "backorders"        => "no",
             "sold_individually" => false,
-            "weight"            => ( string ) $data[ "Dimension" ][ "weight" ],
+            "weight"            => ( string ) $context[ "Dimension" ][ "weight" ],
             "dimensions"        => [
-                "length" => ( string ) $data[ "Dimension" ][ "length" ],
-                "width"  => ( string ) $data[ "Dimension" ][ "width"  ],
-                "height" => ( string ) $data[ "Dimension" ][ "height" ]
+                "length" => ( string ) $context[ "Dimension" ][ "length" ],
+                "width"  => ( string ) $context[ "Dimension" ][ "width"  ],
+                "height" => ( string ) $context[ "Dimension" ][ "height" ]
             ],
             "shipping_class"    => "fast-shop-normal",
             "upsell_ids"        => [],
@@ -1375,7 +1380,7 @@ if ( !function_exists( "vtex_product_to_mkt" ) )
             "meta_data"         => [
                 [
                     "key"   => "_fs_product_id",
-                    "value" => $data[ "Id" ],
+                    "value" => $context[ "Id" ],
                 ]
             ]
         ];
@@ -1450,8 +1455,7 @@ if ( !function_exists( "vtex_freight_to_woo"  ) )
             return $logistics;
         }
 
-        if ( empty( $logistics ) )
-            return vtex_freight_to_woo_failed( $data );
+        return vtex_freight_to_woo_failed( $data );
     }
 }
 

@@ -38,7 +38,7 @@ return [
     /**
      * Enable WP API Integration
      */
-    "wp_api"             => env( key: "WP_API_INTEGRATION",        default: true ),
+    "wp_api_integration" => env( key: "WP_API_INTEGRATION",        default: true ),
 
     /**
      * Force Basic Authentication as query string

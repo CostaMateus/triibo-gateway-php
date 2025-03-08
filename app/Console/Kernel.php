@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use DateTimeZone;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Console\Scheduling\{ Event, Schedule };
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
@@ -27,6 +28,9 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
         \App\Console\Commands\Marketplace\GetCategories::class,
         \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
+
+        \App\Console\Commands\Marketplace\DeleteFastShopSkus::class,
+        \App\Console\Commands\Marketplace\InsertFastShopSkus::class,
 
         // \App\Console\Commands\Triibo\SyncIdsMP::class,
         // \App\Console\Commands\Triibo\UnsetUpdateDate::class,
@@ -94,6 +98,46 @@ class Kernel extends ConsoleKernel
                     ->skip( function () {
                         return Cache::has( "mkt:get_products_running" );
                     } );
+
+            $this->scheduleCommand( $schedule, "mkt:delete-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 23, 15 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 23, 16 )->isFuture();
+
+                    return $is_pst && $is_ftr;
+                }
+            );
+            $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 8, 1, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 8, 1, 46 )->isFuture();
+
+                    return $is_pst && $is_ftr;
+                }
+            );
+        }
+        else
+        {
+            $this->scheduleCommand( $schedule, "mkt:delete-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 21, 45 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 21, 46 )->isFuture();
+
+                    return $is_pst && $is_ftr;
+                }
+            );
+            $this->scheduleCommand( $schedule, "mkt:insert-fs-skus" )->when(
+                function ()
+                {
+                    $is_pst = Carbon::create( 2025, 3, 7, 23, 1 )->isPast();
+                    $is_ftr = Carbon::create( 2025, 3, 7, 23, 2 )->isFuture();
+
+                    return $is_pst && $is_ftr;
+                }
+            );
         }
     }
 
