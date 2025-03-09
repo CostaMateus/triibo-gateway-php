@@ -102,6 +102,8 @@ if ( !function_exists( "get_categories_ids" ) )
             }
         }
 
+        $categories = array_map( fn ( $id ) => [ "id" => $id ], $categories );
+
         return $categories;
     }
 }
@@ -572,7 +574,7 @@ if ( !function_exists( "vtex_get_product_attributes" ) )
                 ];
 
                 if ( in_array( $field_name, $ignore_fields ) )
-                    $visible = false;
+                    return;
                 else
                     $visible = true;
 
