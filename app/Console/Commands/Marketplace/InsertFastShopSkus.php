@@ -189,37 +189,34 @@ class InsertFastShopSkus extends Command
      */
     private function sendToMarketplace( array $wc_products, array $fs_products ) : void
     {
-        $wc_chunks = array_chunk( $wc_products, 100 );
-        $fs_chunks = array_chunk( $fs_products, 100 );
-
-        $count     = count( $wc_chunks );
-
-        foreach ( $wc_chunks as $i => $products )
+        foreach ( $wc_products as $sku => $product )
         {
-            $page    = $i + 1;
-
-            $message = "{$this->prefix} Sending page {$page} of {$count}...";
+            $message = "{$this->prefix} Sending sku {$sku}...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( string: $message );
 
             try
             {
-                Product::batch( [ "create" => $products ] );
+                Product::create( $product );
+                sleep( 1 );
             }
             catch ( \Throwable $e )
             {
-                log_exception(
-                    channel: self::LOG_CHANNEL,
-                    message : $e->getMessage(),
-                    method  : "sendToMarketplace",
-                    type    : "Throwable",
-                    e       : $e
-                );
+                if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
+                {
+                    log_exception(
+                        channel: self::LOG_CHANNEL,
+                        message : $e->getMessage(),
+                        method  : "sendToMarketplace",
+                        type    : "Throwable",
+                        e       : $e
+                    );
 
-                $this->error( $e->getMessage() );
+                    $this->error( $e->getMessage() );
 
-                $encoded = json_encode( $fs_chunks[ $i ], JSON_UNESCAPED_SLASHES );
-                Storage::put( "fast-shop-products/fs-fails-{$i}.json", $encoded );
+                    $encoded = json_encode( $fs_products[ $sku ], JSON_UNESCAPED_SLASHES );
+                    Storage::put( "fast-shop-products/fs-fails-{$sku}.json", $encoded );
+                }
             }
         }
     }
