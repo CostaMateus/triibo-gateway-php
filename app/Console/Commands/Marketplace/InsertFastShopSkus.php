@@ -55,6 +55,8 @@ class InsertFastShopSkus extends Command
 
         $indexes = range( 1, 23 );
 
+        DB::table( "marketplace_product_skus" )->truncate();
+
         foreach ( $indexes as $i )
             $this->process( $i );
 
@@ -190,7 +192,7 @@ class InsertFastShopSkus extends Command
         $wc_chunks = array_chunk( $wc_products, 100 );
         $fs_chunks = array_chunk( $fs_products, 100 );
 
-        $count     = count( $products_chunk );
+        $count     = count( $wc_chunks );
 
         foreach ( $wc_chunks as $i => $products )
         {
