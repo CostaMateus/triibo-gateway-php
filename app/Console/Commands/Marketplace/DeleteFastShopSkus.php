@@ -132,7 +132,7 @@ class DeleteFastShopSkus extends Command
         {
             $has_fs_id = $this->searchMetadata( $product->meta_data );
 
-            if ( $has_fs_id === true && $product->store?->id == 4265 )
+            if ( $has_fs_id === true || $product->store?->id == 4265 )
             {
                 $ids[]   = $product->id;
 
