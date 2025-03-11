@@ -48,6 +48,8 @@ class InsertFastShopSkus extends Command
      */
     public function handle()
     {
+        return 0;
+
         $start   = now();
         $message = "{$this->prefix} Starting process WC data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
@@ -197,8 +199,8 @@ class InsertFastShopSkus extends Command
 
             try
             {
-                Product::create( $product );
-                sleep( 1 );
+                $wcp = Product::create( $product );
+                DB::table( "marketplace_product_skus" )->where( "metadata_id", $sku )->update( [ "product_id" => $wcp[ "id" ] ] );
             }
             catch ( \Throwable $e )
             {

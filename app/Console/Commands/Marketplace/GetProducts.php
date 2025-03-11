@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Marketplace;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 use Illuminate\Support\Facades\{ DB, Cache };
 
@@ -22,6 +21,12 @@ class GetProducts extends Command
      * @var string
      */
     protected $description = "Get marketplace products";
+
+    /**
+     *
+     * @var     string
+     */
+    protected $prefix      = "MKT Get Products:";
 
     /**
      *
@@ -46,32 +51,32 @@ class GetProducts extends Command
      */
     public function handle()
     {
-        Cache::put( "mkt:get_products_running", true, now()->addMinutes( 30 ) );
+        Cache::put( key: "mkt:get_products_running", value: true, ttl: now()->addMinutes( 30 ) );
 
         try
         {
             $start   = now();
-            $message = "MKT Products: Starting process WC data...";
+            $message = "{$this->prefix} Starting process WC data...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $this->info( string: $message );
 
-            $this->info( "Truncate table: marketplace_product_skus" );
+            $this->info( string: "Truncate table: marketplace_product_skus" );
             DB::table( "marketplace_product_skus" )->truncate();
 
             $this->processProducts();
 
-            $message = "MKT Products: Finished WC data process...";
+            $message = "{$this->prefix} Finished WC data process...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $this->info( string: $message );
 
-            $diff    = $start->diffInMinutes( now() );
-            $message = "MKT Products: Runtime {$diff} minutes...";
+            $diff    = $start->diffInMinutes( date: now() );
+            $message = "{$this->prefix} Runtime {$diff} minutes...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
-            $this->info( $message );
+            $this->info( string: $message );
         }
         finally
         {
-            Cache::forget( "mkt:get_products_running" );
+            Cache::forget( key: "mkt:get_products_running" );
         }
     }
 
@@ -83,7 +88,6 @@ class GetProducts extends Command
     {
         $page     = 1;
         $products = [];
-        // $error    = false;
         $count    = 100;
 
         do
@@ -95,10 +99,10 @@ class GetProducts extends Command
 
                 if ( $count != 0 )
                 {
-                    $this->info( "MKT Products: {$count} loaded" );
+                    $this->info( string: "{$this->prefix} {$count} loaded" );
                     $products = $response->toArray();
 
-                    $this->insertProducts( $products );
+                    $this->insertProducts( products: $products );
                 }
 
                 $page++;
@@ -112,24 +116,18 @@ class GetProducts extends Command
 
                 if ( !in_array( $e->getMessage(), $errors ) )
                 {
-                    report( $e );
+                    report( exception: $e );
 
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
-                    $this->error( $e->getMessage() );
+                    $this->error( string: $e->getMessage() );
                     continue;
                 }
             }
         }
         while ( $count == 100 );
 
-        // if ( $error )
-        // {
-        //     $this->error( "MKT Products: Error while loading products" );
-        //     return;
-        // }
-
         if ( count( $products ) > 0 )
-            $this->insertProducts( $products );
+            $this->insertProducts( products: $products );
     }
 
     /**
@@ -159,7 +157,7 @@ class GetProducts extends Command
         foreach ( $products as $product )
         {
             $founded     = false;
-            $metadata_id = $this->searchMetadata( $product->meta_data );
+            $metadata_id = $this->searchMetadata( metas: $product->meta_data );
 
             foreach ( $data as $value )
             {
@@ -190,8 +188,12 @@ class GetProducts extends Command
         $message = "MKT Inserting {$count} products in table: marketplace_product_skus";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
 
-        DB::table( "marketplace_product_skus" )->insert( $data );
+        DB::table( "marketplace_product_skus" )->upsert(
+            [ $data ],
+            [ "product_id", "product_sku" ],
+            [ "metadata_id", "store_id", "product_id", "product_sku", "regular_price", "sale_price", "stock_status", "stock", "status" ]
+        );
     }
 }

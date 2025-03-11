@@ -50,21 +50,21 @@ class DeleteFastShopSkus extends Command
         $start   = now();
         $message = "{$this->prefix} Starting process WC data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
 
         $this->processProducts();
 
-        $this->info( "Truncate table: marketplace_product_skus" );
+        $this->info( string: "Truncate table: marketplace_product_skus" );
         DB::table( "marketplace_product_skus" )->truncate();
 
         $message = "{$this->prefix} Finished WC data process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
 
-        $diff    = $start->diffInMinutes( now() );
+        $diff    = $start->diffInMinutes( date: now() );
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
     }
 
     /**
@@ -87,10 +87,10 @@ class DeleteFastShopSkus extends Command
 
                 if ( $count != 0 )
                 {
-                    $this->info( "{$this->prefix} {$count} loaded" );
+                    $this->info( string: "{$this->prefix} {$count} loaded" );
                     $products = $response->toArray();
 
-                    $this->deleteProducts( $products );
+                    $this->deleteProducts( products: $products );
                 }
 
                 $page++;
@@ -104,10 +104,10 @@ class DeleteFastShopSkus extends Command
 
                 if ( !in_array( $e->getMessage(), $errors ) )
                 {
-                    report( $e );
+                    report( exception: $e );
 
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
-                    $this->error( $e->getMessage() );
+                    $this->error( string: $e->getMessage() );
                     continue;
                 }
             }
@@ -115,7 +115,7 @@ class DeleteFastShopSkus extends Command
         while ( $count == 100 );
 
         if ( count( $products ) > 0 )
-            $this->deleteProducts( $products );
+            $this->deleteProducts( products: $products );
     }
 
     /**
@@ -130,15 +130,15 @@ class DeleteFastShopSkus extends Command
 
         foreach ( $products as $product )
         {
-            $has_fs_id = $this->searchMetadata( $product->meta_data );
+            $has_fs_id = $this->searchMetadata( metas: $product->meta_data );
 
             if ( $has_fs_id === true || $product->store?->id == 4265 )
             {
                 $ids[]   = $product->id;
 
                 $message = "{$this->prefix} {$product->id} deleted";
-                log_message(channel: self::LOG_CHANNEL, message: $message);
-                $this->info( $message );
+                log_message( channel: self::LOG_CHANNEL, message: $message );
+                $this->info( string: $message );
             }
         }
 

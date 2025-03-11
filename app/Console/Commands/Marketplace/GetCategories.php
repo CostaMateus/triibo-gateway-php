@@ -27,6 +27,12 @@ class GetCategories extends Command
      *
      * @var     string
      */
+    protected $prefix      = "MKT Categories:";
+
+    /**
+     *
+     * @var     string
+     */
     protected const LOG_CHANNEL = "marketplace";
 
     /**
@@ -52,7 +58,7 @@ class GetCategories extends Command
         $count      = 100;
 
         $start      = now();
-        $this->log_message( message: "MKT Categories: Starting process WC data..." );
+        $this->log_message( message: "{$this->prefix} Starting process WC data..." );
 
         do
         {
@@ -79,7 +85,7 @@ class GetCategories extends Command
         while ( $count == 100 );
 
         $count      = count( $categories );
-        $this->log_message( message: "MKT Categories: {$count} loaded..." );
+        $this->log_message( message: "{$this->prefix} {$count} loaded..." );
 
         foreach ( $categories as $category )
         {
@@ -99,10 +105,10 @@ class GetCategories extends Command
 
         DB::table( "marketplace_product_categories" )->insert( $data );
 
-        $this->log_message( message: "MKT Categories: Finished WC data process..." );
+        $this->log_message( message: "{$this->prefix} Finished WC data process..." );
 
         $diff       = $start->diffInMinutes( now() );
-        $this->log_message( message: "MKT Categories: Runtime {$diff} minutes..." );
+        $this->log_message( message: "{$this->prefix} Runtime {$diff} minutes..." );
     }
 
     /**

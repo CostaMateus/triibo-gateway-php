@@ -23,6 +23,18 @@ class DeleteDuplicateSku extends Command
     protected $description = "Delete duplicate SKUs in the marketplace";
 
     /**
+     *
+     * @var     string
+     */
+    protected $prefix      = "MKT Duplicate Products:";
+
+    /**
+     *
+     * @var     string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -39,8 +51,13 @@ class DeleteDuplicateSku extends Command
      */
     public function handle()
     {
-        $DB   = ( config( "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
-        $conn = DB::connection( $DB );
+        $start   = now();
+        $message = "{$this->prefix} Starting process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
+        $db      = ( config( key: "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
+        $conn    = DB::connection( name: $db );
 
         do {
             $select_posts = "
@@ -65,7 +82,7 @@ class DeleteDuplicateSku extends Command
                 WHERE post_type = 'product';
             ";
 
-            $posts = $conn->select( $select_posts );
+            $posts = $conn->select( query: $select_posts );
 
             if ( count( $posts ) > 0 )
             {
@@ -95,5 +112,14 @@ class DeleteDuplicateSku extends Command
             }
         }
         while( count( $posts ) > 0 );
+
+        $message = "{$this->prefix} Finished process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $diff    = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
     }
 }
