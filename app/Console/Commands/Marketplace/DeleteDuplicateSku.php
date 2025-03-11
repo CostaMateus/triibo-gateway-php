@@ -56,8 +56,8 @@ class DeleteDuplicateSku extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $db      = ( config( "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
-        $conn    = DB::connection( $db );
+        $db      = ( config( key: "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
+        $conn    = DB::connection( name: $db );
 
         do {
             $select_posts = "
@@ -82,7 +82,7 @@ class DeleteDuplicateSku extends Command
                 WHERE post_type = 'product';
             ";
 
-            $posts = $conn->select( $select_posts );
+            $posts = $conn->select( query: $select_posts );
 
             if ( count( $posts ) > 0 )
             {

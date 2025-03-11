@@ -58,7 +58,7 @@ class DeleteProductWithoutSku extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $env                = config( "vtex.env" );
+        $env                = config( key: "vtex.env" );
         $has_ended          = false;
         $page               = 1;
         $per_page           = 100;
@@ -78,7 +78,7 @@ class DeleteProductWithoutSku extends Command
 
                 $aux    = Product::all( $search );
 
-                $this->info( "Page: {$page} | Loaded: {$aux->count()}" );
+                $this->info( string: "Page: {$page} | Loaded: {$aux->count()}" );
 
                 if ( $aux->count() < 100 ) $has_ended = true;
 
@@ -93,7 +93,7 @@ class DeleteProductWithoutSku extends Command
                     if ( !empty( $product->sku ) )
                         continue;
 
-                    $this->info( "Product ID: {$product->id}" );
+                    $this->info( string: "Product ID: {$product->id}" );
 
                     $delete[] = $product->id;
 
@@ -105,7 +105,7 @@ class DeleteProductWithoutSku extends Command
                         }
                         catch ( Throwable $e )
                         {
-                            $this->error( $e->getMessage() );
+                            $this->error( string: $e->getMessage() );
                         }
 
                         $delete = [];
@@ -114,7 +114,7 @@ class DeleteProductWithoutSku extends Command
             }
             catch ( Throwable $e )
             {
-                $this->error( $e->getMessage() );
+                $this->error( string: $e->getMessage() );
 
                 $has_ended = false;
             }
@@ -127,16 +127,16 @@ class DeleteProductWithoutSku extends Command
         }
         catch ( Throwable $e )
         {
-            $this->error( $e->getMessage() );
+            $this->error( string: $e->getMessage() );
         }
 
         $message = "{$this->prefix} Finished process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
 
         $diff    = $start->diffInMinutes( now() );
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
     }
 }
