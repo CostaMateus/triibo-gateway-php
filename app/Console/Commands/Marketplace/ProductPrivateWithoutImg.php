@@ -23,6 +23,18 @@ class ProductPrivateWithoutImg extends Command
     protected $description = "Change the status of products to private when without images";
 
     /**
+     *
+     * @var     string
+     */
+    protected $prefix      = "MKT Without Img Products:";
+
+    /**
+     *
+     * @var     string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -39,6 +51,11 @@ class ProductPrivateWithoutImg extends Command
      */
     public function handle()
     {
+        $start   = now();
+        $message = "{$this->prefix} Starting process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
         $ended  = false;
         $page   = 1;
         $per    = 100;
@@ -94,6 +111,13 @@ class ProductPrivateWithoutImg extends Command
             $this->error( $e->getMessage() );
         }
 
-        $this->info( "FInished" );
+        $message = "{$this->prefix} Finished process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $diff    = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
     }
 }

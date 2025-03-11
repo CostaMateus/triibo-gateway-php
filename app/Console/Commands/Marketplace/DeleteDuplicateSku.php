@@ -56,7 +56,7 @@ class DeleteDuplicateSku extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $d       = ( config( "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
+        $db      = ( config( "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
         $conn    = DB::connection( $db );
 
         do {
