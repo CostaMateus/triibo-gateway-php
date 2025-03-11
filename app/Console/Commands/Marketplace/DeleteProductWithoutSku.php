@@ -25,6 +25,18 @@ class DeleteProductWithoutSku extends Command
     protected $description = "Delete products of Fast Shop when SKU is empty";
 
     /**
+     *
+     * @var     string
+     */
+    protected $prefix      = "MKT DEL Products:";
+
+    /**
+     *
+     * @var     string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * Create a new command instance.
      *
      * @return void
@@ -41,16 +53,16 @@ class DeleteProductWithoutSku extends Command
      */
     public function handle()
     {
+        $start   = now();
+        $message = "{$this->prefix} Starting process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
         $env                = config( "vtex.env" );
         $has_ended          = false;
         $page               = 1;
         $per_page           = 100;
         $delete             = [];
-        $shipping_class_ids = [
-            4744,                              // Sem HUB
-            3970,                              // Padrão
-            ( $env == "local" ) ? 4824 : 4799, // Normal
-        ];
 
         do
         {
@@ -81,16 +93,9 @@ class DeleteProductWithoutSku extends Command
                     if ( !empty( $product->sku ) )
                         continue;
 
-                    // // not shipping-class of FS
-                    // if ( !in_array( $product->shipping_class_id, $shipping_class_ids ) )
-                    //     continue;
+                    $this->info( "Product ID: {$product->id}" );
 
-                    $this->info( $product->id );
-
-                    $delete[] = [
-                        "id"    => $product->id,
-                        "force" => true
-                    ];
+                    $delete[] = $product->id;
 
                     if ( count( $delete ) == 100 )
                     {
@@ -125,6 +130,13 @@ class DeleteProductWithoutSku extends Command
             $this->error( $e->getMessage() );
         }
 
-        $this->info( "Finished" );
+        $message = "{$this->prefix} Finished WC data process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $diff    = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
     }
 }
