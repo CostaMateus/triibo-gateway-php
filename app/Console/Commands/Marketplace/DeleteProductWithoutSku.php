@@ -130,7 +130,7 @@ class DeleteProductWithoutSku extends Command
             $this->error( $e->getMessage() );
         }
 
-        $message = "{$this->prefix} Finished WC data process...";
+        $message = "{$this->prefix} Finished process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
