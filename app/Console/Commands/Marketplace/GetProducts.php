@@ -27,6 +27,12 @@ class GetProducts extends Command
      *
      * @var     string
      */
+    protected $prefix      = "MKT Get Products:";
+
+    /**
+     *
+     * @var     string
+     */
     protected const LOG_CHANNEL = "marketplace";
 
     /**
@@ -51,7 +57,7 @@ class GetProducts extends Command
         try
         {
             $start   = now();
-            $message = "MKT Products: Starting process WC data...";
+            $message = "{$this->prefix} Starting process WC data...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
@@ -60,12 +66,12 @@ class GetProducts extends Command
 
             $this->processProducts();
 
-            $message = "MKT Products: Finished WC data process...";
+            $message = "{$this->prefix} Finished WC data process...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             $diff    = $start->diffInMinutes( now() );
-            $message = "MKT Products: Runtime {$diff} minutes...";
+            $message = "{$this->prefix} Runtime {$diff} minutes...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
         }
@@ -83,7 +89,6 @@ class GetProducts extends Command
     {
         $page     = 1;
         $products = [];
-        // $error    = false;
         $count    = 100;
 
         do
@@ -95,7 +100,7 @@ class GetProducts extends Command
 
                 if ( $count != 0 )
                 {
-                    $this->info( "MKT Products: {$count} loaded" );
+                    $this->info( "{$this->prefix} {$count} loaded" );
                     $products = $response->toArray();
 
                     $this->insertProducts( $products );
@@ -121,12 +126,6 @@ class GetProducts extends Command
             }
         }
         while ( $count == 100 );
-
-        // if ( $error )
-        // {
-        //     $this->error( "MKT Products: Error while loading products" );
-        //     return;
-        // }
 
         if ( count( $products ) > 0 )
             $this->insertProducts( $products );
@@ -192,6 +191,10 @@ class GetProducts extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        DB::table( "marketplace_product_skus" )->insert( $data );
+        DB::table( "marketplace_product_skus" )->upsert(
+            [ $data ],
+            [ "product_id", "product_sku" ],
+            [ "metadata_id", "store_id", "product_id", "product_sku", "regular_price", "sale_price", "stock_status", "stock", "status" ]
+        );
     }
 }
