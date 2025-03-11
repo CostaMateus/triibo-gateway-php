@@ -48,6 +48,8 @@ class InsertFastShopSkus extends Command
      */
     public function handle()
     {
+        return 0;
+
         $start   = now();
         $message = "{$this->prefix} Starting process WC data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
