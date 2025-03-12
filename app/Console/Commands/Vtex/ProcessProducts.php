@@ -98,8 +98,6 @@ class ProcessProducts extends Command
      */
     public function handle() : int
     {
-        return 0;
-
         $start    = now();
         $this->log_message( message: "============================================" );
         $this->log_message( message: "VTEX Products: Starting process Vtex data..." );
@@ -247,6 +245,12 @@ class ProcessProducts extends Command
             if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) )
                 continue;
 
+            if ( empty( $chunk[ "create" ] ) )
+                unset( $chunk[ "create" ] );
+
+            if ( empty( $chunk[ "update" ] ) )
+                unset( $chunk[ "update" ] );
+
             try
             {
                 WC_Product::batch( $chunk );
@@ -302,6 +306,8 @@ class ProcessProducts extends Command
 
                 if ( !$local_product )
                     continue;
+
+                dump( $wc_product, $local_product );
 
                 $this->createOrUpdateLocalWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
             }
@@ -424,8 +430,8 @@ class ProcessProducts extends Command
      */
     private function getProductData( int $wc_id, string $sku, bool $create = false )
     {
-        $context = $this->getSkuContext( sku: $sku );
         $data    = $this->getSkuData( sku: $sku );
+        $context = $this->getSkuContext( sku: $sku );
 
         if ( ( !$context || !$data ) && !$create )
             return [ "id" => $wc_id, "stock_status" => "outofstock" ];
@@ -442,7 +448,13 @@ class ProcessProducts extends Command
             return null;
 
         if ( $create )
-            return [ "context" => $context, "simulate" => $simulate ];
+        {
+            return [
+                "data"     => $data,
+                "context"  => $context,
+                "simulate" => $simulate
+            ];
+        }
 
         return [
             "regular_price" => convert_price( price: $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ),
