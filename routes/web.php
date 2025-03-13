@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Illuminate\Support\Facades\{ Auth, Route };
@@ -55,6 +56,32 @@ Route::group( [ "middleware" => "auth" ], function()
 // =========================================
 Route::prefix( "mkt" )->group( function ()
 {
+    Route::get( "/create-customer", function()
+    {
+        $data = [
+            'email'      => 'john.doe.9.5.1@example.com',
+            'first_name' => 'John',
+            'last_name'  => 'Doe 9.5.1',
+            'username'   => 'john.doe.9.5.1',
+            'password'   => 'password',
+            'meta_data'   => [ [
+                'key'   => '_triibo_id',
+                'value' => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
+            ], [
+                'key'   => '_triibo_phone',
+                'value' => "+5511911112222"
+            ] ]
+        ];
+
+        $customer = Customer::create( $data );
+
+        // dump( $customer );
+
+        // $customer = Customer::update( $customer[ "id" ], [ "meta_data" => $data[ "meta_data" ] ] );
+
+        dd( $customer );
+    } );
+
     Route::get( "/get-customer/{id}", function( $id )
     {
         $customer = Customer::find( $id );
@@ -72,6 +99,20 @@ Route::prefix( "mkt" )->group( function ()
         catch ( \Exception $e )
         {
             dd( $e->getMessage() );
+        }
+    } );
+
+    Route::get( "/get-orders/{status}", function( $status = "pending" )
+    {
+        try
+        {
+            $orders = Order::where( "status", $status )->get();
+
+            dd( $orders );
+        }
+        catch ( \Exception $e )
+        {
+            dd( $e->getMessage(), $e );
         }
     } );
 
@@ -133,14 +174,26 @@ Route::prefix( "mkt" )->group( function ()
 
     Route::get( "/update-order/{id}", function( $id )
     {
-        $data  = [
-            "customer_id" => 1717,
-            "status"      => "processing",
+        $headers  = [
+            "Accept"    => "*/*",
+            "x-api-key" => "54723162306C6F6A7052646D4C6170693030",
         ];
 
-        $order = Order::update( $id, $data );
+        $url      = "https://marketplace.triibo.com.br/wp-json/triibo-payments/v1/orders/update-payment";
+        $params   = "?status=RECEIVED&orderId={$id}&approved=true";
 
-        dd( $data, $order );
+        $response = Http::withHeaders( headers: $headers ) ->get( url: $url . $params );
+
+        dd( $response->json() );
+
+        // $data  = [
+        //     "customer_id" => 1717,
+        //     "status"      => "processing",
+        // ];
+
+        // $order = Order::update( $id, $data );
+
+        // dd( $data, $order );
     } );
 
     Route::get( "/create-subscription/{id}", function( $id )
@@ -343,7 +396,6 @@ Route::prefix( "fs" )->group( function ()
         $translated = vtex_freight_to_woo( $response[ 1 ][ "data" ] );
         dd( $translated );
     } );
-
 
     Route::get( "/create-order", function()
     {
