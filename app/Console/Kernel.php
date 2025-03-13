@@ -85,9 +85,6 @@ class Kernel extends ConsoleKernel
             // Remove FS products without SKU
             $this->scheduleCommand( $schedule, "mkt:delete_product_without_sku"           )->dailyAt( "05:00" );
 
-            // Get Products - weekly on sunday, tuesday, thursday
-            $this->scheduleCommand( $schedule, "mkt:get_products"                         )->dailyAt( "05:30" )->days( [ 0, 2, 4 ] );
-
             // Get Categories - weekly on monday
             $this->scheduleCommand( $schedule, "mkt:get_categories"                       )->weeklyOn( 1, "06:00" );
 
