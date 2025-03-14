@@ -523,13 +523,21 @@ if ( !function_exists( "vtex_get_product_images" ) )
         } );
 
         // Map Vtex images to WooCommerce image format.
-        $data     = array_map( function ( $image ) {
-            return [
-                "src"  => explode( "?", $image[ "ImageUrl" ] )[ 0 ],
-                "name" => $image[ "ImageName" ],
-                "alt"  => $image[ "ImageName" ]
-            ];
-        }, $filtered );
+        $data     = array_map(
+            function ( $image )
+            {
+                $src  = explode( "?", $image[ "ImageUrl" ] )[ 0 ];
+                $name = explode( "/", $src );
+                $name = explode( ".", end( $name ) )[ 0 ];
+
+                return [
+                    "src"  => $src,
+                    "name" => $name,
+                    "alt"  => $name,
+                ];
+            },
+            $filtered
+        );
 
         return $data;
     }
