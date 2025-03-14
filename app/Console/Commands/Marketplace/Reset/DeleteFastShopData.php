@@ -44,7 +44,7 @@ class DeleteFastShopData extends Command
     /**
      * @var     array
      */
-    protected $allowed_options = [ null, "images", "products" ];
+    protected $allowed_options = [ null, "image", "images", "product", "products" ];
 
     /**
      * @var     string
@@ -69,30 +69,35 @@ class DeleteFastShopData extends Command
     public function handle()
     {
         $start      = now();
-        $message    = "{$this->prefix} Starting process...";
-        log_message( channel: self::LOG_CHANNEL, message: $message );
-        $this->info( string: $message );
-
         $option     = $this->option( key: "option" );
 
         if ( !in_array( needle: $option, haystack: $this->allowed_options ) )
         {
-            $message    = "{$this->prefix} Invalid option: {$option}";
+            $message = "{$this->prefix} Invalid option: {$option}";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->error( string: $message );
 
             return Command::FAILURE;
         }
 
-        $option     = $this->option( key: "option" ) ?: "attachment";
-        $option     = $option != "images"            ?: "attachment";
-
-        if ( config( key: "app.env" ) == "local" )
+        $option     = match ( $option )
         {
-            $db  = "dev-mkt";
-            $url = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
-        }
-        else
+            "product"   => "product",
+            "products"  => "product",
+            "image"     => "attachment",
+            "images"    => "attachment",
+            null        => "attachment",
+            default     => "attachment",
+        };
+
+        $message    = "{$this->prefix} Starting process, {$option}";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
+        $db         = "dev-mkt";
+        $url        = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
+
+        if ( config( key: "app.env" ) === "production" )
         {
             $db  = "prd-mkt";
             $url = "https://marketplace.triibo.com.br" . $this->url_sufix;
@@ -118,7 +123,8 @@ class DeleteFastShopData extends Command
                 $posts   = $conn->select( query: $this->getSelect( start: $lm_start, end: $lm_end, type: $option ) );
                 $ids     = [];
 
-                foreach ( $posts as $post ) $ids[] = ( string ) $post->id;
+                foreach ( $posts as $post )
+                    $ids[] = ( string ) $post->id;
 
                 $message  = "{$this->prefix} Selected: " . implode( ", ", $ids ) ;
                 log_message( channel: self::LOG_CHANNEL, message: $message, context: $ids );
