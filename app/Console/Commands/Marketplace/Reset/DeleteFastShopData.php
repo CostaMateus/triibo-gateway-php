@@ -30,7 +30,7 @@ class DeleteFastShopData extends Command
     /**
      * @var     string
      */
-    protected $url_sufix   = "/wp-json/triibo/v1/delete-fs-data";
+    protected $url_sufix   = "/wp-json/triibo/v1/delete/fs-data";
 
     /**
      * @var     array
