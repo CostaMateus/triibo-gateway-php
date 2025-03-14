@@ -6,36 +6,33 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 
-class DeleteFastShopImages extends Command
+class DeleteFastShopData extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var     string
      */
-    protected $signature = "mkt:delete_fastshop_images";
+    protected $signature = "mkt:delete_fs_data {--option= : Options: images, products }";
 
     /**
      * The console command description.
      *
      * @var     string
      */
-    protected $description = "Delete Fast Shop Images";
+    protected $description = "Delete Fast Shop data";
 
     /**
-     *
      * @var     string
      */
-    protected $prefix      = "MKT Delete Images:";
+    protected $prefix      = "MKT FS Delete:";
 
     /**
-     *
      * @var     string
      */
-    protected $url_sufix   = "/wp-json/triibo/v1/delete-images";
+    protected $url_sufix   = "/wp-json/triibo/v1/delete-fs-data";
 
     /**
-     *
      * @var     array
      */
     protected $headers     = [
@@ -45,7 +42,11 @@ class DeleteFastShopImages extends Command
     ];
 
     /**
-     *
+     * @var     array
+     */
+    protected $allowed_options = [ null, "images", "products" ];
+
+    /**
      * @var     string
      */
     protected const LOG_CHANNEL = "fastshop";
@@ -71,6 +72,20 @@ class DeleteFastShopImages extends Command
         $message    = "{$this->prefix} Starting process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
+
+        $option     = $this->option( key: "option" );
+
+        if ( !in_array( needle: $option, haystack: $this->allowed_options ) )
+        {
+            $message    = "{$this->prefix} Invalid option: {$option}";
+            log_message( channel: self::LOG_CHANNEL, message: $message );
+            $this->error( string: $message );
+
+            return Command::FAILURE;
+        }
+
+        $option     = $this->option( key: "option" ) ?: "attachment";
+        $option     = $option != "images"            ?: "attachment";
 
         if ( config( key: "app.env" ) == "local" )
         {
@@ -100,23 +115,27 @@ class DeleteFastShopImages extends Command
         {
             do
             {
-                $posts = $conn->select( query: $this->getSelect( start: $lm_start, end: $lm_end ) );
-                $ids   = [];
+                $posts   = $conn->select( query: $this->getSelect( start: $lm_start, end: $lm_end, type: $option ) );
+                $ids     = [];
 
-                foreach ( $posts as $post )
-                    $ids[] = ( string ) $post->id;
+                foreach ( $posts as $post ) $ids[] = ( string ) $post->id;
 
-                $message = "{$this->prefix} Selected: " . implode( ", ", $ids ) ;
+                $message  = "{$this->prefix} Selected: " . implode( ", ", $ids ) ;
                 log_message( channel: self::LOG_CHANNEL, message: $message, context: $ids );
                 $this->info( $message );
+
+                $content  = json_encode( [
+                    "posts" => $ids,
+                    "type"  => $option,
+                ] );
 
                 $response = retry(
                     times             : 3,
                     sleepMilliseconds : 1000,
-                    callback          : function () use ( $url, $ids )
+                    callback          : function () use ( $url, $content )
                     {
                         $response_2 = Http::withHeaders( headers: $this->headers )
-                                        ->withBody( content : json_encode( [ "posts" => $ids ] ), contentType : "application/json" )
+                                        ->withBody( content : $content, contentType : "application/json" )
                                         ->post( url: $url );
 
                         if ( !$response_2->successful() )
@@ -168,7 +187,7 @@ class DeleteFastShopImages extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        return 1;
+        return Command::SUCCESS;
     }
 
     /**
@@ -177,7 +196,7 @@ class DeleteFastShopImages extends Command
      * @param   int     $end
      * @return  string
      */
-    private function getSelect( int $start, int $end ) : string
+    private function getSelect( int $start, int $end, string $type ) : string
     {
         return "
             SELECT
@@ -194,7 +213,7 @@ class DeleteFastShopImages extends Command
             WHERE
                 p.post_author = 4265
             AND
-                p.post_type = 'attachment'
+                p.post_type = '{$type}'
             ORDER BY
                 p.ID DESC
             LIMIT
