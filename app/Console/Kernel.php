@@ -32,6 +32,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\DeleteFastShopSkus::class,
         \App\Console\Commands\Marketplace\InsertFastShopSkus::class,
 
+        \App\Console\Commands\Marketplace\Reset\DeleteFastShopData::class,
+
         // \App\Console\Commands\Triibo\SyncIdsMP::class,
         // \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         // \App\Console\Commands\Triibo\UnsetVouchers::class,
@@ -95,6 +97,12 @@ class Kernel extends ConsoleKernel
                     ->skip( function () {
                         return Cache::has( "mkt:get_products_running" );
                     } );
+        }
+
+        if ( config( "app.env" ) == "local" )
+        {
+            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=images"   )->yearlyOn( 3, 14, "20:50" );
+            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=products" )->yearlyOn( 3, 14, "21:00" );
         }
     }
 
