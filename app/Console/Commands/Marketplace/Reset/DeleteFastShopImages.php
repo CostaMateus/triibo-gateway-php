@@ -26,7 +26,7 @@ class DeleteFastShopImages extends Command
      *
      * @var     string
      */
-    protected $prefix      = "MKT DEL FS IMGS:";
+    protected $prefix      = "MKT Delete Images:";
 
     /**
      *
@@ -106,6 +106,10 @@ class DeleteFastShopImages extends Command
                 foreach ( $posts as $post )
                     $ids[] = ( string ) $post->id;
 
+                $message = "{$this->prefix} Selected: " . implode( ", ", $ids ) ;
+                log_message( channel: self::LOG_CHANNEL, message: $message, context: $ids );
+                $this->info( $message );
+
                 $response = retry(
                     times             : 3,
                     sleepMilliseconds : 1000,
@@ -125,7 +129,7 @@ class DeleteFastShopImages extends Command
                 if ( !$response->successful() )
                     throw new \Exception( $response->json()[ "message" ], $response->status() );
 
-                $message = "{$this->prefix} Processed: " . implode( ", ", $ids ) ;
+                $message = "{$this->prefix} Successful processed: " . implode( ", ", $ids ) ;
                 log_message( channel: self::LOG_CHANNEL, message: $message, context: $response->json() );
                 $this->info( $message );
 
