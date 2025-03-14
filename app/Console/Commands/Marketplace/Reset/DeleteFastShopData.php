@@ -108,19 +108,14 @@ class DeleteFastShopData extends Command
         $this->info( string: $message );
 
         $conn       = DB::connection( name: $db );
-
         $unfinished = true;
-
-        $lm_start   = 0;
-        $lm_end     = 10;
-
         $response   = null;
 
         try
         {
             do
             {
-                $posts   = $conn->select( query: $this->getSelect( start: $lm_start, end: $lm_end, type: $option ) );
+                $posts   = $conn->select( query: $this->getSelect( type: $option ) );
                 $ids     = [];
 
                 foreach ( $posts as $post )
@@ -154,12 +149,9 @@ class DeleteFastShopData extends Command
                 if ( !$response->successful() )
                     throw new \Exception( $response->json()[ "message" ], $response->status() );
 
-                $message = "{$this->prefix} Successful processed: " . implode( ", ", $ids ) ;
+                $message = "{$this->prefix} Successful processed";
                 log_message( channel: self::LOG_CHANNEL, message: $message, context: $response->json() );
                 $this->info( $message );
-
-                $lm_start = $lm_end + 1;
-                $lm_end   = $lm_end + 10;
 
                 if ( $posts < 10 )
                     $unfinished = false;
@@ -176,11 +168,7 @@ class DeleteFastShopData extends Command
                 channel : self::LOG_CHANNEL,
                 message : $message,
                 e       : $e,
-                context : [
-                    "lm_start" => $lm_start,
-                    "lm_end"   => $lm_end,
-                    "ids"      => $ids,
-                ],
+                context : [ "ids" => $ids ],
             );
         }
 
@@ -202,7 +190,7 @@ class DeleteFastShopData extends Command
      * @param   int     $end
      * @return  string
      */
-    private function getSelect( int $start, int $end, string $type ) : string
+    private function getSelect( string $type ) : string
     {
         return "
             SELECT
@@ -223,7 +211,7 @@ class DeleteFastShopData extends Command
             ORDER BY
                 p.ID DESC
             LIMIT
-                {$start}, {$end};
+                100;
         ";
     }
 }
