@@ -192,6 +192,8 @@ class DeleteFastShopData extends Command
      */
     private function getSelect( string $type ) : string
     {
+        $limit = $type == "attachment" ? 100 : 25;
+
         return "
             SELECT
                 p.ID as id,
@@ -209,9 +211,9 @@ class DeleteFastShopData extends Command
             AND
                 p.post_type = '{$type}'
             ORDER BY
-                p.ID DESC
+                p.ID ASC
             LIMIT
-                100;
+                {$limit};
         ";
     }
 }
