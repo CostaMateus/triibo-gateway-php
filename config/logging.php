@@ -138,6 +138,12 @@ return [
             "path"   => storage_path( "logs/marketplace.log" ),
             "level"  => "debug"
         ],
+        "fastshop"  => [
+            "permission" => 0777,
+            "driver" => "single",
+            "path"   => storage_path( "logs/fastshop.log" ),
+            "level"  => "debug"
+        ],
 
         // triibo
         "triibo"       => [
