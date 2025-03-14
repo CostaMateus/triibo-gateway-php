@@ -66,7 +66,7 @@ return [
         'dev-mkt' => [
             'driver'         => 'mysql',
             'url'            => '',
-            'host'           => '54.190.225.250',
+            'host'           => '50.112.97.101',
             'port'           => '3306',
             'database'       => 'triibomarketplace',
             'username'       => 'triibomarketplace',
