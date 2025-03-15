@@ -6,6 +6,7 @@ use Throwable;
 use Illuminate\Console\Command;
 use App\Services\Vtex\ProductService;
 use App\Services\Vtex\ConnectorService;
+use Illuminate\Support\Facades\Storage;
 use App\Services\Vtex\FulfillmentService;
 use Codexshaper\WooCommerce\Facades\Product;
 
@@ -14,21 +15,41 @@ class GetProductList extends Command
     /**
      * The name and signature of the console command.
      *
-     * @var string
+     * @var     string
      */
-    protected $signature = "vtex:get-product-list";
+    protected $signature   = "vtex:get-product-list";
 
     /**
      * The console command description.
      *
-     * @var string
+     * @var     string
      */
     protected $description = "Get product list";
 
+    /**
+     * @var     string
+     */
+    protected $prefix      = "FS:";
+
+    /**
+     * @var     string
+     */
     protected $sale_channel;
+
+    /**
+     * @var     ProductService
+     */
     protected $product_service;
+
+    /**
+     * @var     FulfillmentService
+     */
     protected $simulation_service;
-    protected const LOG_CHANNEL = "marketplace";
+
+    /**
+     * @var     string
+     */
+    protected const LOG_CHANNEL = "fastshop";
 
     /**
      * Create a new command instance.
@@ -51,23 +72,53 @@ class GetProductList extends Command
     }
 
     /**
-     * Execute the console command.
+     * Log message
      *
+     * @param   string  $message
+     * @param   string  $type
      * @return  void
      */
-    public function handle() : void
+    private function log_message( string $message, string $type = "info" ) : void
     {
-        $skus = $this->getAllSkus();
+        $message = "{$this->prefix} {$message}";
+
+        log_message( channel: self::LOG_CHANNEL, message: $message, level: $type );
+
+        $this->$type( string: $message );
+    }
+
+    /**
+     * Execute the console command.
+     *
+     * @return  int
+     */
+    public function handle() : int
+    {
+        $start = now();
+        $this->log_message( message: "Starting process" );
+
+        $skus  = $this->getAllSkus();
 
         if ( count( $skus ) == 0 )
         {
-            $this->error( "Error on load skus from connector" );
-            return;
+            $this->log_message( message: "Error on load skus from connector", type: "error" );
+            return Command::FAILURE;
         }
 
-        $this->info( "Load: " . count( $skus ) );
+        // $skus = Storage::get( "vtex/skus.json" );
+        // $skus = json_decode( $skus, true ); // 17905 | 15-03-2025
 
-        $this->getAllProducts( $skus );
+        $this->log_message( message: "Load: " . count( $skus ) );
+
+        $this->getAllProducts( skus: $skus );
+
+        $this->log_message( message: "Finished process..." );
+
+        $diff    = $start->diffInMinutes( date: now() );
+
+        $this->log_message( message: "Runtime {$diff} minutes..." );
+
+        return Command::SUCCESS;
     }
 
     /**
@@ -83,11 +134,11 @@ class GetProductList extends Command
 
         do
         {
-            $response = $this->product_service->initialSkuLoad( $page );
+            $response = $this->product_service->initialSkuLoad( page: $page );
 
             if ( $response[ 0 ] != 200 )
             {
-                $this->error( "Error on load skus from connector" );
+                $this->log_message( message: "Error on load skus from connector", type: "error" );
 
                 $count = 0;
 
@@ -97,13 +148,13 @@ class GetProductList extends Command
             $count     = count( $response[ 1 ][ "data" ] );
             $skus_list = array_merge( $skus_list, $response[ 1 ][ "data" ] );
 
-            $this->info( "Load {$count}" );
+            $this->log_message( message: "Load {$count} | page {$page}" );
 
             $page++;
         }
         while ( $count == 500 );
 
-        $this->info( "List of skus, loaded successfully" );
+        $this->log_message( message: "List of skus, loaded successfully" );
 
         return $skus_list;
     }
@@ -123,24 +174,36 @@ class GetProductList extends Command
         {
             foreach ( $skus as $sku )
             {
-                $context  = $this->getSkuContext( $sku );
-                $data     = $this->getSkuData( $sku );
+                $data     = $this->getSkuData( sku: $sku );
+                $context  = $this->getSkuContext( sku: $sku );
 
+                // No product data
                 if ( is_null( $data ) || is_null( $context ) )
                 {
-                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                    $this->error( "SKU: {$s} | Empty or disabled or channel diff" );
+                    $s       = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $this->log_message( message: "SKU: {$s} | Empty or disabled", type: "error" );
 
                     $fails[] = $sku;
                     continue;
                 }
 
-                $simulate = $this->getSimulate( $data[ "Id" ] );
+                $simulate = $this->getSimulate( id: $data[ "Id" ] );
 
+                // No freight simulation data
                 if ( is_null( $simulate ) )
                 {
-                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                    $this->error( "SKU: {$s} | Without simulate" );
+                    $s       = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $this->log_message( message: "SKU: {$s} | Without simulate", type: "error" );
+
+                    $fails[] = $sku;
+                    continue;
+                }
+
+                // Product without stock
+                if ( isset( $simulate[ "items" ] ) && $simulate[ "items" ][ 0 ][ "availability" ] !== "available" )
+                {
+                    $s       = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $this->log_message( message: "SKU: {$s} | Without stock", type: "error" );
 
                     $fails[] = $sku;
                     continue;
@@ -152,8 +215,9 @@ class GetProductList extends Command
                     "simulate" => $simulate,
                 ];
 
-                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                $this->info( "SKU: {$s}" );
+                $s        = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+
+                $this->log_message( message: "SKU loaded: {$s}" );
 
                 $products[ $sku ] = $product;
 
@@ -162,9 +226,9 @@ class GetProductList extends Command
                     $wc_products = $this->translateProducts( $products );
 
                     if ( is_array( $wc_products ) )
-                        $this->sendToMarketplace( $wc_products, $products );
+                        $this->sendToMarketplace( $wc_products, array_keys( $products ) );
 
-                    $this->info( "=================== Reset ===================" );
+                    $this->log_message( message: "=================== Reset ===================" );
 
                     $products = [];
                 }
@@ -180,20 +244,18 @@ class GetProductList extends Command
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
         }
 
         if ( count( $products ) != 0 )
         {
-            $wc_products = $this->translateProducts( $products );
+            $wc_products = $this->translateProducts( products: $products );
 
             if ( is_array( $wc_products ) )
-                $this->sendToMarketplace( $wc_products, $products );
+                $this->sendToMarketplace( products: $wc_products, ids: array_keys( $products ) );
         }
 
         save_file( name: "vtex-fails-sku", data: $fails );
-
-        $this->info( "=================== Finish ==================" );
     }
 
     /**
@@ -206,7 +268,7 @@ class GetProductList extends Command
     {
         try
         {
-            $response = $this->product_service->getSkuData( $sku );
+            $response = $this->product_service->getSkuData( sku: $sku );
 
             if ( $response[ 0 ] != 200 )
                 return null;
@@ -223,12 +285,13 @@ class GetProductList extends Command
             log_exception(
                 channel: self::LOG_CHANNEL,
                 message : $e->getMessage(),
+                context : [ "id" => $sku ],
                 method  : "getSkuData",
                 type    : "Throwable",
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
 
             return null;
         }
@@ -244,7 +307,7 @@ class GetProductList extends Command
     {
         try
         {
-            $response = $this->product_service->getSkuContext( $sku );
+            $response = $this->product_service->getSkuContext( sku: $sku );
 
             if ( $response[ 0 ] != 200 )
                 return null;
@@ -264,12 +327,13 @@ class GetProductList extends Command
             log_exception(
                 channel: self::LOG_CHANNEL,
                 message : $e->getMessage(),
+                context : [ "id" => $sku ],
                 method  : "getSkuContext",
                 type    : "Throwable",
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
 
             return null;
         }
@@ -298,7 +362,7 @@ class GetProductList extends Command
                 "selectedSla" => "Normal",
             ];
 
-            $response = $this->simulation_service->simulate( $data );
+            $response = $this->simulation_service->simulate( data: $data );
 
             if ( $response[ 0 ] != 200 )
                 return null;
@@ -321,12 +385,13 @@ class GetProductList extends Command
             log_exception(
                 channel: self::LOG_CHANNEL,
                 message : $e->getMessage(),
+                context : [ "id" => $id ],
                 method  : "getSimulate",
                 type    : "Throwable",
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
 
             return null;
         }
@@ -342,31 +407,38 @@ class GetProductList extends Command
     {
         try
         {
-            $this->info( "Translate to marketplace: " . count( $products ) );
+            $this->log_message( message: "Translate to marketplace: " . count( $products ) );
 
             $wc_data = [];
 
             foreach( $products as $sku => $product )
             {
-                $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                $this->info( "SKU: {$s} | " . $product[ "data" ][ "Name" ] );
+                $s         = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                $this->log_message( message: "SKU: {$s} | " . $product[ "data" ][ "Name" ] );
 
-                $wc_data[] = vtex_product_to_mkt( $product[ "data" ], $product[ "context" ], $product[ "simulate" ] );
+                $wc_data[] = vtex_product_to_mkt(
+                    data     : $product[ "data"     ],
+                    context  : $product[ "context"  ],
+                    simulate : $product[ "simulate" ]
+                );
             }
 
             return $wc_data;
         }
         catch( Throwable $e )
         {
+            $ids = array_keys( $products );
+
             log_exception(
                 channel: self::LOG_CHANNEL,
                 message : $e->getMessage(),
+                context : [ "ids" => $ids ],
                 method  : "translateProducts",
                 type    : "Throwable",
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
+            $this->log_message( message: $e->getMessage(), type: "error" );
 
             return null;
         }
@@ -376,31 +448,31 @@ class GetProductList extends Command
      * Undocumented function
      *
      * @param   array   $products
+     * @param   array   $ids
      * @return  void
      */
-    private function sendToMarketplace( array $products, array $original ) : void
+    private function sendToMarketplace( array $products, array $ids ) : void
     {
         try
         {
-            $this->info( "Send to marketplace" );
+            $this->log_message( message: "Send to marketplace" );
 
             Product::batch( [ "create" => $products ] );
 
-            $this->info( "Sent to marketplace successfully" );
+            $this->log_message( message: "Sent to marketplace successfully" );
         }
         catch ( Throwable $e )
         {
             log_exception(
-                channel: self::LOG_CHANNEL,
+                channel : self::LOG_CHANNEL,
                 message : $e->getMessage(),
+                context : [ "ids" => $ids ],
                 method  : "sendToMarketplace",
                 type    : "Throwable",
                 e       : $e
             );
 
-            $this->error( $e->getMessage() );
-
-            save_file( name: "vtex-fails-original-products", data: $original );
+            $this->log_message( message: $e->getMessage(), type: "error" );
         }
     }
 }
