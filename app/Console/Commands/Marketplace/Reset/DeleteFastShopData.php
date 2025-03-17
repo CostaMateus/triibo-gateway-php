@@ -138,7 +138,8 @@ class DeleteFastShopData extends Command
                     sleepMilliseconds : 2000,
                     callback          : function () use ( $url, $content )
                     {
-                        $response_2 = Http::withHeaders( headers: $this->headers )
+                        $response_2 = Http::timeout( 90 )
+                                        ->withHeaders( headers: $this->headers )
                                         ->withBody( content : $content, contentType : "application/json" )
                                         ->post( url: $url );
 
