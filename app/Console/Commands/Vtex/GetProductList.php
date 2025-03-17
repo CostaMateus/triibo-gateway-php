@@ -174,6 +174,9 @@ class GetProductList extends Command
         {
             foreach ( $skus as $sku )
             {
+                // if ( $sku != 24 )
+                //     continue;
+
                 $data     = $this->getSkuData( sku: $sku );
                 $context  = $this->getSkuContext( sku: $sku );
 
@@ -221,6 +224,7 @@ class GetProductList extends Command
 
                 $products[ $sku ] = $product;
 
+                // if ( count( $products ) == 10 || $sku == 24 )
                 if ( count( $products ) == 10 )
                 {
                     $wc_products = $this->translateProducts( $products );
@@ -457,7 +461,9 @@ class GetProductList extends Command
         {
             $this->log_message( message: "Send to marketplace" );
 
-            Product::batch( [ "create" => $products ] );
+            $ids = Product::batch( [ "create" => $products ] );
+
+            // dump( $ids );
 
             $this->log_message( message: "Sent to marketplace successfully" );
         }
