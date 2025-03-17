@@ -32,6 +32,8 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\Marketplace\DeleteFastShopSkus::class,
         \App\Console\Commands\Marketplace\InsertFastShopSkus::class,
 
+        \App\Console\Commands\Marketplace\Reset\DeleteFastShopData::class,
+
         // \App\Console\Commands\Triibo\SyncIdsMP::class,
         // \App\Console\Commands\Triibo\UnsetUpdateDate::class,
         // \App\Console\Commands\Triibo\UnsetVouchers::class,
@@ -91,10 +93,7 @@ class Kernel extends ConsoleKernel
             // Process product informations FS - every five minutes
             $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )
                     ->everyFiveMinutes()
-                    ->between( "6:00", "23:59" )
-                    ->skip( function () {
-                        return Cache::has( "mkt:get_products_running" );
-                    } );
+                    ->between( "6:00", "23:59" );
         }
     }
 
