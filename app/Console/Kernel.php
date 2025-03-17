@@ -93,16 +93,7 @@ class Kernel extends ConsoleKernel
             // Process product informations FS - every five minutes
             $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )
                     ->everyFiveMinutes()
-                    ->between( "6:00", "23:59" )
-                    ->skip( function () {
-                        return Cache::has( "mkt:get_products_running" );
-                    } );
-        }
-
-        if ( config( "app.env" ) == "local" )
-        {
-            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=images"   )->yearlyOn( 3, 14, "22:50" );
-            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=products" )->yearlyOn( 3, 14, "22:46" );
+                    ->between( "6:00", "23:59" );
         }
     }
 
