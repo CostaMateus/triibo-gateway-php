@@ -122,4 +122,50 @@ class DeleteDuplicateSku extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
     }
+
+    /**
+     * Remove orphaned entries in the 'wc_product_meta_lookup' table.
+     * This query deletes any rows from 'wp_wc_product_meta_lookup' where the associated
+     * post in the 'wp_posts' table is missing (i.e., the post.ID is NULL).
+     *
+     * @return  string
+     */
+    private function deletePostMetaLookupQuery() : string
+    {
+        return "
+            DELETE
+                wp_wc_product_meta_lookup
+            FROM
+                wp_wc_product_meta_lookup
+            LEFT JOIN
+                wp_posts
+            ON
+                wp_wc_product_meta_lookup.product_id = wp_posts.ID
+            WHERE
+                wp_posts.ID IS NULL;
+        ";
+    }
+
+    /**
+     * Remove orphaned entries in the 'postmeta' table.
+     * This query deletes any rows from 'wp_postmeta' where the associated
+     * post in the 'wp_posts' table is missing (i.e., the post.ID is NULL).
+     *
+     * @return string
+     */
+    private function deletePostMetaQuery() : string
+    {
+        return "
+            DELETE
+                wp_postmeta
+            FROM
+                wp_postmeta
+            LEFT JOIN
+                wp_posts
+            ON
+                wp_postmeta.post_id = wp_posts.ID
+            WHERE
+                wp_posts.ID IS NULL;
+        ";
+    }
 }
