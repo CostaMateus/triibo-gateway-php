@@ -101,8 +101,8 @@ class Kernel extends ConsoleKernel
 
         if ( config( "app.env" ) == "local" )
         {
-            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=images"   )->yearlyOn( 3, 14, "20:50" );
-            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=products" )->yearlyOn( 3, 14, "21:00" );
+            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=images"   )->yearlyOn( 3, 14, "22:50" );
+            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --option=products" )->yearlyOn( 3, 14, "22:46" );
         }
     }
 
