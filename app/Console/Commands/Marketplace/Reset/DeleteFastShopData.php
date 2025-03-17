@@ -134,8 +134,8 @@ class DeleteFastShopData extends Command
                 ] );
 
                 $response = retry(
-                    times             : 3,
-                    sleepMilliseconds : 1000,
+                    times             : 5,
+                    sleepMilliseconds : 2000,
                     callback          : function () use ( $url, $content )
                     {
                         $response_2 = Http::withHeaders( headers: $this->headers )
@@ -147,6 +147,14 @@ class DeleteFastShopData extends Command
 
                         return $response_2;
                     },
+                    when              : function ( \Throwable $e )
+                    {
+                        $message    = "{$this->prefix} Retry. Error: {$e->getMessage()}";
+                        log_message ( channel: self::LOG_CHANNEL, message: $message );
+                        $this->error( string: $message );
+
+                        return true;
+                    }
                 );
 
                 if ( !$response->successful() )
