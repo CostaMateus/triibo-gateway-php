@@ -115,8 +115,11 @@ class DeleteFastShopData extends Command
         {
             do
             {
-                $posts   = $conn->select( query: $this->getSelect( type: $option ) );
-                $ids     = [];
+                $posts    = $conn->select( query: $this->getSelect( type: $option ) );
+
+                if ( !$posts ) break;
+
+                $ids      = [];
 
                 foreach ( $posts as $post )
                     $ids[] = ( string ) $post->id;
@@ -149,7 +152,7 @@ class DeleteFastShopData extends Command
                 if ( !$response->successful() )
                     throw new \Exception( $response->json()[ "message" ], $response->status() );
 
-                $message = "{$this->prefix} Successful processed";
+                $message  = "{$this->prefix} Successful processed";
                 log_message( channel: self::LOG_CHANNEL, message: $message, context: $response->json() );
                 $this->info( $message );
 
@@ -192,7 +195,7 @@ class DeleteFastShopData extends Command
      */
     private function getSelect( string $type ) : string
     {
-        $limit = $type == "attachment" ? 100 : 25;
+        $limit = $type == "attachment" ? 1000 : 25;
 
         return "
             SELECT
