@@ -241,22 +241,22 @@ class MarketplaceController extends Controller
         $order->mkt_id     = $wc_order[ "id" ];
         $order->ord_status = "processed";
 
-        // $response          = vtex_new_order_exec( "triibo", self::SELLER, $freight[ "data" ], $wc_order );
+        $response          = vtex_new_order_exec( "triibo", self::SELLER, $freight[ "data" ], $wc_order );
 
-        // if ( $response[ "error_code" ] !== null )
-        // {
-        //     $order->ord_status = "fs_create_error";
-        //     $order->save();
+        if ( $response[ "error_code" ] !== null )
+        {
+            $order->ord_status = "fs_create_error";
+            $order->save();
 
-        //     return log_and_redirect(
-        //         channel : self::LOG_CHANNEL,
-        //         route   : self::ROUTE,
-        //         type    : self::ERROR,
-        //         message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
-        //     );
-        // }
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
+            );
+        }
 
-        // $order->save();
+        $order->save();
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
