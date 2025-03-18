@@ -111,7 +111,7 @@
                                             </a>
                                         </th>
                                         <th class="text-center text-nowrap" >Quantidade</th>
-                                        <th class="text-center text-nowrap" >Nome produto</th>
+                                        <th class="text-center text-nowrap" style="min-width:400px" >Nome produto</th>
                                         <th class="text-center text-nowrap" >
                                             ID usuário
                                             <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="ID do usuário ao qual o pedido ficará atrelado no marketplace" >
@@ -148,7 +148,15 @@
                                             <td class="text-nowrap text-end" >{{ number_format( $order->max_price, 2, ',', '.' ) }}</td>
                                             <td class="text-nowrap"          >{{ $order->product_id   }}</td>
                                             <td class="text-nowrap"          >{{ $order->product_qntt }}</td>
-                                            <td class="text-nowrap"          >{{ $order->product_name }}</td>
+                                            <td style="min-width:400px" >
+                                                <p class="mb-0 name-preview" >{{ Str::limit( $order->product_name, 50 ) }}</p>
+                                                <div class="name-full d-none" >
+                                                    {{ $order->product_name }}
+                                                </div>
+                                                <div class="text-center" >
+                                                    <button class="btn btn-sm btn-link show-more-name" >Ver mais</button>
+                                                </div>
+                                            </td>
                                             <td class="text-nowrap"          >{{ $order->customer_id  }}</td>
                                             <td class="text-nowrap" >
                                                 <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->billing ), 20 ) }}</p>
@@ -259,6 +267,25 @@
             const parser    = new URL( window.location );
             parser.searchParams.set( "status", status );
             window.location = parser.href;
+        } );
+
+        // Show more/less for name
+        $( document ).on( "click", ".show-more-name", function()
+        {
+            var row = $( this ).closest( "tr" );
+
+            row.find( ".name-preview" ).toggleClass( "d-none" );
+            row.find( ".name-full"    ).toggleClass( "d-none" );
+
+            $( this ).text( function( i, text )
+            {
+                return text === "Ver mais" ? "Ver menos" : "Ver mais";
+            } );
+
+            // Hide other expanded name
+            $( "tr" ).not( row ).find( ".name-preview" ).removeClass( "d-none" );
+            $( "tr" ).not( row ).find( ".name-full"    ).addClass( "d-none" );
+            $( "tr" ).not( row ).find( ".show-more-name"  ).text( "Ver mais" );
         } );
 
         // Show more/less for addresses
