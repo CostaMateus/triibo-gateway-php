@@ -1290,19 +1290,21 @@ if ( !function_exists( "create_marketplace_order"  ) )
 
         try
         {
-            $response = retry(
-                times             : 3,
-                sleepMilliseconds : 2000,
-                callback          : function () use ( $data )
-                {
-                    return WC_Order::create( $data );
-                },
-                when              : function ( \Exception $e ) use ( $channel )
-                {
-                    log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
-                    return true;
-                }
-            );
+            // $response = retry(
+            //     times             : 3,
+            //     sleepMilliseconds : 2000,
+            //     callback          : function () use ( $data )
+            //     {
+            //         return WC_Order::create( $data );
+            //     },
+            //     when              : function ( HttpClientException $e ) use ( $channel )
+            //     {
+            //         log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
+            //         return true;
+            //     }
+            // );
+
+            $response = WC_Order::create( $data );
 
             $order    = [
                 "success" => true,
@@ -1311,18 +1313,18 @@ if ( !function_exists( "create_marketplace_order"  ) )
                 "data"    => $response,
             ];
         }
-        catch ( \Throwable $e )
+        catch ( \Exception $e )
         {
             log_message( channel: $channel, message: print_r( $e, true ) );
 
             if ( $e->getMessage() == "JSON ERROR: Syntax error" )
             {
-                $order[ "message" ] = "{$oorder_id}: Erro ao tentar criar pedido, tente novamente.";
+                $order[ "message" ] = "{$order_id}: Erro ao tentar criar pedido, tente novamente.";
                 $order[ "code"    ] = 502;
             }
             else
             {
-                $order[ "message" ] = "{$oorder_id}: Erro ao tentar criar pedido.";
+                $order[ "message" ] = "{$order_id}: Erro ao tentar criar pedido.";
                 $order[ "code"    ] = 500;
             }
         }
