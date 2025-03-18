@@ -43,14 +43,17 @@ class MarketplaceController extends Controller
 
         $orders   = $query->paginate( 100 )->through( function ( $order )
         {
-            $order->billing  = reorganize_fields( $order->billing,  get_billing_fields_order()  );
-            $order->shipping = reorganize_fields( $order->shipping, get_shipping_fields_order() );
-            $order->status   = get_order_status( $order->ord_status );
+            $order->billing  = reorganize_fields( data : $order->billing,  order : get_billing_fields_order()  );
+            $order->shipping = reorganize_fields( data : $order->shipping, order : get_shipping_fields_order() );
+            $order->status   = get_order_status( status : $order->ord_status );
 
             return $order;
         } );
 
-        return view( "marketplace.index", compact( "file", "files", "orders", "status", "statuses" ) );
+        return view(
+            view : "marketplace.index",
+            data : compact( "file", "files", "orders", "status", "statuses" )
+        );
     }
 
     /**
@@ -60,14 +63,14 @@ class MarketplaceController extends Controller
      */
     public function importOrders( Request $request ) : RedirectResponse
     {
-        $request->validate( [ "csv_file" => "required|file|mimes:csv,txt|max:2048" ] );
+        $request->validate( rules : [ "csv_file" => "required|file|mimes:csv,txt|max:2048" ] );
 
         $type    = self::ERROR;
         $message = "Arquivo inválido.";
 
-        if ( $request->file( "csv_file" )->isValid() )
+        if ( $request->file( key : "csv_file" )->isValid() )
         {
-            $processed = process_csv_file( $request->file( "csv_file" ) );
+            $processed = process_csv_file( file : $request->file( "csv_file" ) );
 
             if ( $processed )
             {
@@ -338,11 +341,11 @@ class MarketplaceController extends Controller
         $vtex     = new VtexOrderController();
         $request  = new Request();
 
-        $request->headers->set( "seller",    self::SELLER                          );
-        $request->headers->set( "api-key",   config( "woocommerce.plugins.key"   ) );
-        $request->headers->set( "api-token", config( "woocommerce.plugins.token" ) );
+        $request->headers->set( key : "seller",    values : self::SELLER                          );
+        $request->headers->set( key : "api-key",   values : config( "woocommerce.plugins.key"   ) );
+        $request->headers->set( key : "api-token", values : config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderApproval( $request, $order->mkt_id );
+        $response = $vtex->orderApproval( request : $request, order_id : $order->mkt_id );
 
         if ( $response->status() != 200 )
         {
@@ -416,11 +419,11 @@ class MarketplaceController extends Controller
         $vtex     = new VtexOrderController();
         $request  = new Request();
 
-        $request->headers->set( "seller",    self::SELLER                          );
-        $request->headers->set( "api-key",   config( "woocommerce.plugins.key"   ) );
-        $request->headers->set( "api-token", config( "woocommerce.plugins.token" ) );
+        $request->headers->set( key : "seller",    values: self::SELLER                          );
+        $request->headers->set( key : "api-key",   values: config( "woocommerce.plugins.key"   ) );
+        $request->headers->set( key : "api-token", values: config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderCancellation( $request, $order->mkt_id );
+        $response = $vtex->orderCancellation( request : $request, order_id : $order->mkt_id );
 
         if ( $response->status() != 200 )
         {
