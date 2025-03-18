@@ -1227,12 +1227,7 @@ if ( !function_exists( "get_marketplace_product" ) )
                 sleepMilliseconds : 2000,
                 callback          : function () use ( $order )
                 {
-                    $response = WC_Product::find( $order->product_id );
-
-                    if ( !$response->successful() )
-                        throw new \Exception( "Error: product query call failed", $response->status() );
-
-                    return $response;
+                    return WC_Product::find( $order->product_id );
                 },
                 when              : function ( \Throwable $e )
                 {
