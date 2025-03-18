@@ -126,8 +126,6 @@ class OrderController extends VtexController
                 // TODO confirmar se precisa reativar essas notificações
                 // send_notification( $parent, $order, "invoice_error" );
             }
-
-            return response()->json( [ "success" => true ], 200 );
         }
         catch ( Throwable $e )
         {
@@ -148,6 +146,8 @@ class OrderController extends VtexController
                 ], 400 );
             }
         }
+
+        return response()->json( [ "success" => true ], 200 );
     }
 
     /**

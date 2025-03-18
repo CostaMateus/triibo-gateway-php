@@ -1290,20 +1290,6 @@ if ( !function_exists( "create_marketplace_order"  ) )
 
         try
         {
-            // $response = retry(
-            //     times             : 3,
-            //     sleepMilliseconds : 2000,
-            //     callback          : function () use ( $data )
-            //     {
-            //         return WC_Order::create( $data );
-            //     },
-            //     when              : function ( HttpClientException $e ) use ( $channel )
-            //     {
-            //         log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
-            //         return true;
-            //     }
-            // );
-
             $response = WC_Order::create( $data );
 
             $order    = [
