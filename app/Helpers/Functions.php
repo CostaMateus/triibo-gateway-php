@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
 use Illuminate\Support\Facades\{ DB, Log };
+use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 
 if ( !function_exists( "log_message" ) )
@@ -1103,9 +1104,11 @@ if ( !function_exists( "marketplace_new_order_prepare" ) )
                 [ "key" => "_shipping_neighborhood", "value" => $order->shipping[ "neighborhood" ] ?? "", ],
                 [ "key" => "_billing_number",        "value" => $order->billing [ "number"       ] ?? "", ],
                 [ "key" => "_billing_neighborhood",  "value" => $order->billing [ "neighborhood" ] ?? "", ],
-                [ "key" => "_billing_cnpj",          "value" => $order->billing [ "cnpj"         ], ],
-                [ "key" => "_billing_ie",            "value" => $order->billing [ "ie"           ], ],
-                [ "key" => "_billing_persontype",    "value" => 2, ] // J - pessoa juridica
+                [ "key" => "_billing_cnpj",          "value" => $order->billing [ "cnpj"         ],       ],
+                [ "key" => "_billing_ie",            "value" => $order->billing [ "ie"           ],       ],
+                [ "key" => "_billing_persontype",    "value" => 2,                                        ], // J - pessoa juridica
+                [ "key" => "_is_integration",        "value" => "yes",                                    ],
+                [ "key" => "_ord_id",                "value" => $order->ord_id,                           ]
             ]
         ];
 
@@ -1198,5 +1201,81 @@ if ( !function_exists( "update_local_establishment" ) )
                 "push_id" => $push_id,
                 "data"    => json_encode( $establishment )
             ] );
+    }
+}
+
+if ( !function_exists( "get_marketplace_product" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @return  array
+     */
+    function get_marketplace_product( string $channel, Order $order ) : array
+    {
+        $product = [
+            "success" => false,
+            "message" => "",
+            "code"    => 0,
+            "data"    => [],
+        ];
+
+        try
+        {
+            $response = retry(
+                times             : 3,
+                sleepMilliseconds : 2000,
+                callback          : function () use ( $order )
+                {
+                    $response = WC_Product::find( $order->product_id );
+
+                    if ( !$response->successful() )
+                        throw new \Exception( "Error: product query call failed", $response->status() );
+
+                    return $response;
+                },
+                when              : function ( \Throwable $e )
+                {
+                    return true;
+                }
+            );
+
+            $product  = [
+                "success" => true,
+                "message" => "ok",
+                "code"    => 200,
+                "data"    => $response,
+            ];
+        }
+        catch ( \Throwable $e )
+        {
+            log_message( channel: $channel, message: print_r( $e, true ) );
+
+            if ( $e->getMessage() == "Error: ID inválido. [woocommerce_rest_product_invalid_id]" )
+            {
+                $order->ord_status = "product_not_found";
+                $order->save();
+
+                $product[ "message" ] = "{$order->ord_id}: Produto não encontrado.";
+                $product[ "code"    ] = 404;
+            }
+            elseif ( $e->getMessage() == "JSON ERROR: Syntax error" )
+            {
+                $product[ "message" ] = "{$order->ord_id}: Não foi possível consultar o produto, tente novamente.";
+                $product[ "code"    ] = 502;
+            }
+            elseif ( $e->getMessage() == "Error: <p>Há um erro crítico no seu site.</p><p><a href=\"https:\/\/wordpress.org/documentation/article/faq-troubleshooting/\">Saiba mais sobre a como resolver problemas do WordPress.</a></p> [internal_server_error]" )
+            {
+                $product[ "message" ] = "{$order->ord_id}: Erro interno, tente novamente.";
+                $product[ "code"    ] = 501;
+            }
+            else
+            {
+                $product[ "message" ] = "{$order->ord_id}: Erro ao consultar o produto, tente novamente.";
+                $product[ "code"    ] = 500;
+            }
+        }
+
+        return $product;
     }
 }

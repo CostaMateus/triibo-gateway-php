@@ -91,7 +91,9 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive" >
+                        {!! $orders->onEachSide( 1 )->links( "pagination::bootstrap-5" ) !!}
+
+                        <div class="table-responsive my-3" >
                             <table class="table table-borderless table-striped table-sm mb-0" >
                                 <thead>
                                     <tr>
@@ -211,6 +213,7 @@
                             </table>
                         </div>
 
+                        {!! $orders->onEachSide( 1 )->links( "pagination::bootstrap-5" ) !!}
                     </div>
                 </div>
             </div>

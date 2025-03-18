@@ -7,7 +7,7 @@
         <div class="container-fluid" >
             <div class="row justify-content-center" >
 
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 text-center mb-3" >
+                <div class="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3 text-center mb-3" >
                     <div class="card bg-white" >
                         <div class="card-body" >
                             <a class="text-decoration-none" href="{{ route( "users.index" ) }}" >
@@ -18,7 +18,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 text-center mb-3" >
+                <div class="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3 text-center mb-3" >
                     <div class="card bg-white" >
                         <div class="card-body" >
                             <a class="text-decoration-none" href="{{ route( "log-viewer.index" ) }}" >
@@ -32,7 +32,7 @@
             </div>
 
             <div class="row justify-content-center" >
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 text-center mb-3" >
+                <div class="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3 text-center mb-3" >
                     <div class="card bg-white" >
                         <div class="card-body" >
                             <a class="text-decoration-none" href="{{ route( "docs.index" ) }}" >
@@ -43,7 +43,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3 text-center mb-3" >
+                <div class="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3 text-center mb-3" >
                     <div class="card bg-white" >
                         <div class="card-body" >
                             <a class="text-decoration-none" href="{{ route( "mkt.index" ) }}" >

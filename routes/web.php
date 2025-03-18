@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Storage;
 use Kreait\Laravel\Firebase\Facades\Firebase;
 use Illuminate\Support\Facades\{ Auth, Route };
 use App\Http\Controllers\Vtex\ProductController;
+use Codexshaper\WooCommerce\Facades\PaymentGateway;
 use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 use Codexshaper\WooCommerce\Facades\{ Order, Product, Customer, Subscription };
 use App\Http\Controllers\{ HomeController, MarketplaceController, UserController };
@@ -122,8 +123,8 @@ Route::prefix( "mkt" )->group( function ()
             "customer_id"          => 1717,
             "set_paid"             => false,
             "status"               => "on-hold",
-            "payment_method"       => "triibo_assinaturas",
-            "payment_method_title" => "Recorrente",
+            "payment_method"       => "triibo_payments_pix",
+            "payment_method_title" => "Triibo PIX",
             // "meta_data"            => [
             //     [
             //         "key"   => "_triibo_id",
@@ -162,8 +163,8 @@ Route::prefix( "mkt" )->group( function ()
                 'country'    => 'US',
             ],
             "line_items"           => [ [
-                "product_id" => 1021687,
-                "quantity"   => 1
+                "product_id" => 1023758,
+                "quantity"   => 2
             ] ],
         ];
 
@@ -356,6 +357,13 @@ Route::prefix( "mkt" )->group( function ()
         }
 
         dd( "Count: " . count( $wc_products ) );
+    } );
+
+    Route::get( "/get-gateways", function()
+    {
+        $paymentGateways = PaymentGateway::all();
+
+        dd( $paymentGateways );
     } );
 } );
 
