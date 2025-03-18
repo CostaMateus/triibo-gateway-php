@@ -13,7 +13,7 @@ class MarketplaceController extends Controller
 {
     const LOG_CHANNEL = "triibo";
 
-    const ROUTE       = "mkt.orders";
+    const ROUTE       = "mkt.index";
 
     const SELLER      = "fast_shop";
 
