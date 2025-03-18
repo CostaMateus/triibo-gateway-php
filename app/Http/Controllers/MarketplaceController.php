@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Marketplace\Order;
+use Illuminate\Support\Facades\App;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\{ Request, RedirectResponse };
 use Codexshaper\WooCommerce\Facades\Order as WC_Order;
@@ -40,7 +41,7 @@ class MarketplaceController extends Controller
         if ( $status != "all" )
             $query->where( "ord_status", $status );
 
-        $orders   = $query->get()->map( function ( $order )
+        $orders   = $query->paginate( 100 )->through( function ( $order )
         {
             $order->billing  = reorganize_fields( $order->billing,  get_billing_fields_order()  );
             $order->shipping = reorganize_fields( $order->shipping, get_shipping_fields_order() );
@@ -122,54 +123,91 @@ class MarketplaceController extends Controller
             );
         }
 
-        try
-        {
-            $product = WC_Product::find( $order->product_id );
-        }
-        catch ( \Throwable $e )
-        {
-            log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
+        // try
+        // {
+        //     $product = retry(
+        //         times             : 3,
+        //         sleepMilliseconds : 2000,
+        //         callback          : function () use ( $order )
+        //         {
+        //             $response = WC_Product::find( $order->product_id );
 
-            if ( $e->getMessage() == "Error: ID inválido. [woocommerce_rest_product_invalid_id]" )
-            {
-                $order->ord_status = "product_not_found";
-                $order->save();
+        //             if ( !$response->successful() )
+        //                 throw new \Exception( "Error: product query call failed", $response->status() );
 
-                return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : "{$order->ord_id}: Produto não encontrado."
-                );
-            }
-            elseif ( $e->getMessage() == "JSON ERROR: Syntax error" )
-            {
-                // return log_and_redirect(
-                //     channel : self::LOG_CHANNEL,
-                //     route   : self::ROUTE,
-                //     type    : "warning",
-                //     message : "{$order->ord_id}: Não foi possível consultar o produto, tente novamente."
-                // );
-            }
-            elseif ( $e->getMessage() == "Error: <p>Há um erro crítico no seu site.</p><p><a href=\"https:\/\/wordpress.org/documentation/article/faq-troubleshooting/\">Saiba mais sobre a como resolver problemas do WordPress.</a></p> [internal_server_error]" )
-            {
-                return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : "{$order->ord_id}: Erro interno, tente novamente."
-                );
-            }
-            else
-            {
-                return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : "{$order->ord_id}: Erro ao consultar o produto, tente novamente."
-                );
-            }
+        //             return $response;
+        //         },
+        //         when              : function ( \Throwable $e )
+        //         {
+        //             $message  = "{$this->prefix} Retry. Error: {$e->getMessage()}";
+        //             log_message ( channel: self::LOG_CHANNEL, message: $message );
+
+        //             return true;
+        //         }
+        //     );
+        // }
+        // catch ( \Throwable $e )
+        // {
+        //     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
+
+        //     if ( $e->getMessage() == "Error: ID inválido. [woocommerce_rest_product_invalid_id]" )
+        //     {
+        //         $order->ord_status = "product_not_found";
+        //         $order->save();
+
+        //         return log_and_redirect(
+        //             channel : self::LOG_CHANNEL,
+        //             route   : self::ROUTE,
+        //             type    : self::ERROR,
+        //             message : "{$order->ord_id}: Produto não encontrado."
+        //         );
+        //     }
+        //     elseif ( $e->getMessage() == "JSON ERROR: Syntax error" )
+        //     {
+        //         // return log_and_redirect(
+        //         //     channel : self::LOG_CHANNEL,
+        //         //     route   : self::ROUTE,
+        //         //     type    : "warning",
+        //         //     message : "{$order->ord_id}: Não foi possível consultar o produto, tente novamente."
+        //         // );
+        //     }
+        //     elseif ( $e->getMessage() == "Error: <p>Há um erro crítico no seu site.</p><p><a href=\"https:\/\/wordpress.org/documentation/article/faq-troubleshooting/\">Saiba mais sobre a como resolver problemas do WordPress.</a></p> [internal_server_error]" )
+        //     {
+        //         return log_and_redirect(
+        //             channel : self::LOG_CHANNEL,
+        //             route   : self::ROUTE,
+        //             type    : self::ERROR,
+        //             message : "{$order->ord_id}: Erro interno, tente novamente."
+        //         );
+        //     }
+        //     else
+        //     {
+        //         return log_and_redirect(
+        //             channel : self::LOG_CHANNEL,
+        //             route   : self::ROUTE,
+        //             type    : self::ERROR,
+        //             message : "{$order->ord_id}: Erro ao consultar o produto, tente novamente."
+        //         );
+        //     }
+        // }
+
+        do
+        {
+            $response = get_marketplace_product( channel: self::LOG_CHANNEL, order: $order );
         }
+        while( !$response[ "success" ] && $response[ "code" ] == 502 );
+
+        if ( !$response[ "success" ] )
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : $response[ "message" ]
+            );
+        }
+
+        $product = $response[ "data" ];
 
         if ( $product[ "store" ]->id != $store_id )
         {
@@ -230,6 +268,8 @@ class MarketplaceController extends Controller
         }
 
         $wc_data        = marketplace_new_order_prepare( $order, $order->product_id, $delivery_price );
+
+        dd( $order, $wc_data );
 
         try
         {
