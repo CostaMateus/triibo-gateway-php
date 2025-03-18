@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
 use Illuminate\Support\Facades\{ DB, Log };
+use Codexshaper\WooCommerce\Facades\Order as WC_Order;
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 
@@ -1207,8 +1208,6 @@ if ( !function_exists( "update_local_establishment" ) )
 if ( !function_exists( "get_marketplace_product" ) )
 {
     /**
-     * Undocumented function
-     *
      * @return  array
      */
     function get_marketplace_product( string $channel, Order $order ) : array
@@ -1229,7 +1228,7 @@ if ( !function_exists( "get_marketplace_product" ) )
                 {
                     return WC_Product::find( $order->product_id );
                 },
-                when              : function ( \Throwable $e )
+                when              : function ()
                 {
                     return true;
                 }
@@ -1272,5 +1271,61 @@ if ( !function_exists( "get_marketplace_product" ) )
         }
 
         return $product;
+    }
+}
+
+if ( !function_exists( "create_marketplace_order"  ) )
+{
+    /**
+     * @return  array
+     */
+    function create_marketplace_order( string $channel, array $data, string $order_id ) : array
+    {
+        $order = [
+            "success" => false,
+            "message" => "",
+            "code"    => 0,
+            "data"    => [],
+        ];
+
+        try
+        {
+            $response = retry(
+                times             : 3,
+                sleepMilliseconds : 2000,
+                callback          : function () use ( $data )
+                {
+                    return WC_Order::create( $data );
+                },
+                when              : function ()
+                {
+                    return true;
+                }
+            );
+
+            $order    = [
+                "success" => true,
+                "message" => "ok",
+                "code"    => 200,
+                "data"    => $response,
+            ];
+        }
+        catch ( \Throwable $e )
+        {
+            log_message( channel: $channel, message: print_r( $e, true ) );
+
+            if ( $e->getMessage() == "JSON ERROR: Syntax error" )
+            {
+                $order[ "message" ] = "{$oorder_id}: Erro ao tentar criar pedido, tente novamente.";
+                $order[ "code"    ] = 502;
+            }
+            else
+            {
+                $order[ "message" ] = "{$oorder_id}: Erro ao tentar criar pedido.";
+                $order[ "code"    ] = 500;
+            }
+        }
+
+        return $order;
     }
 }
