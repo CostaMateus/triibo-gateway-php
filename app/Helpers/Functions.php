@@ -1313,6 +1313,7 @@ if ( !function_exists( "create_marketplace_order"  ) )
         catch ( \Throwable $e )
         {
             log_message( channel: $channel, message: print_r( $e, true ) );
+            log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
 
             if ( $e->getMessage() == "JSON ERROR: Syntax error" )
             {
