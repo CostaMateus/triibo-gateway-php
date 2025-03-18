@@ -1297,7 +1297,7 @@ if ( !function_exists( "create_marketplace_order"  ) )
                 {
                     return WC_Order::create( $data );
                 },
-                when              : function ( \Throwable $e ) use ( $channel )
+                when              : function ( \Exception $e ) use ( $channel )
                 {
                     log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
                     return true;
