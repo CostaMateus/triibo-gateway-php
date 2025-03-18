@@ -123,74 +123,6 @@ class MarketplaceController extends Controller
             );
         }
 
-        // try
-        // {
-        //     $product = retry(
-        //         times             : 3,
-        //         sleepMilliseconds : 2000,
-        //         callback          : function () use ( $order )
-        //         {
-        //             $response = WC_Product::find( $order->product_id );
-
-        //             if ( !$response->successful() )
-        //                 throw new \Exception( "Error: product query call failed", $response->status() );
-
-        //             return $response;
-        //         },
-        //         when              : function ( \Throwable $e )
-        //         {
-        //             $message  = "{$this->prefix} Retry. Error: {$e->getMessage()}";
-        //             log_message ( channel: self::LOG_CHANNEL, message: $message );
-
-        //             return true;
-        //         }
-        //     );
-        // }
-        // catch ( \Throwable $e )
-        // {
-        //     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
-
-        //     if ( $e->getMessage() == "Error: ID inválido. [woocommerce_rest_product_invalid_id]" )
-        //     {
-        //         $order->ord_status = "product_not_found";
-        //         $order->save();
-
-        //         return log_and_redirect(
-        //             channel : self::LOG_CHANNEL,
-        //             route   : self::ROUTE,
-        //             type    : self::ERROR,
-        //             message : "{$order->ord_id}: Produto não encontrado."
-        //         );
-        //     }
-        //     elseif ( $e->getMessage() == "JSON ERROR: Syntax error" )
-        //     {
-        //         // return log_and_redirect(
-        //         //     channel : self::LOG_CHANNEL,
-        //         //     route   : self::ROUTE,
-        //         //     type    : "warning",
-        //         //     message : "{$order->ord_id}: Não foi possível consultar o produto, tente novamente."
-        //         // );
-        //     }
-        //     elseif ( $e->getMessage() == "Error: <p>Há um erro crítico no seu site.</p><p><a href=\"https:\/\/wordpress.org/documentation/article/faq-troubleshooting/\">Saiba mais sobre a como resolver problemas do WordPress.</a></p> [internal_server_error]" )
-        //     {
-        //         return log_and_redirect(
-        //             channel : self::LOG_CHANNEL,
-        //             route   : self::ROUTE,
-        //             type    : self::ERROR,
-        //             message : "{$order->ord_id}: Erro interno, tente novamente."
-        //         );
-        //     }
-        //     else
-        //     {
-        //         return log_and_redirect(
-        //             channel : self::LOG_CHANNEL,
-        //             route   : self::ROUTE,
-        //             type    : self::ERROR,
-        //             message : "{$order->ord_id}: Erro ao consultar o produto, tente novamente."
-        //         );
-        //     }
-        // }
-
         do
         {
             $response = get_marketplace_product( channel: self::LOG_CHANNEL, order: $order );
@@ -269,47 +201,62 @@ class MarketplaceController extends Controller
 
         $wc_data        = marketplace_new_order_prepare( $order, $order->product_id, $delivery_price );
 
-        dd( $order, $wc_data );
+        // try
+        // {
+        //     $wc_order = WC_Order::create( $wc_data );
+        // }
+        // catch ( \Throwable $e )
+        // {
+        //     if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
+        //     {
+        //         log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
+        //         return log_and_redirect(
+        //             channel : self::LOG_CHANNEL,
+        //             route   : self::ROUTE,
+        //             type    : self::ERROR,
+        //             message : "{$order->ord_id}: Erro ao criar pedido."
+        //         );
+        //     }
+        // }
 
-        try
+        do
         {
-            $wc_order = WC_Order::create( $wc_data );
+            $response = create_marketplace_order( channel: self::LOG_CHANNEL, data: $wc_data, order_id: $order->ord_id );
         }
-        catch ( \Throwable $e )
+        while( !$response[ "success" ] && $response[ "code" ] == 502 );
+
+        if ( !$response[ "success" ] )
         {
-            if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
-            {
-                log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
-                return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : "{$order->ord_id}: Erro ao criar pedido."
-                );
-            }
-        }
-
-        $wc_order = json_decode( json_encode( $wc_order ), true );
-
-        $order->mkt_id     = $wc_order[ "id" ];
-        $order->ord_status = "processed";
-
-        $response          = vtex_new_order_exec( "triibo", self::SELLER, $freight[ "data" ], $wc_order );
-
-        if ( $response[ "error_code" ] !== null )
-        {
-            $order->ord_status = "fs_create_error";
-            $order->save();
-
             return log_and_redirect(
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
+                message : $response[ "message" ]
             );
         }
 
-        $order->save();
+        $wc_order          = $response[ "data" ];
+        $wc_order          = json_decode( json_encode( $wc_order ), true );
+
+        $order->mkt_id     = $wc_order[ "id" ];
+        $order->ord_status = "processed";
+
+        // $response          = vtex_new_order_exec( "triibo", self::SELLER, $freight[ "data" ], $wc_order );
+
+        // if ( $response[ "error_code" ] !== null )
+        // {
+        //     $order->ord_status = "fs_create_error";
+        //     $order->save();
+
+        //     return log_and_redirect(
+        //         channel : self::LOG_CHANNEL,
+        //         route   : self::ROUTE,
+        //         type    : self::ERROR,
+        //         message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
+        //     );
+        // }
+
+        // $order->save();
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
