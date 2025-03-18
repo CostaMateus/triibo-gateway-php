@@ -1096,10 +1096,10 @@ if ( !function_exists( "marketplace_new_order_prepare" ) )
                 "total"        => $freight
             ] ],
             "meta_data"            => [
-                [ "key" => "_shipping_number",       "value" => $order->shipping[ "number"       ], ],
-                [ "key" => "_shipping_neighborhood", "value" => $order->shipping[ "neighborhood" ], ],
-                [ "key" => "_billing_number",        "value" => $order->billing [ "number"       ], ],
-                [ "key" => "_billing_neighborhood",  "value" => $order->billing [ "neighborhood" ], ],
+                [ "key" => "_shipping_number",       "value" => $order->shipping[ "number"       ] ?? "", ],
+                [ "key" => "_shipping_neighborhood", "value" => $order->shipping[ "neighborhood" ] ?? "", ],
+                [ "key" => "_billing_number",        "value" => $order->billing [ "number"       ] ?? "", ],
+                [ "key" => "_billing_neighborhood",  "value" => $order->billing [ "neighborhood" ] ?? "", ],
                 [ "key" => "_billing_cnpj",          "value" => $order->billing [ "cnpj"         ], ],
                 [ "key" => "_billing_ie",            "value" => $order->billing [ "ie"           ], ],
                 [ "key" => "_billing_persontype",    "value" => 2, ] // J - pessoa juridica
