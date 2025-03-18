@@ -723,7 +723,7 @@ if ( !function_exists( "process_csv_file" ) )
             // Convert csv to array
             $csv_array   = array_map( function( $line )
             {
-                return str_getcsv( $line, ",", '"' );
+                return str_getcsv( $line, ";", '"' );
             }, explode( "\n", $csv_content ) );
 
             // Clean empty lines
