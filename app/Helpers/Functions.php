@@ -776,6 +776,9 @@ if ( !function_exists( "process_csv_file" ) )
 
                         $order[ "file_name"    ] = $file_name;
 
+                        if ( !isset( $order[ "customer_id" ] ) )
+                            $order[ "customer_id" ] = 6636;
+
                         Order::updateOrCreate(
                             [
                                 "file_name" => $order[ "file_name" ],
@@ -1079,7 +1082,7 @@ if ( !function_exists( "marketplace_new_order_prepare" ) )
     function marketplace_new_order_prepare( Order $order, string $product_id, string $freight ) : array
     {
         $data = [
-            "customer_id"          => $order[ "customer_id" ] ?? 1717,
+            "customer_id"          => $order[ "customer_id" ] ?? 6636,
             "set_paid"             => true,
             "status"               => "processing",
             "payment_method"       => "triibo_payments_billet",

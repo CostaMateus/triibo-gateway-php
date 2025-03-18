@@ -126,7 +126,7 @@ class MarketplaceController extends Controller
         {
             $product = WC_Product::find( $order->product_id );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
             log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
 
@@ -234,19 +234,22 @@ class MarketplaceController extends Controller
         try
         {
             $wc_order = WC_Order::create( $wc_data );
-            $wc_order = json_decode( json_encode( $wc_order ), true );
         }
-        catch ( Throwable $e )
+        catch ( \Throwable $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
-
-            return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id}: Erro ao criar pedido."
-            );
+            if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
+            {
+                log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
+                return log_and_redirect(
+                    channel : self::LOG_CHANNEL,
+                    route   : self::ROUTE,
+                    type    : self::ERROR,
+                    message : "{$order->ord_id}: Erro ao criar pedido."
+                );
+            }
         }
+
+        $wc_order = json_decode( json_encode( $wc_order ), true );
 
         $order->mkt_id     = $wc_order[ "id" ];
         $order->ord_status = "processed";
