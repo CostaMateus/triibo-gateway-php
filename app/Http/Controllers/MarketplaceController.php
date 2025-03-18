@@ -125,7 +125,10 @@ class MarketplaceController extends Controller
 
         do
         {
-            $response = get_marketplace_product( channel: self::LOG_CHANNEL, order: $order );
+            $response = get_marketplace_product(
+                channel : self::LOG_CHANNEL,
+                order   : $order
+            );
         }
         while( !$response[ "success" ] && $response[ "code" ] == 502 );
 
@@ -163,7 +166,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $fs_product_id  = search_product_meta( $product[ "meta_data" ] );
+        $fs_product_id = search_product_meta( metas : $product[ "meta_data" ] );
 
         if ( $fs_product_id == null )
         {
@@ -175,7 +178,10 @@ class MarketplaceController extends Controller
             );
         }
 
-        $freight        = get_freight_vtex( $fs_product_id, $order[ "shipping" ][ "postcode" ] );
+        $freight = get_freight_vtex(
+            product_id : $fs_product_id,
+            postcode   : $order[ "shipping" ][ "postcode" ]
+        );
 
         if ( $freight === false )
         {
@@ -187,7 +193,10 @@ class MarketplaceController extends Controller
             );
         }
 
-        $delivery_price = get_delivery_price( $fs_product_id, $freight[ "data" ] );
+        $delivery_price = get_delivery_price(
+            product_id : $fs_product_id,
+            freight    : $freight[ "data" ]
+        );
 
         if ( $delivery_price === false )
         {
@@ -199,29 +208,19 @@ class MarketplaceController extends Controller
             );
         }
 
-        $wc_data        = marketplace_new_order_prepare( $order, $order->product_id, $delivery_price );
-
-        // try
-        // {
-        //     $wc_order = WC_Order::create( $wc_data );
-        // }
-        // catch ( \Throwable $e )
-        // {
-        //     if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
-        //     {
-        //         log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ) );
-        //         return log_and_redirect(
-        //             channel : self::LOG_CHANNEL,
-        //             route   : self::ROUTE,
-        //             type    : self::ERROR,
-        //             message : "{$order->ord_id}: Erro ao criar pedido."
-        //         );
-        //     }
-        // }
+        $wc_data = marketplace_new_order_prepare(
+            order      : $order,
+            product_id : $order->product_id,
+            freight    : $delivery_price
+        );
 
         do
         {
-            $response = create_marketplace_order( channel: self::LOG_CHANNEL, data: $wc_data, order_id: $order->ord_id );
+            $response = create_marketplace_order(
+                channel  : self::LOG_CHANNEL,
+                data     : $wc_data,
+                order_id : $order->ord_id
+            );
         }
         while( !$response[ "success" ] && $response[ "code" ] == 502 );
 
@@ -241,7 +240,12 @@ class MarketplaceController extends Controller
         $order->mkt_id     = $wc_order[ "id" ];
         $order->ord_status = "processed";
 
-        $response          = vtex_new_order_exec( "triibo", self::SELLER, $freight[ "data" ], $wc_order );
+        $response          = vtex_new_order_exec(
+            channel : self::LOG_CHANNEL,
+            seller  : self::SELLER,
+            freight : $freight[ "data" ],
+            order   : $wc_order
+        );
 
         if ( $response[ "error_code" ] !== null )
         {
@@ -256,7 +260,29 @@ class MarketplaceController extends Controller
             );
         }
 
+        // TODO remover
+        log_message( channel: self::LOG_CHANNEL, message: print_r( $response, true ) );
+
         $order->save();
+
+        // Update order metadata with VTEX order ID
+        update_order_meta(
+            channel  : self::LOG_CHANNEL,
+            order_id : $order->mkt_id,
+            data     : [
+                "meta_data" => [ [
+                    "key"   => "_fastshop_order_id",
+                    "value" => $response[ "data" ][ "operationId" ]
+                ] ]
+            ]
+        );
+
+        // Create creation note
+        create_order_note(
+            channel  : self::LOG_CHANNEL,
+            order_id : $order->mkt_id,
+            message  : "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ]
+        );
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
