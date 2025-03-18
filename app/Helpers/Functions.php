@@ -1297,8 +1297,9 @@ if ( !function_exists( "create_marketplace_order"  ) )
                 {
                     return WC_Order::create( $data );
                 },
-                when              : function ()
+                when              : function ( \Throwable $e ) use ( $channel )
                 {
+                    log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
                     return true;
                 }
             );
@@ -1313,7 +1314,6 @@ if ( !function_exists( "create_marketplace_order"  ) )
         catch ( \Throwable $e )
         {
             log_message( channel: $channel, message: print_r( $e, true ) );
-            log_message( channel: $channel, message: print_r( $e->getResponse(), true ) );
 
             if ( $e->getMessage() == "JSON ERROR: Syntax error" )
             {
