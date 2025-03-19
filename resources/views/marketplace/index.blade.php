@@ -120,24 +120,33 @@
                                     <span class="ms-1" >Cancelar</span>
                                 </span>
 
-                                <span class="me-3 d-inline-flex align-items-center" title="Ver dados da FS" >
-                                    <button class="btn btn-light p-1" type="button" title="Ver dados da FS" >
-                                        <i class="bi bg-fs-favicon i-align-center" ></i>
-                                    </button>
-                                    <span class="ms-1" >Ver dados da FS</span>
-                                </span>
-                                <span class="me-3 d-inline-flex align-items-center" title="Ver dados do MKT" >
-                                    <button class="btn btn-light p-1" type="button" title="Ver dados do MKT" >
-                                        <i class="bi bg-mkt-favicon i-align-center" ></i>
-                                    </button>
-                                    <span class="ms-1" >Ver dados do MKT</span>
-                                </span>
-                                <span class="me-3 d-inline-flex align-items-center" title="Ver pedido no MKT" >
-                                    <button class="btn btn-light p-1" type="button" title="Ver pedido no MKT" >
-                                        <i class="bi bg-external-link i-align-center" ></i>
-                                    </button>
-                                    <span class="ms-1" >Ver pedido no MKT</span>
-                                </span>
+                                @if ( auth()->user()->id === 2 ) {{-- TODO remover --}}
+                                    <span class="me-3 d-inline-flex align-items-center" title="Atualizar" >
+                                        <button class="btn btn-triibo text-white p-1" type="button" title="Atualizar" >
+                                            <i class="h5 bi bi-arrow-repeat i-align-center" ></i>
+                                        </button>
+                                        <span class="ms-1" >Atualizar</span>
+                                    </span>
+
+                                    <span class="me-3 d-inline-flex align-items-center" title="Ver dados da FS" >
+                                        <button class="btn btn-light p-1" type="button" title="Ver dados da FS" >
+                                            <i class="bi bg-fs-favicon i-align-center" ></i>
+                                        </button>
+                                        <span class="ms-1" >Ver dados da FS</span>
+                                    </span>
+                                    <span class="me-3 d-inline-flex align-items-center" title="Ver dados do MKT" >
+                                        <button class="btn btn-light p-1" type="button" title="Ver dados do MKT" >
+                                            <i class="bi bg-mkt-favicon i-align-center" ></i>
+                                        </button>
+                                        <span class="ms-1" >Ver dados do MKT</span>
+                                    </span>
+                                    <span class="me-3 d-inline-flex align-items-center" title="Ver pedido no MKT" >
+                                        <button class="btn btn-light p-1" type="button" title="Ver pedido no MKT" >
+                                            <i class="bi bg-external-link i-align-center" ></i>
+                                        </button>
+                                        <span class="ms-1" >Ver pedido no MKT</span>
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -193,20 +202,22 @@
                                             <td class="text-center" >{{ $order->ord_id }}</td>
                                             <td class="text-nowrap text-center" >
                                                 {{ $order->mkt_id }}
-                                                @if ( $order->mkt_id )
-                                                    <br>
-                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.fs",  [ "order_id" => $order->mkt_id ] ) }}"
-                                                        title="Ver dados da FS" target="_blank" rel="noopener noreferrer" >
-                                                        <i class="bi bg-fs-favicon i-align-center" ></i>
-                                                    </a>
-                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt", [ "order_id" => $order->mkt_id ] ) }}"
-                                                        title="Ver dados do MKT" target="_blank" rel="noopener noreferrer" >
-                                                        <i class="bi bg-mkt-favicon i-align-center" ></i>
-                                                    </a>
-                                                    <a class="btn btn-light p-1" href="{{ route( "order.mkt.ext", [ "order_id" => $order->mkt_id ] ) }}"
-                                                        title="Ver pedido no MKT" target="_blank" rel="noopener noreferrer" >
-                                                        <i class="bi bg-external-link i-align-center" ></i>
-                                                    </a>
+                                                @if ( auth()->user()->id === 2 ) {{-- TODO remover --}}
+                                                    @if ( $order->mkt_id )
+                                                        <br>
+                                                        <a class="btn btn-light p-1" href="{{ route( "mkt.order.fs", [ "order_id" => $order->mkt_id ] ) }}"
+                                                            title="Ver dados da FS" target="_blank" rel="noopener noreferrer" >
+                                                            <i class="bi bg-fs-favicon i-align-center" ></i>
+                                                        </a>
+                                                        <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt", [ "order_id" => $order->mkt_id ] ) }}"
+                                                            title="Ver dados do MKT" target="_blank" rel="noopener noreferrer" >
+                                                            <i class="bi bg-mkt-favicon i-align-center" ></i>
+                                                        </a>
+                                                        <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt.ext", [ "order_id" => $order->mkt_id ] ) }}"
+                                                            title="Ver pedido no MKT" target="_blank" rel="noopener noreferrer" >
+                                                            <i class="bi bg-external-link i-align-center" ></i>
+                                                        </a>
+                                                    @endif
                                                 @endif
                                             </td>
                                             <td class="text-nowrap text-center" >
@@ -266,6 +277,15 @@
                                                     <button class="btn btn-danger text-white p-1 cancel-order" title="Cancelar" >
                                                         <i class="h3 bi bi-x-circle i-align-center" ></i>
                                                     </button>
+                                                @endif
+
+                                                {{-- "approved", "canceled" --}}
+                                                @if ( auth()->user()->id === 2 ) {{-- TODO remover --}}
+                                                    @if( !in_array( $order->ord_status, [ "not_processed" ] ) )
+                                                        <button class="btn btn-triibo text-white p-1 update-order" title="Atualizar" >
+                                                            <i class="h3 bi bi-arrow-repeat i-align-center" ></i>
+                                                        </button>
+                                                    @endif
                                                 @endif
                                             </td>
                                         </tr>
@@ -412,6 +432,14 @@
             setFormValues( "cancel", ord_id, file_name );
         } );
 
+        $( ".update-order" ).on( "click", function()
+        {
+            const ord_id    = $( this ).parent().data( "ord_id"    );
+            const file_name = $( this ).parent().data( "file_name" );
+
+            setFormValues( "update", ord_id, file_name );
+        } );
+
         window.setFormValues = function ( action, ord_id, file_name )
         {
             let route   = "";
@@ -431,6 +459,11 @@
             {
                 route   = "{{ route( 'mkt.order.cancel'  ) }}";
                 message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será cancelado na Fast Shop e no marketplace!`;
+            }
+            else if ( action == "update"  )
+            {
+                route   = "{{ route( 'mkt.order.update'  ) }}";
+                message = `O pedido ID: ${ord_id}, será atualizado!`;
             }
 
             $( "#order-form input[name='ord_id']"    ).val( ord_id    );
