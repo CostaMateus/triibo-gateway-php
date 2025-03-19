@@ -3,11 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Marketplace\Order;
-use Illuminate\Support\Facades\App;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\{ Request, RedirectResponse };
 use Codexshaper\WooCommerce\Facades\Order as WC_Order;
-use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 use App\Http\Controllers\Vtex\OrderController as VtexOrderController;
 
 class MarketplaceController extends Controller
@@ -478,5 +476,41 @@ class MarketplaceController extends Controller
         $response = vtex_get_order( "marketplace", "fast_shop", $order_id );
 
         dd( $response );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param   Request     $request
+     * @param   string      $order_id
+     * @return  void
+     */
+    public function getMktOrder( Request $request, string $order_id ) : void
+    {
+        try
+        {
+            $response = WC_Order::find( $order_id );
+        }
+        catch ( \Exception $e )
+        {
+            dd( $e->getMessage() );
+        }
+
+        dd( $response );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param   Request     $request
+     * @param   string      $order_id
+     * @return  RedirectResponse
+     */
+    public function redirectMktOreder( Request $request, string $order_id ) : RedirectResponse
+    {
+        $prefix = config( "marketplace.url" );
+        $url    = "{$prefix}/wp-admin/post.php?post={$order_id}&action=edit";
+
+        return redirect()->away( $url );
     }
 }
