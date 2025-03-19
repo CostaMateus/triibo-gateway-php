@@ -2,6 +2,28 @@
 
 @section( "title", "Pedidos marketplace" )
 
+@section( "css" )
+    <style>
+        .bg-fs-favicon,
+        .bg-triibo-favicon,
+        .bg-external-link {
+            width: 20px;
+            height: 20px;
+            background-size: cover;
+            background-repeat: no-repeat;
+        }
+        .bg-fs-favicon {
+            background-image: url( "{{ asset( 'images/fs-favicon.png'     ) }}" );
+        }
+        .bg-triibo-favicon {
+            background-image: url( "{{ asset( 'images/triibo-favicon.png' ) }}" );
+        }
+        .bg-external-link {
+            background-image: url( "{{ asset( 'images/external-link.png'  ) }}" );
+        }
+    </style>
+@endsection
+
 @section( "content" )
     <div class="container-fluid" >
         <div class="row justify-content-center" >
@@ -141,16 +163,21 @@
                                         <tr>
                                             {{-- {{ $order->status[ "color" ] }} --}}
                                             <td class="text-center" >{{ $order->ord_id }}</td>
-                                            <td class="text-center" >
+                                            <td class="text-nowrap text-center" >
                                                 {{ $order->mkt_id }}
                                                 @if ( $order->mkt_id )
                                                     <br>
-                                                    <a href="{{ route( "mkt.order.fs", [ "order_id" => $order->mkt_id ] ) }}" target="_blank" rel="noopener noreferrer" >
-                                                        Ver dados FS
+                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.fs",  [ "order_id" => $order->mkt_id ] ) }}"
+                                                        title="Ver dados da FS" target="_blank" rel="noopener noreferrer" >
+                                                        <i class="bi bg-fs-favicon i-align-center" ></i>
                                                     </a>
-                                                    <br>
-                                                    <a href="https://marketplace.triibo.com.br/wp-admin/post.php?post={{ $order->mkt_id }}&action=edit" target="_blank" rel="noopener noreferrer" >
-                                                        Ver no MKT
+                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt", [ "order_id" => $order->mkt_id ] ) }}"
+                                                        title="Ver dados do MKT" target="_blank" rel="noopener noreferrer" >
+                                                        <i class="bi bg-triibo-favicon i-align-center" ></i>
+                                                    </a>
+                                                    <a class="btn btn-light p-1" href="{{ route( "order.mkt.ext", [ "order_id" => $order->mkt_id ] ) }}"
+                                                        title="Ver pedido no MKT" target="_blank" rel="noopener noreferrer" >
+                                                        <i class="bi bg-external-link i-align-center" ></i>
                                                     </a>
                                                 @endif
                                             </td>
@@ -196,19 +223,19 @@
                                             </td>
                                             <td class="text-center text-nowrap" data-ord_id="{{ $order->ord_id }}" data-file_name="{{ $order->file_name }}" >
                                                 @if ( in_array( $order->ord_status, [ "not_processed", "product_not_found", "over_max" ] ) )
-                                                    <button class="btn btn-sm btn-block btn-primary text-white p-1 create-order" title="Criar" >
+                                                    <button class="btn btn-primary text-white p-1 create-order" title="Criar" >
                                                         <i class="h3 bi bi-plus-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
 
                                                 @if( $order->ord_status == "processed" )
-                                                    <button class="btn btn-sm btn-block btn-success text-white p-1 approve-order" title="Aprovar" >
+                                                    <button class="btn btn-success text-white p-1 approve-order" title="Aprovar" >
                                                         <i class="h3 bi bi-check-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
 
                                                 @if( in_array( $order->ord_status, [ "processed", "approved" ] ) )
-                                                    <button class="btn btn-sm btn-block btn-danger text-white p-1 cancel-order" title="Cancelar" >
+                                                    <button class="btn btn-danger text-white p-1 cancel-order" title="Cancelar" >
                                                         <i class="h3 bi bi-x-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
