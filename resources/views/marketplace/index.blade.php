@@ -192,8 +192,8 @@
                                             </td>
                                             <td class="text-center text-nowrap" data-ord_id="{{ $order->ord_id }}" data-file_name="{{ $order->file_name }}" >
                                                 @if ( in_array( $order->ord_status, [ "not_processed", "product_not_found", "over_max" ] ) )
-                                                    <button class="btn btn-sm btn-block btn-primary text-white p-1 create-order"  title="Criar" >
-                                                        <i class="h3 bi bi-plus-circle i-align-center"  ></i>
+                                                    <button class="btn btn-sm btn-block btn-primary text-white p-1 create-order" title="Criar" >
+                                                        <i class="h3 bi bi-plus-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
 
@@ -204,8 +204,8 @@
                                                 @endif
 
                                                 @if( in_array( $order->ord_status, [ "processed", "approved" ] ) )
-                                                    <button class="btn btn-sm btn-block btn-danger text-white p-1 cancel-order"  title="Cancelar" >
-                                                        <i class="h3 bi bi-x-circle i-align-center"     ></i>
+                                                    <button class="btn btn-sm btn-block btn-danger text-white p-1 cancel-order" title="Cancelar" >
+                                                        <i class="h3 bi bi-x-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
                                             </td>
