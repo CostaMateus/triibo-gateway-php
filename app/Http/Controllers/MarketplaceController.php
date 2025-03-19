@@ -217,15 +217,11 @@ class MarketplaceController extends Controller
             freight    : $delivery_price
         );
 
-        do
-        {
-            $response = create_marketplace_order(
-                channel  : self::LOG_CHANNEL,
-                data     : $wc_data,
-                order_id : $order->ord_id
-            );
-        }
-        while( !$response[ "success" ] && $response[ "code" ] == 502 );
+        $response = create_marketplace_order(
+            channel  : self::LOG_CHANNEL,
+            data     : $wc_data,
+            order_id : $order->ord_id
+        );
 
         if ( !$response[ "success" ] )
         {
@@ -242,50 +238,46 @@ class MarketplaceController extends Controller
 
         $order->mkt_id     = $wc_order[ "id" ];
         $order->ord_status = "processed";
-
-        $response          = vtex_new_order_exec(
-            channel : self::LOG_CHANNEL,
-            seller  : self::SELLER,
-            freight : $freight[ "data" ],
-            order   : $wc_order
-        );
-
-        if ( $response[ "error_code" ] !== null )
-        {
-            $order->ord_status = "fs_create_error";
-            $order->save();
-
-            return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
-            );
-        }
-
-        // TODO remover
-        log_message( channel: self::LOG_CHANNEL, message: print_r( $response, true ) );
-
         $order->save();
 
-        // Update order metadata with VTEX order ID
-        update_order_meta(
-            channel  : self::LOG_CHANNEL,
-            order_id : $order->mkt_id,
-            data     : [
-                "meta_data" => [ [
-                    "key"   => "_fastshop_order_id",
-                    "value" => $response[ "data" ][ "operationId" ]
-                ] ]
-            ]
-        );
+        // $response          = vtex_new_order_exec(
+        //     channel : self::LOG_CHANNEL,
+        //     seller  : self::SELLER,
+        //     freight : $freight[ "data" ],
+        //     order   : $wc_order
+        // );
 
-        // Create creation note
-        create_order_note(
-            channel  : self::LOG_CHANNEL,
-            order_id : $order->mkt_id,
-            message  : "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ]
-        );
+        // if ( $response[ "error_code" ] !== null )
+        // {
+        //     $order->ord_status = "fs_create_error";
+        //     $order->save();
+
+        //     return log_and_redirect(
+        //         channel : self::LOG_CHANNEL,
+        //         route   : self::ROUTE,
+        //         type    : self::ERROR,
+        //         message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
+        //     );
+        // }
+
+        // // Update order metadata with VTEX order ID
+        // update_order_meta(
+        //     channel  : self::LOG_CHANNEL,
+        //     order_id : $order->mkt_id,
+        //     data     : [
+        //         "meta_data" => [ [
+        //             "key"   => "_fastshop_order_id",
+        //             "value" => $response[ "data" ][ "operationId" ]
+        //         ] ]
+        //     ]
+        // );
+
+        // // Create creation note
+        // create_order_note(
+        //     channel  : self::LOG_CHANNEL,
+        //     order_id : $order->mkt_id,
+        //     message  : "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ]
+        // );
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
@@ -362,6 +354,13 @@ class MarketplaceController extends Controller
             );
         }
 
+        // Create manual approval note
+        create_order_note(
+            channel  : self::LOG_CHANNEL,
+            order_id : $order_id,
+            message  : "Pedido aprovado manualmente na FS por: " . auth()->user()->name . " (integração)"
+        );
+
         $order->ord_status = "approved";
         $order->save();
 
@@ -416,27 +415,43 @@ class MarketplaceController extends Controller
             );
         }
 
-        $vtex     = new VtexOrderController();
-        $request  = new Request();
+        // $vtex     = new VtexOrderController();
+        // $request  = new Request();
 
-        $request->headers->set( key : "seller",    values: self::SELLER                          );
-        $request->headers->set( key : "api-key",   values: config( "woocommerce.plugins.key"   ) );
-        $request->headers->set( key : "api-token", values: config( "woocommerce.plugins.token" ) );
+        // $request->headers->set( key : "seller",    values: self::SELLER                          );
+        // $request->headers->set( key : "api-key",   values: config( "woocommerce.plugins.key"   ) );
+        // $request->headers->set( key : "api-token", values: config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderCancellation( request : $request, order_id : $order->mkt_id );
+        // $response = $vtex->orderCancellation( request : $request, order_id : $order->mkt_id );
 
-        if ( $response->status() != 200 )
+        // if ( $response->status() != 200 )
+        // {
+        //     $data = $response->getData();
+
+        //     $order->ord_status = "fs_cancel_error";
+        //     $order->save();
+
+        //     return log_and_redirect(
+        //         channel : self::LOG_CHANNEL,
+        //         route   : self::ROUTE,
+        //         type    : self::ERROR,
+        //         message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
+        //     );
+        // }
+
+        $response = update_marketplace_order(
+            channel  : self::LOG_CHANNEL,
+            order_id : $order->ord_id,
+            status   : "cancelled",
+        );
+
+        if ( !$response[ "success" ] )
         {
-            $data = $response->getData();
-
-            $order->ord_status = "fs_cancel_error";
-            $order->save();
-
             return log_and_redirect(
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
+                message : $response[ "message" ]
             );
         }
 
