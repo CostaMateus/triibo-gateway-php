@@ -238,45 +238,6 @@ class MarketplaceController extends Controller
         $order->ord_status = "processed";
         $order->save();
 
-        // $response          = vtex_new_order_exec(
-        //     channel : self::LOG_CHANNEL,
-        //     seller  : self::SELLER,
-        //     freight : $freight[ "data" ],
-        //     order   : $wc_order
-        // );
-
-        // if ( $response[ "error_code" ] !== null )
-        // {
-        //     $order->ord_status = "fs_create_error";
-        //     $order->save();
-
-        //     return log_and_redirect(
-        //         channel : self::LOG_CHANNEL,
-        //         route   : self::ROUTE,
-        //         type    : self::ERROR,
-        //         message : "{$order->ord_id} #{$order->mkt_id}: Erro ao criar pedido na Fast Shop."
-        //     );
-        // }
-
-        // // Update order metadata with VTEX order ID
-        // update_order_meta(
-        //     channel  : self::LOG_CHANNEL,
-        //     order_id : $order->mkt_id,
-        //     data     : [
-        //         "meta_data" => [ [
-        //             "key"   => "_fastshop_order_id",
-        //             "value" => $response[ "data" ][ "operationId" ]
-        //         ] ]
-        //     ]
-        // );
-
-        // // Create creation note
-        // create_order_note(
-        //     channel  : self::LOG_CHANNEL,
-        //     order_id : $order->mkt_id,
-        //     message  : "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ]
-        // );
-
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
             route   : self::ROUTE,
@@ -327,6 +288,11 @@ class MarketplaceController extends Controller
                 message : "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
             );
         }
+
+        // $wc_order = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
+
+
+
 
         $vtex     = new VtexOrderController();
         $request  = new Request();
@@ -388,8 +354,8 @@ class MarketplaceController extends Controller
             );
         }
 
-        $order = Order::where( "file_name",  $request->file_name )
-                      ->where( "ord_id",     $request->ord_id    )
+        $order = Order::where( "file_name", $request->file_name )
+                      ->where( "ord_id",    $request->ord_id    )
                       ->whereIn( "ord_status", [ "processed", "approved" ] )
                       ->first();
 
@@ -413,30 +379,6 @@ class MarketplaceController extends Controller
             );
         }
 
-        // $vtex     = new VtexOrderController();
-        // $request  = new Request();
-
-        // $request->headers->set( key : "seller",    values: self::SELLER                          );
-        // $request->headers->set( key : "api-key",   values: config( "woocommerce.plugins.key"   ) );
-        // $request->headers->set( key : "api-token", values: config( "woocommerce.plugins.token" ) );
-
-        // $response = $vtex->orderCancellation( request : $request, order_id : $order->mkt_id );
-
-        // if ( $response->status() != 200 )
-        // {
-        //     $data = $response->getData();
-
-        //     $order->ord_status = "fs_cancel_error";
-        //     $order->save();
-
-        //     return log_and_redirect(
-        //         channel : self::LOG_CHANNEL,
-        //         route   : self::ROUTE,
-        //         type    : self::ERROR,
-        //         message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
-        //     );
-        // }
-
         $response = update_marketplace_order(
             channel  : self::LOG_CHANNEL,
             order_id : $order->mkt_id,
@@ -455,6 +397,49 @@ class MarketplaceController extends Controller
 
         $order->ord_status = "canceled";
         $order->save();
+
+        return log_and_redirect(
+            channel : self::LOG_CHANNEL,
+            route   : self::ROUTE,
+            type    : self::SUCCESS,
+            message : "{$order->ord_id} #{$order->mkt_id}: Pedido cancelado com sucesso."
+        );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return  RedirectResponse
+     */
+    public function orderUpdate( Request $request ) : RedirectResponse
+    {
+        if ( !$request->ord_id || !$request->file_name )
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "Dados inválidos."
+            );
+        }
+
+        $order = Order::where( "file_name", $request->file_name )
+                      ->where( "ord_id",    $request->ord_id    )
+                      ->first();
+
+        if ( !$order->mkt_id )
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : "O pedido não foi criado no marketplace ainda."
+            );
+        }
+
+        $wc_order = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
+
+        dd( $wc_order );
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
