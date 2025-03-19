@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapseCofry"
                 aria-expanded="true" aria-controls="collapseCofry" >
                 Integração Cofry
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapseCofry" class="accordion-collapse collapse" aria-labelledby="headingCofry" data-bs-parent="#accordionTriibo" >

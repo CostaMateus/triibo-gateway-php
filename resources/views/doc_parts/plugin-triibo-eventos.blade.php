@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapsePluginEventos"
                 aria-expanded="true" aria-controls="collapsePluginEventos" >
                 Plugin MKT - Triibo Eventos
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapsePluginEventos" class="accordion-collapse collapse" aria-labelledby="headingPluginEventos" data-bs-parent="#accordionTriibo" >

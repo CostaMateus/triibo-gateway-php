@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapseMauticPipe"
                 aria-expanded="true" aria-controls="collapseMauticPipe" >
                 Integração Mautic <i class="bi bi-arrow-left px-1" ></i> Pipedrive
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapseMauticPipe" class="accordion-collapse collapse" aria-labelledby="headingMauticPipe" data-bs-parent="#accordionTriibo" >

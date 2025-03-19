@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapseFastshop"
                 aria-expanded="true" aria-controls="collapseFastshop" >
                 Integração Fast Shop
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapseFastshop" class="accordion-collapse collapse" aria-labelledby="headingFastshop" data-bs-parent="#accordionTriibo" >
