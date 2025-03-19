@@ -363,7 +363,7 @@
             else if ( action == "cancel"  )
             {
                 route   = "{{ route( 'mkt.order.cancel'  ) }}";
-                message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será na Fast Shop e no marketplace!`;
+                message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será cancelado na Fast Shop e no marketplace!`;
             }
 
             $( "#order-form input[name='ord_id']"    ).val( ord_id    );
