@@ -441,7 +441,7 @@ class MarketplaceController extends Controller
 
         $response = update_marketplace_order(
             channel  : self::LOG_CHANNEL,
-            order_id : $order->ord_id,
+            order_id : $order->mkt_id,
             status   : "cancelled",
         );
 
