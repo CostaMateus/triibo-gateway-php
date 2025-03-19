@@ -105,21 +105,21 @@
                                             </a>
                                         </th>
                                         <th class="text-center text-nowrap" >Status</th>
+                                        <th class="text-center text-nowrap" >Qntdd</th>
                                         <th class="text-center text-nowrap" >Preço máximo</th>
-                                        <th class="text-center text-nowrap" >
-                                            ID produto
-                                            <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="ID do produto no marketplace" >
-                                                <i class="bi bi-info-circle text-primary" > </i>
-                                            </a>
-                                        </th>
-                                        <th class="text-center text-nowrap" >Quantidade</th>
-                                        <th class="text-center text-nowrap" style="min-width:400px" >Nome produto</th>
                                         <th class="text-center text-nowrap" >
                                             ID usuário
                                             <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="ID do usuário ao qual o pedido ficará atrelado no marketplace" >
                                                 <i class="bi bi-info-circle text-primary" > </i>
                                             </a>
                                         </th>
+                                        <th class="text-center text-nowrap" >
+                                            ID produto
+                                            <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="ID do produto no marketplace" >
+                                                <i class="bi bi-info-circle text-primary" > </i>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-nowrap" style="min-width:400px" >Nome produto</th>
                                         <th class="text-center text-nowrap" >
                                             Endereço fatura
                                             <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="Endereço da empresa" >
@@ -140,16 +140,17 @@
                                     @forelse( $orders as $order )
                                         <tr>
                                             {{-- {{ $order->status[ "color" ] }} --}}
-                                            <td class="text-nowrap" >{{ $order->ord_id }}</td>
-                                            <td class="text-nowrap" >{{ $order->mkt_id }}</td>
+                                            <td class="text-center" >{{ $order->ord_id }}</td>
+                                            <td class="text-center" >{{ $order->mkt_id }}</td>
                                             <td class="text-nowrap text-center" >
                                                 <span class="badge rounded-pill mb-0 {{ $order->status[ "color" ] }} ">
                                                     {{ $order->status[ "name" ] }}
                                                 </span>
                                             </td>
+                                            <td class="text-center"          >{{ $order->product_qntt }}</td>
                                             <td class="text-nowrap text-end" >{{ number_format( $order->max_price, 2, ',', '.' ) }}</td>
-                                            <td class="text-nowrap"          >{{ $order->product_id   }}</td>
-                                            <td class="text-nowrap"          >{{ $order->product_qntt }}</td>
+                                            <td class="text-center"          >{{ $order->customer_id  }}</td>
+                                            <td class="text-center"          >{{ $order->product_id   }}</td>
                                             <td style="min-width:400px" >
                                                 <p class="mb-0 name-preview" >{{ Str::limit( $order->product_name, 50 ) }}</p>
                                                 <div class="name-full d-none" >
@@ -159,7 +160,6 @@
                                                     <button class="btn btn-sm btn-link show-more-name" >Ver mais</button>
                                                 </div>
                                             </td>
-                                            <td class="text-nowrap"          >{{ $order->customer_id  }}</td>
                                             <td class="text-nowrap" >
                                                 <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->billing ), 20 ) }}</p>
                                                 <div class="address-full d-none" >
