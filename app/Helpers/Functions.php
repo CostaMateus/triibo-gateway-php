@@ -1318,3 +1318,48 @@ if ( !function_exists( "create_marketplace_order"  ) )
         return $order;
     }
 }
+
+if ( !function_exists( "update_marketplace_order" ) )
+{
+    /**
+     * @return  array
+     */
+    function update_marketplace_order( string $channel, string $order_id, string $status ) : array
+    {
+        $order = [
+            "success" => false,
+            "message" => "",
+            "code"    => 0,
+            "data"    => [],
+        ];
+
+        try
+        {
+            $response = WC_Order::update( $order_id, [ "status" => $status ] );
+
+            $order    = [
+                "success" => true,
+                "message" => "ok",
+                "code"    => 200,
+                "data"    => $response,
+            ];
+        }
+        catch ( \Exception $e )
+        {
+            log_message(channel: $channel, message: print_r($e, true));
+
+            if ( $e->getMessage() == "JSON ERROR: Syntax error" )
+            {
+                $order[ "message" ] = "{$order_id}: Erro ao tentar atualizar pedido, tente novamente.";
+                $order[ "code"    ] = 502;
+            }
+            else
+            {
+                $order[ "message" ] = "{$order_id}: Erro ao tentar atualizar pedido.";
+                $order[ "code"    ] = 500;
+            }
+        }
+
+        return $order;
+    }
+}
