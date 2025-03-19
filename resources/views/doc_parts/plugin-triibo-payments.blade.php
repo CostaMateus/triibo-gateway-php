@@ -5,6 +5,7 @@
             data-bs-toggle="collapse" data-bs-target="#collapsePluginPayments"
             aria-expanded="true" aria-controls="collapsePluginPayments" >
             Plugin MKT - Triibo Payments
+            <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
         </button>
     </p>
     <div id="collapsePluginPayments" class="accordion-collapse collapse" aria-labelledby="headingPluginPayments" data-bs-parent="#accordionTriibo" >

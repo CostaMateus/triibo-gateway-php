@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapseChatGuru"
                 aria-expanded="true" aria-controls="collapseChatGuru" >
                 Integração ChatGuru
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapseChatGuru" class="accordion-collapse collapse" aria-labelledby="headingChatGuru" data-bs-parent="#accordionTriibo" >

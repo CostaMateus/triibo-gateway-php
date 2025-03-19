@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapseAwin"
                 aria-expanded="true" aria-controls="collapseAwin" >
                 Integração Awin
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapseAwin" class="accordion-collapse collapse" aria-labelledby="headingAwin" data-bs-parent="#accordionTriibo" >

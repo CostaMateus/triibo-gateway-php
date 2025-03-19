@@ -1212,7 +1212,7 @@ if ( !function_exists( "get_marketplace_product" ) )
      */
     function get_marketplace_product( string $channel, Order $order ) : array
     {
-        $product = [
+        $response = [
             "success" => false,
             "message" => "",
             "code"    => 0,
@@ -1221,7 +1221,7 @@ if ( !function_exists( "get_marketplace_product" ) )
 
         try
         {
-            $response = retry(
+            $product  = retry(
                 times             : 3,
                 sleepMilliseconds : 2000,
                 callback          : function () use ( $order )
@@ -1234,11 +1234,11 @@ if ( !function_exists( "get_marketplace_product" ) )
                 }
             );
 
-            $product  = [
+            $response = [
                 "success" => true,
                 "message" => "ok",
                 "code"    => 200,
-                "data"    => $response,
+                "data"    => $product,
             ];
         }
         catch ( \Throwable $e )
@@ -1250,27 +1250,64 @@ if ( !function_exists( "get_marketplace_product" ) )
                 $order->ord_status = "product_not_found";
                 $order->save();
 
-                $product[ "message" ] = "{$order->ord_id}: Produto não encontrado.";
-                $product[ "code"    ] = 404;
+                $response[ "message" ] = "{$order->ord_id}: Produto não encontrado.";
+                $response[ "code"    ] = 404;
             }
             elseif ( $e->getMessage() == "JSON ERROR: Syntax error" )
             {
-                $product[ "message" ] = "{$order->ord_id}: Não foi possível consultar o produto, tente novamente.";
-                $product[ "code"    ] = 502;
+                $response[ "message" ] = "{$order->ord_id}: Não foi possível consultar o produto, tente novamente.";
+                $response[ "code"    ] = 502;
             }
             elseif ( $e->getMessage() == "Error: <p>Há um erro crítico no seu site.</p><p><a href=\"https:\/\/wordpress.org/documentation/article/faq-troubleshooting/\">Saiba mais sobre a como resolver problemas do WordPress.</a></p> [internal_server_error]" )
             {
-                $product[ "message" ] = "{$order->ord_id}: Erro interno, tente novamente.";
-                $product[ "code"    ] = 501;
+                $response[ "message" ] = "{$order->ord_id}: Erro interno, tente novamente.";
+                $response[ "code"    ] = 501;
             }
             else
             {
-                $product[ "message" ] = "{$order->ord_id}: Erro ao consultar o produto, tente novamente.";
-                $product[ "code"    ] = 500;
+                $response[ "message" ] = "{$order->ord_id}: Erro ao consultar o produto, tente novamente.";
+                $response[ "code"    ] = 500;
             }
         }
 
-        return $product;
+        return $response;
+    }
+}
+
+if ( !function_exists( "get_marketplace_order" ) )
+{
+    /**
+     * @return  array
+     */
+    function get_marketplace_order( string $channel, string $order_id ) : array
+    {
+        $response = [
+            "success" => false,
+            "message" => "",
+            "code"    => 0,
+            "data"    => [],
+        ];
+
+        try
+        {
+            $order    = WC_Order::find( $order_id );
+
+            $response = [
+                "success" => true,
+                "message" => "ok",
+                "code"    => 200,
+                "data"    => $order,
+            ];
+        }
+        catch ( \Throwable $e )
+        {
+            log_message( channel: $channel, message: print_r( $e, true ) );
+
+            $response[ "message" ] = "{$order->ord_id}: Falha ao consultar pedido.";
+            $response[ "code"    ] = 400;
+        }
+
+        return $response;
     }
 }
 

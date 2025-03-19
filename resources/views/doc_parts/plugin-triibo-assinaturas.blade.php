@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapsePluginAssinaturas"
                 aria-expanded="true" aria-controls="collapsePluginAssinaturas" >
                 Plugin MKT - Triibo Assinaturas
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapsePluginAssinaturas" class="accordion-collapse collapse" aria-labelledby="headingPluginAssinaturas" data-bs-parent="#accordionTriibo" >
