@@ -148,6 +148,10 @@
                                                     <a href="{{ route( "mkt.order.fs", [ "order_id" => $order->mkt_id ] ) }}" target="_blank" rel="noopener noreferrer" >
                                                         Ver dados FS
                                                     </a>
+                                                    <br>
+                                                    <a href="https://marketplace.triibo.com.br/wp-admin/post.php?post={{ $order->mkt_id }}&action=edit" target="_blank" rel="noopener noreferrer" >
+                                                        Ver no MKT
+                                                    </a>
                                                 @endif
                                             </td>
                                             <td class="text-nowrap text-center" >
