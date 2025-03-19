@@ -354,15 +354,15 @@ class MarketplaceController extends Controller
             );
         }
 
+        $order->ord_status = "approved";
+        $order->save();
+
         // Create manual approval note
         create_order_note(
             channel  : self::LOG_CHANNEL,
             order_id : $order->mkt_id,
             message  : "Pedido aprovado manualmente na FS por: " . auth()->user()->name . " (integração)"
         );
-
-        $order->ord_status = "approved";
-        $order->save();
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
