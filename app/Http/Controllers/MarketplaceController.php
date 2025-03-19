@@ -217,15 +217,11 @@ class MarketplaceController extends Controller
             freight    : $delivery_price
         );
 
-        do
-        {
-            $response = create_marketplace_order(
-                channel  : self::LOG_CHANNEL,
-                data     : $wc_data,
-                order_id : $order->ord_id
-            );
-        }
-        while( !$response[ "success" ] && $response[ "code" ] == 502 );
+        $response = create_marketplace_order(
+            channel  : self::LOG_CHANNEL,
+            data     : $wc_data,
+            order_id : $order->ord_id
+        );
 
         if ( !$response[ "success" ] )
         {
@@ -419,27 +415,43 @@ class MarketplaceController extends Controller
             );
         }
 
-        $vtex     = new VtexOrderController();
-        $request  = new Request();
+        // $vtex     = new VtexOrderController();
+        // $request  = new Request();
 
-        $request->headers->set( key : "seller",    values: self::SELLER                          );
-        $request->headers->set( key : "api-key",   values: config( "woocommerce.plugins.key"   ) );
-        $request->headers->set( key : "api-token", values: config( "woocommerce.plugins.token" ) );
+        // $request->headers->set( key : "seller",    values: self::SELLER                          );
+        // $request->headers->set( key : "api-key",   values: config( "woocommerce.plugins.key"   ) );
+        // $request->headers->set( key : "api-token", values: config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderCancellation( request : $request, order_id : $order->mkt_id );
+        // $response = $vtex->orderCancellation( request : $request, order_id : $order->mkt_id );
 
-        if ( $response->status() != 200 )
+        // if ( $response->status() != 200 )
+        // {
+        //     $data = $response->getData();
+
+        //     $order->ord_status = "fs_cancel_error";
+        //     $order->save();
+
+        //     return log_and_redirect(
+        //         channel : self::LOG_CHANNEL,
+        //         route   : self::ROUTE,
+        //         type    : self::ERROR,
+        //         message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
+        //     );
+        // }
+
+        $response = update_marketplace_order(
+            channel  : self::LOG_CHANNEL,
+            order_id : $order->ord_id,
+            status   : "cancelled",
+        );
+
+        if ( !$response[ "success" ] )
         {
-            $data = $response->getData();
-
-            $order->ord_status = "fs_cancel_error";
-            $order->save();
-
             return log_and_redirect(
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
+                message : $response[ "message" ]
             );
         }
 
