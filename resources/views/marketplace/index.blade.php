@@ -144,6 +144,7 @@
                                             <td class="text-center" >
                                                 {{ $order->mkt_id }}
                                                 @if ( $order->mkt_id )
+                                                    <br>
                                                     <a href="{{ route( "mkt.order.fs", [ "order_id" => $order->mkt_id ] ) }}" target="_blank" rel="noopener noreferrer" >
                                                         Ver dados FS
                                                     </a>
