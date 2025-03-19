@@ -474,7 +474,7 @@ class MarketplaceController extends Controller
     {
         try
         {
-            $response = WC_Order::find( $order_id );
+            $response = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order_id );
         }
         catch ( \Exception $e )
         {
