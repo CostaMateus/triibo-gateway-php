@@ -357,7 +357,7 @@ class MarketplaceController extends Controller
         // Create manual approval note
         create_order_note(
             channel  : self::LOG_CHANNEL,
-            order_id : $order_id,
+            order_id : $order->mkt_id,
             message  : "Pedido aprovado manualmente na FS por: " . auth()->user()->name . " (integração)"
         );
 
@@ -464,5 +464,19 @@ class MarketplaceController extends Controller
             type    : self::SUCCESS,
             message : "{$order->ord_id} #{$order->mkt_id}: Pedido cancelado com sucesso."
         );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param   Request     $request
+     * @param   string      $order_id
+     * @return  void
+     */
+    public function getFsOrder( Request $request, string $order_id ) : void
+    {
+        $response = vtex_get_order( "marketplace", "fast_shop", $order_id );
+
+        dd( $response );
     }
 }

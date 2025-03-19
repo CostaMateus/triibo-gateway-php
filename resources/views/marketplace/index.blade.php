@@ -141,7 +141,14 @@
                                         <tr>
                                             {{-- {{ $order->status[ "color" ] }} --}}
                                             <td class="text-center" >{{ $order->ord_id }}</td>
-                                            <td class="text-center" >{{ $order->mkt_id }}</td>
+                                            <td class="text-center" >
+                                                {{ $order->mkt_id }}
+                                                @if ( $order->mkt_id )
+                                                    <a href="{{ route( "mkt.order.fs", [ "order_id" => $order->mkt_id ] ) }}" target="_blank" rel="noopener noreferrer" >
+                                                        Ver dados FS
+                                                    </a>
+                                                @endif
+                                            </td>
                                             <td class="text-nowrap text-center" >
                                                 <span class="badge rounded-pill mb-0 {{ $order->status[ "color" ] }} ">
                                                     {{ $order->status[ "name" ] }}
