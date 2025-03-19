@@ -5,7 +5,7 @@
 @section( "css" )
     <style>
         .bg-fs-favicon,
-        .bg-triibo-favicon,
+        .bg-mkt-favicon,
         .bg-external-link {
             width: 20px;
             height: 20px;
@@ -15,7 +15,7 @@
         .bg-fs-favicon {
             background-image: url( "{{ asset( 'images/fs-favicon.png'     ) }}" );
         }
-        .bg-triibo-favicon {
+        .bg-mkt-favicon {
             background-image: url( "{{ asset( 'images/triibo-favicon.png' ) }}" );
         }
         .bg-external-link {
@@ -97,18 +97,46 @@
                         </div>
 
                         <div class="row mb-3" >
-                            <div class="col-12" >
+                            <div class="col-12 mb-2" >
                                 <small>Legenda</small>
                             </div>
-                            <div class="col-12" >
-                                <span class="me-3" title="Criar" >
-                                    <i class="h4 bi bi-plus-circle my-auto text-primary" ></i> Criar
+                            <div class="col-12 mb-2 d-flex flex-wrap align-items-center" >
+                                <span class="me-3 d-inline-flex align-items-center" title="Criar" >
+                                    <button class="btn btn-primary text-white p-1" type="button" title="Criar" >
+                                        <i class="h5 bi bi-plus-circle i-align-center" ></i>
+                                    </button>
+                                    <span class="ms-1" >Criar</span>
                                 </span>
-                                <span class="me-3" title="Aprovar" >
-                                    <i class="h4 bi bi-check-circle my-auto text-success" ></i> Aprovar
+                                <span class="me-3 d-inline-flex align-items-center" title="Aprovar" >
+                                    <button class="btn btn-success text-white p-1" type="button" title="Aprovar" >
+                                        <i class="h5 bi bi-check-circle i-align-center" ></i>
+                                    </button>
+                                    <span class="ms-1" >Aprovar</span>
                                 </span>
-                                <span title="Cancelar" >
-                                    <i class="h4 bi bi-x-circle my-auto text-danger" ></i> Cancelar
+                                <span class="me-3 d-inline-flex align-items-center" title="Cancelar" >
+                                    <button class="btn btn-danger text-white p-1" type="button" title="Cancelar" >
+                                        <i class="h5 bi bi-x-circle i-align-center" ></i>
+                                    </button>
+                                    <span class="ms-1" >Cancelar</span>
+                                </span>
+
+                                <span class="me-3 d-inline-flex align-items-center" title="Ver dados da FS" >
+                                    <button class="btn btn-light p-1" type="button" title="Ver dados da FS" >
+                                        <i class="bi bg-fs-favicon i-align-center" ></i>
+                                    </button>
+                                    <span class="ms-1" >Ver dados da FS</span>
+                                </span>
+                                <span class="me-3 d-inline-flex align-items-center" title="Ver dados do MKT" >
+                                    <button class="btn btn-light p-1" type="button" title="Ver dados do MKT" >
+                                        <i class="bi bg-mkt-favicon i-align-center" ></i>
+                                    </button>
+                                    <span class="ms-1" >Ver dados do MKT</span>
+                                </span>
+                                <span class="me-3 d-inline-flex align-items-center" title="Ver pedido no MKT" >
+                                    <button class="btn btn-light p-1" type="button" title="Ver pedido no MKT" >
+                                        <i class="bi bg-external-link i-align-center" ></i>
+                                    </button>
+                                    <span class="ms-1" >Ver pedido no MKT</span>
                                 </span>
                             </div>
                         </div>
@@ -173,7 +201,7 @@
                                                     </a>
                                                     <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt", [ "order_id" => $order->mkt_id ] ) }}"
                                                         title="Ver dados do MKT" target="_blank" rel="noopener noreferrer" >
-                                                        <i class="bi bg-triibo-favicon i-align-center" ></i>
+                                                        <i class="bi bg-mkt-favicon i-align-center" ></i>
                                                     </a>
                                                     <a class="btn btn-light p-1" href="{{ route( "order.mkt.ext", [ "order_id" => $order->mkt_id ] ) }}"
                                                         title="Ver pedido no MKT" target="_blank" rel="noopener noreferrer" >
