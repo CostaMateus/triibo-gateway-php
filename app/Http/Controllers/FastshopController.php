@@ -97,8 +97,10 @@ class FastshopController extends Controller
         $app_key   = $request->header( "api-key"   );
         $app_token = $request->header( "api-token" );
 
+        $config    = config( "woocommerce.plugins" );
+
         // Verifição de chaves
-        if ( $app_key != config( "woocommerce.plugins.key" ) || $app_token != config( "woocommerce.plugins.token" ) )
+        if ( $app_key != $config[ "key" ] || $app_token != $config[ "token" ] )
         {
             Log::invalidCredentials( $app_key, $app_token );
 
