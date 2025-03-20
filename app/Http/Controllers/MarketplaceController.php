@@ -462,7 +462,7 @@ class MarketplaceController extends Controller
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : "O pedido não foi criado no marketplace ainda."
+                message : "{$order->ord_id} O pedido não foi criado no marketplace ainda."
             );
         }
 
@@ -474,7 +474,7 @@ class MarketplaceController extends Controller
                 channel : self::LOG_CHANNEL,
                 route   : self::ROUTE,
                 type    : self::ERROR,
-                message : $response[ "message" ]
+                message : $order->ord_id . " " . $response[ "message" ]
             );
         }
 
