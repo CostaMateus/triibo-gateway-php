@@ -109,10 +109,18 @@ class AwinIntegration
      */
     public function __construct( ProcessDataAwin $logger, bool $load = true )
     {
-        $env                        = config( key: "awin.env"                 );
-        $url                        = config( key: "awin.{$env}.url"          );
-        $p_id                       = config( key: "awin.{$env}.publisher_id" );
-        $this->token                = config( key: "awin.{$env}.token"        );
+        if ( config( key: "awin.env" ) === "production" )
+        {
+            $url         = config( key: "awin.production.url"          );
+            $p_id        = config( key: "awin.production.publisher_id" );
+            $this->token = config( key: "awin.production.token"        );
+        }
+        else
+        {
+            $url         = config( key: "awin.local.url"          );
+            $p_id        = config( key: "awin.local.publisher_id" );
+            $this->token = config( key: "awin.local.token"        );
+        }
 
         // Establishments
         $this->url_programmes       = "{$url}/publishers/{$p_id}/programmes";             // countryCode
@@ -142,12 +150,13 @@ class AwinIntegration
      */
     public function getEstablishments( bool $without_translate = false ) : array
     {
-        if ( config( "app.env" ) === "local" )
+        // HOMOL
+        if ( config( key: "app.env" ) === "local" )
         {
             if ( empty( $this->establishments ) )
             {
                 // establishments in the awin format
-                $establishments = Storage::get( "awin/establishments_awin.json" );
+                $establishments = Storage::get( path: "awin/establishments_awin.json" );
                 $establishments = json_decode( $establishments,  true );
 
                 return $establishments;
@@ -157,17 +166,9 @@ class AwinIntegration
                 return $this->establishments;
 
             return $this->translateEstablishments( data: $this->establishments );
-
-            // // establishments in the triibo format
-            // $establishments = Storage::get( "awin/establishments_triibo.json" );
-            // $establishments = json_decode( $establishments, true );
-
-            // return $establishments;
         }
 
-        // ==================================
-        // production
-
+        // PROD
         if ( empty( $this->establishments ) )
         {
             $response = $this->searchEstablishments();
@@ -204,7 +205,7 @@ class AwinIntegration
      *
      * @return  array
      */
-    public function getPromotions()
+    public function getPromotions() : array
     {
         $origins        = $this->getEstablishments( without_translate: true );
         $promotions     = $this->translatePromotionDefault( data: $origins );
@@ -234,7 +235,7 @@ class AwinIntegration
      * @param   boolean $is_update   Get only reports has dateType == 'validation', default false
      * @return  array
      */
-    public function getReports( bool $is_update = false )
+    public function getReports( bool $is_update = false ) : array
     {
         return $this->searchReports( is_update: $is_update );
     }
@@ -244,27 +245,27 @@ class AwinIntegration
      *
      * @return  array
      */
-    private function searchEstablishments()
+    private function searchEstablishments() : array
     {
         $url = "{$this->url_programmes}?relationship=joined"; //&countryCode=" . self::RG;
 
         try
         {
             $response = retry(
-                times: 7,
+                times            : 7,
                 sleepMilliseconds: 10000,
-                callback: function () use ( $url )
+                callback         : function () use ( $url )
                 {
                     return Http::withToken( token: $this->token )->get( url: $url );
                 },
-                when: function ( $e ) use ( $url )
+                when             : function ( $e ) use ( $url )
                 {
                     $this->logger->log_exception(
-                        message : "Establishments: Fail searchEstablishments(). Retry in 10 seconds...",
-                        method  : "searchEstablishments",
-                        type    : "Throwable",
-                        e       : $e,
-                        context : [ "url" => $url ]
+                        message: "Establishments: Fail searchEstablishments(). Retry in 10 seconds...",
+                        method : "searchEstablishments",
+                        type   : "Throwable",
+                        e      : $e,
+                        context: [ "url" => $url ]
                     );
 
                     return true;
@@ -274,11 +275,11 @@ class AwinIntegration
         catch ( \Throwable $e )
         {
             $this->logger->log_exception(
-                message : "Establishments: Fail searchEstablishments(). Catch.",
-                method  : "searchEstablishments",
-                type    : "Throwable",
-                e       : $e,
-                context : [ "url" => $url ]
+                message: "Establishments: Fail searchEstablishments(). Catch.",
+                method : "searchEstablishments",
+                type   : "Throwable",
+                e      : $e,
+                context: [ "url" => $url ]
             );
 
             return [
@@ -323,11 +324,11 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 7,
+                times            : 7,
                 sleepMilliseconds: 10000,
-                callback: function () use ( $url, $id )
+                callback         : function () use ( $url, $id )
                 {
-                    $response_2 = Http::withToken( $this->token )->get( $url );
+                    $response_2 = Http::withToken( token: $this->token )->get( url: $url );
 
                     if ( !$response_2->successful() )
                     {
@@ -343,15 +344,15 @@ class AwinIntegration
 
                     return $response_2;
                 },
-                when: function ( \Throwable $e ) use ( $url, $id )
+                when             : function ( \Throwable $e ) use ( $url, $id )
                 {
                     if ( $e->getMessage() !== "request.limit.exceeded" )
                     {
                         $this->logger->log_exception(
                             message: "Establishments: Fail searchEstablishmentsDetails ID = {$id}. Retry.",
-                            method: "searchEstablishmentsDetails",
-                            type: "Throwable",
-                            e: $e,
+                            method : "searchEstablishmentsDetails",
+                            type   : "Throwable",
+                            e      : $e,
                             context: [ "url" => $url ]
                         );
                     }
@@ -364,9 +365,9 @@ class AwinIntegration
         {
             $this->logger->log_exception(
                 message: "Establishments: Fail searchEstablishmentsDetails ID = {$id}. Catch.",
-                method: "searchEstablishmentsDetails",
-                type: "Throwable",
-                e: $e,
+                method : "searchEstablishmentsDetails",
+                type   : "Throwable",
+                e      : $e,
                 context: [ "url" => $url ]
             );
 
@@ -390,7 +391,7 @@ class AwinIntegration
      * @param   integer     $id        Establishment id
      * @return  array
      */
-    private function searchPromotions( int $id )
+    private function searchPromotions( int $id ) : array
     {
         $this->logger->log_message( message: "Promotions: Start search promotions for ID {$id}" );
 
@@ -440,15 +441,15 @@ class AwinIntegration
 
                         return $response_2;
                     },
-                    when: function ( \Throwable $e ) use ( $body, $id )
+                    when: function ( \Throwable $e ) use ( $body, $id, $page )
                     {
                         if ( $e->getMessage() !== "request.limit.exceeded" )
                         {
                             $this->logger->log_exception(
                                 message: "Promotions: Fail searchPromotions ID = {$id}. Retry.",
-                                method: "searchPromotions",
-                                type: "Throwable",
-                                e: $e,
+                                method : "searchPromotions",
+                                type   : "Throwable",
+                                e      : $e,
                                 context: [
                                     "page" => $page,
                                     "body" => $body
@@ -464,9 +465,9 @@ class AwinIntegration
             {
                 $this->logger->log_exception(
                     message: "Promotions: Fail searchPromotions ID = {$id}. Catch.",
-                    method: "searchPromotions",
-                    type: "Throwable",
-                    e: $e,
+                    method : "searchPromotions",
+                    type   : "Throwable",
+                    e      : $e,
                     context: [
                         "page" => $page,
                         "body" => $body
@@ -517,7 +518,7 @@ class AwinIntegration
      * @param   boolean     $is_update   Get only reports has dateType == 'validation', default false
      * @return  array
      */
-    private function searchReports( bool $is_update = false )
+    private function searchReports( bool $is_update = false ) : array
     {
         $date   = date( "Y-m-d", strtotime( "yesterday" ) );
         $start  = "{$date}T00:00:00";
@@ -533,9 +534,9 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 7,
+                times            : 7,
                 sleepMilliseconds: 10000,
-                callback: function () use ( $query )
+                callback         : function () use ( $query )
                 {
                     $response_2 = Http::withToken( token: $this->token )->get( url: "{$this->url_transactions}/{$query}");
 
@@ -559,9 +560,9 @@ class AwinIntegration
                     {
                         $this->logger->log_exception(
                             message: "Reports: Fail searchReports. Retry.",
-                            method: "searchReports",
-                            type: "Throwable",
-                            e: $e,
+                            method : "searchReports",
+                            type   : "Throwable",
+                            e      : $e,
                             context: [ "query" => $query ]
                         );
                     }
@@ -574,9 +575,9 @@ class AwinIntegration
         {
             $this->logger->log_exception(
                 message: "Reports: Fail searchReports. Catch.",
-                method: "searchReports",
-                type: "Throwable",
-                e: $e,
+                method : "searchReports",
+                type   : "Throwable",
+                e      : $e,
                 context: [ "query" => $query ]
             );
 
@@ -664,8 +665,8 @@ class AwinIntegration
                 ];
 
                 $this->logger->log_message(
-                    message : "Reports: Translated report",
-                    context : $report[ "metaData" ],
+                    message: "Reports: Translated report",
+                    context: $report[ "metaData" ],
                 );
             }
 
@@ -681,7 +682,7 @@ class AwinIntegration
      * @param   array   $data     Establishments data
      * @return  array
      */
-    private function translateEstablishments( array $data )
+    private function translateEstablishments( array $data ) : array
     {
         $establishments = [];
         $date_en        = get_date_time_unix();
@@ -741,8 +742,8 @@ class AwinIntegration
             ];
 
             $this->logger->log_message(
-                message : "Establishments: Translated establishment ID {$id}",
-                context : $establishments[ $id ],
+                message: "Establishments: Translated establishment ID {$id}",
+                context: $establishments[ $id ],
             );
         }
 
@@ -757,7 +758,7 @@ class AwinIntegration
      * @param   array   $data     Establishments data
      * @return  array
      */
-    private function translatePromotionDefault( array $data )
+    private function translatePromotionDefault( array $data ) : array
     {
         $promotions = [];
         $date_en    = get_date_time_unix();
@@ -818,8 +819,8 @@ class AwinIntegration
             ];
 
             $this->logger->log_message(
-                message : "Promotions: Translated promotion default ID {$id}",
-                context : $promotions[ $id ],
+                message: "Promotions: Translated promotion default ID {$id}",
+                context: $promotions[ $id ],
             );
         }
 
@@ -835,7 +836,7 @@ class AwinIntegration
      * @param   string  $cashback   Cashback value
      * @return  array
      */
-    private function translatePromotions( array $data, string $cashback )
+    private function translatePromotions( array $data, string $cashback ) : array
     {
         $promotions = [];
 
@@ -910,8 +911,8 @@ class AwinIntegration
             }
 
             $this->logger->log_message(
-                message : "Promotions: Translated promotion ID {$id}",
-                context : $promotions[ $id ],
+                message: "Promotions: Translated promotion ID {$id}",
+                context: $promotions[ $id ],
             );
         }
 
@@ -928,16 +929,16 @@ class AwinIntegration
      * @param   string  $url            Url of image to download and save
      * @return  boolean
      */
-    private static function saveImage( string $path, string $image_name, string $url )
+    private static function saveImage( string $path, string $image_name, string $url ) : bool
     {
         $full_path = public_path( path: "images/affiliates/awin/{$path}" ) . "/{$image_name}";
 
         try
         {
             $response = retry(
-                times: 7,
+                times            : 7,
                 sleepMilliseconds: 10000,
-                callback: function () use ( $url )
+                callback         : function () use ( $url )
                 {
                     $response_2 = Http::get( url: $url );
 
@@ -946,15 +947,15 @@ class AwinIntegration
 
                     return $response_2;
                 },
-                when: function ( \Throwable $e ) use ( $url, $full_path, $image_name )
+                when             : function ( \Throwable $e ) use ( $url, $full_path, $image_name )
                 {
                     log_exception(
-                        channel : self::LOG_CHANNEL,
-                        message : "Images: Fail saveImage. Retry in 10 seconds...",
-                        method  : "saveImage",
-                        type    : "Throwable",
-                        e       : $e,
-                        context : [
+                        channel: self::LOG_CHANNEL,
+                        message: "Images: Fail saveImage. Retry in 10 seconds...",
+                        method : "saveImage",
+                        type   : "Throwable",
+                        e      : $e,
+                        context: [
                             "url"        => $url,
                             "path"       => $full_path,
                             "image_name" => $image_name,
@@ -968,12 +969,12 @@ class AwinIntegration
         catch ( \Throwable $e )
         {
             log_exception(
-                channel : self::LOG_CHANNEL,
-                message : "Images: Fail saveImage. Catch.",
-                method  : "saveImage",
-                type    : "Throwable",
-                e       : $e,
-                context : [
+                channel: self::LOG_CHANNEL,
+                message: "Images: Fail saveImage. Catch.",
+                method : "saveImage",
+                type   : "Throwable",
+                e      : $e,
+                context: [
                     "url"        => $url,
                     "path"       => $full_path,
                     "image_name" => $image_name,
@@ -1002,7 +1003,7 @@ class AwinIntegration
      * @param   string      $url    Destination url
      * @return  string
      */
-    private function urlTracking( int $id, string $url )
+    private function urlTracking( int $id, string $url ) : string
     {
         $body = [
             "shorten"        => false,
@@ -1016,9 +1017,9 @@ class AwinIntegration
         try
         {
             $response = retry(
-                times: 7,
+                times            : 7,
                 sleepMilliseconds: 10000,
-                callback: function () use ( $body )
+                callback         : function () use ( $body )
                 {
                     $response_2 = Http::withToken( token: $this->token )
                                       ->withBody( content: json_encode( $body ), contentType: "application/json" )
@@ -1038,15 +1039,15 @@ class AwinIntegration
 
                     return $response_2;
                 },
-                when: function ( \Throwable $e ) use ( $body, $id )
+                when             : function ( \Throwable $e ) use ( $body, $id )
                 {
                     if ( $e->getMessage() !== "request.limit.exceeded" )
                     {
                         $this->logger->log_exception(
                             message: "Promotions: Fail urlTracking ID = {$id}. Retry.",
-                            method: "urlTracking",
-                            type: "Throwable",
-                            e: $e,
+                            method : "urlTracking",
+                            type   : "Throwable",
+                            e      : $e,
                             context: [ "body" => $body ]
                         );
                     }
@@ -1059,9 +1060,9 @@ class AwinIntegration
         {
             $this->logger->log_exception(
                 message: "Promotions: Fail urlTracking ID = {$id}. Catch.",
-                method: "urlTracking",
-                type: "Throwable",
-                e: $e,
+                method : "urlTracking",
+                type   : "Throwable",
+                e      : $e,
                 context: [ "body" => $body ]
             );
 
@@ -1079,7 +1080,7 @@ class AwinIntegration
      *
      * @return  array
      */
-    public function schGetEstablishments()
+    public function schGetEstablishments() : array
     {
         return $this->establishments;
     }

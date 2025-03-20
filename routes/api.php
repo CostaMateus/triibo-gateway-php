@@ -52,7 +52,6 @@ Route::group( [ "middleware" => "log.route" ], function() {
         Route::post( "/chatguru", [ ChatGuruController::class, "index" ] )->name( "triibo.chatguru" );
     } );
 
-
     /**
      * Integração MarketplaceTriibo <=> Fastshop
      * ->middleware( "log.route" )
