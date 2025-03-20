@@ -61,8 +61,10 @@ class GetProductList extends Command
         parent::__construct();
 
         $seller                   = "fast_shop";
-        $env                      = config( "vtex.partners.{$seller}.env" );
-        $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
+
+        $partner                  = config( "vtex.partners" )[ $seller ];
+
+        $this->sale_channel       = $partner[ $partner[ "env" ] ][ "sales_channel" ];
 
         $connector                = new ConnectorService( $seller );
         $connector->enableLogNotify( false );

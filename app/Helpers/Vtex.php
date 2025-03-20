@@ -183,20 +183,40 @@ if ( !function_exists( "get_wc_order" ) )
      */
     function get_wc_order( string $channel, string $order_id, string $seller_id ) : array
     {
-        $parent = null;
-        $order  = null;
+        $parent   = null;
+        $order    = null;
 
         try
         {
-            $order = Order::find( $order_id );
-            $order = json_decode( json_encode( $order ), true );
+            $response = get_marketplace_order( $channel, $order_id );
+
+            if ( !$response[ "success" ] )
+            {
+                $message = "Falha ao obter pedido {$order_id}: " . $response[ "message" ];
+
+                log_message( channel: $channel, message: $message );
+
+                throw new \Exception( $message );
+            }
+
+            $order    = json_decode( json_encode( $response[ "data" ] ), true );
 
             if ( $order[ "parent_id" ] != 0 )
             {
                 do
                 {
-                    $parent = Order::find( $order[ "parent_id" ] );
-                    $parent = json_decode( json_encode( $parent ), true );
+                    $parent_response = get_marketplace_order( $channel, $order[ "parent_id" ] );
+
+                    if ( !$parent_response[ "success" ] )
+                    {
+                        $message = "Falha ao obter pedido pai {$order[ "parent_id" ]}: " . $parent_response[ "message" ];
+
+                        log_message( channel: $channel, message: $message );
+
+                        throw new \Exception( $message );
+                    }
+
+                    $parent          = json_decode( json_encode( $parent_response[ "data" ] ), true );
 
                     if ( $parent[ "parent_id" ] != 0 )
                         $order[ "parent_id" ] = $parent[ "parent_id" ];
@@ -225,7 +245,7 @@ if ( !function_exists( "get_wc_order" ) )
             }
         }
 
-        $store_id = config( "woocommerce.partners.{$seller_id}.store_id" );
+        $store_id = config( "woocommerce.partners" )[ $seller_id ][ "store_id" ];
 
         if ( !$order || $order[ "store" ][ "id" ] != $store_id )
             return [ null, null ];
@@ -929,7 +949,7 @@ if ( !function_exists( "vtex_new_order_prepare" ) )
         $billing   = $parent[ "billing"  ] ?? $order[ "billing"  ];
         $shipping  = $parent[ "shipping" ] ?? $order[ "shipping" ];
 
-        $connector = config( "vtex.partners.{$seller}.connector_name" );
+        $connector = config( "vtex.partners" )[ $seller ][ "connector_name" ];
 
         $items     = vtex_map_order_items( $freight[ "logisticsInfo" ], $freight[ "items" ] );
         $client    = vtex_map_client_data( $billing );
@@ -1041,7 +1061,7 @@ if ( !function_exists( "vtex_update_order_prepare" ) )
      */
     function vtex_update_order_prepare( string $seller, string $order_id ) : array
     {
-        $connector = config( "vtex.partners.{$seller}.connector_name" );
+        $connector = config( "vtex.partners" )[ $seller ][ "connector_name" ];
 
         // Generate the URL for the invoice notification endpoint using the order ID
         $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order_id ] );

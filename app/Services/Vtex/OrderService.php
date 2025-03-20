@@ -14,13 +14,6 @@ class OrderService
     private $connector;
 
     /**
-     * Env (e.g., local, production) as a string.
-     *
-     * @var     string
-     */
-    private $env;
-
-    /**
      * Constructor.
      *
      * @param   ConnectorService    $connector
@@ -28,7 +21,6 @@ class OrderService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -41,21 +33,12 @@ class OrderService
      */
     public function getOrder( string $order_id ) : array
     {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "getOrder"
-            )
-            ->buildUrl(
-                api    : "order-retrieve",
-            )
-            ->replaceUrl(
-                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
-            );
+            ->setCallOrigin( origin: "getOrder" )
+            ->buildUrl( api: "order-retrieve", )
+            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
 
         return $this->connector->sendRequest( method: "get" );
-
     }
 
     /**
@@ -70,16 +53,9 @@ class OrderService
      */
     public function newOrder( array $data ) : array
     {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "newOrder"
-            )
-            ->buildUrl(
-                api    : "order-integration",
-                param  : "?affiliateId={$affiliated_id}"
-            );
+            ->setCallOrigin( origin: "newOrder" )
+            ->uildUrl( api: "order-integration", param: "?affiliateId={$this->connector->affiliated_id}" );
 
         return $this->connector->sendRequest( method: "post", body: $data );
     }
@@ -96,16 +72,9 @@ class OrderService
      */
     public function updateOrderStatus( array $data ) : array
     {
-        $account = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account_name" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "updateOrderStatus"
-            )
-            ->buildUrl(
-                api    : "order-integration-status",
-                param  : "?an={$account}"
-            );
+            ->setCallOrigin( origin : "updateOrderStatus" )
+            ->buildUrl( api: "order-integration-status", param: "?an={$this->connector->account_name}" );
 
         return $this->connector->sendRequest( method: "put", body: $data );
     }
@@ -118,18 +87,10 @@ class OrderService
      */
     public function cancelOrder( string $order_id ) : array
     {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "cancelOrder"
-            )
-            ->buildUrl(
-                api    : "order-integration-cancel",
-            )
-            ->replaceUrl(
-                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
-            );
+            ->setCallOrigin( origin: "cancelOrder" )
+            ->buildUrl( api: "order-integration-cancel", )
+            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
 
         return $this->connector->sendRequest( method: "post" );
     }

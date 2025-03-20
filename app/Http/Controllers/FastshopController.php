@@ -35,8 +35,9 @@ class FastshopController extends Controller
             return $this->returnResponse( 400, "Empty data" );
 
         $seller                   = $request->header( "seller" );
-        $env                      = config( "vtex.partners.{$seller}.env" );
-        $this->sale_channel       = config( "vtex.partners.{$seller}.{$env}.sales_channel" );
+        $partner                  = config( "vtex.partners" )[ $seller ];
+
+        $this->sale_channel       = $partner[ $partner[ "env" ] ][ "sales_channel" ];
 
         $connector                = new ConnectorService( $seller );
         $connector->enableLogNotify( false );

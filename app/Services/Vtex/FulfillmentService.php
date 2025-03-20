@@ -15,13 +15,6 @@ class FulfillmentService
     private $connector;
 
     /**
-     * Env (e.g., local, production) as a string.
-     *
-     * @var     string
-     */
-    private $env;
-
-    /**
      * Constructor.
      *
      * @param   ConnectorService    $connector
@@ -29,7 +22,6 @@ class FulfillmentService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -42,17 +34,9 @@ class FulfillmentService
      */
     public function simulate( array $data ) : array
     {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "simulate"
-            )
-            ->buildUrl(
-                api    : "fulfillment-simulation",
-                param  : "?affiliateId={$affiliated_id}&sc={$sales_channel}"
-            );
+            ->setCallOrigin( origin: "simulate" )
+            ->buildUrl( api: "fulfillment-simulation", param: "?affiliateId={$this->connector->affiliated_id}&sc={$this->connector->sales_channel}" );
 
         return $this->connector->sendRequest( method: "post", body: $data );
     }
@@ -67,17 +51,9 @@ class FulfillmentService
      */
     public function fulfillmentOrder( array $data ) : array
     {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "fulfillmentOrder"
-            )
-            ->buildUrl(
-                api    : "fulfillment-order",
-                param  : "?affiliateId={$affiliated_id}&sc={$sales_channel}"
-            );
+            ->setCallOrigin( origin: "fulfillmentOrder" )
+            ->buildUrl( api: "fulfillment-order", param: "?affiliateId={$this->connector->affiliated_id}&sc={$this->connector->sales_channel}" );
 
         return $this->connector->sendRequest( method: "post", body: $data );
     }
@@ -92,20 +68,10 @@ class FulfillmentService
      */
     public function dispatchOrder( string $order_id ) : array
     {
-        $affiliated_id = config( "vtex.partners.{$this->connector->seller}.{$this->env}.affiliated_id" );
-        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "dispatchOrder"
-            )
-            ->buildUrl(
-                api    : "fulfillment-dispatch",
-                param  : "?affiliateId={$affiliated_id}&sc={$sales_channel}",
-            )
-            ->replaceUrl(
-                data   : [ "{orderId}" => "{$affiliated_id}-{$order_id}" ]
-            );
+            ->setCallOrigin( origin: "dispatchOrder" )
+            ->buildUrl( api: "fulfillment-dispatch", param: "?affiliateId={$this->connector->affiliated_id}&sc={$this->connector->sales_channel}", )
+            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
 
         return $this->connector->sendRequest( method: "post", body: [ "marketplaceOrderId" => $order_id ] );
     }

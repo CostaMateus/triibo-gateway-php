@@ -14,13 +14,6 @@ class ProductService
     private $connector;
 
     /**
-     * Env (e.g., local, production) as a string.
-     *
-     * @var     string
-     */
-    private $env;
-
-    /**
      * Constructor.
      *
      * @param   ConnectorService    $connector
@@ -28,7 +21,6 @@ class ProductService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -43,16 +35,10 @@ class ProductService
     {
         $page_size     = 500;
         $only_assigned = true;
-        $sales_channel = config( "vtex.partners.{$this->connector->seller}.{$this->env}.sales_channel" );
 
         $this->connector
-            ->setCallOrigin(
-                origin : "initialSkuLoad"
-            )
-            ->buildUrl(
-                api    : "all-skus-list",
-                param  : "?onlyAssigned={$only_assigned}&sc={$sales_channel}&pageSize={$page_size}&page={$page}"
-            );
+            ->setCallOrigin( origin: "initialSkuLoad" )
+            ->buildUrl( api: "all-skus-list", param: "?onlyAssigned={$only_assigned}&sc={$this->connector->sales_channel}&pageSize={$page_size}&page={$page}" );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -68,15 +54,9 @@ class ProductService
     public function getSkuContext( string $sku ) : array
     {
         $this->connector
-            ->setCallOrigin(
-                origin : "getSkuContext"
-            )
-            ->buildUrl(
-                api    : "get-sku-context",
-            )
-            ->replaceUrl(
-                data   : [ "{skuId}" => $sku ]
-            );
+            ->setCallOrigin( origin: "getSkuContext" )
+            ->buildUrl( api: "get-sku-context" )
+            ->replaceUrl( data: [ "{skuId}" => $sku ] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -92,15 +72,9 @@ class ProductService
     public function getSkuData( string $sku ) : array
     {
         $this->connector
-            ->setCallOrigin(
-                origin : "getSkuData"
-            )
-            ->buildUrl(
-                api    : "get-sku-data",
-            )
-            ->replaceUrl(
-                data   : [ "{skuId}" => $sku ]
-            );
+            ->setCallOrigin( origin: "getSkuData" )
+            ->buildUrl( api: "get-sku-data" )
+            ->replaceUrl( data: [ "{skuId}" => $sku ] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -115,19 +89,10 @@ class ProductService
      */
     public function getProduct( int $product_id ) : array
     {
-        $account = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account" );
-
         $this->connector
-            ->setCallOrigin(
-                origin : "getProduct"
-            )
-            ->buildUrl(
-                api    : "get-detail-product",
-                param  : "?an={$account}"
-            )
-            ->replaceUrl(
-                data   : [ "{productId}" => $product_id ]
-            );
+            ->setCallOrigin( origin: "getProduct" )
+            ->buildUrl( api: "get-detail-product", param: "?an={$this->connector->account_name}" )
+            ->replaceUrl( data: [ "{productId}" => $product_id ] );
 
         return $this->connector->sendRequest( method: "get" );
     }
