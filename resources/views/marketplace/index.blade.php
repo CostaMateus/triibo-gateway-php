@@ -80,7 +80,8 @@
                         </div>
 
                         <div class="row mb-3" >
-                            <div class="col-6 pe-2" >
+                            <div class="col-12 col-md-6 col-lg-3 mb-2 pe-md-1" >
+                                <label for="orders-file" class="text-muted" >Arquivo</label>
                                 <select id="orders-file" class="form-select" >
                                     <option value="" >Selecione um arquivo...</option>
                                     @foreach( $files as $f )
@@ -88,12 +89,34 @@
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="col-6 ps-2" >
+                            <div class="col-12 col-md-6 col-lg-3 mb-2 ps-md-1 px-lg-1" >
+                                <label for="orders-status" class="text-muted" >Status</label>
                                 <select id="orders-status" class="form-select" >
                                     <option value="" >Selecione um status...</option>
                                     @foreach ( $statuses as $key => $value )
                                         <option value="{{ $key }}" @if ( $key == $status ) selected @endif >{{ $value }}</option>
                                     @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 mb-2 pe-md-1 px-lg-1" >
+                                <label for="orders-product-id" class="text-muted" >Produto</label>
+                                <select id="orders-product-id" class="form-select" >
+                                    <option value="" >Selecione um produto...</option>
+                                    <option value="all" >Todos</option>
+                                    @foreach ( $product_ids as $key => $value )
+                                        <option value="{{ $key }}" @if ( $key == $product_id ) selected @endif >{{ $key }} - {{ $value }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3 mb-2 ps-md-1 ps-lg-1" >
+                                <label for="orders-per-page" class="text-muted" >Quantidade</label>
+                                <select id="orders-per-page" class="form-select" >
+                                    <option value="" >Por página...</option>
+                                    <option value="25"  @if (  25 == $orders->perPage() ) selected @endif >25</option>
+                                    <option value="50"  @if (  50 == $orders->perPage() ) selected @endif >50</option>
+                                    <option value="100" @if ( 100 == $orders->perPage() ) selected @endif >100</option>
+                                    <option value="250" @if ( 250 == $orders->perPage() ) selected @endif >250</option>
+                                    <option value="500" @if ( 500 == $orders->perPage() ) selected @endif >500</option>
                                 </select>
                             </div>
                         </div>
@@ -358,6 +381,34 @@
 
             const parser    = new URL( window.location );
             parser.searchParams.set( "status", status );
+            window.location = parser.href;
+        } );
+
+        // Product filter
+        $( "#orders-product-id" ).on( "change", function()
+        {
+            const product_id = $( this ).val();
+
+            if ( !product_id ) return;
+
+            $( "#load" ).removeClass( "d-none" );
+
+            const parser     = new URL( window.location );
+            parser.searchParams.set( "product_id", product_id );
+            window.location  = parser.href;
+        } );
+
+        // Per page filter
+        $( "#orders-per-page" ).on( "change", function()
+        {
+            const per_page  = $( this ).val();
+
+            if ( !per_page ) return;
+
+            $( "#load" ).removeClass( "d-none" );
+
+            const parser    = new URL( window.location );
+            parser.searchParams.set( "per_page", per_page );
             window.location = parser.href;
         } );
 

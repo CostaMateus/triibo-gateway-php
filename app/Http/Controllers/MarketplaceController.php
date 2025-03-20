@@ -26,19 +26,25 @@ class MarketplaceController extends Controller
      */
     public function orders( Request $request ) : Renderable
     {
-        $statuses = get_all_order_status();
+        $statuses    = get_all_order_status();
 
-        $files    = Order::select( "file_name" )->distinct()->orderBy( "file_name", "DESC" )->pluck( "file_name" );
-        $file     = $request->query( "file" ) ?? $files->first();
+        $files       = Order::select( "file_name" )->distinct()->orderBy( "file_name", "DESC" )->pluck( "file_name" );
+        $file        = $request->query( "file" ) ?? $files->first();
 
-        $status   = $request->query( "status" ) ?? "all";
+        $per_page    = $request->query( "per_page"   ) ?? 100;
+        $status      = $request->query( "status"     ) ?? "all";
+        $product_id  = $request->query( "product_id" ) ?? "all";
 
-        $query    = Order::where( "file_name", $file );
+        $product_ids = Order::where( "file_name", $file )->distinct()->orderBy( "product_id" )->pluck( "product_name", "product_id" );
+        $query       = Order::where( "file_name", $file );
 
-        if ( $status != "all" )
-            $query->where( "ord_status", $status );
+        if ( $status !== "all" )
+            $query->where( "ord_status", $status     );
 
-        $orders   = $query->paginate( 100 )->through( function ( $order )
+        if ( $product_id !== "all" )
+            $query->where( "product_id", $product_id );
+
+        $orders      = $query->paginate( $per_page )->through( function ( $order )
         {
             $order->billing  = reorganize_fields( data: $order->billing,  order: get_billing_fields_order()  );
             $order->shipping = reorganize_fields( data: $order->shipping, order: get_shipping_fields_order() );
@@ -51,7 +57,12 @@ class MarketplaceController extends Controller
 
         return view(
             view: "marketplace.index",
-            data: compact( "file", "files", "orders", "status", "statuses" )
+            data: compact(
+                "orders",
+                "file", "files",
+                "status", "statuses",
+                "product_id", "product_ids"
+            )
         );
     }
 
