@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Marketplace\Order;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\{ Request, RedirectResponse };
-use Codexshaper\WooCommerce\Facades\Order as WC_Order;
 use App\Http\Controllers\Vtex\OrderController as VtexOrderController;
 
 class MarketplaceController extends Controller
@@ -41,16 +40,16 @@ class MarketplaceController extends Controller
 
         $orders   = $query->paginate( 100 )->through( function ( $order )
         {
-            $order->billing  = reorganize_fields( data : $order->billing,  order : get_billing_fields_order()  );
-            $order->shipping = reorganize_fields( data : $order->shipping, order : get_shipping_fields_order() );
-            $order->status   = get_order_status( status : $order->ord_status );
+            $order->billing  = reorganize_fields( data: $order->billing,  order: get_billing_fields_order()  );
+            $order->shipping = reorganize_fields( data: $order->shipping, order: get_shipping_fields_order() );
+            $order->status   = get_order_status( status: $order->ord_status );
 
             return $order;
         } );
 
         return view(
-            view : "marketplace.index",
-            data : compact( "file", "files", "orders", "status", "statuses" )
+            view: "marketplace.index",
+            data: compact( "file", "files", "orders", "status", "statuses" )
         );
     }
 
@@ -61,14 +60,14 @@ class MarketplaceController extends Controller
      */
     public function importOrders( Request $request ) : RedirectResponse
     {
-        $request->validate( rules : [ "csv_file" => "required|file|mimes:csv,txt|max:2048" ] );
+        $request->validate( rules: [ "csv_file" => "required|file|mimes:csv,txt|max:2048" ] );
 
         $type    = self::ERROR;
         $message = "Arquivo inválido.";
 
-        if ( $request->file( key : "csv_file" )->isValid() )
+        if ( $request->file( key: "csv_file" )->isValid() )
         {
-            $processed = process_csv_file( file : $request->file( "csv_file" ) );
+            $processed = process_csv_file( file: $request->file( "csv_file" ) );
 
             if ( $processed )
             {
@@ -82,10 +81,10 @@ class MarketplaceController extends Controller
         }
 
         return log_and_redirect(
-            channel : self::LOG_CHANNEL,
-            route   : self::ROUTE,
-            type    : $type,
-            message : $message
+            channel: self::LOG_CHANNEL,
+            route  : self::ROUTE,
+            type   : $type,
+            message: $message
         );
     }
 
@@ -101,10 +100,10 @@ class MarketplaceController extends Controller
         if ( !$request->ord_id || !$request->file_name )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "Dados inválidos."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "Dados inválidos."
             );
         }
 
@@ -118,29 +117,26 @@ class MarketplaceController extends Controller
         if ( !$order )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$request->ord_id}: Pedido com status diferente de 'Não processado'."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$request->ord_id}: Pedido com status diferente de 'Não processado'."
             );
         }
 
         do
         {
-            $response = get_marketplace_product(
-                channel : self::LOG_CHANNEL,
-                order   : $order
-            );
+            $response = get_marketplace_product( channel: self::LOG_CHANNEL, order: $order );
         }
         while( !$response[ "success" ] && $response[ "code" ] == 502 );
 
         if ( !$response[ "success" ] )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : $response[ "message" ]
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: $response[ "message" ]
             );
         }
 
@@ -149,10 +145,10 @@ class MarketplaceController extends Controller
         if ( $product[ "store" ]->id != $store_id )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id}: Esse produto não é da Fast Shop."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: Esse produto não é da Fast Shop."
             );
         }
         else if ( ( float ) $product[ "price" ] > ( float ) $order->max_price )
@@ -161,74 +157,68 @@ class MarketplaceController extends Controller
             $order->save();
 
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id}: Valor do produto acima do máximo."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: Valor do produto acima do máximo."
             );
         }
 
-        $fs_product_id = search_product_meta( metas : $product[ "meta_data" ] );
+        $fs_product_id     = search_product_meta( metas: $product[ "meta_data" ] );
 
         if ( $fs_product_id == null )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id}: Produto sem ID Fast Shop."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: Produto sem ID Fast Shop."
             );
         }
 
-        $freight           = get_freight_vtex(
-            product_id : $fs_product_id,
-            postcode   : $order[ "shipping" ][ "postcode" ]
-        );
+        $freight           = get_freight_vtex( product_id: $fs_product_id, postcode: $order[ "shipping" ][ "postcode" ] );
 
         if ( $freight === false )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id}: Falha ao consulta frete da Fast Shop. FCF1"
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: Falha ao consulta frete da Fast Shop. FCF1"
             );
         }
 
-        $delivery_price    = get_delivery_price(
-            product_id : $fs_product_id,
-            freight    : $freight[ "data" ]
-        );
+        $delivery_price    = get_delivery_price( product_id: $fs_product_id, freight: $freight[ "data" ] );
 
         if ( $delivery_price === false )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id}: Falha ao consulta frete da Fast Shop. FCF2"
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: Falha ao consulta frete da Fast Shop. FCF2"
             );
         }
 
         $wc_data           = marketplace_new_order_prepare(
-            order      : $order,
-            product_id : $order->product_id,
-            freight    : $delivery_price
+            order     : $order,
+            product_id: $order->product_id,
+            freight   : $delivery_price
         );
 
         $response          = create_marketplace_order(
-            channel  : self::LOG_CHANNEL,
-            data     : $wc_data,
-            order_id : $order->ord_id
+            channel : self::LOG_CHANNEL,
+            data    : $wc_data,
+            order_id: $order->ord_id
         );
 
         if ( !$response[ "success" ] )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : $response[ "message" ]
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: $response[ "message" ]
             );
         }
 
@@ -240,10 +230,10 @@ class MarketplaceController extends Controller
         $order->save();
 
         return log_and_redirect(
-            channel : self::LOG_CHANNEL,
-            route   : self::ROUTE,
-            type    : self::SUCCESS,
-            message : "{$order->ord_id} #{$order->mkt_id}: Pedido criado com sucesso."
+            channel: self::LOG_CHANNEL,
+            route  : self::ROUTE,
+            type   : self::SUCCESS,
+            message: "{$order->ord_id} #{$order->mkt_id}: Pedido criado com sucesso."
         );
     }
 
@@ -259,10 +249,10 @@ class MarketplaceController extends Controller
         if ( !$request->ord_id || !$request->file_name )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "Dados inválidos."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "Dados inválidos."
             );
         }
 
@@ -274,48 +264,48 @@ class MarketplaceController extends Controller
         if ( !$order )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$request->ord_id}: Pedido com status diferente de 'Processado'."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$request->ord_id}: Pedido com status diferente de 'Processado'."
             );
         }
 
         if ( !$order->mkt_id )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
             );
         }
 
         if ( !$request->has( "mkt_verified" ) )
         {
-            $response = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
+            $response = get_marketplace_order( channel: self::LOG_CHANNEL, order_id: $order->mkt_id );
 
             if ( !$response[ "success" ] )
             {
                 return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : $response[ "message" ]
+                    channel: self::LOG_CHANNEL,
+                    route  : self::ROUTE,
+                    type   : self::ERROR,
+                    message: $response[ "message" ]
                 );
             }
 
             $wc_order    = $response[ "data" ];
 
-            $is_created  = search_order_meta( metas : $wc_order[ "meta_data" ], key : "_fastshop_order_id" );
+            $is_created  = search_order_meta( metas: $wc_order[ "meta_data" ], key: "_fastshop_order_id" );
 
             if ( $is_created === null )
             {
                 return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : "{$order->ord_id}: Pedido ainda não foi criado na Fast Shop. Tente a opção 'atualizar'."
+                    channel: self::LOG_CHANNEL,
+                    route  : self::ROUTE,
+                    type   : self::ERROR,
+                    message: "{$order->ord_id}: Pedido ainda não foi criado na Fast Shop. Tente a opção 'atualizar'."
                 );
             }
         }
@@ -323,11 +313,11 @@ class MarketplaceController extends Controller
         $vtex     = new VtexOrderController();
         $request  = new Request();
 
-        $request->headers->set( key : "seller",    values : self::SELLER                          );
-        $request->headers->set( key : "api-key",   values : config( "woocommerce.plugins.key"   ) );
-        $request->headers->set( key : "api-token", values : config( "woocommerce.plugins.token" ) );
+        $request->headers->set( key: "seller",    values: self::SELLER                          );
+        $request->headers->set( key: "api-key",   values: config( "woocommerce.plugins.key"   ) );
+        $request->headers->set( key: "api-token", values: config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderApproval( request : $request, order_id : $order->mkt_id );
+        $response = $vtex->orderApproval( request: $request, order_id: $order->mkt_id );
 
         if ( $response->status() != 200 )
         {
@@ -337,10 +327,10 @@ class MarketplaceController extends Controller
             $order->save();
 
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id} #{$order->mkt_id}: {$data->message}"
             );
         }
 
@@ -349,16 +339,16 @@ class MarketplaceController extends Controller
 
         // Create manual approval note
         create_order_note(
-            channel  : self::LOG_CHANNEL,
-            order_id : $order->mkt_id,
-            message  : "Pedido aprovado manualmente na FS por: " . auth()->user()->name . " (integração)"
+            channel : self::LOG_CHANNEL,
+            order_id: $order->mkt_id,
+            message : "Pedido aprovado manualmente na FS por: " . auth()->user()->name . " (integração)"
         );
 
         return log_and_redirect(
-            channel : self::LOG_CHANNEL,
-            route   : self::ROUTE,
-            type    : self::SUCCESS,
-            message : "{$order->ord_id} #{$order->mkt_id}: Pedido aprovado com sucesso."
+            channel: self::LOG_CHANNEL,
+            route  : self::ROUTE,
+            type   : self::SUCCESS,
+            message: "{$order->ord_id} #{$order->mkt_id}: Pedido aprovado com sucesso."
         );
     }
 
@@ -374,10 +364,10 @@ class MarketplaceController extends Controller
         if ( !$request->ord_id || !$request->file_name )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "Dados inválidos."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "Dados inválidos."
             );
         }
 
@@ -389,36 +379,36 @@ class MarketplaceController extends Controller
         if ( !$order )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$request->ord_id}: Pedido com status diferente de 'Processado' e/ou 'Aprovado'."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$request->ord_id}: Pedido com status diferente de 'Processado' e/ou 'Aprovado'."
             );
         }
 
         if ( !$order->mkt_id )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
             );
         }
 
         $response = update_marketplace_order(
-            channel  : self::LOG_CHANNEL,
-            order_id : $order->mkt_id,
-            status   : "cancelled",
+            channel : self::LOG_CHANNEL,
+            order_id: $order->mkt_id,
+            status  : "cancelled",
         );
 
         if ( !$response[ "success" ] )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : $response[ "message" ]
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: $response[ "message" ]
             );
         }
 
@@ -426,10 +416,10 @@ class MarketplaceController extends Controller
         $order->save();
 
         return log_and_redirect(
-            channel : self::LOG_CHANNEL,
-            route   : self::ROUTE,
-            type    : self::SUCCESS,
-            message : "{$order->ord_id} #{$order->mkt_id}: Pedido cancelado com sucesso."
+            channel: self::LOG_CHANNEL,
+            route  : self::ROUTE,
+            type   : self::SUCCESS,
+            message: "{$order->ord_id} #{$order->mkt_id}: Pedido cancelado com sucesso."
         );
     }
 
@@ -445,10 +435,10 @@ class MarketplaceController extends Controller
         if ( !$request->ord_id || !$request->file_name )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "Dados inválidos."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "Dados inválidos."
             );
         }
 
@@ -459,40 +449,40 @@ class MarketplaceController extends Controller
         if ( !$order->mkt_id )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : "{$order->ord_id} O pedido não foi criado no marketplace ainda."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id} O pedido não foi criado no marketplace ainda."
             );
         }
 
-        $response = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
+        $response = get_marketplace_order( channel: self::LOG_CHANNEL, order_id: $order->mkt_id );
 
         if ( !$response[ "success" ] )
         {
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::ERROR,
-                message : $order->ord_id . " " . $response[ "message" ]
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: $order->ord_id . " " . $response[ "message" ]
             );
         }
 
         $wc_order    = $response[ "data" ];
 
-        $is_created  = search_order_meta( metas : $wc_order[ "meta_data" ], key : "_fastshop_order_id" );
-        $is_approved = search_order_meta( metas : $wc_order[ "meta_data" ], key : "_fastshop_order_approved" );
+        $is_created  = search_order_meta( metas: $wc_order[ "meta_data" ], key: "_fastshop_order_id" );
+        $is_approved = search_order_meta( metas: $wc_order[ "meta_data" ], key: "_fastshop_order_approved" );
 
         if ( $is_created === null )
         {
             $vtex     = new VtexOrderController();
             $request  = new Request();
 
-            $request->headers->set( key : "seller",    values : self::SELLER                          );
-            $request->headers->set( key : "api-key",   values : config( "woocommerce.plugins.key"   ) );
-            $request->headers->set( key : "api-token", values : config( "woocommerce.plugins.token" ) );
+            $request->headers->set( key: "seller",    values: self::SELLER                          );
+            $request->headers->set( key: "api-key",   values: config( "woocommerce.plugins.key"   ) );
+            $request->headers->set( key: "api-token", values: config( "woocommerce.plugins.token" ) );
 
-            $response = $vtex->orderCreation( request : $request, order_id : $order->mkt_id );
+            $response = $vtex->orderCreation( request: $request, order_id: $order->mkt_id );
 
             if ( $response->status() != 200 )
             {
@@ -502,10 +492,10 @@ class MarketplaceController extends Controller
                 $order->save();
 
                 return log_and_redirect(
-                    channel : self::LOG_CHANNEL,
-                    route   : self::ROUTE,
-                    type    : self::ERROR,
-                    message : "{$order->ord_id} #{$order->mkt_id}: {$data->message} | Verifique as notas do pedido."
+                    channel: self::LOG_CHANNEL,
+                    route  : self::ROUTE,
+                    type   : self::ERROR,
+                    message: "{$order->ord_id} #{$order->mkt_id}: {$data->message} | Verifique as notas do pedido."
                 );
             }
 
@@ -513,10 +503,10 @@ class MarketplaceController extends Controller
             $order->save();
 
             return log_and_redirect(
-                channel : self::LOG_CHANNEL,
-                route   : self::ROUTE,
-                type    : self::SUCCESS,
-                message : "{$order->ord_id} #{$order->mkt_id}: Pedido criado com sucesso."
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::SUCCESS,
+                message: "{$order->ord_id} #{$order->mkt_id}: Pedido criado com sucesso."
             );
         }
         else if ( $is_approved === null )
@@ -530,10 +520,10 @@ class MarketplaceController extends Controller
         }
 
         return log_and_redirect(
-            channel : self::LOG_CHANNEL,
-            route   : self::ROUTE,
-            type    : self::SUCCESS,
-            message : "{$order->ord_id} #{$order->mkt_id}: Pedido atualizado com sucesso."
+            channel: self::LOG_CHANNEL,
+            route  : self::ROUTE,
+            type   : self::SUCCESS,
+            message: "{$order->ord_id} #{$order->mkt_id}: Pedido atualizado com sucesso."
         );
     }
 
@@ -562,7 +552,7 @@ class MarketplaceController extends Controller
     {
         try
         {
-            $response = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order_id );
+            $response = get_marketplace_order( channel: self::LOG_CHANNEL, order_id: $order_id );
         }
         catch ( \Exception $e )
         {
@@ -581,9 +571,9 @@ class MarketplaceController extends Controller
      */
     public function redirectToMkt( Request $request, string $id ) : RedirectResponse
     {
-        $prefix = config( "marketplace.url" );
+        $prefix = config( key: "marketplace.url" );
         $url    = "{$prefix}/wp-admin/post.php?post={$id}&action=edit";
 
-        return redirect()->away( $url );
+        return redirect()->away( path: $url );
     }
 }
