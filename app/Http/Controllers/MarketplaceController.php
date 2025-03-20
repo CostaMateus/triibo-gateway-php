@@ -128,9 +128,9 @@ class MarketplaceController extends Controller
 
         $store_id = config( key: "woocommerce.partners." . self::SELLER . ".store_id" );
 
-        $order    = Order::where( "file_name",  $request->file_name )
-                         ->where( "ord_id",     $request->ord_id    )
-                         ->where( "ord_status", "not_processed"     )
+        $order    = Order::where( "file_name", $request->file_name )
+                         ->where( "ord_id", $request->ord_id )
+                         ->whereIn( "ord_status", [ "not_processed", "over_max" ] )
                          ->first();
 
         if ( !$order )
@@ -139,7 +139,7 @@ class MarketplaceController extends Controller
                 channel: self::LOG_CHANNEL,
                 route  : self::ROUTE,
                 type   : self::ERROR,
-                message: "{$request->ord_id}: Pedido com status diferente de 'Não processado'."
+                message: "{$request->ord_id}: Pedido com status diferente de 'Não processado' ou 'Preço acima do limite'."
             );
         }
 
@@ -275,9 +275,9 @@ class MarketplaceController extends Controller
             );
         }
 
-        $order = Order::where( "file_name",  $request->file_name )
-                      ->where( "ord_id",     $request->ord_id    )
-                      ->where( "ord_status", "processed"         )
+        $order = Order::where( "file_name", $request->file_name )
+                      ->where( "ord_id", $request->ord_id )
+                      ->where( "ord_status", "processed" )
                       ->first();
 
         if ( !$order )
@@ -392,7 +392,7 @@ class MarketplaceController extends Controller
         }
 
         $order = Order::where( "file_name", $request->file_name )
-                      ->where( "ord_id",    $request->ord_id    )
+                      ->where( "ord_id", $request->ord_id )
                       ->whereIn( "ord_status", [ "processed", "approved" ] )
                       ->first();
 
@@ -402,7 +402,7 @@ class MarketplaceController extends Controller
                 channel: self::LOG_CHANNEL,
                 route  : self::ROUTE,
                 type   : self::ERROR,
-                message: "{$request->ord_id}: Pedido com status diferente de 'Processado' e/ou 'Aprovado'."
+                message: "{$request->ord_id}: Pedido com status diferente de 'Processado' ou 'Aprovado'."
             );
         }
 
@@ -463,7 +463,7 @@ class MarketplaceController extends Controller
         }
 
         $order = Order::where( "file_name", $request->file_name )
-                      ->where( "ord_id",    $request->ord_id    )
+                      ->where( "ord_id", $request->ord_id )
                       ->first();
 
         if ( !$order->mkt_id )
