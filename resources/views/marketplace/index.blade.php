@@ -324,7 +324,7 @@
         window.setTimeout( function ()
         {
             $( ".dismiss-alert" ).addClass( "d-none" );
-        }, 10000 );
+        }, 15000 );
 
         $( "#import-form" ).on( "submit", function()
         {
