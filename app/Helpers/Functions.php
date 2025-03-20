@@ -1338,7 +1338,7 @@ if ( !function_exists( "get_marketplace_order" ) )
         {
             log_message( channel: $channel, message: print_r( $e, true ) );
 
-            $response[ "message" ] = "{$order->ord_id}: Falha ao consultar pedido.";
+            $response[ "message" ] = "{$order_id}: Falha ao consultar pedido.";
             $response[ "code"    ] = 400;
         }
 
