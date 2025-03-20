@@ -15,13 +15,6 @@ class ConnectorService
     private const LOG_CHANNEL = "marketplace";
 
     /**
-     * Env (e.g., local, production) as a string.
-     *
-     * @var     string
-     */
-    private $env;
-
-    /**
      * URL for making requests, constructed based on the environment and other settings.
      *
      * @var     string
@@ -50,11 +43,25 @@ class ConnectorService
     private $call_origin = "";
 
     /**
-     * Seller.
+     * Account name.
      *
      * @var     string
      */
-    public $seller;
+    public $account_name;
+
+    /**
+     * Affiliated id.
+     *
+     * @var     string
+     */
+    public $affiliated_id;
+
+    /**
+     * Sales channel.
+     *
+     * @var     string
+     */
+    public $sales_channel;
 
     /**
      * Constructor.
@@ -63,9 +70,16 @@ class ConnectorService
      */
     public function __construct( string $seller = "fast_shop" )
     {
-        $this->seller  = $seller;
-        $this->env     = config( "vtex.partners.{$this->seller}.env"                  );
-        $this->headers = config( "vtex.partners.{$this->seller}.{$this->env}.headers" );
+        $partner             = config( key: "vtex.partners" )[ $seller ];
+        $env                 = $partner[ "env" ];
+
+        $this->apis          = config( key: "vtex.api" );
+        $this->headers       = $partner[ $env ][ "headers"       ];
+        $this->raw_url       = $partner[ $env ][ "raw_url"      ];
+
+        $this->account_name  = $partner[ $env ][ "account_name"  ];
+        $this->affiliated_id = $partner[ $env ][ "affiliated_id" ];
+        $this->sales_channel = $partner[ $env ][ "sales_channel" ];
     }
 
     /**
@@ -78,12 +92,11 @@ class ConnectorService
      */
     public function buildUrl( string $api, ?string $account = null, ?string $param = null ) : ConnectorService
     {
-        $account   = $account ?? config( "vtex.partners.{$this->seller}.{$this->env}.account_name" );
+        $account   = $account ?? $this->account_name;
 
-        $url_sufix = config( "vtex.api.{$api}" );
-        $url_raw   = config( "vtex.partners.{$this->seller}.{$this->env}.raw_url" );
+        $url_sufix = $this->apis[ $api ];
 
-        $url_base  = str_replace( "{account_name}", $account, $url_raw );
+        $url_base  = str_replace( "{account_name}", $account, $this->raw_url );
 
         $this->url = implode( "", [ $url_base, $url_sufix, $param ] );
 
@@ -165,10 +178,10 @@ class ConnectorService
             if ( !$response->successful() )
             {
                 log_message(
-                    channel : self::LOG_CHANNEL,
-                    level   : "error",
-                    message : $response->reason(),
-                    context : $data,
+                    channel: self::LOG_CHANNEL,
+                    level  : "error",
+                    message: $response->reason(),
+                    context: $data,
                 );
 
                 // Update response code and error code.
@@ -188,11 +201,11 @@ class ConnectorService
 
             // Log the exception for debugging purposes.
             log_exception(
-                channel : self::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : $this->call_origin,
-                type    : "Throwable",
-                e       : $e
+                channel: self::LOG_CHANNEL,
+                message: $e->getMessage(),
+                method : $this->call_origin,
+                type   : "Throwable",
+                e      : $e
             );
         }
 
@@ -222,8 +235,6 @@ class ConnectorService
             }
         }
 
-        $account  = config( "vtex.partners.{$this->seller}.{$this->env}.account_name" );
-
         // Prepare the request body.
         $body     = [
             "name"                   => "Marketplace Triibo",
@@ -234,20 +245,18 @@ class ConnectorService
             "availableCountries"     => [ "BRA" ],
             "type"                   => "EXTERNAL",
             "isActive"               => true,
-            "helpUrl"                => config( "app.url" ),
-            "connectorApiEndpoint"   => config( "app.url" ),
-            "connectorPageUrl"       => config( "app.url" ),
+            "helpUrl"                => config( key: "app.url" ),
+            "connectorApiEndpoint"   => config( key: "app.url" ),
+            "connectorPageUrl"       => config( key: "app.url" ),
             "connectorVtexAdminPath" => "/bridge/#/settings?openConfig=marketplacetriibo",
             "channelId"              => 8
         ];
 
-        $this->setCallOrigin(
-                origin  : "register"
-            )
+        $this->setCallOrigin( origin: "register" )
             ->buildUrl(
-                api     : "manager-connector",
-                account : "portal",
-                param   : "?an={$account}"
+                api    : "manager-connector",
+                param  : "?an={$this->account}",
+                account: "portal",
             );
 
         return $this->sendRequest( method: "post", body: $body );
@@ -262,18 +271,14 @@ class ConnectorService
      */
     public function searchRegistration() : array
     {
-        $account  = config( "vtex.partners.{$this->seller}.{$this->env}.account_name" );
-
         $name     = "Marketplace Triibo";
         $country  = "BRA";
 
-        $this->setCallOrigin(
-                origin  : "searchRegistration"
-            )
+        $this->setCallOrigin( origin: "searchRegistration" )
             ->buildUrl(
-                api     : "manager-connector",
-                account : "portal",
-                param   : "/all?an={$account}&name={$name}&country={$country}"
+                api    : "manager-connector",
+                param  : "/all?an={$this->account}&name={$name}&country={$country}",
+                account: "portal",
             );
 
         return $this->sendRequest( method: "get" );
