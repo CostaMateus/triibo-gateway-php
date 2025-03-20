@@ -55,7 +55,7 @@ class OrderService
     {
         $this->connector
             ->setCallOrigin( origin: "newOrder" )
-            ->uildUrl( api: "order-integration", param: "?affiliateId={$this->connector->affiliated_id}" );
+            ->buildUrl( api: "order-integration", param: "?affiliateId={$this->connector->affiliated_id}" );
 
         return $this->connector->sendRequest( method: "post", body: $data );
     }
