@@ -327,7 +327,7 @@ class MarketplaceController extends Controller
         $request->headers->set( key : "api-key",   values : config( "woocommerce.plugins.key"   ) );
         $request->headers->set( key : "api-token", values : config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderCreation( request : $request, order_id : $order->mkt_id );
+        $response = $vtex->orderApproval( request : $request, order_id : $order->mkt_id );
 
         if ( $response->status() != 200 )
         {
