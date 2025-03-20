@@ -258,13 +258,20 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5001", // 5001 - error in freight data query from FS
-                    "message "   => "something wrong",
+                    "message"    => "something wrong",
                     "data"       => null
                 ], 500 );
             }
 
+            $empty_items       = empty( $simulate[ "data" ][ "items"         ] );
+            $empty_logistics   = empty( $simulate[ "data" ][ "logisticsInfo" ] );
+            $has_without_stock = false;
+
+            if ( !$empty_items )
+                $has_without_stock = !empty( array_filter( $simulate[ "data" ][ "items" ], fn( $item ) => $item[ "availability" ] === "withoutStock" ) );
+
             // Handle empty simulation
-            if ( empty( $simulate[ "data" ][ "items" ] ) || empty( $simulate[ "data" ][ "logisticsInfo" ] ) )
+            if ( $empty_items || $empty_logistics || $has_without_stock )
             {
                 // Log error and send notification
                 log_message(
@@ -281,7 +288,7 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5002", // 5002 - error in freight data query from FS
-                    "message "   => "something wrong",
+                    "message"    => "something wrong",
                     "data"       => null
                 ], 500 );
             }
@@ -296,7 +303,7 @@ class OrderController extends VtexController
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCreation 3",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "wc_data" => $wc_data, "response" => $response[ "data" ], ],
+                    context : [ "order_id" => $order_id, "wc_data" => $wc_data, "response" => $response, ],
                 );
 
                 send_notification( $parent, $order, "order_creation_error" );

@@ -35,13 +35,13 @@ Route::group( [ "middleware" => "auth" ], function()
 
     Route::prefix( "marketplace" )->name( "mkt." )->group( function ()
     {
-        Route::get(  "/pedidos",            [ MarketplaceController::class, "orders"       ] )->name( "index"         );
-        Route::post( "/importar",           [ MarketplaceController::class, "importOrders" ] )->name( "orders.import" );
+        Route::get(  "/pedidos",            [ MarketplaceController::class, "orders"           ] )->name( "index"         );
+        Route::post( "/importar",           [ MarketplaceController::class, "importOrders"     ] )->name( "orders.import" );
 
-        Route::post( "/pedido/criar",       [ MarketplaceController::class, "orderCreate"  ] )->name( "order.create"  );
-        Route::post( "/pedido/aprovar",     [ MarketplaceController::class, "orderApprove" ] )->name( "order.approve" );
-        Route::post( "/pedido/cancelar",    [ MarketplaceController::class, "orderCancel"  ] )->name( "order.cancel"  );
-        Route::post( "/pedido/atualizar",   [ MarketplaceController::class, "orderUpdate"  ] )->name( "order.update"  );
+        Route::post( "/pedido/criar",       [ MarketplaceController::class, "orderCreate"      ] )->name( "order.create"  );
+        Route::post( "/pedido/aprovar",     [ MarketplaceController::class, "orderApproval"    ] )->name( "order.approve" );
+        Route::post( "/pedido/cancelar",    [ MarketplaceController::class, "orderCancel"      ] )->name( "order.cancel"  );
+        Route::post( "/pedido/atualizar",   [ MarketplaceController::class, "orderUpdate"      ] )->name( "order.update"  );
 
         Route::get(  "/fs/{order_id}",      [ MarketplaceController::class, "getFsOrder"       ] )->name( "order.fs"      );
         Route::get(  "/mkt/{order_id}",     [ MarketplaceController::class, "getMktOrder"      ] )->name( "order.mkt"     );

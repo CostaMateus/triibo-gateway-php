@@ -956,7 +956,7 @@ if ( !function_exists( "get_order_status" ) )
                 "name"  => "Falha ao criar na Fast Shop",
                 "color" => "text-white text-bg-danger",
             ],
-            "fs_approve_error"  => [
+            "fs_approval_error" => [
                 "name"  => "Falha ao aprovar na Fast Shop",
                 "color" => "text-white text-bg-danger",
             ],
@@ -992,9 +992,27 @@ if ( !function_exists( "get_all_order_status" ) )
             "product_not_found" => "Produto não encontrado",
             "over_max"          => "Preço acima do limite",
             "fs_create_error"   => "Falha ao criar na Fast Shop",
-            "fs_approve_error"  => "Falha ao aprovar na Fast Shop",
+            "fs_approval_error" => "Falha ao aprovar na Fast Shop",
             "fs_cancel_error"   => "Falha ao cancelar na Fast Shop",
         ];
+    }
+}
+
+if ( !function_exists( "search_meta" ) )
+{
+    /**
+     *
+     * @param   array   $metas
+     * @param   string  $key
+     * @return  mixed
+     */
+    function search_meta( array $metas, string $key ) : mixed
+    {
+        foreach ( $metas as $meta )
+            if ( $meta->key == $key )
+                return $meta->value;
+
+        return null;
     }
 }
 
@@ -1006,13 +1024,23 @@ if ( !function_exists( "search_product_meta" ) )
      * @param   string  $key
      * @return  mixed
      */
-    function search_product_meta( array $metas, string $key = "_fs_product_id" ) : mixed
+    function search_product_meta( array $metas ) : mixed
     {
-        foreach ( $metas as $meta )
-            if ( $meta->key == $key )
-                return $meta->value;
+        return search_meta( metas : $metas, key : "_fs_product_id" );
+    }
+}
 
-        return null;
+if ( !function_exists( "search_order_meta" ) )
+{
+    /**
+     *
+     * @param   array   $metas
+     * @param   string  $key
+     * @return  mixed
+     */
+    function search_order_meta( array $metas, string $key = "_fastshop_order_id" ) : mixed
+    {
+        return search_meta( metas : $metas, key : $key );
     }
 }
 
