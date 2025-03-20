@@ -29,11 +29,11 @@ class MarketplaceController extends Controller
         $statuses    = get_all_order_status();
 
         $files       = Order::select( "file_name" )->distinct()->orderBy( "file_name", "DESC" )->pluck( "file_name" );
-        $file        = $request->query( "file" ) ?? $files->first();
 
-        $per_page    = $request->query( "per_page"   ) ?? 100;
-        $status      = $request->query( "status"     ) ?? "all";
-        $product_id  = $request->query( "product_id" ) ?? "all";
+        $file        = $request->query( "file",       session( "mkt_file",       $files->first() ) );
+        $per_page    = $request->query( "per_page",   session( "mkt_per_page",   100             ) );
+        $status      = $request->query( "status",     session( "mkt_status",     "all"           ) );
+        $product_id  = $request->query( "product_id", session( "mkt_product_id", "all"           ) );
 
         $product_ids = Order::where( "file_name", $file )->distinct()->orderBy( "product_id" )->pluck( "product_name", "product_id" );
         $query       = Order::where( "file_name", $file );
@@ -53,7 +53,13 @@ class MarketplaceController extends Controller
             return $order;
         } );
 
-        session( [ "last_page" => request()->query( "page", 1 ) ] );
+        session( [
+            "mkt_file"       => $file,
+            "mkt_per_page"   => $per_page,
+            "mkt_status"     => $status,
+            "mkt_product_id" => $product_id,
+            "mkt_last_page"  => request()->query( "page", 1 )
+        ] );
 
         return view(
             view: "marketplace.index",
