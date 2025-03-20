@@ -364,8 +364,6 @@
                 const param = $( this ).data( "param" );
                 const value = $( this ).val();
 
-                console.log( param value );
-
                 if ( !value ) return;
 
                 $( "#load" ).removeClass( "d-none" );
