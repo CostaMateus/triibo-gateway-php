@@ -23,6 +23,9 @@
         .bg-external-link {
             background-image: url( "{{ asset( 'images/external-link.png'  ) }}" );
         }
+        .btn-triibo {
+            box-shadow: none !important;
+        }
     </style>
 @endsection
 
@@ -307,7 +310,7 @@
                                                     </button>
                                                 @endif
 
-                                                @if( !in_array( $order->ord_status, [ "not_processed", "approved", "canceled" ] ) )
+                                                @if( !in_array( $order->ord_status, [ "not_processed", "approved", "canceled", "over_max" ] ) )
                                                     <button class="btn btn-triibo text-white p-1 update-order" title="Atualizar" data-action="update" >
                                                         <i class="h3 bi bi-arrow-repeat i-align-center" ></i>
                                                     </button>
