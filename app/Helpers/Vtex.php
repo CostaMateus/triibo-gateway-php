@@ -245,11 +245,7 @@ if ( !function_exists( "get_wc_order" ) )
             }
         }
 
-        $store_id = match ( $seller )
-        {
-            "fast_shop" => config( "woocommerce.partners.fast_shop.store_id" ),
-            default     => 0
-        };
+        $store_id = config( "woocommerce.partners" )[ $seller_id ][ "store_id" ];
 
         if ( !$order || $order[ "store" ][ "id" ] != $store_id )
             return [ null, null ];
