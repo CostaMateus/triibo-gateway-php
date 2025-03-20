@@ -833,14 +833,13 @@ if ( !function_exists( "log_and_redirect" ) )
     {
         log_message( channel: $channel, message: $message );
 
+        $page   = [ "page" => session( "mkt_last_page", 1 ) ];
+
+        $params = array_merge( request()->except( "page" ), $page );
+
         return redirect()
-                ->route(
-                    route:      $route,
-                    parameters: [ "page" => session( "last_page", 1 ) ] )
-                ->with(
-                    key:        $type,
-                    value:      $message
-                );
+            ->route( route: $route, parameters: $params )
+            ->with( key: $type, value: $message );
     }
 }
 

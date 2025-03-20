@@ -82,7 +82,7 @@
                         <div class="row mb-3" >
                             <div class="col-12 col-md-6 col-lg-3 mb-2 pe-md-1" >
                                 <label for="orders-file" class="text-muted" >Arquivo</label>
-                                <select id="orders-file" class="form-select" >
+                                <select id="orders-file" class="form-select filter-select" data-param="file" >
                                     <option value="" >Selecione um arquivo...</option>
                                     @foreach( $files as $f )
                                         <option value="{{ $f }}" @if ( $f == $file ) selected @endif >{{ $f }}</option>
@@ -91,7 +91,7 @@
                             </div>
                             <div class="col-12 col-md-6 col-lg-3 mb-2 ps-md-1 px-lg-1" >
                                 <label for="orders-status" class="text-muted" >Status</label>
-                                <select id="orders-status" class="form-select" >
+                                <select id="orders-status" class="form-select filter-select" data-param="status" >
                                     <option value="" >Selecione um status...</option>
                                     @foreach ( $statuses as $key => $value )
                                         <option value="{{ $key }}" @if ( $key == $status ) selected @endif >{{ $value }}</option>
@@ -100,7 +100,7 @@
                             </div>
                             <div class="col-12 col-md-6 col-lg-3 mb-2 pe-md-1 px-lg-1" >
                                 <label for="orders-product-id" class="text-muted" >Produto</label>
-                                <select id="orders-product-id" class="form-select" >
+                                <select id="orders-product-id" class="form-select filter-select" data-param="product_id" >
                                     <option value="" >Selecione um produto...</option>
                                     <option value="all" >Todos</option>
                                     @foreach ( $product_ids as $key => $value )
@@ -110,7 +110,7 @@
                             </div>
                             <div class="col-12 col-md-6 col-lg-3 mb-2 ps-md-1 ps-lg-1" >
                                 <label for="orders-per-page" class="text-muted" >Quantidade</label>
-                                <select id="orders-per-page" class="form-select" >
+                                <select id="orders-per-page" class="form-select filter-select" data-param="per_page" >
                                     <option value="" >Por página...</option>
                                     <option value="25"  @if (  25 == $orders->perPage() ) selected @endif >25</option>
                                     <option value="50"  @if (  50 == $orders->perPage() ) selected @endif >50</option>
@@ -290,25 +290,25 @@
                                             </td>
                                             <td class="text-center text-nowrap" data-ord_id="{{ $order->ord_id }}" data-file_name="{{ $order->file_name }}" >
                                                 @if ( in_array( $order->ord_status, [ "not_processed", "product_not_found", "over_max" ] ) )
-                                                    <button class="btn btn-primary text-white p-1 create-order" title="Criar" >
+                                                    <button class="btn btn-primary text-white p-1 create-order" title="Criar" data-action="create" >
                                                         <i class="h3 bi bi-plus-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
 
                                                 @if( $order->ord_status == "processed" )
-                                                    <button class="btn btn-success text-white p-1 approve-order" title="Aprovar" >
+                                                    <button class="btn btn-success text-white p-1 approval-order" title="Aprovar" data-action="approval" >
                                                         <i class="h3 bi bi-check-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
 
                                                 @if( in_array( $order->ord_status, [ "processed", "approved" ] ) )
-                                                    <button class="btn btn-danger text-white p-1 cancel-order" title="Cancelar" >
+                                                    <button class="btn btn-danger text-white p-1 cancel-order" title="Cancelar" data-action="cancel" >
                                                         <i class="h3 bi bi-x-circle i-align-center" ></i>
                                                     </button>
                                                 @endif
 
                                                 @if( !in_array( $order->ord_status, [ "not_processed", "approved", "canceled" ] ) )
-                                                    <button class="btn btn-triibo text-white p-1 update-order" title="Atualizar" >
+                                                    <button class="btn btn-triibo text-white p-1 update-order" title="Atualizar" data-action="update" >
                                                         <i class="h3 bi bi-arrow-repeat i-align-center" ></i>
                                                     </button>
                                                 @endif
@@ -356,60 +356,32 @@
             $( "#load" ).removeClass( "d-none" );
         } );
 
-        // File filter
-        $( "#orders-file" ).on( "change", function( e )
+        $( document ).ready( function()
         {
-            const file      = $( this ).val();
+            // filters
+            $( ".filter-select" ).on( "change", function()
+            {
+                const param = $( this ).data( "param" );
+                const value = $( this ).val();
 
-            if ( !file ) return;
+                if ( !value ) return;
 
-            $( "#load" ).removeClass( "d-none" );
+                $( "#load" ).removeClass( "d-none" );
 
-            const parser    = new URL( window.location );
-            parser.searchParams.set( "file", file );
-            window.location = parser.href;
-        } );
+                const parser    = new URL( window.location );
+                parser.searchParams.set( param, value );
+                window.location = parser.href;
+            } );
 
-        // Status filter
-        $( "#orders-status" ).on( "change", function()
-        {
-            const status    = $( this ).val();
+            // actions
+            $( ".create-order, .approval-order, .cancel-order, .update-order" ).on( "click", function()
+            {
+                const action    = $( this ).data( "action" );
+                const ord_id    = $( this ).parent().data( "ord_id"    );
+                const file_name = $( this ).parent().data( "file_name" );
 
-            if ( !status ) return;
-
-            $( "#load" ).removeClass( "d-none" );
-
-            const parser    = new URL( window.location );
-            parser.searchParams.set( "status", status );
-            window.location = parser.href;
-        } );
-
-        // Product filter
-        $( "#orders-product-id" ).on( "change", function()
-        {
-            const product_id = $( this ).val();
-
-            if ( !product_id ) return;
-
-            $( "#load" ).removeClass( "d-none" );
-
-            const parser     = new URL( window.location );
-            parser.searchParams.set( "product_id", product_id );
-            window.location  = parser.href;
-        } );
-
-        // Per page filter
-        $( "#orders-per-page" ).on( "change", function()
-        {
-            const per_page  = $( this ).val();
-
-            if ( !per_page ) return;
-
-            $( "#load" ).removeClass( "d-none" );
-
-            const parser    = new URL( window.location );
-            parser.searchParams.set( "per_page", per_page );
-            window.location = parser.href;
+                setFormValues( action, ord_id, file_name );
+            } );
         } );
 
         // Show more/less for name
@@ -461,38 +433,6 @@
             }
         } );
 
-        $( ".create-order" ).on( "click", function()
-        {
-            const ord_id    = $( this ).parent().data( "ord_id"    );
-            const file_name = $( this ).parent().data( "file_name" );
-
-            setFormValues( "create", ord_id, file_name );
-        } );
-
-        $( ".approve-order" ).on( "click", function()
-        {
-            const ord_id    = $( this ).parent().data( "ord_id"    );
-            const file_name = $( this ).parent().data( "file_name" );
-
-            setFormValues( "approve", ord_id, file_name );
-        } );
-
-        $( ".cancel-order" ).on( "click", function()
-        {
-            const ord_id    = $( this ).parent().data( "ord_id"    );
-            const file_name = $( this ).parent().data( "file_name" );
-
-            setFormValues( "cancel", ord_id, file_name );
-        } );
-
-        $( ".update-order" ).on( "click", function()
-        {
-            const ord_id    = $( this ).parent().data( "ord_id"    );
-            const file_name = $( this ).parent().data( "file_name" );
-
-            setFormValues( "update", ord_id, file_name );
-        } );
-
         window.setFormValues = function ( action, ord_id, file_name )
         {
             let route   = "";
@@ -503,9 +443,9 @@
                 route   = "{{ route( 'mkt.order.create'  ) }}";
                 message = `Deseja criar o pedido ID: ${ord_id}?\nO pedido será criado no marketplace e enviado a Fast Shop!`;
             }
-            else if ( action == "approve" )
+            else if ( action == "approval" )
             {
-                route   = "{{ route( 'mkt.order.approve' ) }}";
+                route   = "{{ route( 'mkt.order.approval' ) }}";
                 message = `Deseja aprovar o pedido ID: ${ord_id}?\nO pedido será aprovado para a Fast Shop!`;
             }
             else if ( action == "cancel"  )
