@@ -15,13 +15,6 @@ class CategoryService
     private $connector;
 
     /**
-     * Env (e.g., local, production) as a string.
-     *
-     * @var     string
-     */
-    private $env;
-
-    /**
      * Constructor.
      *
      * @param   ConnectorService    $connector
@@ -29,7 +22,6 @@ class CategoryService
     public function __construct( ConnectorService $connector )
     {
         $this->connector = $connector;
-        $this->env       = config( "vtex.partners.{$this->connector->seller}.env" );
     }
 
     /**
@@ -41,25 +33,21 @@ class CategoryService
      */
     public function registerMarketplaceConnector() : array
     {
-        $account  = config( "vtex.partners.{$this->connector->seller}.{$this->env}.account_name" );
-
         // Prepare the request body.
         $body     = [
             "displayName"                                => "Marketplace Triibo",
-            "categoryTreeEndPoint"                       => route( "api.marketplace.vtex.mapper.categories"   ),
-            "mappingEndPoint"                            => route( "api.marketplace.vtex.mapper.mapping"      ),
-            "CategoryTreeProcessingNotificationEndpoint" => route( "api.marketplace.vtex.mapper.notification" ),
+            "categoryTreeEndPoint"                       => route( name: "api.marketplace.vtex.mapper.categories"   ),
+            "mappingEndPoint"                            => route( name: "api.marketplace.vtex.mapper.mapping"      ),
+            "CategoryTreeProcessingNotificationEndpoint" => route( name: "api.marketplace.vtex.mapper.notification" ),
             "properties"                                 => [ "allowsRemap" => false ],
         ];
 
         $this->connector
-            ->setCallOrigin(
-                origin  : "registerMarketplaceConnector"
-            )
+            ->setCallOrigin( origin: "registerMarketplaceConnector" )
             ->buildUrl(
-                api     : "category-register",
-                account : "portal",
-                param   : "?an={$account}"
+                api    : "category-register",
+                account: "portal",
+                param  : "?an={$this->connector->account_name}"
             );
 
         return $this->connector->sendRequest( method: "post", body: $body );
@@ -79,16 +67,9 @@ class CategoryService
     public function sendCategoryMapping( string $id, array $categories ) : array
     {
         $this->connector
-            ->setCallOrigin(
-                origin  : "sendCategoryMapping"
-            )
-            ->buildUrl(
-                api     : "category-marketplace",
-                account : "portal",
-            )
-            ->replaceUrl(
-                data    : [ "{id}" => $id ]
-            );
+            ->setCallOrigin( origin: "sendCategoryMapping" )
+            ->buildUrl( api: "category-marketplace", account: "portal" )
+            ->replaceUrl( data: [ "{id}" => $id ] );
 
         return $this->connector->sendRequest( method: "post", body: [ "categories" => $categories ] );
     }
