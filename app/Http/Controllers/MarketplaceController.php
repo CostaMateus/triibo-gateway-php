@@ -47,6 +47,8 @@ class MarketplaceController extends Controller
             return $order;
         } );
 
+        session( [ "last_page" => request()->query( "page", 1 ) ] );
+
         return view(
             view: "marketplace.index",
             data: compact( "file", "files", "orders", "status", "statuses" )
