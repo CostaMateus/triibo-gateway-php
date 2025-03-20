@@ -23,6 +23,9 @@
         .bg-external-link {
             background-image: url( "{{ asset( 'images/external-link.png'  ) }}" );
         }
+        .btn-triibo {
+            box-shadow: none !important;
+        }
     </style>
 @endsection
 
