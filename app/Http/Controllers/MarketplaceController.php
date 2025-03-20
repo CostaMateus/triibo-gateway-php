@@ -576,13 +576,13 @@ class MarketplaceController extends Controller
      * Undocumented function
      *
      * @param   Request     $request
-     * @param   string      $order_id
+     * @param   string      $id
      * @return  RedirectResponse
      */
-    public function redirectMktOrder( Request $request, string $order_id ) : RedirectResponse
+    public function redirectToMkt( Request $request, string $id ) : RedirectResponse
     {
         $prefix = config( "marketplace.url" );
-        $url    = "{$prefix}/wp-admin/post.php?post={$order_id}&action=edit";
+        $url    = "{$prefix}/wp-admin/post.php?post={$id}&action=edit";
 
         return redirect()->away( $url );
     }

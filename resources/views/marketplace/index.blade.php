@@ -4,13 +4,15 @@
 
 @section( "css" )
     <style>
-        .bg-fs-favicon,
-        .bg-mkt-favicon,
-        .bg-external-link {
+        .bg-fs-favicon, .bg-mkt-favicon, .bg-external-link {
             width: 20px;
             height: 20px;
             background-size: cover;
             background-repeat: no-repeat;
+        }
+        a .bg-fs-favicon, a .bg-mkt-favicon, a .bg-external-link {
+            width: 15px;
+            height: 15px;
         }
         .bg-fs-favicon {
             background-image: url( "{{ asset( 'images/fs-favicon.png'     ) }}" );
@@ -100,7 +102,7 @@
                             <div class="col-12 mb-2" >
                                 <small>Legenda</small>
                             </div>
-                            <div class="col-12 mb-2 d-flex flex-wrap align-items-center" >
+                            <div class="col-12 d-flex flex-wrap align-items-center" >
                                 <span class="me-3 d-inline-flex align-items-center" title="Criar" >
                                     <button class="btn btn-primary text-white p-1" type="button" title="Criar" >
                                         <i class="h5 bi bi-plus-circle i-align-center" ></i>
@@ -139,11 +141,11 @@
                                     </button>
                                     <span class="ms-1" >Ver dados do MKT</span>
                                 </span>
-                                <span class="me-3 d-inline-flex align-items-center" title="Ver pedido no MKT" >
-                                    <button class="btn btn-light p-1" type="button" title="Ver pedido no MKT" >
+                                <span class="me-3 d-inline-flex align-items-center" title="Ver no MKT" >
+                                    <button class="btn btn-light p-1" type="button" title="Ver no MKT" >
                                         <i class="bi bg-external-link i-align-center" ></i>
                                     </button>
-                                    <span class="ms-1" >Ver pedido no MKT</span>
+                                    <span class="ms-1" >Ver no MKT</span>
                                 </span>
                             </div>
                         </div>
@@ -210,7 +212,7 @@
                                                         title="Ver dados do MKT" target="_blank" rel="noopener noreferrer" >
                                                         <i class="bi bg-mkt-favicon i-align-center" ></i>
                                                     </a>
-                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt.ext", [ "order_id" => $order->mkt_id ] ) }}"
+                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.external", [ "id" => $order->mkt_id ] ) }}"
                                                         title="Ver pedido no MKT" target="_blank" rel="noopener noreferrer" >
                                                         <i class="bi bg-external-link i-align-center" ></i>
                                                     </a>
@@ -224,7 +226,14 @@
                                             <td class="text-center"          >{{ $order->product_qntt }}</td>
                                             <td class="text-nowrap text-end" >{{ number_format( $order->max_price, 2, ',', '.' ) }}</td>
                                             <td class="text-center"          >{{ $order->customer_id  }}</td>
-                                            <td class="text-center"          >{{ $order->product_id   }}</td>
+                                            <td class="text-center"          >
+                                                {{ $order->product_id   }}
+                                                <br>
+                                                <a class="btn btn-light p-1" href="{{ route( "mkt.external", [ "id" => $order->product_id ] ) }}"
+                                                    title="Ver produto no MKT" target="_blank" rel="noopener noreferrer" >
+                                                    <i class="bi bg-external-link i-align-center" ></i>
+                                                </a>
+                                            </td>
                                             <td style="min-width:400px" >
                                                 <p class="mb-0 name-preview" >{{ Str::limit( $order->product_name, 50 ) }}</p>
                                                 <div class="name-full d-none" >
