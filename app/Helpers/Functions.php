@@ -833,7 +833,14 @@ if ( !function_exists( "log_and_redirect" ) )
     {
         log_message( channel: $channel, message: $message );
 
-        return redirect()->route( route: $route )->with( key: $type, value: $message );
+        return redirect()
+                ->route(
+                    route:      $route,
+                    parameters: [ "page" => session( "last_page", 1 ) ] )
+                ->with(
+                    key:        $type,
+                    value:      $message
+                );
     }
 }
 
