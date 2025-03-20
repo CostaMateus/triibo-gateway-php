@@ -22,13 +22,12 @@ class VtexController extends Controller
      */
     protected function validateKeys( Request $request )
     {
-        $_key   = config( "woocommerce.plugins.key"   );
-        $_token = config( "woocommerce.plugins.token" );
+        $config = config( "woocommerce.plugins" );
 
-        $key    = $request->header( "api-key"    );
-        $token  = $request->header( "api-token"  );
+        $key    = $request->header( "api-key"   );
+        $token  = $request->header( "api-token" );
 
-        if ( $_key != $key || $_token != $token )
+        if ( $config[ "key" ] != $key || $config[ "token" ] != $token )
         {
             log_message(
                 channel : self::LOG_CHANNEL,

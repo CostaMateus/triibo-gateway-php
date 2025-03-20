@@ -323,12 +323,13 @@ class MarketplaceController extends Controller
             }
         }
 
+        $config   = config( "woocommerce.plugins" );
         $vtex     = new VtexOrderController();
         $request  = new Request();
 
-        $request->headers->set( key: "seller",    values: self::SELLER                          );
-        $request->headers->set( key: "api-key",   values: config( "woocommerce.plugins.key"   ) );
-        $request->headers->set( key: "api-token", values: config( "woocommerce.plugins.token" ) );
+        $request->headers->set( key: "seller",    values: self::SELLER       );
+        $request->headers->set( key: "api-key",   values: $config[ "key"   ] );
+        $request->headers->set( key: "api-token", values: $config[ "token" ] );
 
         $response = $vtex->orderApproval( request: $request, order_id: $order->mkt_id );
 
@@ -488,12 +489,13 @@ class MarketplaceController extends Controller
 
         if ( $is_created === null )
         {
+            $config   = config( "woocommerce.plugins" );
             $vtex     = new VtexOrderController();
             $request  = new Request();
 
-            $request->headers->set( key: "seller",    values: self::SELLER                          );
-            $request->headers->set( key: "api-key",   values: config( "woocommerce.plugins.key"   ) );
-            $request->headers->set( key: "api-token", values: config( "woocommerce.plugins.token" ) );
+            $request->headers->set( key: "seller",    values: self::SELLER       );
+            $request->headers->set( key: "api-key",   values: $config[ "key"   ] );
+            $request->headers->set( key: "api-token", values: $config[ "token" ] );
 
             $response = $vtex->orderCreation( request: $request, order_id: $order->mkt_id );
 
