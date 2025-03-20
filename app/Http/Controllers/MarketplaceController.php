@@ -90,7 +90,8 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Undocumented function
+     * Cria o pedido no marketplace, marcado como 'pago', troca o status de pendente para processando.
+     * Por conta dessa troca, dispara a ação do plugin, de criação do pedido na Fast Shop.
      *
      * @param   Request     $request
      * @return  RedirectResponse
@@ -179,7 +180,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $freight = get_freight_vtex(
+        $freight           = get_freight_vtex(
             product_id : $fs_product_id,
             postcode   : $order[ "shipping" ][ "postcode" ]
         );
@@ -194,7 +195,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $delivery_price = get_delivery_price(
+        $delivery_price    = get_delivery_price(
             product_id : $fs_product_id,
             freight    : $freight[ "data" ]
         );
@@ -209,13 +210,13 @@ class MarketplaceController extends Controller
             );
         }
 
-        $wc_data = marketplace_new_order_prepare(
+        $wc_data           = marketplace_new_order_prepare(
             order      : $order,
             product_id : $order->product_id,
             freight    : $delivery_price
         );
 
-        $response = create_marketplace_order(
+        $response          = create_marketplace_order(
             channel  : self::LOG_CHANNEL,
             data     : $wc_data,
             order_id : $order->ord_id
@@ -247,12 +248,13 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Undocumented function
+     * Executa a ação de aprovação na Fast Shop.
+     * Manual igual a feito pelo admin do marketplace.
      *
      * @param   Request     $request
      * @return  RedirectResponse
      */
-    public function orderApprove( Request $request ) : RedirectResponse
+    public function orderApproval( Request $request ) : RedirectResponse
     {
         if ( !$request->ord_id || !$request->file_name )
         {
@@ -289,10 +291,34 @@ class MarketplaceController extends Controller
             );
         }
 
-        // $wc_order = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
+        if ( !$request->has( "mkt_verified" ) )
+        {
+            $response = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
 
+            if ( !$response[ "success" ] )
+            {
+                return log_and_redirect(
+                    channel : self::LOG_CHANNEL,
+                    route   : self::ROUTE,
+                    type    : self::ERROR,
+                    message : $response[ "message" ]
+                );
+            }
 
+            $wc_order    = $response[ "data" ];
 
+            $is_created  = search_order_meta( metas : $wc_order[ "meta_data" ], key : "_fastshop_order_id" );
+
+            if ( $is_created === null )
+            {
+                return log_and_redirect(
+                    channel : self::LOG_CHANNEL,
+                    route   : self::ROUTE,
+                    type    : self::ERROR,
+                    message : "{$order->ord_id}: Pedido ainda não foi criado na Fast Shop. Tente a opção 'atualizar'."
+                );
+            }
+        }
 
         $vtex     = new VtexOrderController();
         $request  = new Request();
@@ -301,13 +327,13 @@ class MarketplaceController extends Controller
         $request->headers->set( key : "api-key",   values : config( "woocommerce.plugins.key"   ) );
         $request->headers->set( key : "api-token", values : config( "woocommerce.plugins.token" ) );
 
-        $response = $vtex->orderApproval( request : $request, order_id : $order->mkt_id );
+        $response = $vtex->orderCreation( request : $request, order_id : $order->mkt_id );
 
         if ( $response->status() != 200 )
         {
             $data = $response->getData();
 
-            $order->ord_status = "fs_approve_error";
+            $order->ord_status = "fs_approval_error";
             $order->save();
 
             return log_and_redirect(
@@ -337,7 +363,8 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Undocumented function
+     * Cancela o pedido no marketplace, troca o status de processando para cancelado.
+     * Por conta dessa troca, dispara a ação do plugin, de cancelamento do pedido na Fast Shop.
      *
      * @param   Request     $request
      * @return  RedirectResponse
@@ -407,7 +434,9 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Undocumented function
+     * Valida o status do pedido no marketplace.
+     * Se não foi criado na Fast Shop, dispara a ação de criação.
+     * Se não foi aprovado, dispara ação de aprovação.
      *
      * @return  RedirectResponse
      */
@@ -437,15 +466,74 @@ class MarketplaceController extends Controller
             );
         }
 
-        $wc_order = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
+        $response = get_marketplace_order( channel : self::LOG_CHANNEL, order_id : $order->mkt_id );
 
-        dd( $wc_order );
+        if ( !$response[ "success" ] )
+        {
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::ERROR,
+                message : $response[ "message" ]
+            );
+        }
+
+        $wc_order    = $response[ "data" ];
+
+        $is_created  = search_order_meta( metas : $wc_order[ "meta_data" ], key : "_fastshop_order_id" );
+        $is_approved = search_order_meta( metas : $wc_order[ "meta_data" ], key : "_fastshop_order_approved" );
+
+        if ( $is_created === null )
+        {
+            $vtex     = new VtexOrderController();
+            $request  = new Request();
+
+            $request->headers->set( key : "seller",    values : self::SELLER                          );
+            $request->headers->set( key : "api-key",   values : config( "woocommerce.plugins.key"   ) );
+            $request->headers->set( key : "api-token", values : config( "woocommerce.plugins.token" ) );
+
+            $response = $vtex->orderCreation( request : $request, order_id : $order->mkt_id );
+
+            if ( $response->status() != 200 )
+            {
+                $data = $response->getData();
+
+                $order->ord_status = "fs_create_error";
+                $order->save();
+
+                return log_and_redirect(
+                    channel : self::LOG_CHANNEL,
+                    route   : self::ROUTE,
+                    type    : self::ERROR,
+                    message : "{$order->ord_id} #{$order->mkt_id}: {$data->message} | Verifique as notas do pedido."
+                );
+            }
+
+            $order->ord_status = "processed";
+            $order->save();
+
+            return log_and_redirect(
+                channel : self::LOG_CHANNEL,
+                route   : self::ROUTE,
+                type    : self::SUCCESS,
+                message : "{$order->ord_id} #{$order->mkt_id}: Pedido criado com sucesso."
+            );
+        }
+        else if ( $is_approved === null )
+        {
+            $order->ord_status = "processed";
+            $order->save();
+
+            $request->merge( [ "mkt_verified" => true ] );
+
+            return $this->orderApproval( $request );
+        }
 
         return log_and_redirect(
             channel : self::LOG_CHANNEL,
             route   : self::ROUTE,
             type    : self::SUCCESS,
-            message : "{$order->ord_id} #{$order->mkt_id}: Pedido cancelado com sucesso."
+            message : "{$order->ord_id} #{$order->mkt_id}: Pedido atualizado com sucesso."
         );
     }
 
@@ -491,7 +579,7 @@ class MarketplaceController extends Controller
      * @param   string      $order_id
      * @return  RedirectResponse
      */
-    public function redirectMktOreder( Request $request, string $order_id ) : RedirectResponse
+    public function redirectMktOrder( Request $request, string $order_id ) : RedirectResponse
     {
         $prefix = config( "marketplace.url" );
         $url    = "{$prefix}/wp-admin/post.php?post={$order_id}&action=edit";
