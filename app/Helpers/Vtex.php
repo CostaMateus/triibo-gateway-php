@@ -953,7 +953,7 @@ if ( !function_exists( "vtex_new_order_prepare" ) )
         $billing   = $parent[ "billing"  ] ?? $order[ "billing"  ];
         $shipping  = $parent[ "shipping" ] ?? $order[ "shipping" ];
 
-        $connector = config( "vtex.partners.{$seller}.connector_name" );
+        $connector = config( "vtex.partners" )[ $seller ][ "connector_name" ];
 
         $items     = vtex_map_order_items( $freight[ "logisticsInfo" ], $freight[ "items" ] );
         $client    = vtex_map_client_data( $billing );
@@ -1065,7 +1065,7 @@ if ( !function_exists( "vtex_update_order_prepare" ) )
      */
     function vtex_update_order_prepare( string $seller, string $order_id ) : array
     {
-        $connector = config( "vtex.partners.{$seller}.connector_name" );
+        $connector = config( "vtex.partners" )[ $seller ][ "connector_name" ];
 
         // Generate the URL for the invoice notification endpoint using the order ID
         $url       = route( "api.marketplace.vtex.order.notification.invoice", [ "order_id" => $order_id ] );
