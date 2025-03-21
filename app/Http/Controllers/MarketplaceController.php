@@ -58,6 +58,17 @@ class MarketplaceController extends Controller
             return $order;
         } );
 
+        // $orders      = $orders->filter( function ( $order )
+        // {
+        //     $billing = reorganize_fields( data: $order->billing,  order: get_billing_fields_order()  );
+        //     if ( $billing[ "first_name" ] == "LIFE LS JARDIM BRASIL EMPREENDIMENTOS IMOBILIARIOS" )
+        //     {
+        //         dd( $order );
+        //         return $order;
+        //     }
+        // } );
+        // dd( $orders );
+
         session( [
             "mkt_file"       => $file,
             "mkt_per_page"   => $per_page,
