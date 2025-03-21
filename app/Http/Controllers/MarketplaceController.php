@@ -44,7 +44,12 @@ class MarketplaceController extends Controller
         if ( $product_id !== "all" )
             $query->where( "product_id", $product_id );
 
-        $orders      = $query->paginate( $per_page )->through( function ( $order )
+        $orders      = $query->paginate( $per_page );
+
+        if ( $orders->currentPage() > 1 && $orders->isEmpty() )
+            $orders = $query->paginate( $per_page, [ "*" ] , "page", $orders->lastPage() );
+
+        $orders      = $orders->through( function ( $order )
         {
             $order->billing  = reorganize_fields( data: $order->billing,  order: get_billing_fields_order()  );
             $order->shipping = reorganize_fields( data: $order->shipping, order: get_shipping_fields_order() );
