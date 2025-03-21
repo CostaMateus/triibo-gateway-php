@@ -82,7 +82,7 @@ class AwinController extends Controller
         "listaFotos",
         "enableDate",
         "disableDate",
-        // "isPublished", // TODO validar
+        "isPublished",
         "dataInclusao",
         "dataAlteracao",
     ];
@@ -97,7 +97,7 @@ class AwinController extends Controller
         "dueDate",
         "enableDate",
         "disableDate",
-        // "isPublished", // TODO validar
+        "isPublished",
         "establishmentId",
     ];
 
@@ -1046,6 +1046,8 @@ class AwinController extends Controller
         // Remove ignored fields from the differences.
         foreach ( self::IGNORE_ESTAB_FIELDS as $field )
             unset( $diff[ $field ] );
+
+        // TODO validar cashback
 
         if ( !empty( $diff ) )
         {
