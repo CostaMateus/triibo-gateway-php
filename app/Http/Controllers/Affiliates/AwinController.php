@@ -935,6 +935,9 @@ class AwinController extends Controller
                             } );
 
         $establishments = json_decode( $establishments, true );
+
+        array_walk( $establishments, fn ( &$item ) => $item[ "data" ][ "cashbackDefault" ] = ( float ) ( $item[ "data" ][ "cashbackDefault" ] ?? 0 ) );
+
         $count          = count( $establishments );
 
         $this->logger->log_message(
