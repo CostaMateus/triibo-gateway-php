@@ -205,7 +205,12 @@ class AwinController extends Controller
         try
         {
             // Attempt to call the Firebase operation method.
-            $this->{$operation_method}();
+            match ( $operation_method )
+            {
+                "insertEstablishmentsFirebase" => $this->insertEstablishmentsFirebase(),
+                "insertPromotionsFirebase"     => $this->insertPromotionsFirebase(),
+                "insertReportsFirebase"        => $this->insertReportsFirebase(),
+            };
 
             $this->logger->log_message( message: "{$operation_name}: Sent successfully" );
         }
