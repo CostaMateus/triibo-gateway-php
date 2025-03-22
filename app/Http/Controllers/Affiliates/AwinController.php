@@ -106,7 +106,6 @@ class AwinController extends Controller
      *
      * @param   ProcessDataAwin     $logger     Logger instance for logging data processing.
      * @param   boolean             $load       Load establishments from Awin, default true.
-     * @return  void
      */
     public function __construct( ProcessDataAwin $logger, bool $load = true )
     {
@@ -141,9 +140,9 @@ class AwinController extends Controller
     /**
      * Process establishments by invoking the Firebase operation for establishments.
      *
-     * @return void
+     * @return  void
      */
-    public function establishments()
+    public function establishments() : void
     {
         $this->processFirebaseOperation( operation_method: "insertEstablishmentsFirebase", operation_name: "Establishments" );
     }
@@ -151,9 +150,9 @@ class AwinController extends Controller
     /**
      * Process promotions by invoking the Firebase operation for promotions.
      *
-     * @return void
+     * @return  void
      */
-    public function promotions()
+    public function promotions() : void
     {
         $this->processFirebaseOperation( operation_method: "insertPromotionsFirebase", operation_name: "Promotions" );
     }
@@ -163,7 +162,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    public function reports()
+    public function reports() : void
     {
         $this->processFirebaseOperation( operation_method: "insertReportsFirebase", operation_name: "Reports" );
     }
@@ -174,7 +173,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    public function images()
+    public function images() : void
     {
         // Copy default images to their respective locations.
         $this->copyDefaultImages();
@@ -206,7 +205,12 @@ class AwinController extends Controller
         try
         {
             // Attempt to call the Firebase operation method.
-            $this->{$operation_method}();
+            match ( $operation_method )
+            {
+                "insertEstablishmentsFirebase" => $this->insertEstablishmentsFirebase(),
+                "insertPromotionsFirebase"     => $this->insertPromotionsFirebase(),
+                "insertReportsFirebase"        => $this->insertReportsFirebase(),
+            };
 
             $this->logger->log_message( message: "{$operation_name}: Sent successfully" );
         }
@@ -247,7 +251,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    private function insertEstablishmentsFirebase()
+    private function insertEstablishmentsFirebase() : void
     {
         // Delete the existing establishments directory.
         clear_directory( path: self::LC_BASE_PATH . "/establishments" );
@@ -398,7 +402,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    private function insertPromotionsFirebase()
+    private function insertPromotionsFirebase() : void
     {
         // Delete the existing promotions directory.
         clear_directory( path: self::LC_BASE_PATH . "/promotions" );
@@ -618,7 +622,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    private function insertReportsFirebase()
+    private function insertReportsFirebase() : void
     {
         $this->logger->log_message( message: "Reports: Searching for new..." );
 
@@ -747,7 +751,7 @@ class AwinController extends Controller
      * @param   Reference   $ref
      * @return  array       $establishments
      */
-    private function filterEstablishments( Reference $reference )
+    private function filterEstablishments( Reference $reference ) : array
     {
         $blacklist = [ "-awin", "-cofry", "-socialsoul"   ];
         $fields    = [ "partnerEstablishmentId", "origin" ];
@@ -761,7 +765,7 @@ class AwinController extends Controller
      * @param   Reference   $reference
      * @return  array       $promotions
      */
-    private function filterPromotions( Reference $reference )
+    private function filterPromotions( Reference $reference ) : array
     {
         $blacklist = [ "-awin", "-cofry", "-socialsoul"                  ];
         $fields    = [ "establishmentId", "partnerPromotionId", "origin" ];
@@ -774,7 +778,7 @@ class AwinController extends Controller
      *
      * @return  void
      */
-    private function copyDefaultImages()
+    private function copyDefaultImages() : void
     {
         // Get the base path for the default images.
         $base_path = public_path( path: self::LC_BASE_PATH );
@@ -935,6 +939,9 @@ class AwinController extends Controller
                             } );
 
         $establishments = json_decode( $establishments, true );
+
+        array_walk( $establishments, fn ( &$item ) => $item[ "data" ][ "cashbackDefault" ] = ( float ) ( $item[ "data" ][ "cashbackDefault" ] ?? 0 ) );
+
         $count          = count( $establishments );
 
         $this->logger->log_message(
@@ -1018,7 +1025,7 @@ class AwinController extends Controller
 
     // ============================================================================================================
 
-    private function processNewEstablishmentFirebase( int $id, array $establishment, string $action )
+    private function processNewEstablishmentFirebase( int $id, array $establishment, string $action ) : void
     {
         // Add new establishment in Firebase.
         $new_push = $this->createFirebaseEstablishment( establishment: $establishment );
@@ -1038,7 +1045,7 @@ class AwinController extends Controller
         );
     }
 
-    private function processEditEstablishmentFirebase( string $push, array $establishment, array $compare, Reference $reference, ?int $partner_id = null )
+    private function processEditEstablishmentFirebase( string $push, array $establishment, array $compare, Reference $reference, ?int $partner_id = null ) : void
     {
         // Compare Awin and local establishments and get differences.
         $diff = array_diff_assoc_recursive( $establishment, $compare );
@@ -1047,10 +1054,29 @@ class AwinController extends Controller
         foreach ( self::IGNORE_ESTAB_FIELDS as $field )
             unset( $diff[ $field ] );
 
-        // TODO validar cashback
-
         if ( !empty( $diff ) )
         {
+            if ( isset( $diff[ "cashbackDefault" ] ) )
+            {
+                $reference_establishment = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
+                $reference_establishment->update( values: [ $push => $establishment ] );
+
+                if ( $partner_id !== null )
+                {
+                    $this->createOrUpdateLocalEstablishment(
+                        id            : $partner_id,
+                        push          : $push,
+                        establishment : $establishment,
+                        action        : "update"
+                    );
+                }
+
+                unset( $diff[ "cashbackDefault" ] );
+
+                if ( empty( $diff ) )
+                    return;
+            }
+
             // Add edit approval request in Firebase.
             $this->createEstablishmentApprovalRequest(
                 push   : $push,
