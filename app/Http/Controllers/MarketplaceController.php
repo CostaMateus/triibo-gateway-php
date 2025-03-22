@@ -555,6 +555,11 @@ class MarketplaceController extends Controller
 
             return $this->orderApproval( $request );
         }
+        else
+        {
+            $order->ord_status = "approved";
+            $order->save();
+        }
 
         return log_and_redirect(
             channel: self::LOG_CHANNEL,
