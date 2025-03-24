@@ -1056,7 +1056,7 @@ class AwinController extends Controller
 
         if ( !empty( $diff ) )
         {
-            if ( isset( $diff[ "cashbackDefault" ] ) )
+            if ( isset( $diff[ "cashbackDefault" ] ) || isset( $diff[ "region" ] ) )
             {
                 $reference_establishment = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
                 $reference_establishment->update( values: [ $push => $establishment ] );
@@ -1071,7 +1071,7 @@ class AwinController extends Controller
                     );
                 }
 
-                unset( $diff[ "cashbackDefault" ] );
+                unset( $diff[ "cashbackDefault" ], $diff[ "region" ] );
 
                 if ( empty( $diff ) )
                     return;
