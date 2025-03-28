@@ -65,14 +65,14 @@ Route::prefix( "mkt" )->group( function ()
     Route::get( "/create-customer", function()
     {
         $data = [
-            'email'      => 'john.doe.9.5.1@example.com',
-            'first_name' => 'John',
-            'last_name'  => 'Doe 9.5.1',
-            'username'   => 'john.doe.9.5.1',
+            'email'      => 'john10.doe.9.7.1@example.com',
+            'first_name' => 'John 10',
+            'last_name'  => 'Doe 9.7.1',
+            'username'   => 'john10.doe.9.7.1',
             'password'   => 'password',
             'meta_data'   => [ [
                 'key'   => '_triibo_id',
-                'value' => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
+                'value' => "11111111111111"
             ], [
                 'key'   => '_triibo_phone',
                 'value' => "+5511911112222"
@@ -309,12 +309,22 @@ Route::prefix( "mkt" )->group( function ()
     Route::get( "/create-product", function()
     {
         $data = [
-            'name'              => 'Premium Quality 5',
+            'name'              => 'Premium Quality 7',
             'type'              => 'simple',
             'regular_price'     => '25.99',
             'description'       => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Vestibulum tortor quam, feugiat vitae, ultricies eget, tempor sit amet, ante. Donec eu libero sit amet quam egestas semper. Aenean ultricies mi vitae est. Mauris placerat eleifend leo.',
             'short_description' => 'Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.',
-            'author'            => 1717
+            'images'            => [
+                [
+                    "src"  => "https://help.rangeme.com/hc/article_attachments/360006928633/what_makes_a_good_product_image.jpg",
+                    "name" => "name_1",
+                    "alt"  => "name_1",
+                ],[
+                    "src"  => "https://cdn.shopify.com/s/files/1/2303/2711/files/2_e822dae0-14df-4cb8-b145-ea4dc0966b34.jpg",
+                    "name" => "name_2",
+                    "alt"  => "name_2",
+                ],
+            ],
         ];
 
         $product = Product::create( $data );
