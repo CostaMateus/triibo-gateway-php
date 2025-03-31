@@ -17,7 +17,7 @@ class GetProductList extends Command
      *
      * @var     string
      */
-    protected $signature   = "vtex:get-product-list";
+    protected $signature   = "vtex:get-product-list {--id=} {--send=}";
 
     /**
      * The console command description.
@@ -45,6 +45,17 @@ class GetProductList extends Command
      * @var     FulfillmentService
      */
     protected $simulation_service;
+
+    /**
+     *
+     * @var     string
+     */
+    protected $option_id;
+
+    /**
+     * @var     string
+     */
+    protected $option_send;
 
     /**
      * @var     string
@@ -96,10 +107,13 @@ class GetProductList extends Command
      */
     public function handle() : int
     {
+        $this->option_id   = $this->option( key: "id"   );
+        $this->option_send = $this->option( key: "send" ) === "false" ? false : true;
+
         $start = now();
         $this->log_message( message: "Starting process" );
 
-        $skus  = $this->getAllSkus();
+        $skus  = is_null( $this->option_id ) ? $this->getAllSkus() : [ $this->option_id ];
 
         if ( count( $skus ) == 0 )
         {
@@ -108,7 +122,7 @@ class GetProductList extends Command
         }
 
         // $skus = Storage::get( "vtex/skus.json" );
-        // $skus = json_decode( $skus, true ); // 17905 | 15-03-2025
+        // $skus = json_decode( $skus, true );
 
         $this->log_message( message: "Load: " . count( $skus ) );
 
@@ -169,26 +183,35 @@ class GetProductList extends Command
      */
     private function getAllProducts( array $skus ) : void
     {
-        $fails    = [];
-        $products = [];
+        $fails      = [];
+        $inactives  = [];
+        $outofstcok = [];
+        $products   = [];
 
         try
         {
             foreach ( $skus as $sku )
             {
-                // if ( $sku != 24 )
-                //     continue;
-
                 $data     = $this->getSkuData( sku: $sku );
                 $context  = $this->getSkuContext( sku: $sku );
 
                 // No product data
                 if ( is_null( $data ) || is_null( $context ) )
                 {
-                    $s       = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
                     $this->log_message( message: "SKU: {$s} | Empty or disabled", type: "error" );
 
                     $fails[] = $sku;
+                    continue;
+                }
+
+                // Inactive product
+                if ( !$data[ "IsActive" ] || !$context[ "IsActive" ] )
+                {
+                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $this->log_message( message: "SKU: {$s} | Inactive", type: "error" );
+
+                    $inactives[] = $sku;
                     continue;
                 }
 
@@ -197,7 +220,7 @@ class GetProductList extends Command
                 // No freight simulation data
                 if ( is_null( $simulate ) )
                 {
-                    $s       = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
                     $this->log_message( message: "SKU: {$s} | Without simulate", type: "error" );
 
                     $fails[] = $sku;
@@ -207,26 +230,23 @@ class GetProductList extends Command
                 // Product without stock
                 if ( isset( $simulate[ "items" ] ) && $simulate[ "items" ][ 0 ][ "availability" ] !== "available" )
                 {
-                    $s       = str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                    $s = str_pad( $sku, 5, " ", STR_PAD_LEFT );
                     $this->log_message( message: "SKU: {$s} | Without stock", type: "error" );
 
-                    $fails[] = $sku;
+                    $outofstcok[] = $sku;
                     continue;
                 }
 
-                $product  = [
+                $product = [
                     "data"     => $data,
                     "context"  => $context,
                     "simulate" => $simulate,
                 ];
 
-                $s        = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-
-                $this->log_message( message: "SKU loaded: {$s}" );
+                $this->log_message( message: "SKU loaded: " . str_pad( $sku, 5, " ", STR_PAD_LEFT ) );
 
                 $products[ $sku ] = $product;
 
-                // if ( count( $products ) == 10 || $sku == 24 )
                 if ( count( $products ) == 10 )
                 {
                     $wc_products = $this->translateProducts( $products );
@@ -251,6 +271,10 @@ class GetProductList extends Command
             );
 
             $this->log_message( message: $e->getMessage(), type: "error" );
+
+            save_file( name: "vtex-fails",      data: $fails      );
+            save_file( name: "vtex-inactives",  data: $inactives  );
+            save_file( name: "vtex-outofstock", data: $outofstock );
         }
 
         if ( count( $products ) != 0 )
@@ -261,7 +285,9 @@ class GetProductList extends Command
                 $this->sendToMarketplace( products: $wc_products, ids: array_keys( $products ) );
         }
 
-        save_file( name: "vtex-fails-sku", data: $fails );
+        save_file( name: "vtex-fails",      data: $fails      );
+        save_file( name: "vtex-inactives",  data: $inactives  );
+        save_file( name: "vtex-outofstock", data: $outofstock );
     }
 
     /**
@@ -461,13 +487,14 @@ class GetProductList extends Command
     {
         try
         {
-            $this->log_message( message: "Send to marketplace" );
+            if ( $this->option_send === true )
+            {
+                $this->log_message( message: "Send to marketplace" );
 
-            $ids = Product::batch( [ "create" => $products ] );
+                $ids = Product::batch( [ "create" => $products ] );
 
-            // dump( $ids );
-
-            $this->log_message( message: "Sent to marketplace successfully" );
+                $this->log_message( message: "Sent to marketplace successfully" );
+            }
         }
         catch ( Throwable $e )
         {
