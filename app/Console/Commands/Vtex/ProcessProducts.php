@@ -129,9 +129,10 @@ class ProcessProducts extends Command
             return 0;
         }
 
-        $env                      = config( key: "vtex.partners.{$seller}.env"                  );
-        $this->sale_channel       = config( key: "vtex.partners.{$seller}.{$env}.sales_channel" );
-        $this->store_id           = config( key: "woocommerce.partners.{$seller}.store_id"      );
+        $partner                  = config( key: "vtex.partners" )[ $seller ];
+        $env                      = $partner[ "env" ];
+        $this->sale_channel       = $partner[ $env  ][ "sales_channel" ];
+        $this->store_id           = config( key: "woocommerce.partners" )[ $seller ][ "store_id" ];
 
         $connector                = new ConnectorService( seller: $seller );
         $connector->enableLogNotify( notify: false );
