@@ -13,7 +13,7 @@ class DeleteFastShopData extends Command
      *
      * @var     string
      */
-    protected $signature        = "mkt:delete_fs_data {--option= : Options: images, products } {--only-meta= : Options: true, false}";
+    protected $signature        = "mkt:delete_fs_data {--option=images : Options: images, products } {--meta} {--fix}";
 
     /**
      * The console command description.
@@ -68,9 +68,10 @@ class DeleteFastShopData extends Command
      */
     public function handle()
     {
-        $start      = now();
-        $option     = $this->option( key: "option"    );
-        $meta       = $this->option( key: "only-meta" );
+        $start   = now();
+        $option  = $this->option( key: "option" );
+        $meta    = $this->option( key: "meta"   );
+        $fix     = $this->option( key: "fix"    );
 
         if ( !in_array( needle: $option, haystack: $this->allowed_options ) )
         {
@@ -81,22 +82,20 @@ class DeleteFastShopData extends Command
             return Command::FAILURE;
         }
 
-        $option     = match ( $option )
+        $option  = match ( $option )
         {
-            "product"   => "product",
-            "products"  => "product",
-            "image"     => "attachment",
-            "images"    => "attachment",
-            null        => "attachment",
-            default     => "attachment",
+            "product"  => "product",
+            "products" => "product",
+            "image"    => "attachment",
+            "images"   => "attachment",
         };
 
-        $message    = "{$this->prefix} Starting process, {$option}";
+        $message = "{$this->prefix} Starting process, {$option}";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $db         = "dev-mkt";
-        $url        = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
+        $db      = "dev-mkt";
+        $url     = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
 
         if ( config( key: "app.env" ) === "production" )
         {
@@ -104,18 +103,19 @@ class DeleteFastShopData extends Command
             $url = "https://marketplace.triibo.com.br" . $this->url_sufix;
         }
 
-        $message    = "{$this->prefix} Selecting DB: {$db}...";
+        $message = "{$this->prefix} Selecting DB: {$db}...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $conn       = DB::connection( name: $db );
-        $unfinished = true;
-        $response   = null;
+        $conn    = DB::connection( name: $db );
 
         try
         {
-            if ( $meta === null )
+            if ( $meta === false )
             {
+                $unfinished = true;
+                $response   = null;
+
                 do
                 {
                     $posts    = $conn->select( query: $this->getSelect( type: $option ) );
@@ -173,11 +173,15 @@ class DeleteFastShopData extends Command
                 }
                 while ( $unfinished );
             }
-            elseif ( $meta === "true" )
+
+            if ( $meta === true )
             {
                 $conn->select( query: $this->deleteMetaLookup() );
                 $conn->select( query: $this->deletePostMeta()   );
             }
+
+            if ( $fix === true )
+                $this->fixPostGallery();
         }
         catch ( \Throwable $e )
         {
@@ -216,25 +220,15 @@ class DeleteFastShopData extends Command
         $store_id = config( key: "woocommerce.partners" )[ "fast_shop" ][ "store_id" ];
 
         return "
-            SELECT
-                p.ID as id,
-                p.post_author,
-                p.post_title,
-                p.post_date,
-                p.post_modified,
-                p.guid as post_image,
-                p.post_type,
-                p.post_mime_type
-            FROM
-                wp_posts p
-            WHERE
-                p.post_author = 4265
-            AND
-                p.post_type = 'attachment'
-            ORDER BY
-                p.ID ASC
-            LIMIT
-                1000;
+            SELECT p.ID as id
+            FROM wp_posts p
+            WHERE p.post_author = {$store_id}
+            AND p.post_type = {$type}'
+        "
+        . ( ( $type == "attachment" ) ? "AND p.post_parent = 0" : "" ) .
+        "
+            ORDER BY p.ID ASC
+            LIMIT {$limit};
         ";
     }
 
@@ -266,5 +260,81 @@ class DeleteFastShopData extends Command
             WHERE wp_posts.ID IS NULL
             AND wp_postmeta.meta_id > 0;
         ";
+    }
+
+    /**
+     * @return  void
+     */
+    private function fixPostGallery() : void
+    {
+        $update    = [];
+        $store_id  = config( key: "woocommerce.partners" )[ "fast_shop" ][ "store_id" ];
+        $db        = ( config( key: "app.env" ) === "production" ) ? "prd-mkt" : "dev-mkt";
+        $conn      = DB::connection( name: $db );
+
+        $query_0   = "
+            UPDATE wp_posts AS img
+            JOIN wp_postmeta AS meta ON img.ID = meta.meta_value
+            JOIN wp_posts AS prod ON meta.post_id = prod.ID
+            SET img.post_parent = prod.ID
+            WHERE meta.meta_key = '_thumbnail_id'
+            AND img.post_type = 'attachment'
+            AND prod.post_type = 'product'
+            AND prod.post_author = {$store_id};
+        ";
+
+        $query_1   = "
+            SELECT ID as post_id
+            FROM wp_posts
+            WHERE post_author = {$store_id}
+            AND post_type = 'attachment'
+            AND post_parent = 0
+            ORDER BY ID DESC;
+        ";
+
+        $query_2   = "
+            SELECT post_id, meta_value
+            FROM wp_postmeta
+            WHERE meta_key = '_product_image_gallery'
+            AND meta_value != ''
+            ORDER BY post_id DESC;
+        ";
+
+        $conn->select( query: $query_0 );
+
+        $post_imgs = $conn->select( query: $query_1 );
+        $post_imgs = array_map( function( $obj ) { return $obj->post_id; }, $post_imgs );
+
+        $result    = $conn->select( query: $query_2 );
+
+        foreach ( $result as $meta )
+        {
+            $product_id = $meta->post_id;
+            $image_ids  = explode( ",", $meta->meta_value );
+
+            $intersect  = array_intersect( $image_ids, $post_imgs );
+
+            if ( empty( $intersect ) )
+                continue;
+
+            foreach ( $image_ids as $image_id )
+            {
+                $image_id = ( int ) trim( $image_id );
+
+                $update[] = "UPDATE wp_posts SET post_parent = {$product_id} WHERE ID = {$image_id};";
+            }
+        }
+
+        foreach ( $update as $query )
+        {
+            $conn->select( query: $query );
+            dump( $query );
+        }
+
+        $post_imgs = $conn->select( query: $query_1 );
+        $post_imgs = array_map( function( $obj ) { return $obj->post_id; }, $post_imgs );
+
+        if ( !empty( $post_imgs ) )
+            Artisan::call( "mkt:delete_fs_data --option=images" );
     }
 }
