@@ -4,6 +4,7 @@ namespace App\Console\Commands\Vtex;
 
 use Throwable;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use App\Services\Vtex\ProductService;
 use App\Services\Vtex\ConnectorService;
 use Illuminate\Support\Facades\Storage;
@@ -76,6 +77,7 @@ class GetProductList extends Command
         $partner                  = config( "vtex.partners" )[ $seller ];
 
         $this->sale_channel       = $partner[ $partner[ "env" ] ][ "sales_channel" ];
+        $this->store_id           = config( key: "woocommerce.partners" )[ $seller ][ "store_id" ];
 
         $connector                = new ConnectorService( $seller );
         $connector->enableLogNotify( false );
@@ -247,7 +249,7 @@ class GetProductList extends Command
 
                 $products[ $sku ] = $product;
 
-                if ( count( $products ) == 10 )
+                if ( count( $products ) == 5 )
                 {
                     $wc_products = $this->translateProducts( $products );
 
@@ -491,7 +493,28 @@ class GetProductList extends Command
             {
                 $this->log_message( message: "Send to marketplace" );
 
-                $ids = Product::batch( [ "create" => $products ] );
+                $wc          = Product::batch( [ "create" => $products ] );
+                $wc_products = $wc->first();
+
+                $data        = [];
+
+                foreach ( $products as $i => $product )
+                {
+                    if ( $wc_products[ $i ]->id == 0 )
+                        continue;
+
+                    $data[] = [
+                        "store_id"      => $this->store_id,
+                        "metadata_id"   => $ids[ $i ],
+                        "product_id"    => $wc_products[ $i ]->id,
+                        "product_sku"   => $product[ "sku"           ],
+                        "regular_price" => $product[ "regular_price" ],
+                        "sale_price"    => $product[ "sale_price"    ],
+                        "stock_status"  => $product[ "stock_status"  ],
+                    ];
+                }
+
+                DB::table( "marketplace_product_skus" )->insert( $data );
 
                 $this->log_message( message: "Sent to marketplace successfully" );
             }
