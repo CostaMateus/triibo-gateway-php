@@ -198,7 +198,7 @@ class ProcessProducts extends Command
 
         $this->log_message( message: "VTEX Products: Runtime {$diff} minutes..." );
 
-        Artisan::call( command: "mkt:delete_fs_data --only-meta=true" );
+        Artisan::call( command: "mkt:delete_fs_data --meta" );
 
         return 0;
     }
