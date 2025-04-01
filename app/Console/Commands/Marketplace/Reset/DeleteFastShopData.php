@@ -112,9 +112,9 @@ class DeleteFastShopData extends Command
         $unfinished = true;
         $response   = null;
 
-        if ( $meta === null )
+        try
         {
-            try
+            if ( $meta === null )
             {
                 do
                 {
@@ -173,39 +173,23 @@ class DeleteFastShopData extends Command
                 }
                 while ( $unfinished );
             }
-            catch ( \Throwable $e )
-            {
-                $message    = "{$this->prefix} Error: {$e->getMessage()}";
-                log_message ( channel: self::LOG_CHANNEL, message: $message );
-                $this->error( string: $message );
-
-                log_exception(
-                    channel : self::LOG_CHANNEL,
-                    message : $message,
-                    e       : $e,
-                    context : [ "ids" => $ids ],
-                );
-            }
-        }
-        elseif ( $meta === "true" )
-        {
-            try
+            elseif ( $meta === "true" )
             {
                 $conn->select( query: $this->deleteMetaLookup() );
                 $conn->select( query: $this->deletePostMeta()   );
             }
-            catch ( \Throwable $e )
-            {
-                $message    = "{$this->prefix} Error: {$e->getMessage()}";
-                log_message ( channel: self::LOG_CHANNEL, message: $message );
-                $this->error( string: $message );
+        }
+        catch ( \Throwable $e )
+        {
+            $message    = "{$this->prefix} Error: {$e->getMessage()}";
+            log_message ( channel: self::LOG_CHANNEL, message: $message );
+            $this->error( string: $message );
 
-                log_exception(
-                    channel: self::LOG_CHANNEL,
-                    message: $message,
-                    e      : $e,
-                );
-            }
+            log_exception(
+                channel : self::LOG_CHANNEL,
+                message : $message,
+                e       : $e,
+            );
         }
 
         $message = "{$this->prefix} Finished process...";
@@ -244,13 +228,13 @@ class DeleteFastShopData extends Command
             FROM
                 wp_posts p
             WHERE
-                p.post_author = {$store_id}
+                p.post_author = 4265
             AND
-                p.post_type = '{$type}'
+                p.post_type = 'attachment'
             ORDER BY
                 p.ID ASC
             LIMIT
-                {$limit};
+                1000;
         ";
     }
 
