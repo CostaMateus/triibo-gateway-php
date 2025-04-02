@@ -458,6 +458,8 @@ class ProcessProducts extends Command
             return;
         }
 
+        unset( $data[ "id" ] );
+
         DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
 
         return;
