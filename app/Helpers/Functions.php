@@ -582,20 +582,23 @@ if ( !function_exists( "send_mail_notification" ) )
     function send_mail_notification( string $blade, string $method, string $catch, ?Throwable $e = null ) : void
     {
         // Determine the environment (HML or PRD) based on the app.env configuration.
-        $env      = config( "app.env" ) == "local" ? "HML" : "PRD";
+        $env     = config( "app.env" ) == "local" ? "HML" : "PRD";
 
-        // Define the email subjects for different blades.
-        $subjects = [
+        $blade   = ( $blade == "triibo" ) ? "marketplace" : $blade;
+
+        // Define the email subject for different blades.
+        $subject = match ( $blade )
+        {
             "awin"        => "{$env} - Integração Awin",
             "cofry"       => "{$env} - Integração Cofry",
             "socialsoul"  => "{$env} - Integração SocialSoul",
             "marketplace" => "{$env} - Integração Marketplace",
             "vtex"        => "{$env} - Integração VTEX",
-        ];
+        };
 
         // Prepare the email data.
         $mail     = [
-            "subject"    => $subjects[ $blade ],
+            "subject"    => $subject,
             "title"      => "Erro no schedule: ",
             "method"     => $method,
             "catch"      => $catch,
