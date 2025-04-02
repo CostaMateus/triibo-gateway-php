@@ -61,7 +61,8 @@ if ( !function_exists( "log_exception" ) )
         Log::channel( channel: $channel )->$level( message: trim( $message ), context: $context );
 
         // Send an email notification about the exception.
-        send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
+        if ( config( "app.name" ) !== "Triibo DEV" )
+            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
     }
 }
 
