@@ -119,10 +119,7 @@ class ProcessProducts extends Command
         }
 
         $origin   = $this->allowed_sellers[ $seller ];
-        $products = Product::where( "status", "unprocessed" )
-                            ->where( "origin", $origin )
-                            ->orderByDesc( "id" )
-                            ->get();
+        $products = Product::where( "status", "unprocessed" )->where( "origin", $origin )->get();
 
         if ( $products->count() == 0 )
         {
