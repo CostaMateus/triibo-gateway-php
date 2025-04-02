@@ -3,8 +3,7 @@
 namespace App\Console\Commands\Marketplace\Reset;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\{ DB, Http, Artisan };
 
 class DeleteFastShopData extends Command
 {

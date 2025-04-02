@@ -6,7 +6,7 @@ use Throwable;
 use App\Models\Vtex\Product;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\{ DB, Artisan };
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 use App\Services\Vtex\{ ProductService, ConnectorService, FulfillmentService };
 
