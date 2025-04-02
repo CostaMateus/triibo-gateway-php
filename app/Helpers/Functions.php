@@ -584,9 +584,7 @@ if ( !function_exists( "send_mail_notification" ) )
         // Determine the environment (HML or PRD) based on the app.env configuration.
         $env     = config( "app.env" ) == "local" ? "HML" : "PRD";
 
-        dump( $blade );
-
-        if ( in_array( $blade, [ "...", "triibo" ] ) )
+        if ( in_array( $blade, [ "codex", "triibo" ] ) )
             $blade = "marketplace";
 
         // Define the email subject for different blades.
