@@ -111,7 +111,7 @@ class DeleteFastShopData extends Command
 
         try
         {
-            if ( $meta === false )
+            if ( $meta === false && $fix === false )
             {
                 $unfinished = true;
                 $response   = null;
@@ -223,10 +223,10 @@ class DeleteFastShopData extends Command
             SELECT p.ID as id
             FROM wp_posts p
             WHERE p.post_author = {$store_id}
-            AND p.post_type = {$type}'
-        "
-        . ( ( $type == "attachment" ) ? "AND p.post_parent = 0" : "" ) .
-        "
+            AND p.post_type = '{$type}'
+            "
+            . ( ( $type == "attachment" ) ? "AND p.post_parent = 0" : "" ) .
+            "
             ORDER BY p.ID ASC
             LIMIT {$limit};
         ";
@@ -323,12 +323,15 @@ class DeleteFastShopData extends Command
 
                 $update[] = "UPDATE wp_posts SET post_parent = {$product_id} WHERE ID = {$image_id};";
             }
+
+            $this->info( $product_id );
         }
 
         foreach ( $update as $query )
         {
             $conn->select( query: $query );
-            dump( $query );
+
+            $this->info( $query );
         }
 
         $post_imgs = $conn->select( query: $query_1 );
