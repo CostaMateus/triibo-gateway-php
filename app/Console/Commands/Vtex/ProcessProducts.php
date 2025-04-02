@@ -345,6 +345,8 @@ class ProcessProducts extends Command
      */
     private function processProduct( Product $product ) : void
     {
+        $this->log_message( message: "VTEX Products: Processing product SKU {$product->sku}, with action {$product->action}..." );
+
         $wc_product = $this->searchProduct( id: $product->sku );
 
         if ( $product->action === "disable" )
@@ -402,6 +404,15 @@ class ProcessProducts extends Command
             $data = vtex_product_to_mkt( data: $data[ "data" ], context: $data[ "context" ], simulate: $data[ "simulate" ] );
 
             $this->batch_wc[ "create" ][] = $data;
+
+            $data = [
+                "store_id"      => $this->store_id,
+                "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
+                "product_sku"   => $data[ "sku"           ],
+                "regular_price" => $data[ "regular_price" ],
+                "sale_price"    => $data[ "sale_price"    ],
+                "stock_status"  => $data[ "stock_status"  ],
+            ];
 
             $this->createOrUpdateLocalWcProduct( data: $data );
 
@@ -461,7 +472,8 @@ class ProcessProducts extends Command
             return;
         }
 
-        unset( $data[ "id" ] );
+        if ( isset( $data[ "id" ] ) )
+            unset( $data[ "id" ] );
 
         DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
 
