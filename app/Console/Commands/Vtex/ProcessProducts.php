@@ -230,11 +230,24 @@ class ProcessProducts extends Command
         $this->log_message( message: "VTEX Products: Updating marketplace products..." );
 
         $chunks        = [];
-        $create_chunks = array_chunk( $this->batch_wc[ "create" ], 30 );
-        $update_chunks = array_chunk( $this->batch_wc[ "update" ], 30 );
-        $delete_chunks = array_chunk( $this->batch_wc[ "delete" ], 30 );
+        $create_chunks = [];
+        $update_chunks = [];
+        $delete_chunks = [];
 
-        $max_chunks    = max( count( $create_chunks ), count( $update_chunks ), count( $delete_chunks ) );
+        if ( isset( $this->batch_wc[ "create" ] ) )
+            $create_chunks = array_chunk( $this->batch_wc[ "create" ], 30 );
+
+        if ( isset( $this->batch_wc[ "update" ] ) )
+            $update_chunks = array_chunk( $this->batch_wc[ "update" ], 30 );
+
+        if ( isset( $this->batch_wc[ "delete" ] ) )
+            $delete_chunks = array_chunk( $this->batch_wc[ "delete" ], 30 );
+
+        $max_chunks    = max(
+            count( $create_chunks ),
+            count( $update_chunks ),
+            count( $delete_chunks )
+        );
 
         foreach ( range( 0, $max_chunks ) as $i )
         {
@@ -386,7 +399,11 @@ class ProcessProducts extends Command
 
             $this->batch_wc[ "update" ][] = $data;
 
-            $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: $data );
+            $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: [
+                "regular_price" => $data[ "regular_price" ],
+                "sale_price"    => $data[ "sale_price"    ],
+                "stock_status"  => $data[ "stock_status"  ],
+            ] );
 
             return;
         }
@@ -404,15 +421,6 @@ class ProcessProducts extends Command
             $data = vtex_product_to_mkt( data: $data[ "data" ], context: $data[ "context" ], simulate: $data[ "simulate" ] );
 
             $this->batch_wc[ "create" ][] = $data;
-
-            $data = [
-                "store_id"      => $this->store_id,
-                "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
-                "product_sku"   => $data[ "sku"           ],
-                "regular_price" => $data[ "regular_price" ],
-                "sale_price"    => $data[ "sale_price"    ],
-                "stock_status"  => $data[ "stock_status"  ],
-            ];
 
             $this->createOrUpdateLocalWcProduct( data: $data );
 
@@ -471,9 +479,6 @@ class ProcessProducts extends Command
 
             return;
         }
-
-        if ( isset( $data[ "id" ] ) )
-            unset( $data[ "id" ] );
 
         DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
 
