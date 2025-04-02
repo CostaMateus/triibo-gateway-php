@@ -97,20 +97,25 @@ class OrderController extends VtexController
             {
                 $courier = $data[ "courierStatus" ];
 
-                if ( isset( $courier[ "finished" ] ) && $courier[ "finished" ] == true )
+                if ( !empty( $courier[ "data" ] ) )
                 {
-                    $message  = "ENTREGA REALIZADA\n";
-                    $message .= convert_delivery_date( $data[ "courierStatus" ][ "deliveredDate" ] );
+                    $status  = $courier[ "data" ][ 0 ];
+                    $message = $status[ "description" ];
+
+                    if ( $status[ "description" ] == "Entrega realizada" )
+                    {
+                        $message = "ENTREGA REALIZADA\n" . convert_delivery_date( $courier[ "deliveredDate" ] );
+
+                        update_order_meta( parent::LOG_CHANNEL, $order_id, [
+                            "status"    => "completed",
+                            "meta_data" => [ [
+                                "key"   => "_has_fs_finished",
+                                "value" => "yes"
+                            ] ]
+                        ] );
+                    }
 
                     create_order_note( parent::LOG_CHANNEL, $order_id, $message );
-
-                    update_order_meta( parent::LOG_CHANNEL, $order_id, [
-                        "status"    => "completed",
-                        "meta_data" => [ [
-                            "key"   => "_has_fs_finished",
-                            "value" => "yes"
-                        ] ]
-                    ] );
                 }
             }
             else
@@ -119,12 +124,9 @@ class OrderController extends VtexController
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - invoiceNotification 2",
-                    level   : "error",
+                    level   : "info",
                     context : [ "order_id" => $order_id, "invoice" => $data ],
                 );
-
-                // TODO confirmar se precisa reativar essas notificações
-                // send_notification( $parent, $order, "invoice_error" );
             }
         }
         catch ( Throwable $e )
