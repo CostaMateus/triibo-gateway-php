@@ -230,9 +230,9 @@ class ProcessProducts extends Command
         $this->log_message( message: "VTEX Products: Updating marketplace products..." );
 
         $chunks        = [];
-        $create_chunks = array_chunk( $this->batch_wc[ "create" ], 50 );
-        $update_chunks = array_chunk( $this->batch_wc[ "update" ], 50 );
-        $delete_chunks = array_chunk( $this->batch_wc[ "delete" ], 50 );
+        $create_chunks = array_chunk( $this->batch_wc[ "create" ], 30 );
+        $update_chunks = array_chunk( $this->batch_wc[ "update" ], 30 );
+        $delete_chunks = array_chunk( $this->batch_wc[ "delete" ], 30 );
 
         $max_chunks    = max( count( $create_chunks ), count( $update_chunks ), count( $delete_chunks ) );
 
