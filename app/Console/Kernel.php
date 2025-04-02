@@ -92,7 +92,7 @@ class Kernel extends ConsoleKernel
 
             // Process product informations FS - every five minutes
             $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )
-                    ->everyFiveMinutes()
+                    ->everyFifteenMinutes()
                     ->between( "6:00", "23:59" );
         }
     }
