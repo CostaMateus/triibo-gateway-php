@@ -421,7 +421,7 @@ class AwinIntegration
                 $response = retry(
                     times: 7,
                     sleepMilliseconds: 10000,
-                    callback: function () use ( $body )
+                    callback: function () use ( $body, $id )
                     {
                         $response_2 = Http::withToken( token: $this->token )
                                           ->withBody( content: json_encode( $body ), contentType: "application/json" )

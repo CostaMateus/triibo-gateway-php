@@ -72,7 +72,10 @@ class ProcessProducts extends Command
      *
      * @var     array
      */
-    protected $update_wc          = [ "create" => [], "update" => [] ];
+    protected $batch_wc           = [
+        "create" => [],
+        "delete" => []
+    ];
 
     /**
      *
@@ -129,9 +132,10 @@ class ProcessProducts extends Command
             return 0;
         }
 
-        $env                      = config( key: "vtex.partners.{$seller}.env"                  );
-        $this->sale_channel       = config( key: "vtex.partners.{$seller}.{$env}.sales_channel" );
-        $this->store_id           = config( key: "woocommerce.partners.{$seller}.store_id"      );
+        $partner                  = config( key: "vtex.partners" )[ $seller ];
+        $env                      = $partner[ "env" ];
+        $this->sale_channel       = $partner[ $env  ][ "sales_channel" ];
+        $this->store_id           = config( key: "woocommerce.partners" )[ $seller ][ "store_id" ];
 
         $connector                = new ConnectorService( seller: $seller );
         $connector->enableLogNotify( notify: false );
@@ -161,7 +165,7 @@ class ProcessProducts extends Command
                     $this->update_local[] = $product->id;
                 }
 
-                $success = $this->updateMarketplaceProduct();
+                $success = $this->batchMarketplaceProduct();
 
                 if ( $success )
                     $success = $this->createLocalWcProducts();
@@ -194,6 +198,8 @@ class ProcessProducts extends Command
 
         $this->log_message( message: "VTEX Products: Runtime {$diff} minutes..." );
 
+        Artisan::call( command: "mkt:delete_fs_data --meta" );
+
         return 0;
     }
 
@@ -216,21 +222,23 @@ class ProcessProducts extends Command
      *
      * @return  bool
      */
-    private function updateMarketplaceProduct() : bool
+    private function batchMarketplaceProduct() : bool
     {
         $this->log_message( message: "VTEX Products: Updating marketplace products..." );
 
         $chunks        = [];
-        $create_chunks = array_chunk( $this->update_wc[ "create" ], 50 );
-        $update_chunks = array_chunk( $this->update_wc[ "update" ], 50 );
+        $create_chunks = array_chunk( $this->batch_wc[ "create" ], 50 );
+        $update_chunks = array_chunk( $this->batch_wc[ "update" ], 50 );
+        $delete_chunks = array_chunk( $this->batch_wc[ "delete" ], 50 );
 
-        $max_chunks    = max( count( $create_chunks ), count( $update_chunks ) );
+        $max_chunks    = max( count( $create_chunks ), count( $update_chunks ), count( $delete_chunks ) );
 
         foreach ( range( 0, $max_chunks ) as $i )
         {
             $chunks[] = [
                 "create" => $create_chunks[ $i ] ?? [],
                 "update" => $update_chunks[ $i ] ?? [],
+                "delete" => $delete_chunks[ $i ] ?? [],
             ];
         }
 
@@ -242,7 +250,7 @@ class ProcessProducts extends Command
 
             $this->log_message( message: "VTEX Products: Updating marketplace products, {$group}" );
 
-            if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) )
+            if ( empty( $chunk[ "create" ] ) && empty( $chunk[ "update" ] ) && empty( $chunk[ "delete" ] ) )
                 continue;
 
             if ( empty( $chunk[ "create" ] ) )
@@ -250,6 +258,9 @@ class ProcessProducts extends Command
 
             if ( empty( $chunk[ "update" ] ) )
                 unset( $chunk[ "update" ] );
+
+            if ( empty( $chunk[ "delete" ] ) )
+                unset( $chunk[ "delete" ] );
 
             try
             {
@@ -288,7 +299,7 @@ class ProcessProducts extends Command
     {
         $this->log_message( message: "VTEX Products: Creating local WC products..." );
 
-        $created = $this->update_wc[ "create" ];
+        $created = $this->batch_wc[ "create" ];
 
         foreach ( $created as $product )
         {
@@ -306,8 +317,6 @@ class ProcessProducts extends Command
 
                 if ( !$local_product )
                     continue;
-
-                dump( $wc_product, $local_product );
 
                 $this->createOrUpdateLocalWcProduct( id: $local_product->id, data: [ "product_id" => $wc_product[ "id" ] ] );
             }
@@ -340,46 +349,61 @@ class ProcessProducts extends Command
             if ( empty( $wc_product ) )
                 return;
 
-            if ( $wc_product->stock_status == "outofstock" )
-                return;
-
-            $this->update_wc[ "update" ][] = [ "id" => $wc_product->id, "stock_status" => "outofstock" ];
-
-            $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: [ "stock_status" => "outofstock" ] );
+            $this->toDelete( wc_product: $wc_product );
+            return;
         }
 
-        elseif ( $product->action === "update" )
+        if ( $product->action === "update" )
         {
             $data = json_decode( $product->meta, true );
 
-            if ( empty( $wc_product ) || ( !$data[ "PriceModified" ] && !$data[ "StockModified" ] ) )
+            if ( empty( $wc_product ) )
                 return;
 
-            $data = $this->getProductData( wc_id: $wc_product->id, sku: $product->sku );
+            if ( $data[ "HasStockKeepingUnitRemovedFromAffiliate" ] )
+            {
+                $this->toDelete( wc_product: $wc_product );
+                return;
+            }
 
-            $this->update_wc[ "update" ][] = $data;
+            $data = $this->getProductData( sku: $product->sku, full: $data[ "HasStockKeepingUnitModified" ] );
+
+            if ( $data === false )
+            {
+                $this->toDelete( wc_product: $wc_product );
+                return;
+            }
+
+            if ( isset( $data[ "data" ] ) )
+                $data = vtex_product_to_mkt( data: $data[ "data" ], context: $data[ "context" ], simulate: $data[ "simulate" ] );
+
+            $data[ "id" ]                 = $wc_product->product_id;
+
+            $this->batch_wc[ "update" ][] = $data;
 
             $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: $data );
+
+            return;
         }
 
-        elseif ( $product->action === "create" )
+        if ( $product->action === "create" )
         {
             if ( !empty( $wc_product ) )
                 return;
 
-            $data = $this->getProductData( wc_id: 0, sku: $product->sku, create: true );
+            $data = $this->getProductData( sku: $product->sku, create: true );
 
-            if ( empty( $data ) )
+            if ( $data === null )
                 return;
 
             $data = vtex_product_to_mkt( data: $data[ "data" ], context: $data[ "context" ], simulate: $data[ "simulate" ] );
 
-            $this->update_wc[ "create" ][] = $data;
+            $this->batch_wc[ "create" ][] = $data;
 
             $this->createOrUpdateLocalWcProduct( data: $data );
-        }
 
-        return;
+            return;
+        }
     }
 
     /**
@@ -399,55 +423,70 @@ class ProcessProducts extends Command
 
     /**
      *
-     * @param   integer     $id
-     * @param   array       $data
+     * @param   object  $wc_product
+     * @return  void
+     */
+    private function toDelete( object $wc_product ) : void
+    {
+        $this->batch_wc[ "delete" ][] = $wc_product->product_id;
+
+        DB::table( "marketplace_product_skus" )
+            ->where( "id", $wc_product->id )
+            ->delete();
+    }
+
+    /**
+     *
+     * @param   int     $id
+     * @param   array   $data
      * @return  void
      */
     private function createOrUpdateLocalWcProduct( int $id = 0, array $data = [] ) : void
     {
         if ( $id == 0 )
         {
-            DB::table( "marketplace_product_skus" )->insert( [
-                "store_id"      => $this->store_id,
-                "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
-                "product_sku"   => $data[ "sku"           ],
-                "regular_price" => $data[ "regular_price" ],
-                "sale_price"    => $data[ "sale_price"    ],
-                "stock_status"  => $data[ "stock_status"  ],
-            ] );
+            DB::table( "marketplace_product_skus" )
+                ->insert( [
+                    "store_id"      => $this->store_id,
+                    "metadata_id"   => $data[ "meta_data"     ][ 0 ][ "value" ],
+                    "product_sku"   => $data[ "sku"           ],
+                    "regular_price" => $data[ "regular_price" ],
+                    "sale_price"    => $data[ "sale_price"    ],
+                    "stock_status"  => $data[ "stock_status"  ],
+                ] );
+
+            return;
         }
-        else
-        {
-            DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
-        }
+
+        DB::table( "marketplace_product_skus" )->where( "id", $id )->update( $data );
+
+        return;
     }
 
     /**
      *
-     * @param   int     $sku
      * @param   string  $sku
-     * @return  array
+     * @param   bool    $create
+     * @param   bool    $full
+     * @return  false|null|array
      */
-    private function getProductData( int $wc_id, string $sku, bool $create = false )
+    private function getProductData( string $sku, bool $create = false, bool $full = false ) : mixed
     {
         $data    = $this->getSkuData( sku: $sku );
         $context = $this->getSkuContext( sku: $sku );
 
-        if ( ( !$context || !$data ) && !$create )
-            return [ "id" => $wc_id, "stock_status" => "outofstock" ];
-
-        if ( ( !$context || !$data ) && $create )
-            return null;
+        if ( ( !$context || !$data ) )
+            return !$create ? false : null;
 
         $simulate = $this->getSimulate( id: $data[ "Id" ] );
 
-        if ( ( !$simulate || !isset( $simulate[ "items" ] ) ) && !$create )
-            return [ "id" => $wc_id, "stock_status" => "outofstock" ];
+        if ( ( !$simulate || !isset( $simulate[ "items" ] ) ) )
+            return !$create ? false : null;
 
-        if ( ( !$simulate || !isset( $simulate[ "items" ] ) ) && $create )
-            return null;
+        if ( $simulate[ "items" ][ 0 ][ "availability" ] != "available" )
+            return !$create ? false : null;
 
-        if ( $create )
+        if ( $create || $full )
         {
             return [
                 "data"     => $data,
@@ -459,13 +498,13 @@ class ProcessProducts extends Command
         return [
             "regular_price" => convert_price( price: $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ),
             "sale_price"    => convert_price( price: $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ),
-            "stock_status"  => ( $simulate[ "items" ][ 0 ][ "availability" ] == "available" ) ? "instock" : "outofstock",
+            "stock_status"  => "instock",
         ];
     }
 
     /**
      *
-     * @param   integer     $sku
+     * @param   int     $sku
      * @return  array|false|null
      */
     private function getSkuContext( int $sku ) : array|false|null
@@ -505,7 +544,7 @@ class ProcessProducts extends Command
 
     /**
      *
-     * @param   integer     $sku
+     * @param   int     $sku
      * @return  array|false|null
      */
     private function getSkuData( int $sku ) : array|false|null
@@ -542,7 +581,7 @@ class ProcessProducts extends Command
 
     /**
      *
-     * @param   integer     $id
+     * @param   int     $id
      * @return  array|null
      */
     private function getSimulate( int $id ) : array|null

@@ -196,7 +196,7 @@ if ( !function_exists( "get_wc_order" ) )
 
                 log_message( channel: $channel, message: $message );
 
-                throw new \Exception( $message );
+                return [ null, null ];
             }
 
             $order    = json_decode( json_encode( $response[ "data" ] ), true );

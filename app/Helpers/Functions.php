@@ -61,7 +61,8 @@ if ( !function_exists( "log_exception" ) )
         Log::channel( channel: $channel )->$level( message: trim( $message ), context: $context );
 
         // Send an email notification about the exception.
-        send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
+        if ( config( "app.name" ) !== "Triibo DEV" )
+            send_mail_notification( blade: $channel, method: $method, catch: $type, e: $e );
     }
 }
 
@@ -1335,9 +1336,19 @@ if ( !function_exists( "get_marketplace_order" ) )
         }
         catch ( \Throwable $e )
         {
-            log_message( channel: $channel, message: print_r( $e, true ) );
+            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            {
+                // Log the exception for debugging purposes.
+                log_exception(
+                    channel : $channel,
+                    message : $e->getMessage(),
+                    method  : "get_wc_order",
+                    type    : "Throwable",
+                    e       : $e
+                );
+            }
 
-            $response[ "message" ] = "{$order_id}: Falha ao consultar pedido.";
+            $response[ "message" ] = $e->getMessage();
             $response[ "code"    ] = 400;
         }
 
