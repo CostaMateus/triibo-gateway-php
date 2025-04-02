@@ -106,52 +106,58 @@ return [
         ],
 
         // programa de afiliados
-        "affiliate"  => [
+        "affiliate"   => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/affiliate.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/affiliate.log" ),
+            "level"      => "debug"
         ],
-        "awin"       => [
+        "awin"        => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/awin.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/awin.log" ),
+            "level"      => "debug"
         ],
-        "cofry"      => [
+        "cofry"       => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/cofry.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/cofry.log" ),
+            "level"      => "debug"
         ],
-        "socialsoul" => [
+        "socialsoul"  => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/socialsoul.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/socialsoul.log" ),
+            "level"      => "debug"
         ],
 
         // marketplace
-        "marketplace"  => [
+        "marketplace" => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/marketplace.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/marketplace.log" ),
+            "level"      => "debug"
         ],
-        "fastshop"  => [
+        "fastshop"    => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/fastshop.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/fastshop.log" ),
+            "level"      => "debug"
         ],
 
         // triibo
-        "triibo"       => [
+        "triibo"      => [
             "permission" => 0777,
-            "driver" => "single",
-            "path"   => storage_path( "logs/triibo.log" ),
-            "level"  => "debug"
+            "driver"     => "single",
+            "path"       => storage_path( "logs/triibo.log" ),
+            "level"      => "debug"
+        ],
+
+        "codex"       => [
+            "permission" => 0777,
+            "driver"     => "single",
+            "path"       => storage_path( "logs/codex.log" ),
+            "level"      => "debug"
         ],
     ],
-
 ];
