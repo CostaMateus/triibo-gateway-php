@@ -101,7 +101,9 @@ Route::prefix( "mkt" )->group( function ()
     {
         try
         {
-            $order = Order::find( $id );
+            // $order = Order::find( $id );
+            $order = get_wc_order( "codex", $id, "fast_shop" );
+            // $order = get_marketplace_order( "codex", $id );
             dd( $order );
         }
         catch ( \Exception $e )

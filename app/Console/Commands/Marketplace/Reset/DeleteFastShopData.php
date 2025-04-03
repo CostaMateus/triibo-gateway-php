@@ -306,31 +306,40 @@ class DeleteFastShopData extends Command
 
         $result    = $conn->select( query: $query_2 );
 
-        foreach ( $result as $meta )
+        $chunked   = array_chunk( $result, 500 );
+
+        foreach ( $chunked as $i => $result )
         {
-            $product_id = $meta->post_id;
-            $image_ids  = explode( ",", $meta->meta_value );
+            $i++;
 
-            $intersect  = array_intersect( $image_ids, $post_imgs );
+            $this->info( "Chunk {$i} de " . count( $chunked ) );
 
-            if ( empty( $intersect ) )
-                continue;
-
-            foreach ( $image_ids as $image_id )
+            foreach ( $result as $meta )
             {
-                $image_id = ( int ) trim( $image_id );
+                $product_id = $meta->post_id;
+                $image_ids  = explode( ",", $meta->meta_value );
 
-                $update[] = "UPDATE wp_posts SET post_parent = {$product_id} WHERE ID = {$image_id};";
+                $intersect  = array_intersect( $image_ids, $post_imgs );
+
+                if ( empty( $intersect ) )
+                    continue;
+
+                foreach ( $image_ids as $image_id )
+                {
+                    $image_id = ( int ) trim( $image_id );
+
+                    $update[] = "UPDATE wp_posts SET post_parent = {$product_id} WHERE ID = {$image_id};";
+                }
+
+                $this->info( $product_id );
             }
 
-            $this->info( $product_id );
-        }
+            foreach ( $update as $query )
+            {
+                $conn->select( query: $query );
 
-        foreach ( $update as $query )
-        {
-            $conn->select( query: $query );
-
-            $this->info( $query );
+                $this->info( $query );
+            }
         }
 
         $post_imgs = $conn->select( query: $query_1 );
