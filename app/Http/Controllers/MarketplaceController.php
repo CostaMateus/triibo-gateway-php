@@ -175,7 +175,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $product = $response[ "data" ];
+        $product           = $response[ "data" ];
 
         if ( $product[ "store" ]->id != $store_id )
         {
@@ -210,6 +210,8 @@ class MarketplaceController extends Controller
                 message: "{$order->ord_id}: Produto sem ID Fast Shop."
             );
         }
+
+        $order->shipping   = format_postcode( $order->shipping );
 
         $freight           = get_freight_vtex( product_id: $fs_product_id, postcode: $order[ "shipping" ][ "postcode" ] );
 

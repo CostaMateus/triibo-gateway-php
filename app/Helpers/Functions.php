@@ -1055,6 +1055,24 @@ if ( !function_exists( "search_order_meta" ) )
     }
 }
 
+if ( !function_exists( "format_postcode" ) )
+{
+    /**
+     *
+     * @param   array   $addr
+     * @return  array
+     */
+    function format_postcode( array $addr ) : array
+    {
+        $postcode           = preg_replace( "/\D/",             "",      $addr[ "postcode" ] );
+        $postcode           = preg_replace( "/(\d{5})(\d{3})/", "$1-$2", $postcode           );
+
+        $addr[ "postcode" ] = $postcode;
+
+        return $addr;
+    }
+}
+
 if ( !function_exists( "get_freight_vtex" ) )
 {
     /**
