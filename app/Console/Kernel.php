@@ -2,10 +2,7 @@
 
 namespace App\Console;
 
-use DateTime;
 use DateTimeZone;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Console\Scheduling\{ Event, Schedule };
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -95,9 +92,6 @@ class Kernel extends ConsoleKernel
             $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )
                     ->everyFiveMinutes()
                     ->between( "6:00", "23:59" );
-
-            if ( ( new DateTime( "2025-04-03 15:35:00" ) ) > ( new DateTime( now() ) ) )
-                $this->scheduleCommand( $schedule, "mkt:delete_fs_data --fix" )->dailyAt( "15:30" );
         }
     }
 
