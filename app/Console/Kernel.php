@@ -2,10 +2,7 @@
 
 namespace App\Console;
 
-use DateTime;
 use DateTimeZone;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Console\Scheduling\{ Event, Schedule };
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
