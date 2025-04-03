@@ -1,8 +1,10 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use Kreait\Laravel\Firebase\Facades\Firebase;
+use App\Http\Controllers\Vtex\OrderController;
 use Illuminate\Support\Facades\{ Auth, Route };
 use App\Http\Controllers\Vtex\ProductController;
 use Codexshaper\WooCommerce\Facades\PaymentGateway;
@@ -420,64 +422,19 @@ Route::prefix( "fs" )->group( function ()
         dd( $translated );
     } );
 
-    Route::get( "/create-order", function()
+    Route::get( "/create-order/{id}", function( $id )
     {
-        $data = [
-            "customer_id"          => 1717,
-            "set_paid"             => true,
-            "status"               => "processing",
-            "payment_method"       => "triibo_payments_billet",
-            "payment_method_title" => "Triibo Boleto",
-            "billing"              => [
-                "first_name"   => "Empresa",
-                "last_name"    => "LTDA",
-                "company"      => "Empresa LTDA",
-                "email"        => "email@empresa.com",
-                "phone"        => "+5511900000000",
-                "cpf"          => "",
-                "cnpj"         => "12.345.678/0001-99",
-                "ie"           => "123.456.789.000",
-                "postcode"     => "01234-000",
-                "address_1"    => "Av Pacaembu, 1000",
-                "number"       => "1000",
-                "address_2"    => "Sala 110",
-                "neighborhood" => "Pacaembu",
-                "city"         => "São Paulo",
-                "state"        => "SP",
-                "country"      => "BR",
-            ],
-            "shipping"             => [
-                "first_name"   => "John",
-                "last_name"    => "Doe",
-                "company"      => "",
-                "email"        => "email@cliente.com",
-                "phone"        => "+5511999999999",
-                "cpf"          => "009.876.543-21",
-                "cnpj"         => "",
-                "ie"           => "",
-                "postcode"     => "01218-011",
-                "address_1"    => "Rua Fulano, 1000",
-                "number"       => "1000",
-                "address_2"    => "Apto 123A",
-                "neighborhood" => "Pacaembu",
-                "city"         => "São Paulo",
-                "state"        => "SP",
-                "country"      => "BR",
-            ],
-            "line_items"           => [ [
-                "product_id" => 1021687, // buscar o _fs_product_id (15695)
-                "quantity"   => 1
-            ] ],
-            "shipping_lines"       => [ [
-                "method_id"    => "triibo-fast-shop-shipping",
-                "method_title" => "Fast Shop",
-                "total"        => "20.72"
-            ] ]
-        ];
+        $config   = config( "woocommerce.plugins" );
+        $vtex     = new OrderController();
+        $request  = new Request();
 
-        $order = Order::create( $data );
+        $request->headers->set( key: "seller",    values: "fast_shop"        );
+        $request->headers->set( key: "api-key",   values: $config[ "key"   ] );
+        $request->headers->set( key: "api-token", values: $config[ "token" ] );
 
-        dd( $data, $order );
+        $response = $vtex->orderCreation( request: $request, order_id: $id );
+
+        dd( $response );
     } );
 
     // recuperar produto no marketplace
