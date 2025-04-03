@@ -1079,7 +1079,7 @@ if ( !function_exists( "get_freight_vtex" ) )
             "isCheckedIn" => false,
             "country"     => "BRA",
             "selectedSla" => "Normal",
-            "postalCode"  => preg_replace( "/\D/", "", $postcode ),
+            "postalCode"  => $postcode,
         ];
 
         $response  = $service->simulate( $req_data );
