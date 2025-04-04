@@ -3,6 +3,7 @@
 namespace App\Console\Commands\Marketplace\Reset;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Connection;
 use Illuminate\Support\Facades\{ DB, Http, Artisan };
 
 class DeleteFastShopData extends Command
@@ -12,7 +13,7 @@ class DeleteFastShopData extends Command
      *
      * @var     string
      */
-    protected $signature        = "mkt:delete_fs_data {--option=images : Options: images, products } {--meta} {--fix}";
+    protected $signature        = "mkt:delete_fs_data {--option=images : Options: images, products } {--meta} {--fix} {--outofstock}";
 
     /**
      * The console command description.
@@ -67,10 +68,11 @@ class DeleteFastShopData extends Command
      */
     public function handle()
     {
-        $start   = now();
-        $option  = $this->option( key: "option" );
-        $meta    = $this->option( key: "meta"   );
-        $fix     = $this->option( key: "fix"    );
+        $start      = now();
+        $option     = $this->option( key: "option"     );
+        $meta       = $this->option( key: "meta"       );
+        $fix        = $this->option( key: "fix"        );
+        $outofstock = $this->option( key: "outofstock" );
 
         if ( !in_array( needle: $option, haystack: $this->allowed_options ) )
         {
@@ -110,7 +112,7 @@ class DeleteFastShopData extends Command
 
         try
         {
-            if ( $meta === false && $fix === false )
+            if ( !in_array( true, [ $meta, $fix, $outofstock ] ) )
             {
                 $unfinished = true;
                 $response   = null;
@@ -181,6 +183,9 @@ class DeleteFastShopData extends Command
 
             if ( $fix === true )
                 $this->fixPostGallery();
+
+            if ( $outofstock === true )
+                $this->deleteOutofstock( conn: $conn, url: $url );
         }
         catch ( \Throwable $e )
         {
@@ -347,5 +352,61 @@ class DeleteFastShopData extends Command
 
         if ( !empty( $post_imgs ) )
             Artisan::call( "mkt:delete_fs_data --option=images" );
+    }
+
+    /**
+     * @return  void
+     */
+    private function deleteOutofstock( Connection $conn, string $url ) : void
+    {
+        $store_id  = config( key: "woocommerce.partners" )[ "fast_shop" ][ "store_id" ];
+
+        $query_0   = "
+            SELECT p.ID as post_id
+            FROM wp_posts p
+            LEFT JOIN wp_postmeta pm
+            ON p.ID = pm.post_id
+            WHERE p.post_author = {$store_id}
+            AND pm.meta_key = '_stock_status'
+            AND pm.meta_value = 'outofstock';
+        ";
+
+        $post_ids  = $conn->select( query: $query_0 );
+        $post_ids  = array_map( function( $obj ) { return $obj->post_id; }, $post_ids );
+        $chunked   = array_chunk( $post_ids, 10 );
+
+        foreach ( $chunked as $i => $post_ids )
+        {
+            $i++;
+
+            $this->info( "Chunk {$i} de " . count( $chunked ) );
+
+            $ids      = implode( ", ", $post_ids );
+            $query_1  = "DELETE wp_postmeta   FROM wp_postmeta WHERE post_id     IN ({$ids});";
+            $query_2  = "DELETE wp_posts      FROM wp_posts    WHERE ID          IN ({$ids});";
+            $query_3  = "SELECT ID as post_id FROM wp_posts    WHERE post_parent IN ({$ids});";
+
+            $this->info( $query_1 );
+            $this->info( $query_2 );
+            $this->info( $query_3 );
+
+            $conn->select( query: $query_1 );
+            $conn->select( query: $query_2 );
+
+            $imgs_ids = $conn->select( query: $query_3 );
+            $imgs_ids = array_map( function( $obj ) { return ( string ) $obj->post_id; }, $imgs_ids );
+
+            $content  = json_encode( [
+                "type"  => "attachment",
+                "posts" => $imgs_ids,
+            ] );
+
+            $response = Http::timeout( 90 )
+                            ->withHeaders( headers: $this->headers )
+                            ->withBody( content : $content, contentType : "application/json" )
+                            ->post( url: $url );
+
+            $this->info( $response );
+        }
     }
 }
