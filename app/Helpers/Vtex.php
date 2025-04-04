@@ -997,7 +997,29 @@ if ( !function_exists( "vtex_new_order_exec" ) )
 
         try
         {
+            log_message(
+                channel : "codex",
+                level   : "critical",
+                message : "VTEX - DEBUG 1",
+                context : [
+                    "data" => [
+                        "freight" => $freight,
+                        "order" => $order,
+                    ]
+                ]
+            );
+
             $data     = vtex_new_order_prepare( $seller, $freight, $order, $parent );
+
+            log_message(
+                channel : "codex",
+                level   : "critical",
+                message : "VTEX - DEBUG 2",
+                context : [
+                    "data" => $data,
+                ]
+            );
+
             $response = $service->newOrder( $data );
 
             if ( $response[ 0 ] != 200 )
