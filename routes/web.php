@@ -167,13 +167,16 @@ Route::prefix( "mkt" )->group( function ()
             "line_items"           => [ [
                 "product_id" => 1191861,
                 "quantity"   => 1,
-                "total"      => "24.47",
+                // "total"      => "24.47",
             ] ],
             "shipping_lines"       => [ [
                 "method_id"    => "triibo-fast-shop-shipping",
                 "method_title" => "Fast Shop",
                 "total"        => "20.61"
             ] ],
+            "coupon_lines" => [ [
+                "code" => "teste-mateus"
+            ] ]
         ];
 
         $order = Order::create( $data );

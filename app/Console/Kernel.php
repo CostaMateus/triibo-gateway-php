@@ -42,7 +42,7 @@ class Kernel extends ConsoleKernel
         if ( config( "app.env" ) == "production" )
         {
             // Clear Logs - sunday at 00h00
-            $this->scheduleCommand( $schedule, "log:clear" )->weekly();
+            $schedule->command( "log:clear" )->weekly()->withoutOverlapping()->runInBackground();
 
             // ################################
             // ### Awin Triibo Integration ####
@@ -51,7 +51,7 @@ class Kernel extends ConsoleKernel
             // Lojas, promoções e imagens - segunda a sexta às 03h
             // $this->scheduleCommand( $schedule, "awin:process --option=all"     )->weekdays()->at( "03:00" );
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
-            $this->scheduleCommand( $schedule, "awin:process --option=reports" )->dailyAt( "01:30" );
+            $schedule->command( "awin:process --option=reports" )->dailyAt( "01:30" )->withoutOverlapping()->runInBackground();
 
 
             // ################################
@@ -69,19 +69,19 @@ class Kernel extends ConsoleKernel
             ### Marketplace ################
             ################################
             // Delete duplicate SKUs
-            $this->scheduleCommand( $schedule, "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" );
+            $schedule->command( "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" )->withoutOverlapping()->runInBackground();
 
             // Change status of products without images
-            $this->scheduleCommand( $schedule, "mkt:product_private_without_img"          )->dailyAt( "02:15" );
+            $schedule->command( "mkt:product_private_without_img"          )->dailyAt( "02:15" )->withoutOverlapping()->runInBackground();
 
             // Remove FS products without SKU
-            $this->scheduleCommand( $schedule, "mkt:delete_product_without_sku"           )->dailyAt( "05:00" );
+            $schedule->command( "mkt:delete_product_without_sku"           )->dailyAt( "05:00" )->withoutOverlapping()->runInBackground();
 
             // Get Categories - weekly on monday
-            $this->scheduleCommand( $schedule, "mkt:get_categories"                       )->weeklyOn( 1, "06:00" );
+            $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->withoutOverlapping()->runInBackground();
 
             // Process product informations FS - every five minutes
-            $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )->everyTenMinutes();
+            $schedule->command( "vtex:process_products --seller=fast_shop" )->everyTenMinutes()->withoutOverlapping()->runInBackground();
         }
     }
 
@@ -105,13 +105,5 @@ class Kernel extends ConsoleKernel
     protected function scheduleTimezone() : mixed
     {
         return "America/Sao_Paulo";
-    }
-
-    /**
-     * @return  Event
-     */
-    protected function scheduleCommand( Schedule $schedule, string $command ) : Event
-    {
-        return $schedule->command( $command )->withoutOverlapping()->runInBackground();
     }
 }
