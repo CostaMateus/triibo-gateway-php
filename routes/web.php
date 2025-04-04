@@ -101,8 +101,8 @@ Route::prefix( "mkt" )->group( function ()
     {
         try
         {
-            // $order = Order::find( $id );
-            $order = get_wc_order( "codex", $id, "fast_shop" );
+            $order = Order::find( $id );
+            // $order = get_wc_order( "codex", $id, "fast_shop" );
             // $order = get_marketplace_order( "codex", $id );
             dd( $order );
         }
@@ -131,49 +131,48 @@ Route::prefix( "mkt" )->group( function ()
         $data = [
             "customer_id"          => 1717,
             "set_paid"             => false,
-            "status"               => "on-hold",
-            "payment_method"       => "triibo_payments_pix",
-            "payment_method_title" => "Triibo PIX",
-            // "meta_data"            => [
-            //     [
-            //         "key"   => "_triibo_id",
-            //         "value" => "m5RFeCkwJBNdhHOtBVp9OfqmjGG3"
-            //     ],[
-            //         "key"   => "_billing_cellphone",
-            //         "value" => "+5511949289507"
-            //     ],[
-            //         "key"   => "_billing_phone",
-            //         "value" => "+5511949289507"
-            //     ],[
-            //         "key"   => "_triibo_phone",
-            //         "value" => "+5511949289507"
-            //     ]
-            // ],
-            'billing'              => [
-                'first_name' => 'John',
-                'last_name'  => 'Doe',
-                'address_1'  => '969 Market',
-                'address_2'  => '',
-                'city'       => 'San Francisco',
-                'state'      => 'CA',
-                'postcode'   => '94103',
-                'country'    => 'US',
-                'email'      => 'john.doe@example.com',
-                'phone'      => '(555) 555-5555',
+            "status"               => "pending",
+            "payment_method"       => "triibo_payments_billet",
+            "payment_method_title" => "Triibo Boleto",
+            "meta_data"            => [
+                [ "key" => "_shipping_number",       "value" => 304              ],
+                [ "key" => "_shipping_neighborhood", "value" => "Campos Eliseos" ],
+                [ "key" => "_billing_number",        "value" => 304              ],
+                [ "key" => "_billing_neighborhood",  "value" => "Campos Eliseos" ],
+                [ "key" => "_billing_cpf",           "value" => "02681487242"    ],
+                [ "key" => "_billing_persontype",    "value" => 1,               ]
             ],
-            'shipping'             => [
-                'first_name' => 'John',
-                'last_name'  => 'Doe',
-                'address_1'  => '969 Market',
-                'address_2'  => '',
-                'city'       => 'San Francisco',
-                'state'      => 'CA',
-                'postcode'   => '94103',
-                'country'    => 'US',
+            "billing"              => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Rua Apa",
+                "address_2"  => "Apto 52",
+                "city"       => "São Paulo",
+                "state"      => "SP",
+                "postcode"   => "01201030",
+                "country"    => "BR",
+                "email"      => "mateus.costa@triibo.com.br",
+                "phone"      => "+5511949289507",
+            ],
+            "shipping"             => [
+                "first_name" => "Mateus",
+                "last_name"  => "Costa",
+                "address_1"  => "Rua Apa",
+                "address_2"  => "Apto 52",
+                "city"       => "São Paulo",
+                "state"      => "SP",
+                "postcode"   => "01201030",
+                "country"    => "BR",
             ],
             "line_items"           => [ [
-                "product_id" => 1023758,
-                "quantity"   => 2
+                "product_id" => 1191861,
+                "quantity"   => 1,
+                "total"      => "24.47",
+            ] ],
+            "shipping_lines"       => [ [
+                "method_id"    => "triibo-fast-shop-shipping",
+                "method_title" => "Fast Shop",
+                "total"        => "20.61"
             ] ],
         ];
 
