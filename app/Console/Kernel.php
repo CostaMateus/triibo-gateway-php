@@ -84,7 +84,7 @@ class Kernel extends ConsoleKernel
             $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )->everyFiveMinutes();
 
             // TODO remover
-            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --outofstock"          )->weeklyOn( 5, "13:15" );
+            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --outofstock"          )->weeklyOn( 5, "13:25" );
         }
     }
 
