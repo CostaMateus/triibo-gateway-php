@@ -81,10 +81,7 @@ class Kernel extends ConsoleKernel
             $this->scheduleCommand( $schedule, "mkt:get_categories"                       )->weeklyOn( 1, "06:00" );
 
             // Process product informations FS - every five minutes
-            $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )->everyFiveMinutes();
-
-            // TODO remover
-            $this->scheduleCommand( $schedule, "mkt:delete_fs_data --outofstock"          )->weeklyOn( 5, "13:25" );
+            $this->scheduleCommand( $schedule, "vtex:process_products --seller=fast_shop" )->everyTenMinutes();
         }
     }
 
