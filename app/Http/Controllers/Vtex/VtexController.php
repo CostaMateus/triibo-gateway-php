@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Vtex;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 
 class VtexController extends Controller
@@ -18,9 +19,9 @@ class VtexController extends Controller
      * Credential validation.
      *
      * @param   Request     $request
-     * @return  true|Response
+     * @return  true|JsonResponse
      */
-    protected function validateKeys( Request $request )
+    protected function validateKeys( Request $request ) : mixed
     {
         $config = config( "woocommerce.plugins" );
 

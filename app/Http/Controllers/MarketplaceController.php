@@ -186,18 +186,6 @@ class MarketplaceController extends Controller
                 message: "{$order->ord_id}: Esse produto não é da Fast Shop."
             );
         }
-        else if ( ( float ) $product[ "price" ] > ( float ) $order->max_price )
-        {
-            $order->ord_status = "over_max";
-            $order->save();
-
-            return log_and_redirect(
-                channel: self::LOG_CHANNEL,
-                route  : self::ROUTE,
-                type   : self::ERROR,
-                message: "{$order->ord_id}: Valor do produto acima do máximo."
-            );
-        }
 
         $fs_product_id     = search_product_meta( metas: $product[ "meta_data" ] );
 
@@ -213,7 +201,7 @@ class MarketplaceController extends Controller
 
         $order->shipping   = format_postcode( $order->shipping );
 
-        $freight           = get_freight_vtex( product_id: $fs_product_id, postcode: $order[ "shipping" ][ "postcode" ] );
+        $freight           = get_freight_vtex( product_id: $fs_product_id, postcode: $order->shipping[ "postcode" ] );
 
         if ( $freight === false )
         {
@@ -225,7 +213,9 @@ class MarketplaceController extends Controller
             );
         }
 
-        $delivery_price    = get_delivery_price( product_id: $fs_product_id, freight: $freight[ "data" ] );
+        $product_prices    = get_product_prices( product_id: $fs_product_id, freight: $freight[ "data" ] );
+        $delivery_price    = $product_prices[ "delivery_price" ];
+        $price             = $product_prices[ "price"          ];
 
         if ( $delivery_price === false )
         {
@@ -234,6 +224,35 @@ class MarketplaceController extends Controller
                 route  : self::ROUTE,
                 type   : self::ERROR,
                 message: "{$order->ord_id}: Falha ao consulta frete da Fast Shop. FCF2"
+            );
+        }
+
+        $response          = update_marketplace_product(
+            channel   : self::LOG_CHANNEL,
+            product_id: $order->product_id,
+            data      : $product_prices
+        );
+
+        if ( !$response[ "success" ] )
+        {
+            return log_and_redirect(
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: " . $response[ "message" ]
+            );
+        }
+
+        if ( ( float ) $price > ( float ) $order->max_price )
+        {
+            $order->ord_status = "over_max";
+            $order->save();
+
+            return log_and_redirect(
+                channel: self::LOG_CHANNEL,
+                route  : self::ROUTE,
+                type   : self::ERROR,
+                message: "{$order->ord_id}: Valor do produto acima do máximo."
             );
         }
 
