@@ -1109,7 +1109,7 @@ if ( !function_exists( "get_freight_vtex" ) )
     }
 }
 
-if ( !function_exists( "get_delivery_price" ) )
+if ( !function_exists( "get_product_prices" ) )
 {
     /**
      * Undocumented function
@@ -1117,14 +1117,22 @@ if ( !function_exists( "get_delivery_price" ) )
      * @param   array   $data
      * @return  mixed
      */
-    function get_delivery_price( int $product_id, array $freight ) : mixed
+    function get_product_prices( int $product_id, array $freight ) : mixed
     {
-        $data = vtex_freight_to_woo( $freight );
+        $data   = vtex_freight_to_woo( $freight );
 
         if ( empty( $data ) || ( isset( $data[ "code" ] ) && $data[ "code" ] != null ) )
             return false;
 
-        return $data[ $product_id ][ "delivery_price" ];
+        $prices = $data[ $product_id ];
+
+        $price  = ( $prices[ "sale_price"    ] < $prices[ "regular_price" ] )
+                  ? $prices[ "sale_price"    ]
+                  : $prices[ "regular_price" ];
+
+        $data[ $product_id ][ "price" ] = $price;
+
+        return $data[ $product_id ];
     }
 }
 
@@ -1465,5 +1473,50 @@ if ( !function_exists( "update_marketplace_order" ) )
         }
 
         return $order;
+    }
+}
+
+if ( !function_exists( "update_marketplace_product" ) )
+{
+    function update_marketplace_product( string $channel, int $product_id, array $data ) : array
+    {
+        $product = [
+            "success" => false,
+            "message" => "",
+            "code"    => 0,
+            "data"    => [],
+        ];
+
+        try
+        {
+            $response = WC_Product::update( $product_id, [
+                "regular_price" => $data[ "regular_price" ],
+                "sale_price"    => $data[ "sale_price"    ],
+            ] );
+
+            $product    = [
+                "success" => true,
+                "message" => "ok",
+                "code"    => 200,
+                "data"    => $response,
+            ];
+        }
+        catch ( \Exception $e )
+        {
+            log_message(channel: $channel, message: print_r($e, true));
+
+            if ( $e->getMessage() == "JSON ERROR: Syntax error" )
+            {
+                $product[ "message" ] = "{$product_id}: Erro ao tentar atualizar produto, tente novamente.";
+                $product[ "code"    ] = 502;
+            }
+            else
+            {
+                $product[ "message" ] = "{$product_id}: Erro ao tentar atualizar produto.";
+                $product[ "code"    ] = 500;
+            }
+        }
+
+        return $product;
     }
 }
