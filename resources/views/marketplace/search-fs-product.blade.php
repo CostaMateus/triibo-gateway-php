@@ -32,6 +32,22 @@
 
                         @if ( isset( $data ) && $data )
                             <div id="searched" class="w-100 mt-3" >
+
+                                @if ( !empty( $data[ "mkt" ] ) )
+                                    <p class="mb-0" >
+                                        <strong>Nome</strong>:
+                                        {{ $data[ "mkt" ][ "name"         ] }}
+                                    </p>
+                                    <p class="mb-0" >
+                                        <strong>SKU</strong>:
+                                        {{ $data[ "mkt" ][ "sku"          ] }}
+                                    </p>
+                                    <p>
+                                        <strong>Estoque</strong>:
+                                        {{ $data[ "mkt" ][ "stock_status" ] }}
+                                    </p>
+                                @endif
+
                                 @dump( $data )
                             </div>
                         @endif
