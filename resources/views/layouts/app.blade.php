@@ -38,6 +38,27 @@
             </main>
         </div>
 
+        @if ( isset( $showToast ) && $showToast )
+            <div class="position-fixed mx-auto p-3" style="z-index: 1005; top: 0; left: 0; right: 0;" >
+                <div id="liveToast" class="mx-auto toast fade show" role="alert" aria-live="assertive" aria-atomic="true" data-delay="2000" >
+                    <div class="toast-header" >
+                        <strong class="me-auto" >Triibo</strong>
+                        <small>agora</small>
+                        <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close" ></button>
+                    </div>
+                    <div class="toast-body" >
+                        {{ $message }}
+                    </div>
+                </div>
+            </div>
+
+            <script>
+                window.setTimeout( function () {
+                    $( "#liveToast" ).removeClass( "show" );
+                }, 2000 );
+            </script>
+        @endif
+
         @yield( "js" )
     </body>
 </html>
