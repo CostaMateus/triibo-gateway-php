@@ -46,6 +46,20 @@ class MarketplaceController extends Controller
 
         $orders      = $query->paginate( $per_page );
 
+        if ( $request->getPathInfo() === "/marketplace/pedidos/2" )
+        {
+            $ids    = [ 1148803, 1136223, 1136166, 1136127, 1136096, 1136086,
+                        1136066, 1136007, 1135939, 1135896, 1135850, 1135849,
+                        1135848, 1135745, 1135744, 1135743, 1135742, 1135741,
+                        1135740, 1135739, 1130618, 1130389, 1130454, 1130367,
+                        1130363, 1130361, ];
+
+            $orders = Order::where( "file_name", $file )
+                            ->whereIn( "mkt_id", $ids   )
+                            ->orderBy( "mkt_id", "DESC" )
+                            ->paginate( $per_page );
+        }
+
         if ( $orders->currentPage() > 1 && $orders->isEmpty() )
             $orders = $query->paginate( $per_page, [ "*" ] , "page", $orders->lastPage() );
 
