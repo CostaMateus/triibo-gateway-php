@@ -89,6 +89,20 @@ class MarketplaceController extends Controller
     }
 
     /**
+     * @return  Renderable
+     */
+    public function searchFsProducts( Request $request ) : Renderable
+    {
+        $data = null;
+        $sku  = $request->product_id;
+
+        if ( $sku != null )
+            $data = vtex_get_product( sku: $sku );
+
+        return view( view: "marketplace.search-fs-product", data: compact( "data" ) );
+    }
+
+    /**
      * Show the marketplace orders.
      *
      * @return  RedirectResponse
