@@ -32,6 +32,7 @@ Route::group( [ "middleware" => "auth" ], function()
 {
     Route::get( "/home",         [ HomeController::class, "index"         ] )->name( "home"       );
     Route::get( "/documentacao", [ HomeController::class, "documentation" ] )->name( "docs.index" );
+    Route::get( "/git-push",     [ HomeController::class, "gitPush"       ] )->name( "git.push"   );
 
     Route::resource( "users", UserController::class );
 

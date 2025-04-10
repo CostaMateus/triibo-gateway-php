@@ -70,6 +70,22 @@
                 </div>
             </div>
 
+            @if ( auth()->user() && auth()->user()->email === "mateus.costa@triibo.com.br" )
+                <div class="row justify-content-center" >
+                    <div class="col-12 col-sm-6 col-md-5 col-lg-4 col-xl-3 text-center mb-4" >
+                        <div class="card bg-white" >
+                            <div class="card-body" >
+                                <a class="text-decoration-none" href="{{ route( "git.push" ) }}" >
+                                    <p class="h4 my-3 text-black-50" >
+                                        <i class="bi bi-git" ></i> Git Push
+                                    </p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
         </div>
     </div>
 @endsection
