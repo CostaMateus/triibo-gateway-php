@@ -39,7 +39,6 @@ Route::group( [ "middleware" => "auth" ], function()
     Route::prefix( "marketplace" )->name( "mkt." )->group( function ()
     {
         Route::get(  "/pedidos",           [ MarketplaceController::class, "orders"           ] )->name( "index"           );
-        Route::get(  "/pedidos/2",         [ MarketplaceController::class, "orders"           ] )->name( "index"           );
         Route::get(  "/consulta-produtos", [ MarketplaceController::class, "searchFsProducts" ] )->name( "search.products" );
         Route::post( "/consulta-produtos", [ MarketplaceController::class, "searchFsProducts" ] )->name( "search.products" );
 
