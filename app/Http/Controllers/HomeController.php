@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use Exception;
 use Illuminate\Http\RedirectResponse;
+use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Contracts\Support\Renderable;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class HomeController extends Controller
 {
@@ -13,7 +16,7 @@ class HomeController extends Controller
      *
      * @return  Renderable
      */
-    public function welcome()
+    public function welcome() : Renderable
     {
         return view( "welcome", [ "showToast" => false, "message" => "" ] );
     }
@@ -23,7 +26,7 @@ class HomeController extends Controller
      *
      * @return  Renderable
      */
-    public function clearCache()
+    public function clearCache() : Renderable
     {
         Artisan::call( "optimize:clear" );
 
@@ -35,7 +38,7 @@ class HomeController extends Controller
      *
      * @return  Renderable
      */
-    public function index()
+    public function index() : Renderable
     {
         return view( "home" );
     }
@@ -45,7 +48,7 @@ class HomeController extends Controller
      *
      * @return  Renderable
      */
-    public function documentation()
+    public function documentation() : Renderable
     {
         return view( "doc_parts.index" );
     }
@@ -53,12 +56,33 @@ class HomeController extends Controller
     /**
      * Git push.
      *
-     * @return  RedirectResponse
+     * @return  Renderable
      */
-    public function gitPush() : RedirectResponse
+    public function gitPush() : Renderable
     {
-        shell_exec( "/var/www/html/laravel/laravel-deploy.sh" );
+        if ( !auth()->check() || auth()->user()->email !== "mateus.costa@triibo.com.br" )
+            return view( "home" );
 
-        return redirect()->back();
+        try
+        {
+            $process = new Process( [ "/var/www/html/laravel/laravel-deploy.sh" ] );
+            $process->setTimeout( 3600 );
+            $process->run();
+
+            if ( !$process->isSuccessful() )
+                throw new ProcessFailedException( $process );
+
+            return view( "home", [
+                "showToast" => true,
+                "message"   => "Git push executado com sucesso!",
+            ] );
+        }
+        catch ( Exception $e )
+        {
+            return view( "home", [
+                "showToast" => true,
+                "message" => $e->getMessage(),
+            ] );
+        }
     }
 }
