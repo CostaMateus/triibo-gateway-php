@@ -245,11 +245,7 @@ if ( !function_exists( "get_wc_order" ) )
             }
         }
 
-        $store_id = config( "woocommerce.partners" )[ $seller_id ][ "store_id" ];
-
-        log_message( channel: $channel, level: "error", message: "order {$order_id}", context: $order );
-
-        if ( !$order || !isset( $order[ "store" ] ) || $order[ "store" ][ "id" ] != $store_id )
+        if ( !$order )
             return [ null, null ];
 
         return [ $parent, $order ];
@@ -1687,5 +1683,46 @@ if ( !function_exists( "handle_order_meta_fs_approval_missing" ) )
             return process_handle_key_missing( $channel, $parent, $order, $data );
 
         return null;
+    }
+}
+
+if ( !function_exists( "validate_wc_order" ) )
+{
+    /**
+     * Undocumented function
+     *
+     * @param   string  $channel
+     * @param   string  $method
+     * @param   string  $order_id
+     * @param   mixed   $order
+     * @return  bool|JsonResponse
+     */
+    function validate_wc_order( string $channel, string $method, string $order_id, mixed $order ) : mixed
+    {
+        if ( $order === false )
+        {
+            log_message(
+                channel : $channel,
+                message : "VTEX - validate_wc_order | {$method}",
+                level   : "error",
+                context : [ "order_id" => $order_id, "message" => "order_not_found" ],
+            );
+
+            return response()->json( [], 404 );
+        }
+
+        if ( $order === null )
+        {
+            log_message(
+                channel : $channel,
+                message : "VTEX - validate_wc_order | {$method}",
+                level   : "error",
+                context : [ "order_id" => $order_id, "message" => "failed_to_retrieve_order" ],
+            );
+
+            return response()->json( [], 200 );
+        }
+
+        return true;
     }
 }
