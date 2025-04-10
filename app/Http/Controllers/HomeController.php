@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Contracts\Support\Renderable;
 
@@ -47,5 +48,17 @@ class HomeController extends Controller
     public function documentation()
     {
         return view( "doc_parts.index" );
+    }
+
+    /**
+     * Git push.
+     *
+     * @return  RedirectResponse
+     */
+    public function gitPush() : RedirectResponse
+    {
+        shell_exec( "/var/www/html/laravel/laravel-deploy.sh" );
+
+        return redirect()->back();
     }
 }
