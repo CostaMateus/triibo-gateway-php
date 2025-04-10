@@ -1372,7 +1372,7 @@ if ( !function_exists( "get_marketplace_order" ) )
                 log_exception(
                     channel : $channel,
                     message : $e->getMessage(),
-                    method  : "get_wc_order",
+                    method  : "get_marketplace_order",
                     type    : "Throwable",
                     e       : $e
                 );

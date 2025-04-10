@@ -52,10 +52,15 @@ class OrderController extends VtexController
             // Retrieve the WooCommerce order
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order === false )
-                return response()->json( [], 404 );
-            elseif ( $order === null )
-                return response()->json( [], 200 );
+            $is_not_validated   = validate_wc_order(
+                channel : parent::LOG_CHANNEL,
+                method  : "invoiceNotification",
+                order_id: $order_id,
+                order   : $order,
+            );
+
+            if ( $is_not_validated !== true )
+                return $is_not_validated;
 
             $invoice  = array_search_by_key( "_has_fs_invoice",  "key", $order[ "meta_data" ] );
             $tracking = array_search_by_key( "_has_fs_tracking", "key", $order[ "meta_data" ] );
@@ -170,14 +175,15 @@ class OrderController extends VtexController
             // Retrieve the WooCommerce order
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order === false )
-            {
-                return response()->json( [], 404 );
-            }
-            elseif ( $order === null )
-            {
-                return response()->json( [], 200 );
-            }
+            $is_not_validated   = validate_wc_order(
+                channel : parent::LOG_CHANNEL,
+                method  : "cancellationNotification",
+                order_id: $order_id,
+                order   : $order,
+            );
+
+            if ( $is_not_validated !== true )
+                return $is_not_validated;
 
             // Send notification
             send_notification( $parent, $order, "order_cancelled" );
@@ -231,10 +237,15 @@ class OrderController extends VtexController
             // Retrieve the WooCommerce order
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order === false )
-                return response()->json( [], 404 );
-            elseif ( $order === null )
-                return response()->json( [], 200 );
+            $is_not_validated   = validate_wc_order(
+                channel : parent::LOG_CHANNEL,
+                method  : "orderCreation",
+                order_id: $order_id,
+                order   : $order,
+            );
+
+            if ( $is_not_validated !== true )
+                return $is_not_validated;
 
             // Format product data for freight calculation
             $wc_data  = format_product_to_freight( $order );
@@ -380,10 +391,15 @@ class OrderController extends VtexController
             // Retrieve the WooCommerce order
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order === false )
-                return response()->json( [], 404 );
-            elseif ( $order === null )
-                return response()->json( [], 200 );
+            $is_not_validated   = validate_wc_order(
+                channel : parent::LOG_CHANNEL,
+                method  : "orderApproval",
+                order_id: $order_id,
+                order   : $order,
+            );
+
+            if ( $is_not_validated !== true )
+                return $is_not_validated;
 
             // Check for missing VTEX order ID or approval status
             if ( ( $missing_id = handle_order_meta_fs_id_missing( parent::LOG_CHANNEL, $parent, $order, "orderApproval" ) ) !== null )
@@ -477,10 +493,15 @@ class OrderController extends VtexController
             // Retrieve the WooCommerce order
             [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            if ( $order === false )
-                return response()->json( [], 404 );
-            elseif ( $order === null )
-                return response()->json( [], 200 );
+            $is_not_validated   = validate_wc_order(
+                channel : parent::LOG_CHANNEL,
+                method  : "orderCancellation",
+                order_id: $order_id,
+                order   : $order,
+            );
+
+            if ( $is_not_validated !== true )
+                return $is_not_validated;
 
             // Check for missing VTEX order ID
             if ( ( $missing_id = handle_order_meta_fs_id_missing( parent::LOG_CHANNEL, $parent, $order, "orderCancellation" ) ) !== null )
