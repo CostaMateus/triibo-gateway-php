@@ -6,7 +6,7 @@ use Illuminate\Http\JsonResponse;
 use App\Notifications\FastShop\OrderError;
 use Illuminate\Support\Facades\{ DB, Storage };
 use Codexshaper\WooCommerce\Facades\{ Category, Note, Order };
-use App\Services\Vtex\{ OrderService, ConnectorService, FulfillmentService };
+use App\Services\Vtex\{ OrderService, ProductService, ConnectorService, FulfillmentService };
 
 /**
  * Helper functions for various tasks in the application.
@@ -1689,7 +1689,6 @@ if ( !function_exists( "handle_order_meta_fs_approval_missing" ) )
 if ( !function_exists( "validate_wc_order" ) )
 {
     /**
-     * Undocumented function
      *
      * @param   string  $channel
      * @param   string  $method
@@ -1724,5 +1723,58 @@ if ( !function_exists( "validate_wc_order" ) )
         }
 
         return true;
+    }
+}
+
+if ( !function_exists( "vtex_get_product" ) )
+{
+    /**
+     *
+     * @param   string  $sku
+     * @return  array
+     */
+    function vtex_get_product( string $sku ) : array
+    {
+        $connector  = new ConnectorService( seller: "fast_shop" );
+        $connector->enableLogNotify( notify: false );
+
+        $service_pr = new ProductService( connector: $connector );
+        $service_sm = new FulfillmentService( connector: $connector );
+
+        $data       = $service_pr->getSkuData( sku: $sku );
+        $context    = $service_pr->getSkuContext( sku: $sku );
+        $simulate   = $service_sm->simulate( data: [
+            "items" => [ [
+                "id"       => $sku,
+                "quantity" => 1,
+                "seller"   => "1"
+            ] ],
+            "isCheckedIn" => false,
+            "country"     => "BRA",
+            "selectedSla" => "Normal",
+        ] );
+
+        if ( $data[ 0 ] !== 200 || $context[ 0 ] !== 200 || $simulate[ 0 ] !== 200 )
+        {
+            return [
+                "data"     => $data,
+                "context"  => $context,
+                "simulate" => $simulate,
+                "mkt"      => "failed_to_retrieve_product"
+            ];
+        }
+
+        $data        = $data    [ 1 ][ "data" ];
+        $context     = $context [ 1 ][ "data" ];
+        $simulate    = $simulate[ 1 ][ "data" ];
+
+        $mkt_product = vtex_product_to_mkt( data: $data, context: $context, simulate: $simulate );
+
+        return [
+            "data"     => $data,
+            "context"  => $context,
+            "simulate" => $simulate,
+            "mkt"      => $mkt_product
+        ];
     }
 }
