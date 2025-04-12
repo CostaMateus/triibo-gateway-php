@@ -1,25 +1,27 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+declare(strict_types = 1);
 
-class CreateAffiliatesPromotionsTable extends Migration
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+final class CreateAffiliatesPromotionsTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up() : void
     {
-        Schema::create( "affiliates_promotions", function ( Blueprint $table )
+        Schema::create( "affiliates_promotions", static function ( Blueprint $table ) : void
         {
             $table->id();
-            $table->string( "origin"       );                       // ex: awin
-            $table->string( "origin_id"    );                       // ex: 17532
+            $table->string( "origin" );                       // ex: awin
+            $table->string( "origin_id" );                       // ex: 17532
             $table->string( "affiliate_id" )->unique();             // origin + origin_id
-            $table->string( "push_id"      )->nullable()->unique(); // firebase id
+            $table->string( "push_id" )->nullable()->unique(); // firebase id
             $table->json( "data" )->nullable();                     // source data once formatted to Triibo format
             $table->timestamps();
         } );
@@ -30,7 +32,7 @@ class CreateAffiliatesPromotionsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down() : void
     {
         Schema::dropIfExists( "affiliates_promotions" );
     }

@@ -1,19 +1,22 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+declare(strict_types = 1);
 
-class CreateMarketplaceProductSkusTable extends Migration
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+final class CreateMarketplaceProductSkusTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up() : void
     {
-        Schema::create( "marketplace_product_skus", function ( Blueprint $table ) {
+        Schema::create( "marketplace_product_skus", static function ( Blueprint $table ) : void
+        {
             $table->id();
             $table->integer( "product_id" );
             $table->string( "product_sku" );
@@ -25,7 +28,7 @@ class CreateMarketplaceProductSkusTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down() : void
     {
         Schema::dropIfExists( "marketplace_product_skus" );
     }

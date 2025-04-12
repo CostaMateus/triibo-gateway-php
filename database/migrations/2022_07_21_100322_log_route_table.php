@@ -1,27 +1,30 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+declare(strict_types = 1);
 
-class LogRouteTable extends Migration
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+final class LogRouteTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up() : void
     {
-        Schema::create("log_route", function (Blueprint $table) {
+        Schema::create( "log_route", static function ( Blueprint $table ) : void
+        {
             $table->id();
-            $table->string("duration");
-            $table->string("status");
-            $table->string("method");
-            $table->string("ip");
-            $table->string("url");
+            $table->string( "duration" );
+            $table->string( "status" );
+            $table->string( "method" );
+            $table->string( "ip" );
+            $table->string( "url" );
             $table->timestamps();
-        });
+        } );
     }
 
     /**
@@ -29,8 +32,8 @@ class LogRouteTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down() : void
     {
-        Schema::drop("log_route");
+        Schema::drop( "log_route" );
     }
 }

@@ -1,19 +1,22 @@
 <?php
 
+declare(strict_types = 1);
+
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreateFastshopProductsTable extends Migration
+final class CreateFastshopProductsTable extends Migration
 {
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up() : void
     {
-        Schema::create( "fastshop_products", function ( Blueprint $table ) {
+        Schema::create( "fastshop_products", static function ( Blueprint $table ) : void
+        {
             $table->id();
             $table->string( "action" ); // create / update / delete
             $table->json( "data" );
@@ -26,7 +29,7 @@ class CreateFastshopProductsTable extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down() : void
     {
         Schema::dropIfExists( "fastshop_products" );
     }
