@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 return [
 
     /*
@@ -156,8 +154,8 @@ return [
     */
 
     'extra' => [
-        'Eloquent' => [ 'Illuminate\Database\Eloquent\Builder', 'Illuminate\Database\Query\Builder' ],
-        'Session' => [ 'Illuminate\Session\Store' ],
+        'Eloquent' => ['Illuminate\Database\Eloquent\Builder', 'Illuminate\Database\Query\Builder'],
+        'Session' => ['Illuminate\Session\Store'],
     ],
 
     'magic' => [],

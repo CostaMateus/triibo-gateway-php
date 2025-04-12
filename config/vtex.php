@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 return [
 
     "env" => env( key: "MKT_ENV", default: "local" ),

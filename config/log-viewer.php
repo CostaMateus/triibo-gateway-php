@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 use Opcodes\LogViewer\Http\Middleware\{ AuthorizeLogViewer, EnsureFrontendRequestsAreStateful };
 
 return [

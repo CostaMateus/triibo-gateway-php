@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 return [
 
     "env" => env( "AWIN_ENV", "local" ),

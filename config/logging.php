@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 use Monolog\Handler\{NullHandler, StreamHandler, SyslogUdpHandler};
 
 return [
@@ -37,7 +35,7 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => [ 'single' ],
+            'channels' => ['single'],
             'ignore_exceptions' => false,
         ],
 
