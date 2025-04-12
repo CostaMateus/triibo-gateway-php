@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Services\Vtex;
 
-final class OrderService
+class OrderService
 {
     /**
      * Vtex Connector Service.
@@ -37,7 +35,7 @@ final class OrderService
         $this->connector
             ->setCallOrigin( origin: "getOrder" )
             ->buildUrl( api: "order-retrieve" )
-            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
+            ->replaceUrl( data: ["{orderId}" => "{$this->connector->affiliated_id}-{$order_id}"] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -95,7 +93,7 @@ final class OrderService
         $this->connector
             ->setCallOrigin( origin: "cancelOrder" )
             ->buildUrl( api: "order-integration-cancel" )
-            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
+            ->replaceUrl( data: ["{orderId}" => "{$this->connector->affiliated_id}-{$order_id}"] );
 
         return $this->connector->sendRequest( method: "post" );
     }

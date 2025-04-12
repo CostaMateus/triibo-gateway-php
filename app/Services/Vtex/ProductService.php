@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Services\Vtex;
 
-final class ProductService
+class ProductService
 {
     /**
      * Vtex Connector Service.
@@ -58,7 +56,7 @@ final class ProductService
         $this->connector
             ->setCallOrigin( origin: "getSkuContext" )
             ->buildUrl( api: "get-sku-context" )
-            ->replaceUrl( data: [ "{skuId}" => $sku ] );
+            ->replaceUrl( data: ["{skuId}" => $sku] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -77,7 +75,7 @@ final class ProductService
         $this->connector
             ->setCallOrigin( origin: "getSkuData" )
             ->buildUrl( api: "get-sku-data" )
-            ->replaceUrl( data: [ "{skuId}" => $sku ] );
+            ->replaceUrl( data: ["{skuId}" => $sku] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -96,7 +94,7 @@ final class ProductService
         $this->connector
             ->setCallOrigin( origin: "getProduct" )
             ->buildUrl( api: "get-detail-product", param: "?an={$this->connector->account_name}" )
-            ->replaceUrl( data: [ "{productId}" => $product_id ] );
+            ->replaceUrl( data: ["{productId}" => $product_id] );
 
         return $this->connector->sendRequest( method: "get" );
     }

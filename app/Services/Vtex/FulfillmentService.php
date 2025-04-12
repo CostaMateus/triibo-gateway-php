@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Services\Vtex;
 
-final class FulfillmentService
+class FulfillmentService
 {
     /**
      * Vtex Connector Service.
@@ -73,7 +71,7 @@ final class FulfillmentService
         $this->connector
             ->setCallOrigin( origin: "dispatchOrder" )
             ->buildUrl( api: "fulfillment-dispatch", param: "?affiliateId={$this->connector->affiliated_id}&sc={$this->connector->sales_channel}" )
-            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
+            ->replaceUrl( data: ["{orderId}" => "{$this->connector->affiliated_id}-{$order_id}"] );
 
         return $this->connector->sendRequest( method: "post", body: ["marketplaceOrderId" => $order_id] );
     }

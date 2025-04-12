@@ -1,10 +1,8 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Services\Vtex;
 
-final class CategoryService
+class CategoryService
 {
     /**
      * Vtex Connector Service.
@@ -38,7 +36,7 @@ final class CategoryService
             "categoryTreeEndPoint" => route( name: "api.marketplace.vtex.mapper.categories" ),
             "mappingEndPoint" => route( name: "api.marketplace.vtex.mapper.mapping" ),
             "CategoryTreeProcessingNotificationEndpoint" => route( name: "api.marketplace.vtex.mapper.notification" ),
-            "properties" => [ "allowsRemap" => false ],
+            "properties" => ["allowsRemap" => false],
         ];
 
         $this->connector
@@ -69,7 +67,7 @@ final class CategoryService
         $this->connector
             ->setCallOrigin( origin: "sendCategoryMapping" )
             ->buildUrl( api: "category-marketplace", account: "portal" )
-            ->replaceUrl( data: [ "{id}" => $id ] );
+            ->replaceUrl( data: ["{id}" => $id] );
 
         return $this->connector->sendRequest( method: "post", body: ["categories" => $categories] );
     }

@@ -1,13 +1,11 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Services\Vtex;
 
 use Throwable;
 use Illuminate\Support\Facades\Http;
 
-final class ConnectorService
+class ConnectorService
 {
     /**
      * Define a class constant for the log channel.
@@ -101,7 +99,7 @@ final class ConnectorService
 
         $url_base = str_replace( "{account_name}", $account, $this->raw_url );
 
-        $this->url = implode( "", [ $url_base, $url_sufix, $param ] );
+        $this->url = implode( "", [$url_base, $url_sufix, $param] );
 
         return $this;
     }
@@ -160,10 +158,10 @@ final class ConnectorService
      *
      * @return array an array containing the response code and data, or a default error message if the request was not successful
      */
-    public function sendRequest( string $method, array $body = [ ] ) : array
+    public function sendRequest( string $method, array $body = [] ) : array
     {
         $code = 200;
-        $data = [ ];
+        $data = [];
 
         try
         {
@@ -175,11 +173,9 @@ final class ConnectorService
             $response = $pending->{ $method }( url: $this->url );
 
             // Prepare response data.
-            $data = [
-                "error_code" => null,
+            $data = ["error_code" => null,
                 "message" => $response->reason(),
-                "data" => $response->json()
-            ];
+                "data" => $response->json(), ];
 
             // Check not successful.
             if ( ! $response->successful() )
@@ -200,11 +196,9 @@ final class ConnectorService
         {
             // Handle any unexpected errors.
             $code = 500;
-            $data = [
-                "error_code" => $e->getCode(),
+            $data = ["error_code" => $e->getCode(),
                 "message" => "Unexpected error",
-                "data" => null
-            ];
+                "data" => null, ];
 
             // Log the exception for debugging purposes.
             log_exception(
@@ -216,7 +210,7 @@ final class ConnectorService
             );
         }
 
-        return [ $code, $data ];
+        return [$code, $data];
     }
 
     /**
@@ -243,21 +237,19 @@ final class ConnectorService
         }
 
         // Prepare the request body.
-        $body = [
-            "name" => "Marketplace Triibo",
+        $body = ["name" => "Marketplace Triibo",
             "website" => "marketplace.triibo.com.br",
             "logo" => "http://php.triibo.com.br/images/logo/logo-triibo.png",
             "description" => "Uma das empresas do grupo Synoro, a Triibo é uma plataforma de engajamento baseada no conceito de comunidade, que conecta empresas, pessoas, marcas e afins de maneira descomplicada e intuitiva.",
             "segment" => "OTHERS",
-            "availableCountries" => [ "BRA" ],
+            "availableCountries" => ["BRA"],
             "type" => "EXTERNAL",
             "isActive" => true,
             "helpUrl" => config( key: "app.url" ),
             "connectorApiEndpoint" => config( key: "app.url" ),
             "connectorPageUrl" => config( key: "app.url" ),
             "connectorVtexAdminPath" => "/bridge/#/settings?openConfig=marketplacetriibo",
-            "channelId" => 8
-        ];
+            "channelId" => 8, ];
 
         $this->setCallOrigin( origin: "register" )
             ->buildUrl(
