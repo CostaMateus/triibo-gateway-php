@@ -1,11 +1,9 @@
 <?php
 
-declare(strict_types = 1);
-
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-final class MauticApiConsumerKey extends Migration
+class MauticApiConsumerKey extends Migration
 {
     /**
      * Run the migrations.
