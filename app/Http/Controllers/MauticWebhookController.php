@@ -11,42 +11,40 @@ class MauticWebhookController extends Controller
     /**
      * Data from Mautic to Pipedrive
      *
-     * @param  \Illuminate\Http\Request $request
+     * @param Request $request
+     *
      * @return \Illuminate\Http\Response
      */
-    public function post(Request $request)
+    public function post( Request $request )
     {
-        $date    = date("Ymd-his");
-        $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
+        $date = date( "Ymd-his" );
+        $encoded = json_encode( $request->all(), JSON_UNESCAPED_SLASHES );
 
-        Storage::put("mautic-".$date.".json", $encoded);
+        Storage::put( "mautic-".$date.".json", $encoded );
 
-        return response()->json([
+        return response()->json( [
             "message" => "Apenas teste",
-            "code"    => 200
-        ], 200);
+            "code" => 200
+        ], 200 );
     }
 
-    public function get(Request $request)
+    public function get( Request $request )
     {
-        $date    = date("Ymd-his");
-        $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
+        $date = date( "Ymd-his" );
+        $encoded = json_encode( $request->all(), JSON_UNESCAPED_SLASHES );
 
-        Storage::put("mautic-app-register-".$date.".json", $encoded);
+        Storage::put( "mautic-app-register-".$date.".json", $encoded );
 
-        return response()->json([
+        return response()->json( [
             "message" => "Callback Mautic teste",
-            "code"    => 200,
-            "body"    => $request->all()
-        ], 200);
+            "code" => 200,
+            "body" => $request->all()
+        ], 200 );
     }
 
-
-
-    public function index($id)
+    public function index( $id )
     {
 
-        $contact = Mautic::request("GET","contacts/158095");
-        return $contact;
+        return Mautic::request( "GET", "contacts/158095" );
     }
 }

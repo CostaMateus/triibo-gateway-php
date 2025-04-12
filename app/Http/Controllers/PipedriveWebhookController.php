@@ -4,33 +4,30 @@ namespace App\Http\Controllers;
 
 use Exception;
 use App\Models\User;
-use App\Helpers\Helper;
-use Illuminate\Http\Request;
 use Devio\Pipedrive\Pipedrive;
-use Illuminate\Http\JsonResponse;
 use App\Notifications\WebhookMarketplace;
 use App\Http\Integrations\MauticIntegration;
+use Illuminate\Http\{JsonResponse, Request};
 
 class PipedriveWebhookController extends Controller
 {
     /**
      * Define a class constant for the log channel.
      *
-     * @var     string
+     * @var string
      */
-    private const LOG_CHANNEL           = "marketplace";
-
-    private const MSG_CHANGE_BY_API     = "Changed by api ignored";
+    private const LOG_CHANNEL = "marketplace";
+    private const MSG_CHANGE_BY_API = "Changed by api ignored";
     private const MSG_UNSUPPORTED_EVENT = "Unsupported event";
 
     /**
      * Deal to Contact->Funil
      */
-    private const DEAL_ADDED_EVENT     = "added.deal";
-    private const DEAL_UPDATED_EVENT   = "updated.deal";
-    private const DEAL_DELETED_EVENT   = "deleted.deal";
-    private const DEAL_CODE            = 1;
-    private const DEAL_MONITORING      = [
+    private const DEAL_ADDED_EVENT = "added.deal";
+    private const DEAL_UPDATED_EVENT = "updated.deal";
+    private const DEAL_DELETED_EVENT = "deleted.deal";
+    private const DEAL_CODE = 1;
+    private const DEAL_MONITORING = [
         "stage_id", // Etapa    / id interno: 12462
         "label",    // Etiqueta / id interno: 12463
         "status",   // Status   / id interno: 12464
@@ -41,11 +38,11 @@ class PipedriveWebhookController extends Controller
     /**
      * Organization to Company
      */
-    private const ORG_ADDED_EVENT      = "added.organization";
-    private const ORG_UPDATED_EVENT    = "updated.organization";
-    private const ORG_DELETED_EVENT    = "deleted.organization";
-    private const ORG_CODE             = 2;
-    private const ORG_MONITORING       = [
+    private const ORG_ADDED_EVENT = "added.organization";
+    private const ORG_UPDATED_EVENT = "updated.organization";
+    private const ORG_DELETED_EVENT = "deleted.organization";
+    private const ORG_CODE = 2;
+    private const ORG_MONITORING = [
         // "name",
         // "address_formatted_address",
         "a93024fa0b5785ae4b3b1b49a18bb5267b87dfdd", // Telefone      / id interno: 4022
@@ -58,14 +55,16 @@ class PipedriveWebhookController extends Controller
     /**
      * Stage to Funil/pipeline
      */
-    private const STAGE_ADDED_EVENT    = "added.stage";
-    private const STAGE_UPDATED_EVENT  = "updated.stage";
-    private const STAGE_DELETED_EVENT  = "deleted.stage";
-    private const STAGE_CODE           = 4;
-    private const STAGE_MONITORING     = "name";
+    private const STAGE_ADDED_EVENT = "added.stage";
+    private const STAGE_UPDATED_EVENT = "updated.stage";
+    private const STAGE_DELETED_EVENT = "deleted.stage";
+    private const STAGE_CODE = 4;
+    private const STAGE_MONITORING = "name";
 
     /**
      * Person to Contact
+     *
+     * @param Request $request
      */
     // private const PERSON_ADDED_EVENT   = "added.person";
     // private const PERSON_UPDATED_EVENT = "updated.person";
@@ -80,8 +79,9 @@ class PipedriveWebhookController extends Controller
     /**
      * Pipedrive - deal
      *
-     * @param   Request     $request
-     * @return  JsonResponse
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
     public function deal( Request $request )
     {
@@ -89,14 +89,14 @@ class PipedriveWebhookController extends Controller
 
         $params = $request->all();
 
-        if ( $params[ "meta" ][ "change_source" ] == "api" )
+        if ( $params[ "meta" ][ "change_source" ] === "api" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | " . self::MSG_CHANGE_BY_API );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | ".self::MSG_CHANGE_BY_API );
 
             return response()->json( [
-                "status"  => "Ok",
-                "message" => "Deal - " . self::MSG_CHANGE_BY_API,
-                "code"    => -1,
+                "status" => "Ok",
+                "message" => "Deal - ".self::MSG_CHANGE_BY_API,
+                "code" => -1,
             ], 200 );
         }
 
@@ -107,29 +107,31 @@ class PipedriveWebhookController extends Controller
                 case self::DEAL_ADDED_EVENT:
                 case self::DEAL_UPDATED_EVENT:
                 case self::DEAL_DELETED_EVENT:
-                    $index = ( $params[ "event" ] == self::DEAL_DELETED_EVENT ) ? "previous" : "current";
+                    $index = ( $params[ "event" ] === self::DEAL_DELETED_EVENT ) ? "previous" : "current";
 
-                    if ( !$params[ $index ][ "org_id" ] )
+                    if ( ! $params[ $index ][ "org_id" ] )
                     {
                         log_message( channel: self::LOG_CHANNEL, message: "Deals: code 404 | Not found: org_id" );
+
                         break;
                     }
 
-                    if ( isset( $params[ "previous" ] ) && $params[ "event" ] != self::DEAL_DELETED_EVENT )
+                    if ( isset( $params[ "previous" ] ) && $params[ "event" ] !== self::DEAL_DELETED_EVENT )
                     {
-                        $result  = FALSE;
+                        $result = false;
                         $changes = array_diff_assoc_recursive( $params[ "current" ], $params[ "previous" ] );
 
                         foreach ( self::DEAL_MONITORING as $m )
                         {
                             if ( array_key_exists( $m, $changes ) )
                             {
-                                $result = TRUE;
+                                $result = true;
+
                                 break;
                             }
                         }
 
-                        if ( !$result ) break;
+                        if ( ! $result ) break;
                     }
 
                     $api = new Pipedrive( config( "pipedrive.token" ) );
@@ -145,7 +147,7 @@ class PipedriveWebhookController extends Controller
                     $data[ "active"    ] = $params[ $index ][ "active"   ];
                     $data[ "deleted"   ] = $params[ $index ][ "deleted"  ];
 
-                    if ( $index == "current" )
+                    if ( $index === "current" )
                     {
                         $data[ "new_stage_id" ] = $params[ $index ][ "stage_id" ];
                         $data[ "new_status"   ] = $params[ $index ][ "status"   ];
@@ -176,34 +178,36 @@ class PipedriveWebhookController extends Controller
                     }
 
                     MauticIntegration::dealUpdate( "deals", $data );
-                break;
+
+                    break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
+                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | ".self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
-                        "status"  => "Error",
-                        "message" => "Deals - " . self::MSG_UNSUPPORTED_EVENT,
-                        "code"    => 0,
+                        "status" => "Error",
+                        "message" => "Deals - ".self::MSG_UNSUPPORTED_EVENT,
+                        "code" => 0,
                     ], 400 );
-                break;
+
+                    break;
             }
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | " . $e->getMessage() );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | ".$e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
             return response()->json( [
-                "status"  => "Error",
+                "status" => "Error",
                 "message" => $e->getMessage(),
-                "code"    => self::DEAL_CODE,
+                "code" => self::DEAL_CODE,
             ], 500 );
         }
 
         return response()->json( [
-            "status"  => "Ok",
+            "status" => "Ok",
             "message" => "Success",
         ], 200 );
     }
@@ -211,22 +215,23 @@ class PipedriveWebhookController extends Controller
     /**
      * Pipedrive - organization
      *
-     * @param   Request     $request
-     * @return  JsonResponse
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
     public function organization( Request $request )
     {
         $params = $request->all();
 
-        if ( $params[ "meta" ][ "change_source" ] == "api" )
+        if ( $params[ "meta" ][ "change_source" ] === "api" )
         {
             $message = "";
-            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | " . self::MSG_CHANGE_BY_API );
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | ".self::MSG_CHANGE_BY_API );
 
             return response()->json( [
-                "status"  => "Ok",
-                "message" => "Organizations - " . self::MSG_CHANGE_BY_API,
-                "code"    => -1,
+                "status" => "Ok",
+                "message" => "Organizations - ".self::MSG_CHANGE_BY_API,
+                "code" => -1,
             ], 200 );
         }
 
@@ -238,55 +243,58 @@ class PipedriveWebhookController extends Controller
                 case self::ORG_UPDATED_EVENT:
                 case self::ORG_DELETED_EVENT:
 
-                    $index = ( $params[ "event" ] == self::ORG_DELETED_EVENT ) ? "previous" : "current";
-                    $del   = ( $params[ "event" ] == self::ORG_DELETED_EVENT ) ? true       : false;
+                    $index = ( $params[ "event" ] === self::ORG_DELETED_EVENT ) ? "previous" : "current";
+                    $del = ( $params[ "event" ] === self::ORG_DELETED_EVENT ) ? true : false;
 
-                    if ( isset( $params[ "previous" ] ) && $params[ "event" ] != self::ORG_DELETED_EVENT )
+                    if ( isset( $params[ "previous" ] ) && $params[ "event" ] !== self::ORG_DELETED_EVENT )
                     {
-                        $result  = FALSE;
+                        $result = false;
                         $changes = array_diff_assoc_recursive( $params[ "current" ], $params[ "previous" ] );
 
                         foreach ( self::ORG_MONITORING as $m )
                         {
                             if ( array_key_exists( $m, $changes ) )
                             {
-                                $result = TRUE;
+                                $result = true;
+
                                 break;
                             }
                         }
 
-                        if ( !$result ) break;
+                        if ( ! $result ) break;
                     }
 
                     MauticIntegration::updateOrCreate( "contacts", $params[ $index ], $del );
-                break;
+
+                    break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
+                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | ".self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
-                        "status"  => "Error",
-                        "message" => "Organizations - " . self::MSG_UNSUPPORTED_EVENT,
-                        "code"    => 0,
+                        "status" => "Error",
+                        "message" => "Organizations - ".self::MSG_UNSUPPORTED_EVENT,
+                        "code" => 0,
                     ], 400 );
-                break;
+
+                    break;
             }
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | " . $e->getMessage() );
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | ".$e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
             return response()->json( [
-                "status"  => "Error",
-                "message" => "Organizations - " . $e->getMessage(),
-                "code"    => self::ORG_CODE,
+                "status" => "Error",
+                "message" => "Organizations - ".$e->getMessage(),
+                "code" => self::ORG_CODE,
             ], 500 );
         }
 
         return response()->json( [
-            "status"  => "Ok",
+            "status" => "Ok",
             "message" => "Success",
         ], 200 );
     }
@@ -295,21 +303,22 @@ class PipedriveWebhookController extends Controller
      * Pipedrive - stage
      * Recebe o webhook dos estágios dentro dos funis do Pipedrive
      *
-     * @param   Request     $request
-     * @return  JsonResponse
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
     public function stage( Request $request )
     {
         $params = $request->all();
 
-        if ( $params[ "meta" ][ "change_source" ] == "api" )
+        if ( $params[ "meta" ][ "change_source" ] === "api" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | " . self::MSG_CHANGE_BY_API );
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | ".self::MSG_CHANGE_BY_API );
 
             return response()->json( [
-                "status"  => "Ok",
-                "message" => "Stages - " . self::MSG_CHANGE_BY_API,
-                "code"    => -1,
+                "status" => "Ok",
+                "message" => "Stages - ".self::MSG_CHANGE_BY_API,
+                "code" => -1,
             ], 200 );
         }
 
@@ -321,34 +330,36 @@ class PipedriveWebhookController extends Controller
                 case self::STAGE_UPDATED_EVENT:
                 case self::STAGE_DELETED_EVENT:
                     MauticIntegration::updateStages();
-                break;
+
+                    break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
+                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | ".self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
-                        "status"  => "Error",
-                        "message" => "Stages - " . self::MSG_UNSUPPORTED_EVENT,
-                        "code"    => 0,
+                        "status" => "Error",
+                        "message" => "Stages - ".self::MSG_UNSUPPORTED_EVENT,
+                        "code" => 0,
                     ], 400 );
-                break;
+
+                    break;
             }
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | " . $e->getMessage() );
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | ".$e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
             return response()->json( [
-                "status"  => "Error",
-                "message" => "Stages - " . $e->getMessage(),
-                "code"    => self::STAGE_CODE,
+                "status" => "Error",
+                "message" => "Stages - ".$e->getMessage(),
+                "code" => self::STAGE_CODE,
             ], 500 );
         }
 
         return response()->json( [
-            "status"  => "Ok",
+            "status" => "Ok",
             "message" => "Success",
         ], 200 );
     }
@@ -356,17 +367,18 @@ class PipedriveWebhookController extends Controller
     /**
      * Pipedrive - person
      *
-     * @param   Request     $request
-     * @return  JsonResponse
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
     public function person( Request $request )
     {
-        if ( env( "APP_ENV" ) == "production" || env( "APP_ENV" ) == "local" )
+        if ( env( "APP_ENV" ) === "production" || env( "APP_ENV" ) === "local" )
         {
             log_message( channel: self::LOG_CHANNEL, message: "Persons: code -1 | Deactivated" );
 
             return response()->json( [
-                "status"  => "Ok",
+                "status" => "Ok",
                 "message" => "Persons - Deactivated",
             ], 200 );
         }
@@ -452,25 +464,26 @@ class PipedriveWebhookController extends Controller
     /**
      * Undocumented function
      *
-     * @param   array       $params
-     * @param   Exception   $e
-     * @return  void
+     * @param array     $params
+     * @param Exception $e
+     *
+     * @return void
      */
-    private static function sendMailNotification( array $params, Exception $e )
+    private static function sendMailNotification( array $params, Exception $e ) : void
     {
-        if ( $params[ "retry" ] == 3 )
+        if ( $params[ "retry" ] === 3 )
         {
             $mail = [
-                "subject"    => "Dev - Integração Triibo Pipedrive-Mautic",
-                "title"      => "Erro no webhook: " . $params[ "meta" ][ "object" ],
-                "class"      => $params[ "meta" ][ "object" ],
-                "params"     => $params,
+                "subject" => "Dev - Integração Triibo Pipedrive-Mautic",
+                "title" => "Erro no webhook: ".$params[ "meta" ][ "object" ],
+                "class" => $params[ "meta" ][ "object" ],
+                "params" => $params,
                 "stacktrace" => $e,
             ];
 
-            $users = User::where(   "email", "equipemarketplace@triibo.com.br" )
-                         ->orWhere( "email", "mateus.costa@triibo.com.br" )
-                         ->get();
+            $users = User::where( "email", "equipemarketplace@triibo.com.br" )
+                ->orWhere( "email", "mateus.costa@triibo.com.br" )
+                ->get();
 
             $users[ 0 ]->notify( new WebhookMarketplace( $mail ) );
             $users[ 1 ]->notify( new WebhookMarketplace( $mail ) );

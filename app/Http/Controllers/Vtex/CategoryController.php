@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Vtex;
 
 use Throwable;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Vtex\VtexController;
+use Illuminate\Http\{JsonResponse, Request};
 
 class CategoryController extends VtexController
 {
@@ -15,8 +13,9 @@ class CategoryController extends VtexController
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *          Parameter mappingEndPoint
      *
-     * @param   Request     $request    The incoming HTTP request containing category mapping data.
-     * @return  JsonResponse            A JSON response indicating the result of the operation.
+     * @param Request $request the incoming HTTP request containing category mapping data
+     *
+     * @return JsonResponse a JSON response indicating the result of the operation
      */
     public function mapping( Request $request ) : JsonResponse
     {
@@ -28,10 +27,10 @@ class CategoryController extends VtexController
             save_file( name: "vtex-category-mapping", data: $request->all() );
 
             // Prepare successful response data.
-            $data    = [
+            $data = [
                 "error_code" => null,
-                "message"    => "ok",
-                "data"       => null,
+                "message" => "ok",
+                "data" => null,
             ];
         }
         catch ( Throwable $e )
@@ -40,8 +39,8 @@ class CategoryController extends VtexController
             $code = 500;
             $data = [
                 "error_code" => $e->getCode(),
-                "message"    => "Unexpected error",
-                "data"       => null,
+                "message" => "Unexpected error",
+                "data" => null,
             ];
 
             // Log the exception for debugging purposes.
@@ -64,8 +63,9 @@ class CategoryController extends VtexController
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *          Parameter categoryTreeEndPoint
      *
-     * @param   Request     $request    The incoming HTTP request containing category mapping data.
-     * @return  JsonResponse            A JSON response indicating the result of the operation.
+     * @param Request $request the incoming HTTP request containing category mapping data
+     *
+     * @return JsonResponse a JSON response indicating the result of the operation
      */
     public function categories( Request $request ) : JsonResponse
     {
@@ -81,10 +81,10 @@ class CategoryController extends VtexController
             $categories = vtex_format_categories( data: $categories );
 
             // Prepare successful response data.
-            $data       = [
+            $data = [
                 "error_code" => null,
-                "message"    => "ok",
-                "data"       => $categories,
+                "message" => "ok",
+                "data" => $categories,
             ];
         }
         catch ( Throwable $e )
@@ -93,8 +93,8 @@ class CategoryController extends VtexController
             $code = 500;
             $data = [
                 "error_code" => $e->getCode(),
-                "message"    => "Unexpected error",
-                "data"       => null,
+                "message" => "Unexpected error",
+                "data" => null,
             ];
 
             // Log the exception for debugging purposes.
@@ -117,8 +117,9 @@ class CategoryController extends VtexController
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-mapper#post-/api/mkp-category-mapper/connector/register
      *          Parameter CategoryTreeProcessingNotificationEndpoint
      *
-     * @param   Request     $request    The incoming HTTP request containing category mapping data.
-     * @return  JsonResponse            A JSON response indicating the result of the operation.
+     * @param Request $request the incoming HTTP request containing category mapping data
+     *
+     * @return JsonResponse a JSON response indicating the result of the operation
      */
     public function notification( Request $request ) : JsonResponse
     {
@@ -130,10 +131,10 @@ class CategoryController extends VtexController
             save_file( name: "vtex-category-mapping-notification", data: $request->all() );
 
             // Prepare successful response data.
-            $data    = [
+            $data = [
                 "error_code" => null,
-                "message"    => "ok",
-                "data"       => null,
+                "message" => "ok",
+                "data" => null,
             ];
         }
         catch ( Throwable $e )
@@ -142,8 +143,8 @@ class CategoryController extends VtexController
             $code = 500;
             $data = [
                 "error_code" => $e->getCode(),
-                "message"    => "Unexpected error",
-                "data"       => null,
+                "message" => "Unexpected error",
+                "data" => null,
             ];
 
             // Log the exception for debugging purposes.

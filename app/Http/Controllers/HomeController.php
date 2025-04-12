@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use Illuminate\Http\RedirectResponse;
 use Symfony\Component\Process\Process;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Contracts\Support\Renderable;
@@ -14,29 +13,29 @@ class HomeController extends Controller
     /**
      * Show the application welcome.
      *
-     * @return  Renderable
+     * @return Renderable
      */
     public function welcome() : Renderable
     {
-        return view( "welcome", [ "showToast" => false, "message" => "" ] );
+        return view( "welcome", ["showToast" => false, "message" => ""] );
     }
 
     /**
      * Clear the application caches.
      *
-     * @return  Renderable
+     * @return Renderable
      */
     public function clearCache() : Renderable
     {
         Artisan::call( "optimize:clear" );
 
-        return view( "welcome", [ "showToast" => true, "message" => "Cache limpos com sucesso!" ] );
+        return view( "welcome", ["showToast" => true, "message" => "Cache limpos com sucesso!"] );
     }
 
     /**
      * Show the application dashboard.
      *
-     * @return  Renderable
+     * @return Renderable
      */
     public function index() : Renderable
     {
@@ -46,7 +45,7 @@ class HomeController extends Controller
     /**
      * Show the documentation.
      *
-     * @return  Renderable
+     * @return Renderable
      */
     public function documentation() : Renderable
     {
@@ -56,25 +55,25 @@ class HomeController extends Controller
     /**
      * Git push.
      *
-     * @return  Renderable
+     * @return Renderable
      */
     public function gitPush() : Renderable
     {
-        if ( !auth()->check() || auth()->user()->email !== "mateus.costa@triibo.com.br" )
+        if ( ! auth()->check() || auth()->user()->email !== "mateus.costa@triibo.com.br" )
             return view( "home" );
 
         try
         {
-            $process = new Process( [ "/var/www/html/laravel/laravel-deploy.sh" ] );
+            $process = new Process( ["/var/www/html/laravel/laravel-deploy.sh"] );
             $process->setTimeout( 3600 );
             $process->run();
 
-            if ( !$process->isSuccessful() )
+            if ( ! $process->isSuccessful() )
                 throw new ProcessFailedException( $process );
 
             return view( "home", [
                 "showToast" => true,
-                "message"   => "Git push executado com sucesso!",
+                "message" => "Git push executado com sucesso!",
             ] );
         }
         catch ( Exception $e )

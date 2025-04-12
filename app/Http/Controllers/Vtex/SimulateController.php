@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers\Vtex;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Vtex\VtexController;
+use Illuminate\Http\{JsonResponse, Request};
 
 class SimulateController extends VtexController
 {
     /**
+     * @param Request $request
      *
-     *
-     * @param   Request     $request
-     * @return  JsonResponse
+     * @return JsonResponse
      */
     public function freightCalculation( Request $request ) : JsonResponse
     {
@@ -20,7 +17,7 @@ class SimulateController extends VtexController
             return $verified;
 
         $wc_data = $request->all();
-        $seller  = $request->header( "seller" );
+        $seller = $request->header( "seller" );
 
         return vtex_freight_exec( parent::LOG_CHANNEL, $seller, $wc_data );
     }

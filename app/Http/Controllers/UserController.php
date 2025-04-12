@@ -12,16 +12,18 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
+     *
      * @return \Illuminate\Http\Response
      */
-    public function index(Request $request)
+    public function index( Request $request )
     {
-        $data = User::where("email", "!=", "equipemarketplace@triibo.com.br")
-                    ->where("email", "!=", "contato@triibo.com.br")
-                    ->where("email", "!=", "atendimento@triibo.com.br")
-                    ->orderBy("name","ASC")->paginate(50);
+        $data = User::where( "email", "!=", "equipemarketplace@triibo.com.br" )
+            ->where( "email", "!=", "contato@triibo.com.br" )
+            ->where( "email", "!=", "atendimento@triibo.com.br" )
+            ->orderBy( "name", "ASC" )->paginate( 50 );
 
-        return view("users.index", compact("data"));
+        return view( "users.index", compact( "data" ) );
     }
 
     /**
@@ -31,75 +33,77 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view("users.create");
+        return view( "users.create" );
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
+     *
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store( Request $request )
     {
-        $valData = $request->validate([
-            "name"     => "required|string|max:255",
-            "email"    => "required|string|max:255|email|allowed_domain|unique:users,email",
+        $valData = $request->validate( [
+            "name" => "required|string|max:255",
+            "email" => "required|string|max:255|email|allowed_domain|unique:users,email",
             "password" => "required|string|min:8|same:password_confirmation",
-        ]);
+        ] );
 
-        $valData["password"] = Hash::make($valData["password"]);
+        $valData["password"] = Hash::make( $valData["password"] );
 
-        $user = User::create($valData);
-
-        return $user;
+        return User::create( $valData );
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show( $id )
     {
-        $user = User::find($id);
+        $user = User::find( $id );
 
-        return view("users.show", compact("user"));
+        return view( "users.show", compact( "user" ) );
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
+     *
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit( $id )
     {
-        $user = User::find($id);
+        $user = User::find( $id );
 
-        return view("users.edit", compact("user"));
+        return view( "users.edit", compact( "user" ) );
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  User  $user
+     * @param Request $request
+     * @param User    $user
+     *
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, User $user)
+    public function update( Request $request, User $user )
     {
-        $valData = $request->validate([
-            "name"     => "required|string|max:255",
-            "email"    => "required|string|max:255|email|allowed_domain|".Rule::unique("users")->ignore($user->id),
+        $valData = $request->validate( [
+            "name" => "required|string|max:255",
+            "email" => "required|string|max:255|email|allowed_domain|".Rule::unique( "users" )->ignore( $user->id ),
             "password" => "nullable|string|min:8|same:password_confirmation",
-        ]);
+        ] );
 
-        $user->name  = $valData["name"];
+        $user->name = $valData["name"];
         $user->email = $valData["email"];
 
-        if (!empty($valData["password"])) $user->password = Hash::make($valData["password"]);
+        if ( ! empty( $valData["password"] ) ) $user->password = Hash::make( $valData["password"] );
 
         $user->save();
 
@@ -109,10 +113,11 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  User  $user
+     * @param User $user
+     *
      * @return \Illuminate\Http\Response
      */
-    public function destroy(User $user)
+    public function destroy( User $user )
     {
         $user->delete();
 
