@@ -2,21 +2,19 @@
 
 namespace App\Services\Vtex;
 
-use App\Services\Vtex\ConnectorService;
-
 class ProductService
 {
     /**
      * Vtex Connector Service.
      *
-     * @var     ConnectorService
+     * @var ConnectorService
      */
     private $connector;
 
     /**
      * Constructor.
      *
-     * @param   ConnectorService    $connector
+     * @param ConnectorService $connector
      */
     public function __construct( ConnectorService $connector )
     {
@@ -28,12 +26,13 @@ class ProductService
      *
      * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel
      *
-     * @param   int     $page   The page number to fetch. Defaults to 1.
-     * @return  array
+     * @param int $page The page number to fetch. Defaults to 1.
+     *
+     * @return array
      */
     public function initialSkuLoad( int $page = 1 ) : array
     {
-        $page_size     = 500;
+        $page_size = 500;
         $only_assigned = true;
 
         $this->connector
@@ -48,15 +47,16 @@ class ProductService
      *
      * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog_system/pvt/sku/stockkeepingunitbyid/-skuId-
      *
-     * @param   string  $sku    The SKU identifier.
-     * @return  array
+     * @param string $sku the SKU identifier
+     *
+     * @return array
      */
     public function getSkuContext( string $sku ) : array
     {
         $this->connector
             ->setCallOrigin( origin: "getSkuContext" )
             ->buildUrl( api: "get-sku-context" )
-            ->replaceUrl( data: [ "{skuId}" => $sku ] );
+            ->replaceUrl( data: ["{skuId}" => $sku] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -66,15 +66,16 @@ class ProductService
      *
      * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/stockkeepingunit/-skuId-
      *
-     * @param   string  $sku
-     * @return  array
+     * @param string $sku
+     *
+     * @return array
      */
     public function getSkuData( string $sku ) : array
     {
         $this->connector
             ->setCallOrigin( origin: "getSkuData" )
             ->buildUrl( api: "get-sku-data" )
-            ->replaceUrl( data: [ "{skuId}" => $sku ] );
+            ->replaceUrl( data: ["{skuId}" => $sku] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -84,15 +85,16 @@ class ProductService
      *
      * @see     https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog_system/pvt/products/productget/-productId-
      *
-     * @param   int     $product_id     The product ID.
-     * @return  array
+     * @param int $product_id the product ID
+     *
+     * @return array
      */
     public function getProduct( int $product_id ) : array
     {
         $this->connector
             ->setCallOrigin( origin: "getProduct" )
             ->buildUrl( api: "get-detail-product", param: "?an={$this->connector->account_name}" )
-            ->replaceUrl( data: [ "{productId}" => $product_id ] );
+            ->replaceUrl( data: ["{productId}" => $product_id] );
 
         return $this->connector->sendRequest( method: "get" );
     }

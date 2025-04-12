@@ -5,22 +5,22 @@ use Illuminate\Database\Migrations\Migration;
 
 class MauticApiConsumerKey extends Migration
 {
-
     /**
      * Run the migrations.
      *
      * @return void
      */
-    public function up()
+    public function up() : void
     {
-        Schema::create('mautic_consumer', function (Blueprint $table) {
-            $table->increments('id');
-            $table->string('access_token');
-            $table->integer('expires');
-            $table->string('token_type');
-            $table->string('refresh_token');
+        Schema::create( 'mautic_consumer', static function ( Blueprint $table ) : void
+        {
+            $table->increments( 'id' );
+            $table->string( 'access_token' );
+            $table->integer( 'expires' );
+            $table->string( 'token_type' );
+            $table->string( 'refresh_token' );
             $table->timestamps();
-        });
+        } );
     }
 
     /**
@@ -28,9 +28,8 @@ class MauticApiConsumerKey extends Migration
      *
      * @return void
      */
-    public function down()
+    public function down() : void
     {
-        Schema::drop('mautic_consumer');
+        Schema::drop( 'mautic_consumer' );
     }
-
 }

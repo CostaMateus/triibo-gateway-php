@@ -4,12 +4,7 @@ namespace App\Http\Controllers\Vtex;
 
 use Throwable;
 use App\Models\Vtex\Product;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Services\Vtex\ProductService;
-use App\Services\Vtex\ConnectorService;
-use App\Services\Vtex\FulfillmentService;
-use App\Http\Controllers\Vtex\VtexController;
+use Illuminate\Http\{JsonResponse, Request};
 
 class ProductController extends VtexController
 {
@@ -18,63 +13,64 @@ class ProductController extends VtexController
      *
      * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-new-products
      *
-     * @param   Request     $request
-     * @return  JsonResponse
+     * @param Request $request
+     *
+     * @return JsonResponse
      */
     public function updateOrCreateSku( Request $request )
     {
-        $vtex_data     = $request->all();
+        $vtex_data = $request->all();
 
         if ( empty( $vtex_data ) )
         {
             return response()->json( [
                 "error_code" => 400,
-                "message"    => "Empty data",
-                "data"       => null,
+                "message" => "Empty data",
+                "data" => null,
             ], 400 );
         }
 
-        $allow_origins = [ "fastshopbrqa2", "fastshopbr" ];
-        $origin        = $vtex_data[ "An" ];
+        $allow_origins = ["fastshopbrqa2", "fastshopbr"];
+        $origin = $vtex_data[ "An" ];
 
-        if ( !in_array( $origin, $allow_origins ) )
+        if ( ! in_array( $origin, $allow_origins ) )
         {
             return response()->json( [
                 "error_code" => 401,
-                "message"    => "Unauthorized",
-                "data"       => null,
+                "message" => "Unauthorized",
+                "data" => null,
             ], 401 );
         }
 
         // Prepare successful response data.
-        $code          = 200;
-        $data          = [
+        $code = 200;
+        $data = [
             "error_code" => null,
-            "message"    => "ok",
-            "data"       => null,
+            "message" => "ok",
+            "data" => null,
         ];
 
         try
         {
             $product = Product::where( "sku", $vtex_data[ "IdSku" ] )->where( "origin", $origin )->first();
 
-            if ( !$product )
+            if ( ! $product )
             {
                 $create = [
-                    "sku"    => $vtex_data[ "IdSku" ],
+                    "sku" => $vtex_data[ "IdSku" ],
                     "origin" => $origin,
                     "action" => "create",
                     "status" => "unprocessed",
-                    "meta"   => json_encode( $vtex_data ),
+                    "meta" => json_encode( $vtex_data ),
                 ];
 
                 Product::create( $create );
             }
             else
             {
-                $product->action = ( $vtex_data[ "IsActive" ] == true ) ? "update" : "disable";
+                $product->action = ( $vtex_data[ "IsActive" ] === true ) ? "update" : "disable";
                 $product->status = "unprocessed";
-                $product->meta   = json_encode( $vtex_data );
+                $product->meta = json_encode( $vtex_data );
                 $product->save();
             }
         }
@@ -84,8 +80,8 @@ class ProductController extends VtexController
             $code = 500;
             $data = [
                 "error_code" => $e->getCode(),
-                "message"    => "Unexpected error",
-                "data"       => $vtex_data,
+                "message" => "Unexpected error",
+                "data" => $vtex_data,
             ];
 
             // Log the exception for debugging purposes.
@@ -102,9 +98,9 @@ class ProductController extends VtexController
     }
 
     /**
+     * @param string $sku
      *
-     * @param   string  $sku
-     * @return  array
+     * @return array
      */
     public function getProductData( string $sku )
     {

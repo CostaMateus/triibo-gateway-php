@@ -2,21 +2,19 @@
 
 namespace App\Services\Vtex;
 
-use App\Services\Vtex\ConnectorService;
-
 class OrderService
 {
     /**
      * Vtex Connector Service.
      *
-     * @var     ConnectorService
+     * @var ConnectorService
      */
     private $connector;
 
     /**
      * Constructor.
      *
-     * @param   ConnectorService    $connector
+     * @param ConnectorService $connector
      */
     public function __construct( ConnectorService $connector )
     {
@@ -28,15 +26,16 @@ class OrderService
      *
      * @see     https://developers.vtex.com/docs/api-reference/orders-api#get-/api/oms/pvt/orders/-orderId-
      *
-     * @param   string  $order_id
-     * @return  array
+     * @param string $order_id
+     *
+     * @return array
      */
     public function getOrder( string $order_id ) : array
     {
         $this->connector
             ->setCallOrigin( origin: "getOrder" )
-            ->buildUrl( api: "order-retrieve", )
-            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
+            ->buildUrl( api: "order-retrieve" )
+            ->replaceUrl( data: ["{orderId}" => "{$this->connector->affiliated_id}-{$order_id}"] );
 
         return $this->connector->sendRequest( method: "get" );
     }
@@ -48,8 +47,9 @@ class OrderService
      *
      * @uses    $data must be result of app\Helpers\Vtex::vtex_new_order_prepare
      *
-     * @param   array   $data   Order data in VTEX format.
-     * @return  array
+     * @param array $data order data in VTEX format
+     *
+     * @return array
      */
     public function newOrder( array $data ) : array
     {
@@ -67,8 +67,9 @@ class OrderService
      *
      * @uses    $data must be result of app\Helpers\Vtex::vtex_update_order
      *
-     * @param   array   $data       Order data in VTEX format.
-     * @return  array
+     * @param array $data order data in VTEX format
+     *
+     * @return array
      */
     public function updateOrderStatus( array $data ) : array
     {
@@ -82,15 +83,17 @@ class OrderService
     /**
      * Cancel order.
      *
-     * @param   string   $string
-     * @return  array
+     * @param string $string
+     * @param string $order_id
+     *
+     * @return array
      */
     public function cancelOrder( string $order_id ) : array
     {
         $this->connector
             ->setCallOrigin( origin: "cancelOrder" )
-            ->buildUrl( api: "order-integration-cancel", )
-            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
+            ->buildUrl( api: "order-integration-cancel" )
+            ->replaceUrl( data: ["{orderId}" => "{$this->connector->affiliated_id}-{$order_id}"] );
 
         return $this->connector->sendRequest( method: "post" );
     }

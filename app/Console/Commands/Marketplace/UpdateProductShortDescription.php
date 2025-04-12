@@ -2,35 +2,35 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Throwable;
 use Illuminate\Console\Command;
 use Codexshaper\WooCommerce\Facades\Product;
 
 class UpdateProductShortDescription extends Command
 {
     /**
-     * The name and signature of the console command.
-     *
-     * @var     string
-     */
-    protected $signature   = "mkt:update_product_short_description";
-
-    /**
-     * The console command description.
-     *
-     * @var     string
-     */
-    protected $description = "Update product short description";
-
-    /**
-     *
-     * @var     string
+     * @var string
      */
     protected const LOG_CHANNEL = "marketplace";
 
     /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = "mkt:update_product_short_description";
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = "Update product short description";
+
+    /**
      * Create a new command instance.
      *
-     * @return  void
+     * @return void
      */
     public function __construct()
     {
@@ -40,11 +40,11 @@ class UpdateProductShortDescription extends Command
     /**
      * Execute the console command.
      *
-     * @return  int
+     * @return int
      */
     public function handle()
     {
-        $start   = now();
+        $start = now();
         $message = "MKT Products: Starting process WC data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
@@ -55,18 +55,18 @@ class UpdateProductShortDescription extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        $diff    = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( now() );
         $message = "MKT Products: Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
     }
 
-    private function processProducts()
+    private function processProducts() : void
     {
-        $page     = 1;
-        $per      = 100;
-        $count    = 100;
-        $update   = [];
+        $page = 1;
+        $per = 100;
+        $count = 100;
+        $update = [];
 
         do
         {
@@ -74,29 +74,29 @@ class UpdateProductShortDescription extends Command
             {
                 $response = Product::all( [
                     "per_page" => $per,
-                    "page"     => $page,
+                    "page" => $page,
                 ] );
 
-                $count    = $response->count();
+                $count = $response->count();
 
                 $page++;
 
                 foreach ( $response as $product )
                 {
-                    if ( $product->store->id != 4265 )
+                    if ( $product->store->id !== 4265 )
                         continue;
 
                     if ( empty( $product->attributes ) )
                         continue;
 
                     $product = json_decode( json_encode( $product ), true );
-                    $short   = vtex_append_voltage( $product[ "short_description" ], $product[ "attributes" ] );
+                    $short = vtex_append_voltage( $product[ "short_description" ], $product[ "attributes" ] );
 
                     if ( $short === $product[ "short_description" ] )
                         continue;
 
                     $update[] = [
-                        "id"                => $product[ "id" ],
+                        "id" => $product[ "id" ],
                         "short_description" => $short,
                     ];
 
@@ -112,18 +112,17 @@ class UpdateProductShortDescription extends Command
 
                         if ( $response )
                             $update = [];
-                        else
-                            dd( $update, $page );
+                        else dd( $update, $page );
                     }
                 }
             }
-            catch ( \Throwable $e )
+            catch ( Throwable $e )
             {
                 log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
-                log_message( channel: self::LOG_CHANNEL, message: "page {$page}"   );
+                log_message( channel: self::LOG_CHANNEL, message: "page {$page}" );
             }
         }
-        while ( $count == 100 );
+        while ( $count === 100 );
 
         if ( count( $update ) === 100 )
             $this->updateProducts( products: $update );
@@ -132,23 +131,25 @@ class UpdateProductShortDescription extends Command
     }
 
     /**
+     * @param array $products
      *
-     * @param   array   $products
-     * @return  void
+     * @return void
      */
     private function updateProducts( array $products ) : bool
     {
         try
         {
-            Product::batch( [ "update" => $products ] );
+            Product::batch( ["update" => $products] );
+
             return true;
         }
-        catch ( \Throwable $e )
+        catch ( Throwable $e )
         {
             if ( $e->getMessage() === "JSON ERROR: Syntax error" )
                 return true;
 
             log_message( channel: self::LOG_CHANNEL, message: $e->getMessage() );
+
             return false;
         }
     }

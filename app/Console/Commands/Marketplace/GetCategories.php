@@ -10,6 +10,11 @@ use Codexshaper\WooCommerce\Facades\Category;
 class GetCategories extends Command
 {
     /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -24,16 +29,9 @@ class GetCategories extends Command
     protected $description = "Get marketplace product categories";
 
     /**
-     *
-     * @var     string
+     * @var string
      */
-    protected $prefix      = "MKT Categories:";
-
-    /**
-     *
-     * @var     string
-     */
-    protected const LOG_CHANNEL = "marketplace";
+    protected $prefix = "MKT Categories:";
 
     /**
      * Create a new command instance.
@@ -52,12 +50,12 @@ class GetCategories extends Command
      */
     public function handle()
     {
-        $page       = 1;
+        $page = 1;
         $categories = [];
-        $data       = [];
-        $count      = 100;
+        $data = [];
+        $count = 100;
 
-        $start      = now();
+        $start = now();
         $this->log_message( message: "{$this->prefix} Starting process WC data..." );
 
         do
@@ -66,33 +64,34 @@ class GetCategories extends Command
 
             try
             {
-                $response   = Category::all( [ "per_page" => 100, "page" => $page, ] );
-                $count      = $response->count();
+                $response = Category::all( ["per_page" => 100, "page" => $page] );
+                $count = $response->count();
                 $categories = array_merge( $response->toArray(), $categories );
 
                 $page++;
             }
             catch ( Throwable $e )
             {
-                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
                 {
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
                     $this->log_message( message: $e->getMessage(), level: "error" );
+
                     break;
                 }
             }
         }
-        while ( $count == 100 );
+        while ( $count === 100 );
 
-        $count      = count( $categories );
+        $count = count( $categories );
         $this->log_message( message: "{$this->prefix} {$count} loaded..." );
 
         foreach ( $categories as $category )
         {
             $data[] = [
-                "cat_id"     => $category->id,
-                "cat_slug"   => $category->slug,
-                "cat_name"   => $category->name,
+                "cat_id" => $category->id,
+                "cat_slug" => $category->slug,
+                "cat_name" => $category->name,
                 "cat_parent" => $category->parent,
             ];
         }
@@ -107,17 +106,18 @@ class GetCategories extends Command
 
         $this->log_message( message: "{$this->prefix} Finished WC data process..." );
 
-        $diff       = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( now() );
         $this->log_message( message: "{$this->prefix} Runtime {$diff} minutes..." );
     }
 
     /**
      * Undocumented function
      *
-     * @param   string  $channel
-     * @param   string  $message
-     * @param   string  $level
-     * @return  void
+     * @param string $channel
+     * @param string $message
+     * @param string $level
+     *
+     * @return void
      */
     private function log_message( string $message, string $level = "info" ) : void
     {

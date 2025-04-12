@@ -1,5 +1,7 @@
 <?php
 
+use Opcodes\LogViewer\Http\Middleware\{AuthorizeLogViewer, EnsureFrontendRequestsAreStateful};
+
 return [
 
     /*
@@ -9,9 +11,9 @@ return [
     | Log Viewer can be disabled, so it's no longer accessible via browser.
     |
     */
-    "enabled"                    => env( "LOG_VIEWER_ENABLED", true ),
-    "api_only"                   => env( "LOG_VIEWER_API_ONLY", false ),
-    "require_auth_in_production" => true,
+    'enabled' => env( 'LOG_VIEWER_ENABLED', true ),
+    'api_only' => env( 'LOG_VIEWER_API_ONLY', false ),
+    'require_auth_in_production' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -21,7 +23,7 @@ return [
     | If the domain is empty, all domains will be valid.
     |
     */
-    "route_domain" => null,
+    'route_domain' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -30,7 +32,7 @@ return [
     | Log Viewer will be available under this URL.
     |
     */
-    "route_path" => "log-viewer",
+    'route_path' => 'log-viewer',
 
     /*
     |--------------------------------------------------------------------------
@@ -42,8 +44,8 @@ return [
     | Optional label to display for the above URL.
     |
     */
-    "back_to_system_url"   => config( "app.url", null ) . "home",
-    "back_to_system_label" => null, // Displayed by default: "Back to {{ app.name }}"
+    'back_to_system_url' => config( 'app.url', null ).'home',
+    'back_to_system_label' => null, // Displayed by default: "Back to {{ app.name }}"
 
     /*
     |--------------------------------------------------------------------------
@@ -53,7 +55,7 @@ return [
     | the application's timezone defined in config/app.php.
     |
     */
-    "timezone" => "America/Sao_Paulo",
+    'timezone' => 'America/Sao_Paulo',
 
     /*
     |--------------------------------------------------------------------------
@@ -62,9 +64,9 @@ return [
     | Optional middleware to use when loading the initial Log Viewer page.
     |
     */
-    "middleware" => [
-        "web",
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+    'middleware' => [
+        'web',
+        AuthorizeLogViewer::class,
     ],
 
     /*
@@ -75,11 +77,11 @@ return [
     | used from within the Log Viewer user interface.
     |
     */
-    "api_middleware" => [
-        \Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+    'api_middleware' => [
+        EnsureFrontendRequestsAreStateful::class,
+        AuthorizeLogViewer::class,
     ],
-    "api_stateful_domains" => env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ? explode( ",", env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ) : null,
+    'api_stateful_domains' => env( 'LOG_VIEWER_API_STATEFUL_DOMAINS' ) ? explode( ',', env( 'LOG_VIEWER_API_STATEFUL_DOMAINS' ) ) : null,
 
     /*
     |--------------------------------------------------------------------------
@@ -93,7 +95,7 @@ return [
 
     'hosts' => [
         'local' => [
-            'name' => ucfirst(env('APP_ENV', 'local')),
+            'name' => ucfirst( env( 'APP_ENV', 'local' ) ),
         ],
 
         // 'staging' => [
@@ -131,7 +133,7 @@ return [
         // You can include paths to other log types as well, such as apache, nginx, and more.
         '/var/log/mysql/*.log',
         '/var/log/apache2/*.log',
-        "/var/log/laravel-deploy.log",
+        '/var/log/laravel-deploy.log',
 
         // // MacOS Apple Silicon logs
         // '/opt/homebrew/var/log/nginx/*',
@@ -151,7 +153,7 @@ return [
     | This will take precedence over included files.
     |
     */
-    "exclude_files" => [
+    'exclude_files' => [
         // 'my_secret.log'
     ],
 
@@ -164,7 +166,7 @@ return [
     | from the UI and API calls by setting this to true.
     |
     */
-    "hide_unknown_files" => true,
+    'hide_unknown_files' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -174,10 +176,10 @@ return [
     | This setting is only active when the function is enabled via the user interface.
     |
     */
-    "shorter_stack_trace_excludes" => [
-        "/vendor/symfony/",
-        "/vendor/laravel/framework/",
-        "/vendor/barryvdh/laravel-debugbar/",
+    'shorter_stack_trace_excludes' => [
+        '/vendor/symfony/',
+        '/vendor/laravel/framework/',
+        '/vendor/barryvdh/laravel-debugbar/',
     ],
 
     /*
@@ -188,7 +190,7 @@ return [
     | log navigation. Defaults to your application's default cache driver.
     |
     */
-    "cache_driver" => env( "LOG_VIEWER_CACHE_DRIVER", null ),
+    'cache_driver' => env( 'LOG_VIEWER_CACHE_DRIVER', null ),
 
     /*
     |--------------------------------------------------------------------------
@@ -200,7 +202,7 @@ return [
     | {prefix}:{version}:{rest-of-the-key}
     |
     */
-    "cache_key_prefix" => "lv",
+    'cache_key_prefix' => 'lv',
 
     /*
     |--------------------------------------------------------------------------
@@ -209,6 +211,6 @@ return [
     | The size in MB of files to scan before updating the progress bar when searching across all files.
     |
     */
-    "lazy_scan_chunk_size_in_mb" => 50,
-    "strip_extracted_context"    => true,
+    'lazy_scan_chunk_size_in_mb' => 50,
+    'strip_extracted_context' => true,
 ];

@@ -2,22 +2,19 @@
 
 namespace App\Services\Vtex;
 
-use Throwable;
-use App\Services\Vtex\ConnectorService;
-
 class FulfillmentService
 {
     /**
      * Vtex Connector Service.
      *
-     * @var     ConnectorService
+     * @var ConnectorService
      */
     private $connector;
 
     /**
      * Constructor.
      *
-     * @param   ConnectorService    $connector
+     * @param ConnectorService $connector
      */
     public function __construct( ConnectorService $connector )
     {
@@ -29,8 +26,9 @@ class FulfillmentService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/checkout/pub/orderForms/simulation
      *
-     * @param   array   $data  The data to be sent in the request body.
-     * @return  array
+     * @param array $data the data to be sent in the request body
+     *
+     * @return array
      */
     public function simulate( array $data ) : array
     {
@@ -46,8 +44,9 @@ class FulfillmentService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders
      *
-     * @param   array   $data   Order data in VTEX format.
-     * @return  array
+     * @param array $data order data in VTEX format
+     *
+     * @return array
      */
     public function fulfillmentOrder( array $data ) : array
     {
@@ -63,16 +62,17 @@ class FulfillmentService
      *
      * @see     https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/fulfillment/pvt/orders/-orderId-/fulfill
      *
-     * @param   string  $order_id  The marketplace order id to be dispatched.
-     * @return  array              The response from the API call.
+     * @param string $order_id the marketplace order id to be dispatched
+     *
+     * @return array the response from the API call
      */
     public function dispatchOrder( string $order_id ) : array
     {
         $this->connector
             ->setCallOrigin( origin: "dispatchOrder" )
-            ->buildUrl( api: "fulfillment-dispatch", param: "?affiliateId={$this->connector->affiliated_id}&sc={$this->connector->sales_channel}", )
-            ->replaceUrl( data: [ "{orderId}" => "{$this->connector->affiliated_id}-{$order_id}" ] );
+            ->buildUrl( api: "fulfillment-dispatch", param: "?affiliateId={$this->connector->affiliated_id}&sc={$this->connector->sales_channel}" )
+            ->replaceUrl( data: ["{orderId}" => "{$this->connector->affiliated_id}-{$order_id}"] );
 
-        return $this->connector->sendRequest( method: "post", body: [ "marketplaceOrderId" => $order_id ] );
+        return $this->connector->sendRequest( method: "post", body: ["marketplaceOrderId" => $order_id] );
     }
 }

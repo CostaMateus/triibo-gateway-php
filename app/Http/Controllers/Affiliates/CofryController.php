@@ -14,42 +14,42 @@ class CofryController extends Controller
     /**
      * Define a class constant for the log channel.
      *
-     * @var     string
+     * @var string
      */
-    private const LOG_CHANNEL   = "cofry";
+    private const LOG_CHANNEL = "cofry";
 
     /**
      * Define LOCAL path for establishments.
      *
-     * @var     string
+     * @var string
      */
     private const LC_ESTAB_PATH = "images/estabelecimentos/";
 
     /**
      * Define LOCAL path for promotions.
      *
-     * @var     string
+     * @var string
      */
     private const LC_PROMO_PATH = "images/promos/";
 
     /**
      * Define FIREBASE path for establishments.
      *
-     * @var     string
+     * @var string
      */
     private const FB_ESTAB_PATH = "estabelecimento";
 
     /**
      * Define FIREBASE path for promotions.
      *
-     * @var     string
+     * @var string
      */
     private const FB_PROMO_PATH = "promocao";
 
     /**
      * Process establishments and promotions
      *
-     * @return  void
+     * @return void
      */
     public function all() : void
     {
@@ -60,7 +60,7 @@ class CofryController extends Controller
     /**
      * Process establishments by invoking the Firebase operation for establishments.
      *
-     * @return  void
+     * @return void
      */
     public function establishments() : void
     {
@@ -70,7 +70,7 @@ class CofryController extends Controller
     /**
      * Process promotions by invoking the Firebase operation for promotions.
      *
-     * @return  void
+     * @return void
      */
     public function promotions() : void
     {
@@ -78,12 +78,33 @@ class CofryController extends Controller
     }
 
     /**
+     * This method is responsible for uploading images related to establishments and promotions.
+     * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
+     *
+     * @return void
+     */
+    public function images() : void
+    {
+        $types = ["establishments", "promotions"];
+
+        foreach ( $types as $type )
+        {
+            $local_path = $type === "establishments" ? self::LC_ESTAB_PATH : self::LC_PROMO_PATH;
+            $firebase_path = $type === "establishments" ? self::FB_ESTAB_PATH : self::FB_PROMO_PATH;
+
+            // Upload images for {$type} by providing the local and Firebase storage paths.
+            $this->processImages( local_path: $local_path, firebase_path: $firebase_path, type: $type );
+        }
+    }
+
+    /**
      * Execute a Firebase operation and handle the success or failure of the operation.
      * On success, log the success message. On failure, handle the exception.
      *
-     * @param   string  $operation_method   The method name to call for the operation.
-     * @param   string  $operation_name     The name of the operation for logging purposes.
-     * @return  void
+     * @param string $operation_method the method name to call for the operation
+     * @param string $operation_name   the name of the operation for logging purposes
+     *
+     * @return void
      */
     private function processFirebaseOperation( string $operation_method, string $operation_name ) : void
     {
@@ -123,7 +144,7 @@ class CofryController extends Controller
      * It fetches establishments data from Cofry, compares it with existing data in Firebase,
      * and performs updates or inserts as necessary.
      *
-     * @return  void
+     * @return void
      */
     private function insertEstablishmentsFirebase() : void
     {
@@ -134,35 +155,36 @@ class CofryController extends Controller
         echo $message;
 
         // Retrieve establishments from the Cofry integration.
-        $cofry_establishments    = CofryIntegration::getEstablishments();
+        $cofry_establishments = CofryIntegration::getEstablishments();
 
         // If no establishments are found, log the event and return early.
-        if ( !$cofry_establishments )
+        if ( ! $cofry_establishments )
         {
             $message = "Establishments: No found...";
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             echo $message;
+
             return;
         }
 
         // Get a reference to the Firebase database for establishments.
-        $firebase                = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
+        $firebase = Firebase::database()->getReference( path: "/Estabelecimento-v2" );
         $firebase_establishments = $firebase->getValue();
 
         // Loop through the establishments in Firebase.
         foreach ( $firebase_establishments as $push => $firebase_estab )
         {
             // Check if the establishment is from Cofry and not found in the new data set.
-            if ( strpos( $push, "-cofry" ) !== false )
+            if ( str_contains( $push, "-cofry" ) )
             {
                 // Mark the establishment as unpublished.
-                if ( !isset( $cofry_establishments[ $push ] ) )
+                if ( ! isset( $cofry_establishments[ $push ] ) )
                 {
                     // Mark the establishment as unpublished.
                     $firebase_estab[ "isPublished" ] = false;
                     // Update the establishment in Firebase.
-                    $firebase->update( values: [ $push => $firebase_estab ] );
+                    $firebase->update( values: [$push => $firebase_estab] );
 
                     // Log the deactivation of the establishment.
                     echo "Establishments: Disab. Estab. ID = {$push}\n";
@@ -192,11 +214,11 @@ class CofryController extends Controller
                 $establishment = $this->mergeEstablishmentData( establishment: $establishment, firebase_establishment: $firebase_establishments[ $id ] );
 
                 // Update the status to 'Updated'.
-                $status        = "Updated";
+                $status = "Updated";
             }
 
             // Update or create the establishment in Firebase.
-            $firebase->update( values: [ $id => $establishment ] );
+            $firebase->update( values: [$id => $establishment] );
 
             // Log the creation or update of the establishment.
             echo "Establishments: {$status} Estab. ID = {$id}\n";
@@ -209,7 +231,7 @@ class CofryController extends Controller
      * Responsible for processing and synchronizing promotion data with Firebase.
      * It retrieves promotions from Cofry and updates or creates entries in Firebase accordingly.
      *
-     * @return  void
+     * @return void
      */
     private function insertPromotionsFirebase() : void
     {
@@ -220,10 +242,10 @@ class CofryController extends Controller
         echo $message;
 
         // Retrieve promotions from the Cofry integration.
-        $cofry_promotions    = CofryIntegration::getPromotions();
+        $cofry_promotions = CofryIntegration::getPromotions();
 
         // If no promotions are found, log the event and return early.
-        if ( !$cofry_promotions )
+        if ( ! $cofry_promotions )
         {
             $message = "Promotions: No found...";
 
@@ -234,22 +256,22 @@ class CofryController extends Controller
         }
 
         // Get a reference to the Firebase database for promotions.
-        $firebase            = Firebase::database()->getReference( path: "/Store" );
+        $firebase = Firebase::database()->getReference( path: "/Store" );
         $firebase_promotions = $firebase->getValue();
 
         // Loop through the promotions in Firebase.
         foreach ( $firebase_promotions as $push => $firebase_promo )
         {
             // Check if the promotion is from Cofry and not found in the new data set.
-            if ( strpos( $push, "-cofry" ) !== false )
+            if ( str_contains( $push, "-cofry" ) )
             {
                 // Mark the promotion as unpublished and inactive.
-                if ( !isset( $promos[ $push ] ) )
+                if ( ! isset( $promos[ $push ] ) )
                 {
                     $firebase_promo[ "isPublished" ] = false;
                     $firebase_promo[ "active"      ] = false;
                     // Update the promotion in Firebase.
-                    $firebase->update( values: [ $push => $firebase_promo ] );
+                    $firebase->update( values: [$push => $firebase_promo] );
 
                     // Log the deactivation of the promotion.
                     echo "Promotions: Disab. Promo. ID = {$push}\n";
@@ -273,22 +295,22 @@ class CofryController extends Controller
             if ( isset( $firebase_promotions[ $id ] ) )
             {
                 // Merge the existing description with the new one.
-                $promotion         = $this->mergeDescriptions( new_data: $promotion, existing_data: $firebase_promotions[ $id ], key: "description" );
+                $promotion = $this->mergeDescriptions( new_data: $promotion, existing_data: $firebase_promotions[ $id ], key: "description" );
 
                 // Merge other promotion data fields.
-                $promotion         = $this->mergePromotionData( promotion: $promotion, firebase_promo: $firebase_promotions[ $id ] );
+                $promotion = $this->mergePromotionData( promotion: $promotion, firebase_promo: $firebase_promotions[ $id ] );
 
                 $promotion[ "id" ] = $firebase_promotions[ $id ][ "id" ] ?? $id;
 
                 // Update the status to 'Updated'.
-                $status            = "Updated";
+                $status = "Updated";
             }
 
             // Ensure the promotion has an ID.
-            $promotion[ "id" ] = $promotion[ "id" ] ?? $id;
+            $promotion[ "id" ] ??= $id;
 
             // Update or create the promotion in Firebase.
-            $firebase->update( values: [ $id => $promotion ] );
+            $firebase->update( values: [$id => $promotion] );
 
             // Log the creation or update of the promotion.
             echo "Promotions: {$status} Promo. ID = {$id}\n";
@@ -298,12 +320,13 @@ class CofryController extends Controller
     /**
      * Merge the descriptions of the existing and new data entries.
      *
-     * @param   array   $new_data       The new data entry.
-     * @param   array   $existing_data  The existing data entry from Firebase.
-     * @param   string  $key            The key for the description field.
-     * @return  array                   The merged data entry.
+     * @param array  $new_data      the new data entry
+     * @param array  $existing_data the existing data entry from Firebase
+     * @param string $key           the key for the description field
+     *
+     * @return array the merged data entry
      */
-    private function mergeDescriptions( array $new_data, array $existing_data, string $key ): array
+    private function mergeDescriptions( array $new_data, array $existing_data, string $key ) : array
     {
         // Split the existing description by the delimiter.
         $parts = explode( separator: "\n\n#", string: $existing_data[ $key ] ?? "" );
@@ -323,11 +346,12 @@ class CofryController extends Controller
     /**
      * Merge other establishment data fields from the existing establishment into the new establishment.
      *
-     * @param   array   $establishment              The new establishment data.
-     * @param   array   $firebase_establishment     The existing establishment data from Firebase.
-     * @return  array                               The merged establishment data.
+     * @param array $establishment          the new establishment data
+     * @param array $firebase_establishment the existing establishment data from Firebase
+     *
+     * @return array the merged establishment data
      */
-    private function mergeEstablishmentData( array $establishment, array $firebase_establishment ): array
+    private function mergeEstablishmentData( array $establishment, array $firebase_establishment ) : array
     {
         // Define the fields to merge from the existing establishment.
         $fields = [
@@ -341,57 +365,39 @@ class CofryController extends Controller
     /**
      * Merge other promotion data fields from the existing promotion into the new promotion.
      *
-     * @param   array   $promotion          The new promotion data.
-     * @param   array   $firebase_promo     The existing promotion data from Firebase.
-     * @return  array                       The merged promotion data.
+     * @param array $promotion      the new promotion data
+     * @param array $firebase_promo the existing promotion data from Firebase
+     *
+     * @return array the merged promotion data
      */
     private function mergePromotionData( array $promotion, array $firebase_promo ) : array
     {
         // Define the fields to merge from the existing promotion.
-         $fields = [
-            "enableDate",    "disableDate",           "dueDate",
-            "buttonLabel",   "campanhaTriibo",        "droidWebView",
-            "iOSWebView",    "showButtonDescription", "buttonDescription",
+        $fields = [
+            "enableDate", "disableDate", "dueDate",
+            "buttonLabel", "campanhaTriibo", "droidWebView",
+            "iOSWebView", "showButtonDescription", "buttonDescription",
             "showGoToPlace", "goToPlaceLabel",
-            //"isPublished"
+            // "isPublished"
         ];
 
         return merge_data( new_data: $promotion, existing_data: $firebase_promo, fields: $fields );
     }
 
     /**
-     * This method is responsible for uploading images related to establishments and promotions.
-     * It calls a separate method `processImages` for each type of image, providing the local and Firebase paths.
-     *
-     * @return  void
-     */
-    public function images() : void
-    {
-        $types = [ "establishments", "promotions" ];
-
-        foreach ( $types as $type )
-        {
-            $local_path    = $type == "establishments" ? self::LC_ESTAB_PATH : self::LC_PROMO_PATH;
-            $firebase_path = $type == "establishments" ? self::FB_ESTAB_PATH : self::FB_PROMO_PATH;
-
-            // Upload images for {$type} by providing the local and Firebase storage paths.
-            $this->processImages( local_path: $local_path, firebase_path: $firebase_path, type: $type );
-        }
-    }
-
-    /**
      * This method handles the uploading process of images by first checking for existing files,
      * generating them if necessary, and then executing the upload to Firebase.
      *
-     * @param   string  $local_path     Local file path where images are stored.
-     * @param   string  $firebase_path  Firebase storage path where images will be uploaded.
-     * @param   string  $type           The type of images being processed (e.g., 'establishment', 'promotion').
-     * @return  void
+     * @param string $local_path    local file path where images are stored
+     * @param string $firebase_path firebase storage path where images will be uploaded
+     * @param string $type          The type of images being processed (e.g., 'establishment', 'promotion').
+     *
+     * @return void
      */
-    private function processImages( string $local_path, string $firebase_path, string $type ): void
+    private function processImages( string $local_path, string $firebase_path, string $type ) : void
     {
         // Get the full path to the local directory where images are stored.
-        $path  = public_path( path: $local_path );
+        $path = public_path( path: $local_path );
 
         // Retrieve all files from the local directory.
         $files = File::allFiles( directory: $path );
@@ -432,20 +438,21 @@ class CofryController extends Controller
      * It takes an array of image file names, the local directory path where the images are stored,
      * the target directory path in Firebase Storage, and a string indicating the type of upload.
      *
-     * @param   array   $images         Array of image file names to upload.
-     * @param   string  $local_path     The local directory path where the images are stored.
-     * @param   string  $firebase_path  The target directory path in Firebase Storage.
-     * @param   string  $type           A string indicating the type of upload.
-     * @return  void
+     * @param array  $images        array of image file names to upload
+     * @param string $local_path    the local directory path where the images are stored
+     * @param string $firebase_path the target directory path in Firebase Storage
+     * @param string $type          a string indicating the type of upload
+     *
+     * @return void
      */
-    private function insertImagesFirebase( array $images, string $local_path, string $firebase_path, string $type )
+    private function insertImagesFirebase( array $images, string $local_path, string $firebase_path, string $type ) : void
     {
         // Initialize Firebase storage and get the storage bucket.
         $storage = Firebase::storage();
-        $bucket  = $storage->getBucket();
+        $bucket = $storage->getBucket();
 
         // Get the full local path to the images.
-        $path    = public_path( path: $local_path );
+        $path = public_path( path: $local_path );
 
         $message = "Images: Sending to Firebase - {$type}...";
 
@@ -459,7 +466,7 @@ class CofryController extends Controller
             // Create a resumable uploader instance for the current image.
             $uploader = $bucket->getResumableUploader(
                 data: fopen( "{$path}/{$img}", "r" ),
-                options: [ "name" => "{$firebase_path}/{$img}" ]
+                options: ["name" => "{$firebase_path}/{$img}"]
             );
 
             try

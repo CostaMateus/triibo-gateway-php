@@ -3,8 +3,7 @@
 namespace App\Console\Commands\Vtex;
 
 use Illuminate\Console\Command;
-use App\Services\Vtex\CategoryService;
-use App\Services\Vtex\ConnectorService;
+use App\Services\Vtex\{CategoryService, ConnectorService};
 
 class SendCategory extends Command
 {
@@ -42,23 +41,24 @@ class SendCategory extends Command
         $connector = new ConnectorService();
         $connector->enableLogNotify( false );
 
-        $category  = new CategoryService( $connector );
+        $category = new CategoryService( $connector );
 
-        $response  = $category->registerMarketplaceConnector();
+        $response = $category->registerMarketplaceConnector();
 
-        if ( $response[ 0 ] != 200 )
+        if ( $response[ 0 ] !== 200 )
         {
             $this->error( "Error registering connector" );
+
             return;
         }
 
         $this->info( "Connector registered successfully" );
 
-        $id         = $response[ 1 ][ "data" ][ "id" ];
+        $id = $response[ 1 ][ "data" ][ "id" ];
         $categories = get_marketplace_categories();
         $categories = vtex_format_categories( $categories );
 
-        $response   = $category->sendCategoryMapping( $id, $categories );
+        $response = $category->sendCategoryMapping( $id, $categories );
 
         $this->info( print_r( $response, true ) );
     }

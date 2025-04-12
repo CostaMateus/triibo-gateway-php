@@ -9,6 +9,11 @@ use Codexshaper\WooCommerce\Facades\Product;
 class ProductPrivateWithoutImg extends Command
 {
     /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -23,16 +28,9 @@ class ProductPrivateWithoutImg extends Command
     protected $description = "Change the status of products to private when without images";
 
     /**
-     *
-     * @var     string
+     * @var string
      */
-    protected $prefix      = "MKT Without Img Products:";
-
-    /**
-     *
-     * @var     string
-     */
-    protected const LOG_CHANNEL = "marketplace";
+    protected $prefix = "MKT Without Img Products:";
 
     /**
      * Create a new command instance.
@@ -51,14 +49,14 @@ class ProductPrivateWithoutImg extends Command
      */
     public function handle()
     {
-        $start   = now();
+        $start = now();
         $message = "{$this->prefix} Starting process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $ended  = false;
-        $page   = 1;
-        $per    = 100;
+        $ended = false;
+        $page = 1;
+        $per = 100;
         $update = [];
 
         do
@@ -67,8 +65,8 @@ class ProductPrivateWithoutImg extends Command
             {
                 $products = Product::all( [
                     "per_page" => $per,
-                    "page"     => $page,
-                    "status"   => "publish",
+                    "page" => $page,
+                    "status" => "publish",
                 ] );
 
                 if ( $products->count() < 100 ) $ended = true;
@@ -77,17 +75,17 @@ class ProductPrivateWithoutImg extends Command
 
                 foreach ( $products as $product )
                 {
-                    if ( empty( $product->images ) && count( $product->images ) == 0 )
+                    if ( empty( $product->images ) && count( $product->images ) === 0 )
                     {
                         $update[] = [
-                            "id"     => $product->id,
+                            "id" => $product->id,
                             "status" => "private",
                         ];
                     }
 
-                    if ( count( $update ) == 100 )
+                    if ( count( $update ) === 100 )
                     {
-                        Product::batch( [ "update" => $update ] );
+                        Product::batch( ["update" => $update] );
 
                         $update = [];
                     }
@@ -100,11 +98,11 @@ class ProductPrivateWithoutImg extends Command
                 $ended = false;
             }
         }
-        while ( !$ended );
+        while ( ! $ended );
 
         try
         {
-            Product::batch( [ "update" => $update ] );
+            Product::batch( ["update" => $update] );
         }
         catch ( Throwable $e )
         {
@@ -115,7 +113,7 @@ class ProductPrivateWithoutImg extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        $diff    = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( now() );
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );

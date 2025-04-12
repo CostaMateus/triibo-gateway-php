@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Vtex;
 
 use Throwable;
-use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
-use App\Http\Controllers\Vtex\VtexController;
+use Illuminate\Http\{JsonResponse, Request};
 
 /**
  * OrderController handles various order-related operations for VTEX integration.
@@ -21,14 +19,15 @@ class OrderController extends VtexController
      *
      * @see     https://developers.vtex.com/docs/guides/external-marketplace-integration-invoice-tracking
      *
-     * @param   Request     $request    The incoming HTTP request
-     * @param   string      $order_id   The ID of the order
-     * @return  JsonResponse            A JSON response indicating success
+     * @param Request $request  The incoming HTTP request
+     * @param string  $order_id The ID of the order
+     *
+     * @return JsonResponse A JSON response indicating success
      */
     public function invoiceNotification( Request $request, string $order_id ) : JsonResponse
     {
-        $data   = $request->all();
-        $order  = explode( "-", $data[ "orderId" ] );
+        $data = $request->all();
+        $order = explode( "-", $data[ "orderId" ] );
 
         $seller = get_partner( $order[ 0 ] );
 
@@ -38,21 +37,21 @@ class OrderController extends VtexController
                 channel : parent::LOG_CHANNEL,
                 message : "VTEX - invoiceNotification 1",
                 level   : "error",
-                context : [ "order_id" => $order[ 1 ], "data" => $data ],
+                context : ["order_id" => $order[ 1 ], "data" => $data],
             );
 
             return response()->json( [
                 "error_code" => "5001",
-                "message"    => "Partner not found",
+                "message" => "Partner not found",
             ], 404 );
         }
 
         try
         {
             // Retrieve the WooCommerce order
-            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+            [$parent, $order] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            $is_not_validated   = validate_wc_order(
+            $is_not_validated = validate_wc_order(
                 channel : parent::LOG_CHANNEL,
                 method  : "invoiceNotification",
                 order_id: $order_id,
@@ -62,13 +61,13 @@ class OrderController extends VtexController
             if ( $is_not_validated !== true )
                 return $is_not_validated;
 
-            $invoice  = array_search_by_key( "_has_fs_invoice",  "key", $order[ "meta_data" ] );
+            $invoice = array_search_by_key( "_has_fs_invoice", "key", $order[ "meta_data" ] );
             $tracking = array_search_by_key( "_has_fs_tracking", "key", $order[ "meta_data" ] );
             $finished = array_search_by_key( "_has_fs_finished", "key", $order[ "meta_data" ] );
 
-            if ( $invoice === false && !is_null( $data[ "embeddedInvoice" ] ) )
+            if ( $invoice === false && $data[ "embeddedInvoice" ] !== null )
             {
-                $message  = "NOTA FISCAL\n";
+                $message = "NOTA FISCAL\n";
                 $message .= "Nº: {$data[ "invoiceNumber" ]}\n";
                 $message .= "Chave: {$data[ "invoiceKey" ]}\n";
                 $message .= "URL: {$data[ "invoiceUrl" ]}";
@@ -76,15 +75,15 @@ class OrderController extends VtexController
                 create_order_note( parent::LOG_CHANNEL, $order_id, $message );
 
                 update_order_meta( parent::LOG_CHANNEL, $order_id, [
-                    "meta_data" => [ [
-                        "key"   => "_has_fs_invoice",
+                    "meta_data" => [[
+                        "key" => "_has_fs_invoice",
                         "value" => "yes"
-                    ] ]
+                    ]]
                 ] );
             }
-            elseif ( $tracking === false && !is_null( $data[ "trackingUrl" ] ) )
+            elseif ( $tracking === false && $data[ "trackingUrl" ] !== null )
             {
-                $message  = "PEDIDO ENVIADO PARA ENTREGA\n";
+                $message = "PEDIDO ENVIADO PARA ENTREGA\n";
                 $message .= "Empresa: {$data[ "courier" ]}\n";
                 $message .= "Código: {$data[ "trackingNumber" ]}\n";
                 $message .= "URL: {$data[ "trackingUrl" ]}";
@@ -92,31 +91,31 @@ class OrderController extends VtexController
                 create_order_note( parent::LOG_CHANNEL, $order_id, $message );
 
                 update_order_meta( parent::LOG_CHANNEL, $order_id, [
-                    "meta_data" => [ [
-                        "key"   => "_has_fs_tracking",
+                    "meta_data" => [[
+                        "key" => "_has_fs_tracking",
                         "value" => "yes"
-                    ] ]
+                    ]]
                 ] );
             }
-            elseif ( $finished === false && !is_null( $data[ "courierStatus" ] ) )
+            elseif ( $finished === false && $data[ "courierStatus" ] !== null )
             {
                 $courier = $data[ "courierStatus" ];
 
-                if ( !empty( $courier[ "data" ] ) )
+                if ( ! empty( $courier[ "data" ] ) )
                 {
-                    $status  = $courier[ "data" ][ 0 ];
+                    $status = $courier[ "data" ][ 0 ];
                     $message = $status[ "description" ];
 
-                    if ( $status[ "description" ] == "Entrega realizada" )
+                    if ( $status[ "description" ] === "Entrega realizada" )
                     {
-                        $message = "ENTREGA REALIZADA\n" . convert_delivery_date( $courier[ "deliveredDate" ] );
+                        $message = "ENTREGA REALIZADA\n".convert_delivery_date( $courier[ "deliveredDate" ] );
 
                         update_order_meta( parent::LOG_CHANNEL, $order_id, [
-                            "status"    => "completed",
-                            "meta_data" => [ [
-                                "key"   => "_has_fs_finished",
+                            "status" => "completed",
+                            "meta_data" => [[
+                                "key" => "_has_fs_finished",
                                 "value" => "yes"
-                            ] ]
+                            ]]
                         ] );
                     }
 
@@ -130,13 +129,13 @@ class OrderController extends VtexController
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - invoiceNotification 2",
                     level   : "info",
-                    context : [ "order_id" => $order_id, "invoice" => $data ],
+                    context : ["order_id" => $order_id, "invoice" => $data],
                 );
             }
         }
         catch ( Throwable $e )
         {
-            if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+            if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
             {
                 // Log the exception
                 log_exception(
@@ -149,12 +148,12 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5000", // 5000 - falha generica
-                    "message"    => "Something wrong when receiving invoice notification",
+                    "message" => "Something wrong when receiving invoice notification",
                 ], 400 );
             }
         }
 
-        return response()->json( [ "success" => true ], 200 );
+        return response()->json( ["success" => true], 200 );
     }
 
     /**
@@ -162,9 +161,10 @@ class OrderController extends VtexController
      *
      * @see     https://developers.vtex.com/docs/api-reference/orders-api#post-/api/oms/pvt/orders/-orderId-/cancel
      *
-     * @param   Request     $request    The incoming HTTP request
-     * @param   string      $order_id   The ID of the order
-     * @return  JsonResponse            A JSON response indicating success or an error message
+     * @param Request $request  The incoming HTTP request
+     * @param string  $order_id The ID of the order
+     *
+     * @return JsonResponse A JSON response indicating success or an error message
      */
     public function cancellationNotification( Request $request, string $order_id ) : JsonResponse
     {
@@ -173,9 +173,9 @@ class OrderController extends VtexController
         try
         {
             // Retrieve the WooCommerce order
-            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+            [$parent, $order] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            $is_not_validated   = validate_wc_order(
+            $is_not_validated = validate_wc_order(
                 channel : parent::LOG_CHANNEL,
                 method  : "cancellationNotification",
                 order_id: $order_id,
@@ -188,14 +188,14 @@ class OrderController extends VtexController
             // Send notification
             send_notification( $parent, $order, "order_cancelled" );
 
-            $message  = "PEDIDO CANCELADO PELA FAST SHOP\n";
+            $message = "PEDIDO CANCELADO PELA FAST SHOP\n";
             $message .= "{$request->reason}\n";
-            $message .= date( "d/m/Y à\s H:i:s" ) . "\n";
+            $message .= date( "d/m/Y à\s H:i:s" )."\n";
 
             // Create cancellation note
             create_order_note( parent::LOG_CHANNEL, $order_id, $message );
 
-            return response()->json( [ "success" => true ], 200 );
+            return response()->json( ["success" => true], 200 );
         }
         catch ( Throwable $e )
         {
@@ -210,7 +210,7 @@ class OrderController extends VtexController
 
             return response()->json( [
                 "error_code" => "5000", // 5000 - falha generica
-                "message"    => "Something wrong when cancelling the order",
+                "message" => "Something wrong when cancelling the order",
             ], 400 );
         }
     }
@@ -220,9 +220,10 @@ class OrderController extends VtexController
      *
      * This method is called from ../plugins/triibo-api-services | triibo_fastshop
      *
-     * @param   Request     $request    The incoming HTTP request
-     * @param   string      $order_id   The ID of the order
-     * @return  JsonResponse            A JSON response with the created order data or an error message
+     * @param Request $request  The incoming HTTP request
+     * @param string  $order_id The ID of the order
+     *
+     * @return JsonResponse A JSON response with the created order data or an error message
      */
     public function orderCreation( Request $request, $order_id )
     {
@@ -235,9 +236,9 @@ class OrderController extends VtexController
         try
         {
             // Retrieve the WooCommerce order
-            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+            [$parent, $order] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            $is_not_validated   = validate_wc_order(
+            $is_not_validated = validate_wc_order(
                 channel : parent::LOG_CHANNEL,
                 method  : "orderCreation",
                 order_id: $order_id,
@@ -248,20 +249,20 @@ class OrderController extends VtexController
                 return $is_not_validated;
 
             // Format product data for freight calculation
-            $wc_data  = format_product_to_freight( $order );
+            $wc_data = format_product_to_freight( $order );
 
             // Simulate freight
             $simulate = vtex_freight_exec( parent::LOG_CHANNEL, $seller, $wc_data, true );
 
             // Handle simulation errors
-            if ( $simulate[ "error_code" ] != null )
+            if ( $simulate[ "error_code" ] !== null )
             {
                 // Log error and send notification
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCreation 1",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "wc_data" => $wc_data, "data" => $simulate, ],
+                    context : ["order_id" => $order_id, "wc_data" => $wc_data, "data" => $simulate],
                 );
 
                 send_notification( $parent, $order, "order_creation_error" );
@@ -271,17 +272,17 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5001", // 5001 - error in freight data query from FS
-                    "message"    => "something wrong",
-                    "data"       => null
+                    "message" => "something wrong",
+                    "data" => null
                 ], 500 );
             }
 
-            $empty_items       = empty( $simulate[ "data" ][ "items"         ] );
-            $empty_logistics   = empty( $simulate[ "data" ][ "logisticsInfo" ] );
+            $empty_items = empty( $simulate[ "data" ][ "items"         ] );
+            $empty_logistics = empty( $simulate[ "data" ][ "logisticsInfo" ] );
             $has_without_stock = false;
 
-            if ( !$empty_items )
-                $has_without_stock = !empty( array_filter( $simulate[ "data" ][ "items" ], fn( $item ) => $item[ "availability" ] === "withoutStock" ) );
+            if ( ! $empty_items )
+                $has_without_stock = ! empty( array_filter( $simulate[ "data" ][ "items" ], static fn ( $item ) => $item[ "availability" ] === "withoutStock" ) );
 
             // Handle empty simulation
             if ( $empty_items || $empty_logistics || $has_without_stock )
@@ -291,7 +292,7 @@ class OrderController extends VtexController
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCreation 2",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "wc_data" => $wc_data, "data" => $simulate, ],
+                    context : ["order_id" => $order_id, "wc_data" => $wc_data, "data" => $simulate],
                 );
 
                 send_notification( $parent, $order, "order_creation_error" );
@@ -301,54 +302,54 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5002", // 5002 - error in freight data query from FS
-                    "message"    => "something wrong",
-                    "data"       => null
+                    "message" => "something wrong",
+                    "data" => null
                 ], 500 );
             }
 
             // Create new order in VTEX
             $response = vtex_new_order_exec( parent::LOG_CHANNEL, $seller, $simulate[ "data" ], $order, $parent );
 
-            if ( $response[ "error_code" ] != null )
+            if ( $response[ "error_code" ] !== null )
             {
                 // Log error and send notification
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCreation 3",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "wc_data" => $wc_data, "response" => $response, ],
+                    context : ["order_id" => $order_id, "wc_data" => $wc_data, "response" => $response],
                 );
 
                 send_notification( $parent, $order, "order_creation_error" );
 
                 $message = $response[ "message"    ];
-                $code    = $response[ "error_code" ];
+                $code = $response[ "error_code" ];
 
                 // Create error note
                 create_error_note( parent::LOG_CHANNEL, $order_id, "custom", "{$message}\nCode: {$code}" );
 
                 return response()->json( [
                     "error_code" => "5003", // 5003 - error in order creation in FS
-                    "message"   => "something wrong",
-                    "data"      => [ $code, $message ]
+                    "message" => "something wrong",
+                    "data" => [$code, $message]
                 ], 500 );
             }
 
             // Update order metadata with VTEX order ID
             update_order_meta( parent::LOG_CHANNEL, $order_id, [
-                "meta_data" => [ [
-                    "key"   => "_fastshop_order_id",
+                "meta_data" => [[
+                    "key" => "_fastshop_order_id",
                     "value" => $response[ "data" ][ "operationId" ]
-                ] ]
+                ]]
             ] );
 
             // Create creation note
-            create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ] );
+            create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO CRIADO NA FAST SHOP:\n#".$response[ "data" ][ "operationId" ] );
 
             return response()->json( [
                 "error_code" => null,
-                "message"   => "ok",
-                "data"      => $response[ "data" ],
+                "message" => "ok",
+                "data" => $response[ "data" ],
             ], 200 );
         }
         catch ( Throwable $e )
@@ -364,7 +365,7 @@ class OrderController extends VtexController
 
             return response()->json( [
                 "error_code" => "5000", // 5000 - generic failure
-                "message"   => $e->getMessage(),
+                "message" => $e->getMessage(),
             ], 500 );
         }
     }
@@ -374,9 +375,10 @@ class OrderController extends VtexController
      *
      * This method is called from ../plugins/triibo-api-services | triibo_fastshop
      *
-     * @param   Request     $request    The incoming HTTP request
-     * @param   string      $order_id   The ID of the order
-     * @return JsonResponse             A JSON response with the updated order data or an error message
+     * @param Request $request  The incoming HTTP request
+     * @param string  $order_id The ID of the order
+     *
+     * @return JsonResponse A JSON response with the updated order data or an error message
      */
     public function orderApproval( Request $request, $order_id )
     {
@@ -389,9 +391,9 @@ class OrderController extends VtexController
         try
         {
             // Retrieve the WooCommerce order
-            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+            [$parent, $order] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            $is_not_validated   = validate_wc_order(
+            $is_not_validated = validate_wc_order(
                 channel : parent::LOG_CHANNEL,
                 method  : "orderApproval",
                 order_id: $order_id,
@@ -411,37 +413,37 @@ class OrderController extends VtexController
             // Update order status in VTEX
             $response = vtex_update_order_exec( parent::LOG_CHANNEL, $seller, $order_id );
 
-            if ( $response[ "error_code" ] != null )
+            if ( $response[ "error_code" ] !== null )
             {
                 // Log error and send notification
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderApproval 1",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "response" => $response ],
+                    context : ["order_id" => $order_id, "response" => $response],
                 );
 
                 send_notification( $parent, $order, "order_approval_error_1" );
 
                 $message = $response[ "message"    ];
-                $code    = $response[ "error_code" ];
+                $code = $response[ "error_code" ];
 
                 // Create error note
                 create_error_note( parent::LOG_CHANNEL, $order_id, "custom", "{$message}\nCode: {$code}" );
 
                 return response()->json( [
                     "error_code" => "5001", // 5001 - error in order creation in FS
-                    "message"    => "something wrong",
-                    "data"       => [ $code, $message ]
+                    "message" => "something wrong",
+                    "data" => [$code, $message]
                 ], 500 );
             }
 
             // Update order metadata to mark as approved
             update_order_meta( parent::LOG_CHANNEL, $order_id, [
-                "meta_data" => [ [
-                    "key"   => "_fastshop_order_approved",
+                "meta_data" => [[
+                    "key" => "_fastshop_order_approved",
                     "value" => "yes"
-                ] ]
+                ]]
             ] );
 
             // Create approval note
@@ -449,8 +451,8 @@ class OrderController extends VtexController
 
             return response()->json( [
                 "error_code" => null,
-                "message"    => "ok",
-                "data"       => $response[ "data" ],
+                "message" => "ok",
+                "data" => $response[ "data" ],
             ], 200 );
         }
         catch ( Throwable $e )
@@ -466,7 +468,7 @@ class OrderController extends VtexController
 
             return response()->json( [
                 "error_code" => "5000", // 5000 - generic failure
-                "message"    => $e->getMessage(),
+                "message" => $e->getMessage(),
             ], 500 );
         }
     }
@@ -476,9 +478,10 @@ class OrderController extends VtexController
      *
      * This method is called from ../plugins/triibo-api-services | triibo_fastshop
      *
-     * @param   Request     $request    The incoming HTTP request
-     * @param   string      $order_id   The ID of the order
-     * @return  JsonResponse            A JSON response indicating success or an error message
+     * @param Request $request  The incoming HTTP request
+     * @param string  $order_id The ID of the order
+     *
+     * @return JsonResponse A JSON response indicating success or an error message
      */
     public function orderCancellation( Request $request, $order_id )
     {
@@ -491,9 +494,9 @@ class OrderController extends VtexController
         try
         {
             // Retrieve the WooCommerce order
-            [ $parent, $order ] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
+            [$parent, $order] = get_wc_order( parent::LOG_CHANNEL, $order_id, $seller );
 
-            $is_not_validated   = validate_wc_order(
+            $is_not_validated = validate_wc_order(
                 channel : parent::LOG_CHANNEL,
                 method  : "orderCancellation",
                 order_id: $order_id,
@@ -510,22 +513,22 @@ class OrderController extends VtexController
             // Get order details from VTEX
             $response = vtex_get_order( parent::LOG_CHANNEL, $seller, $order_id );
 
-            if ( $response[ "error_code" ] != null )
+            if ( $response[ "error_code" ] !== null )
             {
                 // Log error and send notification
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCancellation 1",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "response" => $response ],
+                    context : ["order_id" => $order_id, "response" => $response],
                 );
 
                 send_notification( $parent, $order, "order_cancellation_e1" );
 
-                $code     = $response[ "error_code" ];
-                $message  = "Pedido não cancelado.\n";
+                $code = $response[ "error_code" ];
+                $message = "Pedido não cancelado.\n";
                 $message .= "Falha na recuperação do pedido na Fast Shop.\n";
-                $message .= $response[ "message" ] . "\n";
+                $message .= $response[ "message" ]."\n";
                 $message .= "Code: {$code}";
 
                 // Create error note
@@ -533,62 +536,62 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5001", // 5001 - error in order creation in FS
-                    "message"    => "something wrong",
-                    "data"       => [ $code, $message ]
+                    "message" => "something wrong",
+                    "data" => [$code, $message]
                 ], 500 );
             }
 
             $fs_order = $response[ "data" ];
 
             // Check if order can be cancelled (not already invoiced)
-            if ( strtolower( $fs_order[ "status" ] ) == "invoiced" )
+            if ( mb_strtolower( $fs_order[ "status" ] ) === "invoiced" )
             {
                 // Log error and send notification
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCancellation 2",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "response" => $response ],
+                    context : ["order_id" => $order_id, "response" => $response],
                 );
 
                 send_notification( $parent, $order, "order_cancellation_e2" );
 
-                $status       = $fs_order[ "status"            ];
-                $description  = $fs_order[ "statusDescription" ];
+                $status = $fs_order[ "status"            ];
+                $description = $fs_order[ "statusDescription" ];
 
-                $message      = "Pedido não pode ser cancelado na Fast Shop.\n";
-                $message     .= "status: {$status}\n";
-                $message     .= "Descrição: {$description}";
+                $message = "Pedido não pode ser cancelado na Fast Shop.\n";
+                $message .= "status: {$status}\n";
+                $message .= "Descrição: {$description}";
 
                 // Create error note
                 create_error_note( parent::LOG_CHANNEL, $order_id, "custom", $message );
 
                 return response()->json( [
                     "error_code" => "5002", // 5002 - error in order creation in FS
-                    "message"    => "something wrong",
-                    "data"       => [ $status, $message ]
+                    "message" => "something wrong",
+                    "data" => [$status, $message]
                 ], 500 );
             }
 
             // Cancel order in VTEX
             $response = vtex_cancel_order( parent::LOG_CHANNEL, $seller, $order_id );
 
-            if ( $response[ "error_code" ] != null )
+            if ( $response[ "error_code" ] !== null )
             {
                 // Log error and send notification
                 log_message(
                     channel : parent::LOG_CHANNEL,
                     message : "VTEX - orderCancellation 3",
                     level   : "error",
-                    context : [ "order_id" => $order_id, "response" => $response ],
+                    context : ["order_id" => $order_id, "response" => $response],
                 );
 
                 send_notification( $parent, $order, "order_cancellation_e3" );
 
-                $code     = $response[ "error_code" ];
-                $message  = "Pedido não cancelado.\n";
+                $code = $response[ "error_code" ];
+                $message = "Pedido não cancelado.\n";
                 $message .= "Falha ao informar a Fast Shop sobre o cancelamento do pedido.\n";
-                $message .= $response[ "message" ] . "\n";
+                $message .= $response[ "message" ]."\n";
                 $message .= "Code: {$code}";
 
                 // Create error note
@@ -596,8 +599,8 @@ class OrderController extends VtexController
 
                 return response()->json( [
                     "error_code" => "5003", // 5003 - error in order creation in FS
-                    "message"    => "something wrong",
-                    "data"       => [ $code, $message ]
+                    "message" => "something wrong",
+                    "data" => [$code, $message]
                 ], 500 );
             }
 
@@ -606,8 +609,8 @@ class OrderController extends VtexController
 
             return response()->json( [
                 "error_code" => null,
-                "message"    => "ok",
-                "data"       => $response[ "data" ],
+                "message" => "ok",
+                "data" => $response[ "data" ],
             ], 200 );
         }
         catch ( Throwable $e )
@@ -623,7 +626,7 @@ class OrderController extends VtexController
 
             return response()->json( [
                 "error_code" => "5000", // 5000 - generic failure
-                "message"    => $e->getMessage(),
+                "message" => $e->getMessage(),
             ], 500 );
         }
     }

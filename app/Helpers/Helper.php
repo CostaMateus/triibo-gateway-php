@@ -2,11 +2,8 @@
 
 namespace App\Helpers;
 
-use DateTime;
 use Exception;
 use Throwable;
-use DateInterval;
-use DateTimeImmutable;
 use Illuminate\Support\Str;
 use Devio\Pipedrive\Pipedrive;
 use Illuminate\Support\Facades\Http;
@@ -18,48 +15,56 @@ class Helper
      *
      * @param [type]  $label Valor do campo
      * @param [type]  $id    ID do stage
-     * @param boolean $type  TRUE para status, FALSE para label
+     * @param bool $type TRUE para status, FALSE para label
+     *
      * @return void
      */
-    public static function statusLabelDeal($label, $id, bool $type = true)
+    public static function statusLabelDeal( $label, $id, bool $type = true )
     {
-        if (!$label || !$id) return 0;
+        if ( ! $label || ! $id ) return 0;
 
         $resp = 0;
 
-        if ($type)
+        if ( $type )
         {
-            switch ($label) {
+            switch ( $label )
+            {
                 case "open":
-                    $resp = "$id:A";
-                break;
+                    $resp = "{$id}:A";
+
+                    break;
 
                 case "won":
-                    $resp = "$id:G";
-                break;
+                    $resp = "{$id}:G";
+
+                    break;
 
                 case "lost":
-                    $resp = "$id:P";
-                break;
+                    $resp = "{$id}:P";
+
+                    break;
 
                 case "deleted":
-                    $resp = "$id:E";
-                break;
+                    $resp = "{$id}:E";
+
+                    break;
 
                 default:
                     $resp = 0;
-                break;
+
+                    break;
             }
         }
         else
         {
             $labels = self::getLabelsDeal();
 
-            foreach ($labels as $lbl)
+            foreach ( $labels as $lbl )
             {
-                if ($lbl["id"] == (int) $label)
+                if ( $lbl["id"] === (int) $label )
                 {
-                    $resp = "$id:" . $lbl["label"];
+                    $resp = "{$id}:".$lbl["label"];
+
                     break;
                 }
             }
@@ -69,57 +74,28 @@ class Helper
     }
 
     /**
-     * Auxilio para função statusLabelDeal()
-     *
-     * @return array
-     */
-    private static function getLabelsDeal()
-    {
-        // Etiqueta / id interno: 12463
-
-        $token   = config('pipedrive.token');
-        $pipeApi = new Pipedrive($token);
-        $labels  = $pipeApi->DealFields->find(12463)->getData();
-
-        foreach ($labels->options as $t)
-        {
-            if (in_array(mb_strtolower($t->label), ["em espera", "em degustação"]))
-            {
-                $label    = explode(" ", $t->label)[1];
-                $t->label = ucfirst($label);
-            }
-
-            $resp[] = [
-                "id"    => $t->id,
-                "label" => $t->label[0]
-            ];
-        }
-
-        return $resp;
-    }
-
-    /**
      * Recupera o campo segundo o $idField passado.
      * Apenas campos select / com options
-
-     * @param integer $idField    ID do campo
-     * @param integer $idSelected ID da opção selecionada
+     *
+     * @param int $idField    ID do campo
+     * @param int $idSelected ID da opção selecionada
+     *
      * @return string label do campo
      */
-    public static function getOrgCustomField(int $idField, int $idSelected)
+    public static function getOrgCustomField( int $idField, int $idSelected )
     {
         // Fonte do Lead / id interno: 4028
         // Vendedor resp / id interno: 4032
 
-        if ($idSelected > 0)
+        if ( $idSelected > 0 )
         {
-            $token   = config('pipedrive.token');
-            $pipeApi = new Pipedrive($token);
-            $opts    = $pipeApi->OrganizationFields->find($idField)->getData()->options;
+            $token = config( 'pipedrive.token' );
+            $pipeApi = new Pipedrive( $token );
+            $opts = $pipeApi->OrganizationFields->find( $idField )->getData()->options;
 
-            foreach($opts as $opt)
+            foreach ( $opts as $opt )
             {
-                if ($opt->id == $idSelected) return $opt->label;
+                if ( $opt->id === $idSelected ) return $opt->label;
             }
         }
 
@@ -129,67 +105,57 @@ class Helper
     public static function convertDateSS( string $date )
     {
         // 18/11/2022 23:59:00
-        $date      = explode( " ",  $date      );
-        $date[ 0 ] = explode( "/",  $date[ 0 ] );
+        $date = explode( " ", $date );
+        $date[ 0 ] = explode( "/", $date[ 0 ] );
         $date[ 0 ] = array_reverse( $date[ 0 ] );
-        $date[ 0 ] = implode( "-",  $date[ 0 ] );
-        $date      = implode( " ",  $date );
+        $date[ 0 ] = implode( "-", $date[ 0 ] );
 
-        return $date;
+        return implode( " ", $date );
     }
-
-
-
-
-
-
-
-
-
 
     public static function prepareDataFs( $array, $field )
     {
         echo "Formatting SKUs to query in FS\n";
 
-        $items  = [];
+        $items = [];
 
         foreach ( $array as $sku )
         {
-            $id      = ( strpos( $sku[ $field ], "FS-" ) === false )
+            $id = ( ! str_contains( $sku[ $field ], "FS-" ) )
                         ? $sku[ $field ]
-                        : substr( $sku[ $field ], 3 );
+                        : mb_substr( $sku[ $field ], 3 );
 
             $items[] = [
-                "id"       => $id,
+                "id" => $id,
                 "quantity" => 1,
-                "seller"   => "FSH"
+                "seller" => "FSH"
             ];
         }
 
         return [
-            "items"          => $items,
-            "postalCode"     => "",
-            "country"        => "",
+            "items" => $items,
+            "postalCode" => "",
+            "country" => "",
             "geoCoordinates" => []
         ];
     }
 
     public static function getStockPriceFS( $body )
     {
-        $env       = config( "fastshop.env"             );
-        $fsUrl     = config( "fastshop.$env.fs.url"     );
-        $fsHeaders = config( "fastshop.$env.fs.headers" );
+        $env = config( "fastshop.env" );
+        $fsUrl = config( "fastshop" )[ $env ][ "fs.url" ];
+        $fsHeaders = config( "fastshop" )[ $env ][ "fs.headers" ];
 
-        $count     = count( $body[ "items" ] );
+        $count = count( $body[ "items" ] );
 
-        $message   = "Stock|Price: Querying {$count} SKUs at once...";
+        $message = "Stock|Price: Querying {$count} SKUs at once...";
 
         log_message( channel: "marketplace", message: $message );
         echo $message;
 
         try
         {
-            $url      = "$fsUrl/pvt/orderForms/simulation";
+            $url = "{$fsUrl}/pvt/orderForms/simulation";
             $response = Http::withHeaders( $fsHeaders )->withBody( json_encode( $body ), "application/json" )->post( $url );
 
             if ( $response->successful() ) return $response->json();
@@ -210,9 +176,9 @@ class Helper
     {
         foreach ( $tags as $tag )
         {
-            if ( $tag == "Cofry" ) continue;
+            if ( $tag === "Cofry" ) continue;
 
-            $tag   = "\n#cofry_" . Str::slug( $tag, "_" );
+            $tag = "\n#cofry_".Str::slug( $tag, "_" );
             $desc .= $tag;
         }
 
@@ -222,10 +188,9 @@ class Helper
     public static function awinReportStatus( string $status )
     {
         // pending, approved, declined
-        $status = strtolower( $status );
-        $status = ( $status == "declined" ) ? "denied" : $status;
+        $status = mb_strtolower( $status );
 
-        return $status;
+        return ( $status === "declined" ) ? "denied" : $status;
     }
 
     /**
@@ -233,24 +198,25 @@ class Helper
      *
      * It includes the voltage attribute if present and formats the description to a maximum length.
      *
-     * @param   string  $description    The full description of the product.
-     * @param   string  $product_name   The name of the product.
-     * @param   array   $attributes     An array of product attributes.
-     * @return  string                  The generated short description.
+     * @param string $description  the full description of the product
+     * @param string $product_name the name of the product
+     * @param array  $attributes   an array of product attributes
+     *
+     * @return string the generated short description
      */
     public static function getFsProductShortDescription( string $description, string $product_name, array $attributes )
     {
         // Extract the first line of the full description.
-        $short     = explode( "\r\n", $description )[ 0 ];
+        $short = explode( "\r\n", $description )[ 0 ];
 
         // Use the product name if the first line is too short.
-        $short     = ( strlen( $short ) <= 50 ) ? $product_name : $short;
+        $short = ( mb_strlen( $short ) <= 50 ) ? $product_name : $short;
 
         // Limit the description to 140 characters.
-        $short     = Str::limit( $short, 140, " (...)" );
+        $short = Str::limit( $short, 140, " (...)" );
 
         // Find the voltage attribute, if it exists.
-        $volt_attr = current( array_filter( $attributes, function ( $att )
+        $volt_attr = current( array_filter( $attributes, static function ( $att )
         {
             return Str::lower( $att[ "name" ] ) === "voltagem";
         } ) );
@@ -259,10 +225,10 @@ class Helper
         if ( $volt_attr )
         {
             $val = reset( $volt_attr[ "options" ] );
-            $val = in_array( $val, [ "110", "220" ] ) ? $val . "V" : $val;
+            $val = in_array( $val, ["110", "220"] ) ? $val."V" : $val;
 
             if ( $val !== "NA" )
-                $short .= "\r\n\r\n" . Str::ucfirst( "voltagem" ) . " : $val";
+                $short .= "\r\n\r\n".Str::ucfirst( "voltagem" )." : {$val}";
         }
 
         return $short;
@@ -271,8 +237,9 @@ class Helper
     /**
      * Converts product specifications into an array of WooCommerce-compatible attributes.
      *
-     * @param   array   $specifications     An array of product specifications.
-     * @return  array                       An array of formatted attributes for WooCommerce.
+     * @param array $specifications an array of product specifications
+     *
+     * @return array an array of formatted attributes for WooCommerce
      */
     public static function getFsProductAttributes( array $specifications )
     {
@@ -286,15 +253,15 @@ class Helper
                 continue;
 
             // Convert boolean 'true' to 'SIM'.
-            $field_value  = $attr[ "fieldValue" ] === "true" ? "SIM" : $attr[ "fieldValue" ];
+            $field_value = $attr[ "fieldValue" ] === "true" ? "SIM" : $attr[ "fieldValue" ];
 
             // Add the attribute to the array.
             $attributes[] = [
-                "name"      => $attr[ "fieldName" ],
-                "position"  => $key,
-                "visible"   => true,
+                "name" => $attr[ "fieldName" ],
+                "position" => $key,
+                "visible" => true,
                 "variation" => true,
-                "options"   => [ $field_value ],
+                "options" => [$field_value],
             ];
         }
 
@@ -307,18 +274,19 @@ class Helper
      * This function is used to create a textual representation of the information
      * contained in an array, with a title and a set of attributes and their labels.
      *
-     * @param   array   $data           The input data array.
-     * @param   string  $title          The title for the section of formatted information.
-     * @param   array   $attributes     An associative array mapping data keys to their display labels.
-     * @return  string                  A formatted string containing the information.
+     * @param array  $data       the input data array
+     * @param string $title      the title for the section of formatted information
+     * @param array  $attributes an associative array mapping data keys to their display labels
+     *
+     * @return string a formatted string containing the information
      */
     public static function formatInfo( array $data, string $title, array $attributes )
     {
-        $info = "$title\n";
+        $info = "{$title}\n";
 
         foreach ( $attributes as $key => $label )
             if ( isset( $data[ $key ] ) )
-                $info .= " $label: {$data[$key]}\n";
+                $info .= " {$label}: {$data[$key]}\n";
 
         return $info;
     }
@@ -326,28 +294,29 @@ class Helper
     /**
      * Maps the logistics information from WooCommerce to the format required by Fast Shop (FS).
      *
-     * @param   array   $data   The logistics information from a WooCommerce order.
-     * @return  array           The logistics information formatted for FS.
+     * @param array $data the logistics information from a WooCommerce order
+     *
+     * @return array the logistics information formatted for FS
      */
     public static function mapFsLogisticsInfo( array $data )
     {
         // Map logistics information to the FS format.
-        return array_map( function ( $item )
+        return array_map( static function ( $item )
         {
             // Search for the index of the SLA that corresponds to the "delivery" delivery channel.
-            $sla_id       = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
+            $sla_id = array_search( "delivery", array_column( $item[ "slas" ], "deliveryChannel" ) );
 
             // Select the SLA based on the found index.
             $selected_sla = $item[ "slas" ][ $sla_id ];
 
             // Return an array with the logistics information mapped to the FS format.
             return [
-                "itemIndex"        => $item[ "itemIndex" ],
-                "selectedSla"      => $selected_sla[ "id" ],
-                "lockTTL"          => "3d",
+                "itemIndex" => $item[ "itemIndex" ],
+                "selectedSla" => $selected_sla[ "id" ],
+                "lockTTL" => "3d",
                 "shippingEstimate" => $selected_sla[ "shippingEstimate" ],
-                "price"            => $selected_sla[ "price"            ],
-                "deliveryWindow"   => [],
+                "price" => $selected_sla[ "price"            ],
+                "deliveryWindow" => [],
             ];
 
         }, $data );
@@ -356,29 +325,30 @@ class Helper
     /**
      * Maps order items from a given logistics array to the format required by Fast Shop (FS).
      *
-     * @param   array   $logistics  The logistics information related to the order items.
-     * @param   array   $items      The actual items from the order.
-     * @return  array               The order items formatted for FS.
+     * @param array $logistics the logistics information related to the order items
+     * @param array $items     the actual items from the order
+     *
+     * @return array the order items formatted for FS
      */
     public static function mapFsOrderItems( array $logistics, array $items )
     {
         // Use array_map to transform each item to the FS format using the logistics array.
-        return array_map( function ( $item ) use ( $items )
+        return array_map( static function ( $item ) use ( $items )
         {
             // Retrieve the corresponding item from the items array using the itemIndex.
-            $item_id  = $item[ "itemIndex" ];
+            $item_id = $item[ "itemIndex" ];
             $aux_item = $items[ $item_id ];
 
             // Return an array with the item data mapped to the FS format.
             return [
-                "id"                => $aux_item[ "id"             ],
-                "quantity"          => $aux_item[ "quantity"       ],
-                "price"             => $aux_item[ "price"          ],
-                "unitMultiplier"    => $aux_item[ "unitMultiplier" ],
-                "Seller"            => $aux_item[ "seller"         ],
-                "priceTags"         => $aux_item[ "priceTags"      ],
-                "isGift"            => false,
-                "commission"        => 10,
+                "id" => $aux_item[ "id"             ],
+                "quantity" => $aux_item[ "quantity"       ],
+                "price" => $aux_item[ "price"          ],
+                "unitMultiplier" => $aux_item[ "unitMultiplier" ],
+                "Seller" => $aux_item[ "seller"         ],
+                "priceTags" => $aux_item[ "priceTags"      ],
+                "isGift" => false,
+                "commission" => 10,
                 "freightCommission" => 0,
             ];
 
@@ -388,16 +358,47 @@ class Helper
     /**
      * Retrieves stock and price information for a given product.
      *
-     * @param   object  $product    The product object from which data will be extracted.
-     * @return  array               An associative product array.
+     * @param object $product the product object from which data will be extracted
+     *
+     * @return array an associative product array
      */
     public static function getProductStockPrice( object $product )
     {
         return [
-            "regular_price"  => $product->regular_price,
-            "sale_price"     => $product->sale_price,
+            "regular_price" => $product->regular_price,
+            "sale_price" => $product->sale_price,
             "stock_quantity" => $product->stock_quantity,
-            "stock_status"   => $product->stock_status,
+            "stock_status" => $product->stock_status,
         ];
+    }
+
+    /**
+     * Auxilio para função statusLabelDeal()
+     *
+     * @return array
+     */
+    private static function getLabelsDeal()
+    {
+        // Etiqueta / id interno: 12463
+
+        $token = config( 'pipedrive.token' );
+        $pipeApi = new Pipedrive( $token );
+        $labels = $pipeApi->DealFields->find( 12463 )->getData();
+
+        foreach ( $labels->options as $t )
+        {
+            if ( in_array( mb_strtolower( $t->label ), ["em espera", "em degustação"] ) )
+            {
+                $label = explode( " ", $t->label )[1];
+                $t->label = ucfirst( $label );
+            }
+
+            $resp[] = [
+                "id" => $t->id,
+                "label" => $t->label[0]
+            ];
+        }
+
+        return $resp;
     }
 }

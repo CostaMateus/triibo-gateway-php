@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
 return [
     /*
      * ------------------------------------------------------------------------
      * Default Firebase project
      * ------------------------------------------------------------------------
      */
-    'default' => env('FIREBASE_PROJECT', 'app'),
+    'default' => env( 'FIREBASE_PROJECT', 'app' ),
 
     /*
      * ------------------------------------------------------------------------
@@ -47,7 +45,7 @@ return [
              *
              */
             'credentials' => [
-                'file' => (env('TRIIBO_ENV') == 'production') ? env('FIREBASE_CREDENTIALS_PROD') : env('FIREBASE_CREDENTIALS_HML'),
+                'file' => ( env( 'TRIIBO_ENV' ) === 'production' ) ? env( 'FIREBASE_CREDENTIALS_PROD' ) : env( 'FIREBASE_CREDENTIALS_HML' ),
 
                 /*
                  * If you want to prevent the auto discovery of credentials, set the
@@ -64,7 +62,7 @@ return [
              */
 
             'auth' => [
-                'tenant_id' => env('FIREBASE_AUTH_TENANT_ID'),
+                'tenant_id' => env( 'FIREBASE_AUTH_TENANT_ID' ),
             ],
 
             /*
@@ -85,7 +83,7 @@ return [
                  * Please make sure that you use a full URL like, for example,
                  * https://my-project-id.firebaseio.com
                  */
-                'url' => (env('TRIIBO_ENV') == 'production') ? env('FIREBASE_DATABASE_URL_PROD') : env('FIREBASE_DATABASE_URL_HML'),
+                'url' => ( env( 'TRIIBO_ENV' ) === 'production' ) ? env( 'FIREBASE_DATABASE_URL_PROD' ) : env( 'FIREBASE_DATABASE_URL_HML' ),
             ],
 
             'dynamic_links' => [
@@ -100,7 +98,7 @@ return [
                  * The value must be a valid domain, for example,
                  * https://example.page.link
                  */
-                'default_domain' => env('FIREBASE_DYNAMIC_LINKS_DEFAULT_DOMAIN'),
+                'default_domain' => env( 'FIREBASE_DYNAMIC_LINKS_DEFAULT_DOMAIN' ),
             ],
 
             /*
@@ -117,7 +115,7 @@ return [
                  * override it here.
                  */
 
-                'default_bucket' => env('FIREBASE_STORAGE_DEFAULT_BUCKET'),
+                'default_bucket' => env( 'FIREBASE_STORAGE_DEFAULT_BUCKET' ),
             ],
 
             /*
@@ -130,7 +128,7 @@ return [
              *
              */
 
-            'cache_store' => env('FIREBASE_CACHE_STORE', 'file'),
+            'cache_store' => env( 'FIREBASE_CACHE_STORE', 'file' ),
 
             /*
              * ------------------------------------------------------------------------
@@ -149,8 +147,8 @@ return [
              */
 
             'logging' => [
-                'http_log_channel' => env('FIREBASE_HTTP_LOG_CHANNEL'),
-                'http_debug_log_channel' => env('FIREBASE_HTTP_DEBUG_LOG_CHANNEL'),
+                'http_log_channel' => env( 'FIREBASE_HTTP_LOG_CHANNEL' ),
+                'http_debug_log_channel' => env( 'FIREBASE_HTTP_DEBUG_LOG_CHANNEL' ),
             ],
 
             /*
@@ -165,14 +163,14 @@ return [
                  * Use a proxy that all API requests should be passed through.
                  * (default: none)
                  */
-                'proxy' => env('FIREBASE_HTTP_CLIENT_PROXY'),
+                'proxy' => env( 'FIREBASE_HTTP_CLIENT_PROXY' ),
 
                 /*
                  * Set the maximum amount of seconds (float) that can pass before
                  * a request is considered timed out
                  * (default: indefinitely)
                  */
-                'timeout' => env('FIREBASE_HTTP_CLIENT_TIMEOUT'),
+                'timeout' => env( 'FIREBASE_HTTP_CLIENT_TIMEOUT' ),
             ],
 
             /*
@@ -182,7 +180,7 @@ return [
              *
              * Enable debugging of HTTP requests made directly from the SDK.
              */
-            'debug' => env('FIREBASE_ENABLE_DEBUG', false),
+            'debug' => env( 'FIREBASE_ENABLE_DEBUG', false ),
         ],
     ],
 ];

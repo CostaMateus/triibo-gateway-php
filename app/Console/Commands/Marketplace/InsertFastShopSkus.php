@@ -2,34 +2,33 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Storage;
+use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Product;
-use Storage;
 
 class InsertFastShopSkus extends Command
 {
     /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
+    /**
      * The name and signature of the console command.
      *
-     * @var     string
+     * @var string
      */
-    protected $signature   = "mkt:insert-fs-skus";
+    protected $signature = "mkt:insert-fs-skus";
 
     /**
      * The console command description.
      *
-     * @var     string
+     * @var string
      */
     protected $description = "Insert Fast Shop skus in marketplace";
-
-    protected $prefix      = "MKT INS Products:";
-
-    /**
-     *
-     * @var     string
-     */
-    protected const LOG_CHANNEL = "marketplace";
+    protected $prefix = "MKT INS Products:";
 
     /**
      * Create a new command instance.
@@ -50,7 +49,7 @@ class InsertFastShopSkus extends Command
     {
         return 0;
 
-        $start   = now();
+        $start = now();
         $message = "{$this->prefix} Starting process WC data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
@@ -66,70 +65,68 @@ class InsertFastShopSkus extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        $diff    = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( now() );
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
     }
 
     /**
+     * @param int $i
      *
-     * @param   integer     $i
-     * @return  void
+     * @return void
      */
     private function process( int $i ) : void
     {
         $raw_products = Storage::get( path: "fast-shop-products/fs-products-{$i}.json" );
-        $fs_products  = json_decode( $raw_products, true );
+        $fs_products = json_decode( $raw_products, true );
 
         foreach ( $fs_products as $id => &$product )
         {
-            if ( in_array( false, [ $product[ "data" ][ "IsActive" ], $product[ "context" ][ "IsActive" ] ] ) )
+            if ( in_array( false, [$product[ "data" ][ "IsActive" ], $product[ "context" ][ "IsActive" ]] ) )
             {
                 unset( $fs_products[ $id ] );
+
                 continue;
             }
 
             $this->info( string: "Product ID: {$id}" );
         }
 
-        $message     = "{$this->prefix} Translating data...";
+        $message = "{$this->prefix} Translating data...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        //
         $wc_products = $this->translateProducts( products: $fs_products );
 
-        $message     = "{$this->prefix} Inserting in local, " . count( $wc_products ) . " products...";
+        $message = "{$this->prefix} Inserting in local, ".count( $wc_products )." products...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        //
         $this->createLocalProduct( products: $wc_products );
 
-        $message     = "{$this->prefix} Sending to marketplace, " . count( $wc_products ) . " products...";
+        $message = "{$this->prefix} Sending to marketplace, ".count( $wc_products )." products...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        //
         $this->sendToMarketplace( wc_products: $wc_products, fs_products: $fs_products );
     }
 
     /**
+     * @param array $products
      *
-     * @param   array   $products
-     * @return  array|null
+     * @return null|array
      */
-    private function translateProducts( array $products ) : array|null
+    private function translateProducts( array $products ) : ?array
     {
         try
         {
             $wc_data = [];
 
-            foreach( $products as $sku => $product )
+            foreach ( $products as $sku => $product )
             {
-                $s               = str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                $message         = "{$this->prefix}: sku {$s} | " . $product[ "data" ][ "Name" ];
+                $s = mb_str_pad( $sku, 5, " ", STR_PAD_LEFT );
+                $message = "{$this->prefix}: sku {$s} | ".$product[ "data" ][ "Name" ];
 
                 log_message( channel: self::LOG_CHANNEL, message: $message );
                 $this->info( string: $message );
@@ -143,7 +140,7 @@ class InsertFastShopSkus extends Command
 
             return $wc_data;
         }
-        catch( \Throwable $e )
+        catch ( Throwable $e )
         {
             log_exception(
                 channel: self::LOG_CHANNEL,
@@ -160,9 +157,9 @@ class InsertFastShopSkus extends Command
     }
 
     /**
+     * @param array $products
      *
-     * @param   array   $products
-     * @return  void
+     * @return void
      */
     private function createLocalProduct( array $products ) : void
     {
@@ -171,12 +168,12 @@ class InsertFastShopSkus extends Command
         foreach ( $products as $sku => $product )
         {
             $data[] = [
-                "store_id"      => 4265,
-                "metadata_id"   => $sku,
-                "product_sku"   => $product[ "sku"           ],
+                "store_id" => 4265,
+                "metadata_id" => $sku,
+                "product_sku" => $product[ "sku"           ],
                 "regular_price" => $product[ "regular_price" ],
-                "sale_price"    => $product[ "sale_price"    ],
-                "stock_status"  => $product[ "stock_status"  ],
+                "sale_price" => $product[ "sale_price"    ],
+                "stock_status" => $product[ "stock_status"  ],
             ];
         }
 
@@ -186,8 +183,11 @@ class InsertFastShopSkus extends Command
     /**
      * Undocumented function
      *
-     * @param   array   $products
-     * @return  void
+     * @param array $products
+     * @param array $wc_products
+     * @param array $fs_products
+     *
+     * @return void
      */
     private function sendToMarketplace( array $wc_products, array $fs_products ) : void
     {
@@ -200,9 +200,9 @@ class InsertFastShopSkus extends Command
             try
             {
                 $wcp = Product::create( $product );
-                DB::table( "marketplace_product_skus" )->where( "metadata_id", $sku )->update( [ "product_id" => $wcp[ "id" ] ] );
+                DB::table( "marketplace_product_skus" )->where( "metadata_id", $sku )->update( ["product_id" => $wcp[ "id" ]] );
             }
-            catch ( \Throwable $e )
+            catch ( Throwable $e )
             {
                 if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
                 {

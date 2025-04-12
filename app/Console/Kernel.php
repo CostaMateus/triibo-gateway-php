@@ -3,7 +3,7 @@
 namespace App\Console;
 
 use DateTimeZone;
-use Illuminate\Console\Scheduling\{ Event, Schedule };
+use Illuminate\Console\Scheduling\{Schedule };
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
 class Kernel extends ConsoleKernel
@@ -14,32 +14,33 @@ class Kernel extends ConsoleKernel
      * @var array
      */
     protected $commands = [
-        \App\Console\Commands\Log\ClearLogFile::class,
+        Commands\Log\ClearLogFile::class,
 
-        \App\Console\Commands\Affiliates\Awin\ProcessDataAwin::class,
+        Commands\Affiliates\Awin\ProcessDataAwin::class,
 
-        \App\Console\Commands\Marketplace\DeleteDuplicateSku::class,
-        \App\Console\Commands\Marketplace\DeleteProductWithoutSku::class,
-        \App\Console\Commands\Marketplace\GetCategories::class,
-        \App\Console\Commands\Marketplace\ProductPrivateWithoutImg::class,
+        Commands\Marketplace\DeleteDuplicateSku::class,
+        Commands\Marketplace\DeleteProductWithoutSku::class,
+        Commands\Marketplace\GetCategories::class,
+        Commands\Marketplace\ProductPrivateWithoutImg::class,
 
-        \App\Console\Commands\Marketplace\DeleteFastShopSkus::class,
-        \App\Console\Commands\Marketplace\InsertFastShopSkus::class,
+        Commands\Marketplace\DeleteFastShopSkus::class,
+        Commands\Marketplace\InsertFastShopSkus::class,
 
-        \App\Console\Commands\Marketplace\Reset\DeleteFastShopData::class,
+        Commands\Marketplace\Reset\DeleteFastShopData::class,
 
-        \App\Console\Commands\Vtex\ProcessProducts::class,
+        Commands\Vtex\ProcessProducts::class,
     ];
 
     /**
      * Define the application's command schedule.
      *
-     * @param   Schedule    $schedule
-     * @return  void
+     * @param Schedule $schedule
+     *
+     * @return void
      */
-    protected function schedule( Schedule $schedule )
+    protected function schedule( Schedule $schedule ) : void
     {
-        if ( config( "app.env" ) == "production" )
+        if ( config( "app.env" ) === "production" )
         {
             // Clear Logs - sunday at 00h00
             $schedule->command( "log:clear" )->weekly()->withoutOverlapping()->runInBackground();
@@ -53,7 +54,6 @@ class Kernel extends ConsoleKernel
             // Relatórios - Diariamente às 01h -- relatórios do dia anterior
             $schedule->command( "awin:process --option=reports" )->dailyAt( "01:30" )->withoutOverlapping()->runInBackground();
 
-
             // ################################
             // ### Cofry Triibo Integration ###
             // ################################
@@ -65,20 +65,20 @@ class Kernel extends ConsoleKernel
             // Imagens - Diariamente às 02h10
             // $schedule->command( "cofry:process_images"          )->dailyAt( "02:40" )->runInBackground();
 
-            ################################
-            ### Marketplace ################
-            ################################
+            // ###############################
+            // ## Marketplace ################
+            // ###############################
             // Delete duplicate SKUs
-            $schedule->command( "mkt:delete_duplicate_sku"                 )->dailyAt( "01:00" )->withoutOverlapping()->runInBackground();
+            $schedule->command( "mkt:delete_duplicate_sku" )->dailyAt( "01:00" )->withoutOverlapping()->runInBackground();
 
             // Change status of products without images
-            $schedule->command( "mkt:product_private_without_img"          )->dailyAt( "02:15" )->withoutOverlapping()->runInBackground();
+            $schedule->command( "mkt:product_private_without_img" )->dailyAt( "02:15" )->withoutOverlapping()->runInBackground();
 
             // Remove FS products without SKU
-            $schedule->command( "mkt:delete_product_without_sku"           )->dailyAt( "05:00" )->withoutOverlapping()->runInBackground();
+            $schedule->command( "mkt:delete_product_without_sku" )->dailyAt( "05:00" )->withoutOverlapping()->runInBackground();
 
             // Get Categories - weekly on monday
-            $schedule->command( "mkt:get_categories"                       )->weeklyOn( 1, "06:00" )->withoutOverlapping()->runInBackground();
+            $schedule->command( "mkt:get_categories" )->weeklyOn( 1, "06:00" )->withoutOverlapping()->runInBackground();
 
             // Process product informations FS - every five minutes
             $schedule->command( "vtex:process_products --seller=fast_shop" )->everyTenMinutes()->withoutOverlapping()->runInBackground();
@@ -88,11 +88,11 @@ class Kernel extends ConsoleKernel
     /**
      * Register the commands for the application.
      *
-     * @return  void
+     * @return void
      */
     protected function commands() : void
     {
-        $this->load( __DIR__ . "/Commands" );
+        $this->load( __DIR__."/Commands" );
 
         require base_path( "routes/console.php" );
     }
@@ -100,7 +100,7 @@ class Kernel extends ConsoleKernel
     /**
      * Get the timezone that should be used by default for scheduled events.
      *
-     * @return  DateTimeZone|string|null
+     * @return null|DateTimeZone|string
      */
     protected function scheduleTimezone() : mixed
     {

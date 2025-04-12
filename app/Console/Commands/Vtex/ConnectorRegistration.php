@@ -41,15 +41,16 @@ class ConnectorRegistration extends Command
         $connector = new ConnectorService();
         $connector->enableLogNotify( false );
 
-        $response  = $connector->register();
+        $response = $connector->register();
 
         save_file( name: "vtex-register-connector", data: $response );
 
         $this->info( print_r( $response, true ) );
 
-        if ( $response[ 0 ] != 200 )
+        if ( $response[ 0 ] !== 200 )
         {
             $this->error( "Error registering connector" );
+
             return;
         }
 

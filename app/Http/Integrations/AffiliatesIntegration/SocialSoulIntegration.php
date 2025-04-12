@@ -7,14 +7,11 @@ use Exception;
 use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\{DB, File, Http};
 
 class SocialSoulIntegration
 {
-    const ID = "-socialsoul";
-
+    public const ID = "-socialsoul";
     protected $env;
     protected $url_category;
     protected $url_coupon;
@@ -22,31 +19,32 @@ class SocialSoulIntegration
     protected $url_store;
     protected $url_report;
     protected $source_id;
-
-    protected $stores      = [];
+    protected $stores = [];
     protected $storesLocal = [];
-    protected $base        = 100; // base de calculo, ex 100 reais gastos
-    protected $rate        = 10;  // taxa de conversão, 10 pontos a cada 1 real
+    protected $base = 100; // base de calculo, ex 100 reais gastos
+    protected $rate = 10;  // taxa de conversão, 10 pontos a cada 1 real
 
     public function __construct()
     {
-        $this->env          = config( "socialsoul.env"                    );
-        $url                = config( "socialsoul.{$this->env}.url"       );
-        $tkn                = config( "socialsoul.{$this->env}.token"     );
-        $this->source_id    = config( "socialsoul.{$this->env}.source_id" );
+        $this->env = config( "socialsoul.env" );
+        $url = config( "socialsoul.{$this->env}.url" );
+        $tkn = config( "socialsoul.{$this->env}.token" );
+        $this->source_id = config( "socialsoul.{$this->env}.source_id" );
 
-        $this->url_coupon   = "{$url}/v2/{$tkn}/coupon";
+        $this->url_coupon = "{$url}/v2/{$tkn}/coupon";
         $this->url_category = "{$url}/v3/{$tkn}/category";
-        $this->url_offer    = "{$url}/v3/{$tkn}/offer";
-        $this->url_store    = "{$url}/v3/{$tkn}/store";
-        $this->url_report   = "{$url}/api/lomadee";
+        $this->url_offer = "{$url}/v3/{$tkn}/offer";
+        $this->url_store = "{$url}/v3/{$tkn}/store";
+        $this->url_report = "{$url}/api/lomadee";
 
-        $this->stores       = $this->getStores();
-        $this->storesLocal  = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
+        $this->stores = $this->getStores();
+        $this->storesLocal = json_decode( DB::table( "affiliates_stores" )->get()->toJson(), true );
     }
 
     /**
      * SocialSoul store == Triibo Establishments (FB)
+     *
+     * @param bool $flag
      *
      * @return array
      */
@@ -54,14 +52,14 @@ class SocialSoulIntegration
     {
         if ( empty( $this->stores ) )
         {
-            $path    = public_path( "images/affiliates/socialsoul/establishments" );
+            $path = public_path( "images/affiliates/socialsoul/establishments" );
             $default = public_path( "images/standard.png" );
 
-            File::copy( $default, $path . "/standard.png" );
+            File::copy( $default, $path."/standard.png" );
 
-            $stores  = $this->searchStores();
+            $stores = $this->searchStores();
 
-            if ( !$stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
+            if ( ! $stores[ "success" ] && empty( $stores[ "data" ] ) ) return []; // falha
 
             triibo_usort( "id", $stores[ "data" ] );
 
@@ -78,16 +76,15 @@ class SocialSoulIntegration
      */
     public function getCoupons()
     {
-        $coupons    = $this->searchCoupons();
+        $coupons = $this->searchCoupons();
 
-        if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
+        if ( ! $coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
 
         triibo_usort( "id", $coupons[ "data" ] );
 
-        $stores     = $this->translateStores( $this->stores );
-        $promotions = $this->translateCoupons( $coupons[ "data" ], $stores );
+        $stores = $this->translateStores( $this->stores );
 
-        return $promotions;
+        return $this->translateCoupons( $coupons[ "data" ], $stores );
     }
 
     /**
@@ -98,20 +95,20 @@ class SocialSoulIntegration
     public function getOffers()
     {
         $promotions = [];
-        $stores     = $this->getStores( true );
+        $stores = $this->getStores( true );
 
         foreach ( $stores as $key => $store )
         {
-            if ( !isset( $store[ "hasOffer" ] ) || $store[ "hasOffer" ] == 0 ) continue;
+            if ( ! isset( $store[ "hasOffer" ] ) || $store[ "hasOffer" ] === 0 ) continue;
 
-            $id     = $store[ "partnerEstablishmentId" ];
+            $id = $store[ "partnerEstablishmentId" ];
             $offers = $this->searchOffers( $id );
 
-            if ( !$offers[ "success" ] && empty( $offers[ "data" ] ) ) continue;
+            if ( ! $offers[ "success" ] && empty( $offers[ "data" ] ) ) continue;
 
             triibo_usort( "id", $offers[ "data" ] );
 
-            $offers     = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
+            $offers = $this->translateOffers( $offers[ "data" ], $store[ "cashbackDefault" ] );
             $promotions = array_merge( $promotions, $offers );
         }
 
@@ -119,7 +116,6 @@ class SocialSoulIntegration
     }
 
     /**
-     *
      * @return array
      */
     public function getReports()
@@ -129,529 +125,104 @@ class SocialSoulIntegration
          *
          * API de relatórios apenas tem em prod
          */
-        $url              = config( "socialsoul.production.url" );
+        $url = config( "socialsoul.production.url" );
         $this->url_report = "{$url}/api/lomadee";
 
-        $user         = config( "socialsoul.{$this->env}.login.user"   );
-        $pass         = config( "socialsoul.{$this->env}.login.pass"   );
+        $user = config( "socialsoul.{$this->env}.login.user" );
+        $pass = config( "socialsoul.{$this->env}.login.pass" );
         $publisher_id = config( "socialsoul.{$this->env}.publisher_id" );
 
-        $partial_url  = "/createToken?user={$user}&password={$pass}";
-        $response     = Http::get( $this->url_report . $partial_url );
+        $partial_url = "/createToken?user={$user}&password={$pass}";
+        $response = Http::get( $this->url_report.$partial_url );
 
-        if( !$response->successful() )
+        if ( ! $response->successful() )
         {
             return [
                 "success" => false,
-                "code"    => 4001,
-                "data"    => $response->json()
+                "code" => 4001,
+                "data" => $response->json()
             ];
         }
 
-        $date         = date( "dmY" );
-        $reports      = [];
-        $eventsStatus = [ 0, 1, 2, 99 ];
+        $date = date( "dmY" );
+        $reports = [];
+        $eventsStatus = [0, 1, 2, 99];
 
-        $data         = $response->json();
-        $token        = $data[ "token" ];
+        $data = $response->json();
+        $token = $data[ "token" ];
 
         foreach ( $eventsStatus as $status )
         {
-            $partial_url  = "/reportTransaction?publisherId={$publisher_id}&token={$token}";
+            $partial_url = "/reportTransaction?publisherId={$publisher_id}&token={$token}";
             $partial_url .= "&eventStatus={$status}"; // 0 - Pendente, 1 - Confirmado, 2 - Cancelado, 99 - Bônus
             $partial_url .= "&startDate={$date}";     // ddMMaaaa
             $partial_url .= "&endDate={$date}";       // ddMMaaaa
 
-            $response     = Http::get( $this->url_report . $partial_url );
+            $response = Http::get( $this->url_report.$partial_url );
 
-            if( !$response->successful() )
+            if ( ! $response->successful() )
             {
                 return [
                     "success" => false,
-                    "code"    => 4002,
-                    "data"    => []
+                    "code" => 4002,
+                    "data" => []
                 ];
             }
 
-            $xml          = simplexml_load_string( $response->body(), "SimpleXMLElement", LIBXML_NOCDATA );
-            $json         = json_encode( $xml );
+            $xml = simplexml_load_string( $response->body(), "SimpleXMLElement", LIBXML_NOCDATA );
+            $json = json_encode( $xml );
 
             /**
              * TODO analizar retorno de vários itens no $json
              */
-            $data         = json_decode( $json, true );
+            $data = json_decode( $json, true );
 
-            $reports      = array_merge( $reports, $this->translateReports( $data ) );
+            $reports = array_merge( $reports, $this->translateReports( $data ) );
         }
 
         return $reports;
     }
 
     /**
-     * Get stores SocialSoul
-     *
      * @return array
      */
-    private function searchStores()
+    public function schGetStores()
     {
-        $partial_url = "/_all?sourceId={$this->source_id}";
-        $data        = [];
-        $page        = 1;
-        $size        = 100;
-        $ended       = false;
+        $stores = [];
+        $coupons = $this->searchCoupons();
 
-        do
+        if ( ! $coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
+
+        triibo_usort( "id", $coupons[ "data" ] );
+
+        foreach ( $coupons[ "data" ] as $coupon )
         {
-            $response = Http::get( $this->url_store . "{$partial_url}&page={$page}&size={$size}" );
+            $store = $coupon[ "store" ];
 
-            if( !$response->successful() )
+            if ( ! array_key_exists( $store[ "id" ], $stores ) )
             {
-                return [
-                    "success" => false,
-                    "code"    => 4001,
-                    "data"    => $data
-                ];
-            }
-            else
-            {
-                $page++;
-
-                $body       = $response->json();
-                $data       = array_merge( $data, $body[ "stores" ] );
-
-                $pagination = $body[ "pagination" ];
-                $pg_size    = $pagination[ "size"      ];
-                $pg_total   = $pagination[ "totalPage" ];
-                $pg_current = $pagination[ "page"      ];
-
-                if ( $pg_total == $pg_current || $pg_size < 100 ) $ended = true;
-                if ( $this->env == "local" && $page > 100       ) $ended = true;
+                $key = array_search( $store[ "id" ], array_column( $this->stores, "id" ) );
+                $commission = $this->stores[ $key ][ "maxCommission" ];
+                $store[ "commission" ] = $commission;
+                $stores[ $store[ "id" ] ] = $store;
             }
         }
-        while ( !$ended );
-
-        return [
-            "success" => true,
-            "code"    => 0,
-            "data"    => $data,
-        ];
-    }
-
-    /**
-     * Get coupon SocialSoul
-     *
-     * @return array
-     */
-    private function searchCoupons()
-    {
-        $partial_url = "/_all?sourceId={$this->source_id}";
-        $data        = [];
-        $page        = 1;
-        $size        = 100;
-        $ended       = false;
-
-        do
-        {
-            $response = Http::get( $this->url_coupon . "{$partial_url}&page={$page}&size={$size}" );
-
-            if( !$response->successful() )
-            {
-                return [
-                    "success" => false,
-                    "code"    => 4001,
-                    "data"    => $data
-                ];
-            }
-            else
-            {
-                $page++;
-
-                $body       = $response->json();
-                $data       = array_merge( $data, $body[ "coupons" ] );
-
-                $pagination = $body[ "pagination" ];
-                $pg_size    = $pagination[ "size"      ];
-                $pg_total   = $pagination[ "totalPage" ];
-                $pg_current = $pagination[ "page"      ];
-
-                if ( $pg_total == $pg_current || $pg_size < 100 ) $ended = true;
-                if ( $this->env == "local" && $page > 100       ) $ended = true;
-            }
-        }
-        while ( !$ended );
-
-        return [
-            "success" => true,
-            "code"    => 0,
-            "data"    => $data,
-        ];
-    }
-
-    /**
-     * SocialSoul offer == Triibo Store (FB) / Default promotion
-     *
-     * @param string $id
-     * @return array
-     */
-    private function searchOffers( string $id )
-    {
-        $partial_url = "/_store/{$id}?sourceId={$this->source_id}";
-        $data        = [];
-        $page        = 1;
-        $size        = 100;
-        $ended       = false;
-
-        do
-        {
-            $response = Http::get( $this->url_offer . "{$partial_url}&page={$page}&size={$size}" );
-
-            if( !$response->successful() )
-            {
-                return [
-                    "success" => false,
-                    "code"    => 4001,
-                    "data"    => $data
-                ];
-            }
-            else
-            {
-                $page++;
-
-                $body       = $response->json();
-                $data       = array_merge( $data, $body[ "offers" ] );
-
-                $pagination = $body[ "pagination" ];
-                $pg_size    = $pagination[ "size"      ];
-                $pg_total   = $pagination[ "totalPage" ];
-                $pg_current = $pagination[ "page"      ];
-
-                if ( $pg_total == $pg_current || $pg_size < 100 ) $ended = true;
-                if ( $this->env == "local" && $page > 100       ) $ended = true;
-            }
-        }
-        while ( !$ended );
-
-        return [
-            "success" => true,
-            "code"    => 0,
-            "data"    => $data,
-        ];
-    }
-
-    /**
-     * Translates SocialSoul stores into Triibo Establishments
-     *
-     * @param array $data
-     * @return array
-     */
-    private function translateStores( array $data, bool $flag = false )
-    {
-        $stores  = [];
-        $date    = new DateTime( date( "Y-m-d H:i:s.u" ) );
-        $dateEn  = ( int ) $date->format( "U" ) * 1000;
-        $date    = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis = ( int ) $date->format( "U" ) * 1000;
-
-        /**
-         * TODO remover em PRD
-         */
-        $i = 1;
-
-        foreach ( $data as $store )
-        {
-            /**
-             * TODO remover em PRD
-             */
-            if ( $i > 10 ) continue;
-            $i++;
-
-            $id            = self::ID . $store[ "id" ];
-            $cashback      = ( float ) $store[ "maxCommission" ] / 2;
-            $cashback      = number_format( $cashback, 1, ",", "" );
-
-            $url           = triibo_parse_url( $store[ "link" ] );
-            $key           = array_search( $url, array_column( $this->storesLocal, "domain" ) );
-
-            if ( $key !== false )
-            {
-                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "socialsoul" )
-                    continue;
-            }
-            else
-            {
-                $newStores[] = [
-                    "affiliate_id"   => $store[ "id" ],
-                    "affiliate_name" => "socialsoul",
-                    "domain"         => $url,
-                    "commission"     => $cashback,
-                    "created_at"     => now(),
-                    "updated_at"     => now()
-                ];
-            }
-
-            $auxName       = hyphenize( strtolower( $store[ "name" ] ) );
-            $imageName     = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
-            $imageName     = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
-
-            // $url           = $store[ "link" ];
-
-            $stores[ $id ] = [
-                "partnerEstablishmentId" => $store[ "id" ],
-                "cashbackDefault"        => $cashback,
-
-                "enableDate"             => $dateEn,
-                "disableDate"            => $dateDis,
-                "dataAlteracao"          => $dateEn,
-                "dataInclusao"           => $dateEn,
-
-                "idGestor"               => "+5511949289507@sms,triibo,com,br",
-                "isPublished"            => true,
-
-                "endereco"               => "Brasil",
-                "lat"                    => -15.52047783763576,
-                "long"                   => -48.015408891158984,
-
-                "nome"                   => $store[ "name" ],
-                "descricao"              => $store[ "name" ] . " em parceria com a Triibo oferece ofertas, cupons e cashback em pontos. Aproveite!",
-                "email"                  => "contato@triibo.com.br",
-                "contatotriibo"          => [ "+5511944965799" ],
-                "contatos"               => [ "+5511944965799" ],
-
-                "fotoThumb"              => $imageName,
-                "listaFotos"             => [ $imageName ],
-
-                "funcionamento"          => [ ...get_schedules_operation()        ],
-                "horarios"               => [ ...get_schedules_operation( false ) ],
-
-                "tags"                   => [ "socialsoul" ],
-
-                "keyWordsSet"            => [],
-
-                "origin"                 => "socialsoul",
-            ];
-
-            if ( $flag ) $stores[ $id ][ "hasOffer" ] = $store[ "hasOffer" ];
-        }
-
-        if ( !empty( $newStores ) ) DB::table( "affiliates_stores" )->insert( $newStores );
 
         return $stores;
     }
 
     /**
-     * Translates SocialSoul coupons into Triibo promotions
-     *
-     * @param array $data
-     * @return array
-     */
-    private function translateCoupons( array $data, array $stores )
-    {
-        $promotions = [];
-        $date       = new DateTime(date( "Y-m-d H:i:s.u" ) );
-        $dateEn     = ( int ) $date->format( "U" ) * 1000;
-
-        foreach ( $data as $key => $coupon )
-        {
-            $idStore           = self::ID . $coupon[ "store" ][ "id" ];
-
-            if ( !isset( $stores[ $idStore ] ) ) continue;
-
-            $date              = Helper::convertDateSS( $coupon[ "vigency" ] );
-            $date              = new DateTime( date( $date ) );
-            $dateDis           = ( int ) $date->format( "U" ) * 1000;
-
-            $cashback          = $stores[ $idStore ][ "cashbackDefault" ];
-            $cashback          = str_replace( ",", ".", $cashback );
-            $points            = $this->base * $this->rate * ( $cashback / 100 );
-
-            $id                = $idStore . $coupon[ "id" ];
-
-            $establishmentName = $coupon[ "store" ][ "name" ];
-
-            $description       = $coupon[ "description" ];
-            $description      .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base}.";
-            $description      .= "\n\nCategoria: " . $coupon[ "category" ][ "name" ];
-
-            $detailsDescrip    = $coupon[ "description" ];
-            $detailsDescrip   .= "\n\nUtilize o código de desconto " . $coupon[ "code" ] . " no fechamento da compra.";
-            $detailsDescrip   .= "\n\nVálido até " . explode( " ", $coupon[ "vigency" ] )[ 0 ];
-
-            $url               = $coupon[ "link" ];
-            $url               = strpos( $url, "?" ) !== false ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
-
-            $promotions[ $id ] = [
-                "partnerPromotionId" => $id,
-
-                "establishmentId"    => $idStore,
-                "establishmentName"  => $establishmentName,
-
-                "title"              => $coupon[ "description" ],
-                "detailsTitle"       => $coupon[ "description" ],
-
-                "description"        => $description,
-                "detailsDescription" => $detailsDescrip,
-
-                "checkoutCode"       => $coupon[ "code" ],
-
-                "enableDate"         => $dateEn,
-                "disableDate"        => $dateDis,
-                "dueDate"            => $dateDis,
-
-                "isPublished"        => true,
-                "active"             => true,
-
-                "lat"                => -15.52047783763576,
-                "long"               => -48.015408891158984,
-
-                "level"              => 99,
-
-                "photo"              => "standard.png", // substituir pelas imagens geradas pela Triibo
-                "thumbnail"          => "standard.png", // substituir pelas imagens geradas pela Triibo
-
-                "region"             => "nacional",
-                "type"               => "businessPartner",
-                "url"                => $url,
-
-                "tags"               => [ "Cashback", "Cupom", $coupon[ "category" ][ "name" ] ],
-
-                "keyWordsSet"        => [],
-
-                "origin"             => "socialsoul",
-            ];
-        }
-
-        return $promotions;
-    }
-
-    /**
-     * Translates SocialSoul offer into Triibo promotions
-     *
-     * @param array $data
-     * @return array
-     */
-    private function translateOffers( array $data, string $cashback )
-    {
-        $promotions = [];
-        $date       = new DateTime(date( "Y-m-d H:i:s.u" ) );
-        $dateEn     = ( int ) $date->format( "U" ) * 1000;
-        $date       = $date->add( new DateInterval( "P7Y" ) );
-        $dateDis    = ( int ) $date->format( "U" ) * 1000;
-
-        /**
-         * TODO remover em PRD
-         */
-        $i = 1;
-
-        foreach ( $data as $offer )
-        {
-            /**
-             * TODO remover em PRD
-             */
-            if ( $i > 10 ) continue;
-            $i++;
-
-
-            $idStore           = self::ID . $offer[ "store" ][ "id" ];
-            $id                = $idStore . $offer[ "id" ];
-
-            $establishmentName = $offer[ "store" ][ "name" ];
-
-            $description       = "";
-
-            if ( isset( $offer[ "priceFrom" ] ) )
-            {
-                $fullPrice        = number_format( $offer[ "priceFrom" ], 2, ",", "" );
-                $salePrice        = number_format( $offer[ "price"     ], 2, ",", "" );
-                $description      = "De R\${$fullPrice} por R\${$salePrice}.\n\n";
-            }
-
-            if ( isset( $offer[ "installment" ] ) )
-            {
-                $installmentQntt  = $offer[ "installment" ][ "quantity" ];
-                $installmentValue = $offer[ "installment" ][ "value"    ];
-                $installmentValue = number_format( $installmentValue, 2, ",", "" );
-                $description     .= "Em {$installmentQntt}x de R\${$installmentValue}.\n\n";
-            }
-
-            $cashback          = str_replace( ",", ".", $cashback );
-            $points            = $this->base * $this->rate * ( $cashback / 100 );
-
-            $description      .= "Ganhe {$points} pontos Triibo a cada R\${$this->base}.";
-            $description      .= "\n\nCategoria: " . $offer[ "category" ][ "name" ];
-
-            $imageUrl          = $offer[ "thumbnail" ];
-            $imageName         = "socialsoul_{$offer[ "store" ][ "id" ]}{$offer[ "id" ]}.png";
-            $imageName         = self::saveImage( "promotions", $imageName, $imageUrl ) ? $imageName : "standard.png";
-
-            $url               = $offer[ "link" ];
-            $url               = strpos( $url, "?" ) !== false ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
-
-            $promotions[ $id ] = [
-                "partnerPromotionId" => $id,
-
-                "establishmentId"    => $idStore,
-                "establishmentName"  => $establishmentName,
-
-                "title"              => $offer[ "name" ],
-                "detailsTitle"       => $offer[ "name" ],
-
-                "description"        => $description,
-                "detailsDescription" => $description,
-
-                "enableDate"         => $dateEn,
-                "disableDate"        => $dateDis,
-                "dueDate"            => $dateDis,
-
-                "isPublished"        => true,
-                "active"             => true,
-
-                "lat"                => -15.52047783763576,
-                "long"               => -48.015408891158984,
-
-                "level"              => 99,
-
-                "photo"              => $imageName,
-                "thumbnail"          => $imageName,
-
-                "region"             => "nacional",
-                "type"               => "businessPartner",
-                "url"                => $url,
-
-                "tags"               => [ "Cashback", "Promoção", $offer[ "category" ][ "name" ] ],
-
-                "keyWordsSet"        => [],
-
-                "origin"             => "socialsoul",
-            ];
-        }
-
-        return $promotions;
-    }
-
-    /**
-     *
-     * @param array $data
-     * @return array
-     */
-    private function translateReports( array $data )
-    {
-        /**
-         * TODO - Tratar dados
-         */
-
-        return $data;
-    }
-
-    /**
-     *
      * @param string $logo
      * @param string $path
      * @param string $prefix
+     * @param string $imageName
+     * @param string $url
+     *
      * @return void
      */
     private static function saveImage( string $path, string $imageName, string $url )
     {
-        $fullPath = public_path( "images/affiliates/socialsoul/{$path}" ) . "/{$imageName}";
+        $fullPath = public_path( "images/affiliates/socialsoul/{$path}" )."/{$imageName}";
 
         try
         {
@@ -677,31 +248,457 @@ class SocialSoulIntegration
     }
 
     /**
+     * Get stores SocialSoul
      *
      * @return array
      */
-    public function schGetStores()
+    private function searchStores()
     {
-        $stores  = [];
-        $coupons = $this->searchCoupons();
+        $partial_url = "/_all?sourceId={$this->source_id}";
+        $data = [];
+        $page = 1;
+        $size = 100;
+        $ended = false;
 
-        if ( !$coupons[ "success" ] && empty( $coupons[ "data" ] ) ) return []; // falha
-
-        triibo_usort( "id", $coupons[ "data" ] );
-
-        foreach ( $coupons[ "data" ] as $coupon )
+        do
         {
-            $store = $coupon[ "store" ];
+            $response = Http::get( $this->url_store."{$partial_url}&page={$page}&size={$size}" );
 
-            if ( !array_key_exists( $store[ "id" ], $stores ) )
+            if ( ! $response->successful() )
             {
-                $key                      = array_search( $store[ "id" ], array_column( $this->stores, "id" ) );
-                $commission               = $this->stores[ $key ][ "maxCommission" ];
-                $store[ "commission" ]    = $commission;
-                $stores[ $store[ "id" ] ] = $store;
+                return [
+                    "success" => false,
+                    "code" => 4001,
+                    "data" => $data
+                ];
             }
+
+            $page++;
+
+            $body = $response->json();
+            $data = array_merge( $data, $body[ "stores" ] );
+
+            $pagination = $body[ "pagination" ];
+            $pg_size = $pagination[ "size"      ];
+            $pg_total = $pagination[ "totalPage" ];
+            $pg_current = $pagination[ "page"      ];
+
+            if ( $pg_total === $pg_current || $pg_size < 100 ) $ended = true;
+
+            if ( $this->env === "local" && $page > 100 ) $ended = true;
+
+        }
+        while ( ! $ended );
+
+        return [
+            "success" => true,
+            "code" => 0,
+            "data" => $data,
+        ];
+    }
+
+    /**
+     * Get coupon SocialSoul
+     *
+     * @return array
+     */
+    private function searchCoupons()
+    {
+        $partial_url = "/_all?sourceId={$this->source_id}";
+        $data = [];
+        $page = 1;
+        $size = 100;
+        $ended = false;
+
+        do
+        {
+            $response = Http::get( $this->url_coupon."{$partial_url}&page={$page}&size={$size}" );
+
+            if ( ! $response->successful() )
+            {
+                return [
+                    "success" => false,
+                    "code" => 4001,
+                    "data" => $data
+                ];
+            }
+
+            $page++;
+
+            $body = $response->json();
+            $data = array_merge( $data, $body[ "coupons" ] );
+
+            $pagination = $body[ "pagination" ];
+            $pg_size = $pagination[ "size"      ];
+            $pg_total = $pagination[ "totalPage" ];
+            $pg_current = $pagination[ "page"      ];
+
+            if ( $pg_total === $pg_current || $pg_size < 100 ) $ended = true;
+
+            if ( $this->env === "local" && $page > 100 ) $ended = true;
+
+        }
+        while ( ! $ended );
+
+        return [
+            "success" => true,
+            "code" => 0,
+            "data" => $data,
+        ];
+    }
+
+    /**
+     * SocialSoul offer == Triibo Store (FB) / Default promotion
+     *
+     * @param string $id
+     *
+     * @return array
+     */
+    private function searchOffers( string $id )
+    {
+        $partial_url = "/_store/{$id}?sourceId={$this->source_id}";
+        $data = [];
+        $page = 1;
+        $size = 100;
+        $ended = false;
+
+        do
+        {
+            $response = Http::get( $this->url_offer."{$partial_url}&page={$page}&size={$size}" );
+
+            if ( ! $response->successful() )
+            {
+                return [
+                    "success" => false,
+                    "code" => 4001,
+                    "data" => $data
+                ];
+            }
+
+            $page++;
+
+            $body = $response->json();
+            $data = array_merge( $data, $body[ "offers" ] );
+
+            $pagination = $body[ "pagination" ];
+            $pg_size = $pagination[ "size"      ];
+            $pg_total = $pagination[ "totalPage" ];
+            $pg_current = $pagination[ "page"      ];
+
+            if ( $pg_total === $pg_current || $pg_size < 100 ) $ended = true;
+
+            if ( $this->env === "local" && $page > 100 ) $ended = true;
+
+        }
+        while ( ! $ended );
+
+        return [
+            "success" => true,
+            "code" => 0,
+            "data" => $data,
+        ];
+    }
+
+    /**
+     * Translates SocialSoul stores into Triibo Establishments
+     *
+     * @param array $data
+     * @param bool  $flag
+     *
+     * @return array
+     */
+    private function translateStores( array $data, bool $flag = false )
+    {
+        $stores = [];
+        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn = (int) $date->format( "U" ) * 1000;
+        $date = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis = (int) $date->format( "U" ) * 1000;
+
+        /**
+         * TODO remover em PRD
+         */
+        $i = 1;
+
+        foreach ( $data as $store )
+        {
+            // TODO remover em PRD
+            if ( $i > 10 ) continue;
+            $i++;
+
+            $id = self::ID.$store[ "id" ];
+            $cashback = (float) $store[ "maxCommission" ] / 2;
+            $cashback = number_format( $cashback, 1, ",", "" );
+
+            $url = triibo_parse_url( $store[ "link" ] );
+            $key = array_search( $url, array_column( $this->storesLocal, "domain" ) );
+
+            if ( $key !== false )
+            {
+                if ( $this->storesLocal[ $key ][ "affiliate_name" ] !== "socialsoul" )
+                    continue;
+            }
+            else
+            {
+                $newStores[] = [
+                    "affiliate_id" => $store[ "id" ],
+                    "affiliate_name" => "socialsoul",
+                    "domain" => $url,
+                    "commission" => $cashback,
+                    "created_at" => now(),
+                    "updated_at" => now()
+                ];
+            }
+
+            $auxName = hyphenize( mb_strtolower( $store[ "name" ] ) );
+            $imageName = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
+            $imageName = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
+
+            // $url           = $store[ "link" ];
+
+            $stores[ $id ] = [
+                "partnerEstablishmentId" => $store[ "id" ],
+                "cashbackDefault" => $cashback,
+
+                "enableDate" => $dateEn,
+                "disableDate" => $dateDis,
+                "dataAlteracao" => $dateEn,
+                "dataInclusao" => $dateEn,
+
+                "idGestor" => "+5511949289507@sms,triibo,com,br",
+                "isPublished" => true,
+
+                "endereco" => "Brasil",
+                "lat" => -15.52047783763576,
+                "long" => -48.015408891158984,
+
+                "nome" => $store[ "name" ],
+                "descricao" => $store[ "name" ]." em parceria com a Triibo oferece ofertas, cupons e cashback em pontos. Aproveite!",
+                "email" => "contato@triibo.com.br",
+                "contatotriibo" => ["+5511944965799"],
+                "contatos" => ["+5511944965799"],
+
+                "fotoThumb" => $imageName,
+                "listaFotos" => [$imageName],
+
+                "funcionamento" => [...get_schedules_operation()],
+                "horarios" => [...get_schedules_operation( false )],
+
+                "tags" => ["socialsoul"],
+
+                "keyWordsSet" => [],
+
+                "origin" => "socialsoul",
+            ];
+
+            if ( $flag ) $stores[ $id ][ "hasOffer" ] = $store[ "hasOffer" ];
         }
 
+        if ( ! empty( $newStores ) ) DB::table( "affiliates_stores" )->insert( $newStores );
+
         return $stores;
+    }
+
+    /**
+     * Translates SocialSoul coupons into Triibo promotions
+     *
+     * @param array $data
+     * @param array $stores
+     *
+     * @return array
+     */
+    private function translateCoupons( array $data, array $stores )
+    {
+        $promotions = [];
+        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn = (int) $date->format( "U" ) * 1000;
+
+        foreach ( $data as $key => $coupon )
+        {
+            $idStore = self::ID.$coupon[ "store" ][ "id" ];
+
+            if ( ! isset( $stores[ $idStore ] ) ) continue;
+
+            $date = Helper::convertDateSS( $coupon[ "vigency" ] );
+            $date = new DateTime( date( $date ) );
+            $dateDis = (int) $date->format( "U" ) * 1000;
+
+            $cashback = $stores[ $idStore ][ "cashbackDefault" ];
+            $cashback = str_replace( ",", ".", $cashback );
+            $points = $this->base * $this->rate * ( $cashback / 100 );
+
+            $id = $idStore.$coupon[ "id" ];
+
+            $establishmentName = $coupon[ "store" ][ "name" ];
+
+            $description = $coupon[ "description" ];
+            $description .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base}.";
+            $description .= "\n\nCategoria: ".$coupon[ "category" ][ "name" ];
+
+            $detailsDescrip = $coupon[ "description" ];
+            $detailsDescrip .= "\n\nUtilize o código de desconto ".$coupon[ "code" ]." no fechamento da compra.";
+            $detailsDescrip .= "\n\nVálido até ".explode( " ", $coupon[ "vigency" ] )[ 0 ];
+
+            $url = $coupon[ "link" ];
+            $url = str_contains( $url, "?" ) ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
+
+            $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
+                "establishmentId" => $idStore,
+                "establishmentName" => $establishmentName,
+
+                "title" => $coupon[ "description" ],
+                "detailsTitle" => $coupon[ "description" ],
+
+                "description" => $description,
+                "detailsDescription" => $detailsDescrip,
+
+                "checkoutCode" => $coupon[ "code" ],
+
+                "enableDate" => $dateEn,
+                "disableDate" => $dateDis,
+                "dueDate" => $dateDis,
+
+                "isPublished" => true,
+                "active" => true,
+
+                "lat" => -15.52047783763576,
+                "long" => -48.015408891158984,
+
+                "level" => 99,
+
+                "photo" => "standard.png", // substituir pelas imagens geradas pela Triibo
+                "thumbnail" => "standard.png", // substituir pelas imagens geradas pela Triibo
+
+                "region" => "nacional",
+                "type" => "businessPartner",
+                "url" => $url,
+
+                "tags" => ["Cashback", "Cupom", $coupon[ "category" ][ "name" ]],
+
+                "keyWordsSet" => [],
+
+                "origin" => "socialsoul",
+            ];
+        }
+
+        return $promotions;
+    }
+
+    /**
+     * Translates SocialSoul offer into Triibo promotions
+     *
+     * @param array  $data
+     * @param string $cashback
+     *
+     * @return array
+     */
+    private function translateOffers( array $data, string $cashback )
+    {
+        $promotions = [];
+        $date = new DateTime( date( "Y-m-d H:i:s.u" ) );
+        $dateEn = (int) $date->format( "U" ) * 1000;
+        $date = $date->add( new DateInterval( "P7Y" ) );
+        $dateDis = (int) $date->format( "U" ) * 1000;
+
+        /**
+         * TODO remover em PRD
+         */
+        $i = 1;
+
+        foreach ( $data as $offer )
+        {
+            // TODO remover em PRD
+            if ( $i > 10 ) continue;
+            $i++;
+
+            $idStore = self::ID.$offer[ "store" ][ "id" ];
+            $id = $idStore.$offer[ "id" ];
+
+            $establishmentName = $offer[ "store" ][ "name" ];
+
+            $description = "";
+
+            if ( isset( $offer[ "priceFrom" ] ) )
+            {
+                $fullPrice = number_format( $offer[ "priceFrom" ], 2, ",", "" );
+                $salePrice = number_format( $offer[ "price"     ], 2, ",", "" );
+                $description = "De R\${$fullPrice} por R\${$salePrice}.\n\n";
+            }
+
+            if ( isset( $offer[ "installment" ] ) )
+            {
+                $installmentQntt = $offer[ "installment" ][ "quantity" ];
+                $installmentValue = $offer[ "installment" ][ "value"    ];
+                $installmentValue = number_format( $installmentValue, 2, ",", "" );
+                $description .= "Em {$installmentQntt}x de R\${$installmentValue}.\n\n";
+            }
+
+            $cashback = str_replace( ",", ".", $cashback );
+            $points = $this->base * $this->rate * ( $cashback / 100 );
+
+            $description .= "Ganhe {$points} pontos Triibo a cada R\${$this->base}.";
+            $description .= "\n\nCategoria: ".$offer[ "category" ][ "name" ];
+
+            $imageUrl = $offer[ "thumbnail" ];
+            $imageName = "socialsoul_{$offer[ "store" ][ "id" ]}{$offer[ "id" ]}.png";
+            $imageName = self::saveImage( "promotions", $imageName, $imageUrl ) ? $imageName : "standard.png";
+
+            $url = $offer[ "link" ];
+            $url = str_contains( $url, "?" ) ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
+
+            $promotions[ $id ] = [
+                "partnerPromotionId" => $id,
+
+                "establishmentId" => $idStore,
+                "establishmentName" => $establishmentName,
+
+                "title" => $offer[ "name" ],
+                "detailsTitle" => $offer[ "name" ],
+
+                "description" => $description,
+                "detailsDescription" => $description,
+
+                "enableDate" => $dateEn,
+                "disableDate" => $dateDis,
+                "dueDate" => $dateDis,
+
+                "isPublished" => true,
+                "active" => true,
+
+                "lat" => -15.52047783763576,
+                "long" => -48.015408891158984,
+
+                "level" => 99,
+
+                "photo" => $imageName,
+                "thumbnail" => $imageName,
+
+                "region" => "nacional",
+                "type" => "businessPartner",
+                "url" => $url,
+
+                "tags" => ["Cashback", "Promoção", $offer[ "category" ][ "name" ]],
+
+                "keyWordsSet" => [],
+
+                "origin" => "socialsoul",
+            ];
+        }
+
+        return $promotions;
+    }
+
+    /**
+     * @param array $data
+     *
+     * @return array
+     */
+    private function translateReports( array $data )
+    {
+        // TODO - Tratar dados
+
+        return $data;
     }
 }

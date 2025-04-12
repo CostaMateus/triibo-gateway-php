@@ -7,15 +7,14 @@ use App\Helpers\Helper;
 use Illuminate\Support\Str;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Codexshaper\WooCommerce\Facades\Product;
-use Codexshaper\WooCommerce\Facades\Category;
+use Codexshaper\WooCommerce\Facades\{Category, Product};
 
 class GetProductInfosFastShop extends Command
 {
     /**
      * Define a class constant for the log channel.
      *
-     * @var     string
+     * @var string
      */
     private const LOG_CHANNEL = "marketplace";
 
@@ -33,7 +32,6 @@ class GetProductInfosFastShop extends Command
      * @var string
      */
     protected $description = "Process FastShop new products";
-
     private $action;
 
     /**
@@ -53,45 +51,46 @@ class GetProductInfosFastShop extends Command
      */
     public function handle()
     {
-        if ( !in_array( $this->option( "action" ), [ "create", "update" ] ) )
+        if ( ! in_array( $this->option( "action" ), ["create", "update"] ) )
             return;
 
-        $start        = now();
+        $start = now();
 
         $this->action = $this->option( "action" );
 
-        $message      = "Products: Starting process FS data - {$this->action}...";
+        $message = "Products: Starting process FS data - {$this->action}...";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
         $this->process();
 
-        $message      = "Products: Finished FS data process - {$this->action}...";
+        $message = "Products: Finished FS data process - {$this->action}...";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        $end          = now();
-        $diff         = $start->diffInMinutes( $end );
+        $end = now();
+        $diff = $start->diffInMinutes( $end );
 
-        $message      = "Products: Runtime {$diff} minutes...";
+        $message = "Products: Runtime {$diff} minutes...";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
     }
 
-    private function process()
+    private function process() : void
     {
-        $message  = "Products: Get products of local table...";
+        $message = "Products: Get products of local table...";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
         $products = DB::table( "fastshop_products" )
-                        ->where( "action", $this->action )
-                        ->where( function( $query ) { $query->where( "status", "unprocessed" )->orWhereNull( "status" ); } )
-                        ->get()->toArray();
+            ->where( "action", $this->action )
+            ->where( static function ( $query ) : void
+            { $query->where( "status", "unprocessed" )->orWhereNull( "status" ); } )
+            ->get()->toArray();
 
         $products = json_decode( json_encode( $products ), true );
 
@@ -102,65 +101,66 @@ class GetProductInfosFastShop extends Command
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
+
             return;
         }
 
-        $wcData     = [];
+        $wcData = [];
         $auxProduct = [];
 
         foreach ( $products as $data )
         {
-            $message      = "Products: Processing local product_id: " . $data[ "id" ];
+            $message = "Products: Processing local product_id: ".$data[ "id" ];
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
-            $product      = json_decode( $data[ "data" ], true );
-            $product[ "CategoryFullPath" ] = ( is_null( $product[ "CategoryFullPath" ] ) ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
+            $product = json_decode( $data[ "data" ], true );
+            $product[ "CategoryFullPath" ] = ( $product[ "CategoryFullPath" ] === null ) ? [] : self::getCategoriesId( $product[ "CategoryFullPath" ] );
 
-            $temp         = $this->productFsToWc( $product );
-            $wcData[]     = $temp;
+            $temp = $this->productFsToWc( $product );
+            $wcData[] = $temp;
 
             $auxProduct[] = [
-                "id"  => $data[ "id"  ],
+                "id" => $data[ "id"  ],
                 "sku" => $temp[ "sku" ],
             ];
         }
 
-        if ( $this->action == "create" )
+        if ( $this->action === "create" )
         {
             $dataFs = Helper::prepareDataFs( $wcData, "sku" );
-            $resp   = Helper::getStockPriceFS( $dataFs );
-            $data   = $this->translateFsToWc( $resp );
+            $resp = Helper::getStockPriceFS( $dataFs );
+            $data = $this->translateFsToWc( $resp );
 
             foreach ( $wcData as &$product )
             {
-                $sku   = substr( $product[ "sku" ], 3 );
+                $sku = mb_substr( $product[ "sku" ], 3 );
                 $index = array_search( $sku, array_column( $data, "product_sku" ) );
 
-                $product[ "regular_price"  ] = ( $index !== false ) ? $data[ $index ][ "regular_price" ] : "0.0" ;
-                $product[ "sale_price"     ] = ( $index !== false ) ? $data[ $index ][ "sale_price"    ] : "0.0" ;
+                $product[ "regular_price"  ] = ( $index !== false ) ? $data[ $index ][ "regular_price" ] : "0.0";
+                $product[ "sale_price"     ] = ( $index !== false ) ? $data[ $index ][ "sale_price"    ] : "0.0";
                 $product[ "stock_quantity" ] = ( $index !== false ) ? $data[ $index ][ "stock"         ] : 0;
                 $product[ "stock_status"   ] = ( $index !== false ) ? ( $data[ $index ][ "stock" ] > 0 ? "instock" : "outofstock" ) : "outofstock";
             }
         }
 
         $wcData = array_chunk( $wcData, 100 );
-        $y      = count( $wcData );
+        $y = count( $wcData );
 
-        $fail   = [];
+        $fail = [];
 
         foreach ( $wcData as $i => $skus )
         {
-            ++$i;
-            $message = "Products: Sending SKUs to MKT - pack {$i} of {$y}" ;
+            $i++;
+            $message = "Products: Sending SKUs to MKT - pack {$i} of {$y}";
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
 
             try
             {
-                Product::batch( [ $this->action => $skus ] );
+                Product::batch( [$this->action => $skus] );
             }
             catch ( Throwable $e )
             {
@@ -169,7 +169,7 @@ class GetProductInfosFastShop extends Command
                 log_message( channel: self::LOG_CHANNEL, message: $message );
                 $this->info( $message );
 
-                if ( $e->getMessage() != "JSON ERROR: Syntax error" )
+                if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
                 {
                     send_mail_notification( "marketplace", "process()", "Exception", $e );
                     $fail = array_merge( $fail, $skus );
@@ -179,16 +179,16 @@ class GetProductInfosFastShop extends Command
 
         foreach ( $auxProduct as $product )
         {
-            if ( !empty( $fail ) )
-                if ( false !== array_search( $product[ "sku" ], array_column( $fail, "sku" ) ) )
+            if ( ! empty( $fail ) )
+                if ( array_search( $product[ "sku" ], array_column( $fail, "sku" ) ) !== false )
                     continue;
 
             DB::table( "fastshop_products" )
                 ->where( "id", $product[ "id" ] )
                 ->update( [
                     "product_sku" => $product[ "sku" ],
-                    "action"      => "update",
-                    "status"      => "processed",
+                    "action" => "update",
+                    "status" => "processed",
                 ] );
         }
     }
@@ -204,49 +204,49 @@ class GetProductInfosFastShop extends Command
             {
                 $slug = Str::slug( $catName );
 
-                $cat  = DB::table( "marketplace_product_categories" )
-                           ->where( "cat_slug", $slug )
-                           ->first();
+                $cat = DB::table( "marketplace_product_categories" )
+                    ->where( "cat_slug", $slug )
+                    ->first();
 
                 if ( $cat )
                 {
                     $cats[] = $cat->cat_id;
+
                     continue;
+                }
+
+                $new = Category::all( ["slug" => $slug] )->first();
+
+                if ( $new->isNotEmpty() )
+                {
+                    $new = [
+                        "id" => $new->id,
+                        "slug" => $new->slug,
+                        "name" => $new->name,
+                        "parent" => $new->parent,
+                    ];
                 }
                 else
                 {
-                    $new = Category::all( [ "slug" => $slug ] )->first();
-
-                    if ( $new->isNotEmpty() )
-                    {
-                        $new = [
-                            "id"     => $new->id,
-                            "slug"   => $new->slug,
-                            "name"   => $new->name,
-                            "parent" => $new->parent,
-                        ];
-                    }
-                    else
-                    {
-                        $new = Category::create( [
-                            "name"   => $catName,
-                            "parent" => ( $key == 0 ) ? 0 : $cats[ $key - 1 ]
-                        ] );
-                    }
-
-                    $cats[] = $new[ "id" ];
-
-                    $insert = [
-                        "cat_id"     => $new[ "id"     ],
-                        "cat_slug"   => $new[ "slug"   ],
-                        "cat_name"   => $new[ "name"   ],
-                        "cat_parent" => $new[ "parent" ],
-                    ];
-
-                    DB::table( "marketplace_product_categories" )->insert( $insert );
+                    $new = Category::create( [
+                        "name" => $catName,
+                        "parent" => ( $key === 0 ) ? 0 : $cats[ $key - 1 ]
+                    ] );
                 }
+
+                $cats[] = $new[ "id" ];
+
+                $insert = [
+                    "cat_id" => $new[ "id"     ],
+                    "cat_slug" => $new[ "slug"   ],
+                    "cat_name" => $new[ "name"   ],
+                    "cat_parent" => $new[ "parent" ],
+                ];
+
+                DB::table( "marketplace_product_categories" )->insert( $insert );
+
             }
-            catch( Throwable $e )
+            catch ( Throwable $e )
             {
                 $message = "Products: Failure to get mkt product category";
 
@@ -262,23 +262,23 @@ class GetProductInfosFastShop extends Command
     {
         $attributes = [];
         $categories = [];
-        $images     = [];
+        $images = [];
 
-        $slug       = \Str::slug( $data[ "ProductName" ] );
-        $sku        = $data[ "ProductId" ] == $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];
+        $slug = \Str::slug( $data[ "ProductName" ] );
+        $sku = $data[ "ProductId" ] === $data[ "SellerStockKeepingUnitId" ] ? $data[ "ProductId" ] : $data[ "SellerStockKeepingUnitId" ];
 
-        if ( !empty( $data[ "CategoryFullPath" ] ) )
+        if ( ! empty( $data[ "CategoryFullPath" ] ) )
             foreach ( $data[ "CategoryFullPath" ] as $ctg )
-                $categories[] = [ "id" => $ctg ];
+                $categories[] = ["id" => $ctg];
 
         foreach ( $data[ "Images" ] as $img )
         {
-            if ( !validate_image_url( $img[ "imageUrl" ] ) ) continue;
+            if ( ! validate_image_url( $img[ "imageUrl" ] ) ) continue;
 
             $images[] = [
-                "src"  => $img[ "imageUrl"  ],
+                "src" => $img[ "imageUrl"  ],
                 "name" => $img[ "imageName" ],
-                "alt"  => $img[ "imageName" ]
+                "alt" => $img[ "imageName" ]
             ];
         }
 
@@ -286,107 +286,107 @@ class GetProductInfosFastShop extends Command
         foreach ( $data[ "SkuSpecifications" ] as $key => $attr )
         {
             $attributes[] = [
-                "name"      => $attr[ "fieldName" ],
-                "position"  => $key,
-                "visible"   => true,
+                "name" => $attr[ "fieldName" ],
+                "position" => $key,
+                "visible" => true,
                 "variation" => true,
-                "options"   => [
+                "options" => [
                     $attr[ "fieldValue" ]
                 ],
             ];
         }
+
         foreach ( $data[ "ProductSpecifications" ] as $key => $attr )
         {
-            if ( $attr[ "fieldName" ] == "ProductLineId" ) continue;
+            if ( $attr[ "fieldName" ] === "ProductLineId" ) continue;
 
-            $fieldValue   = ( $attr[ "fieldValue" ] === "true" ) ? "SIM" : $attr[ "fieldValue" ];
+            $fieldValue = ( $attr[ "fieldValue" ] === "true" ) ? "SIM" : $attr[ "fieldValue" ];
 
             $attributes[] = [
-                "name"      => $attr[ "fieldName" ],
-                "position"  => $key,
-                "visible"   => true,
+                "name" => $attr[ "fieldName" ],
+                "position" => $key,
+                "visible" => true,
                 "variation" => true,
-                "options"   => [ $fieldValue ],
+                "options" => [$fieldValue],
             ];
         }
 
-        $description   = $data[ "ProductDescription" ];
+        $description = $data[ "ProductDescription" ];
 
         $shortDescript = explode( "\r\n", $description )[ 0 ];
-        $shortDescript = ( strlen( $shortDescript ) <= 50 ) ? $data[ "ProductName" ] : $shortDescript;
+        $shortDescript = ( mb_strlen( $shortDescript ) <= 50 ) ? $data[ "ProductName" ] : $shortDescript;
         $shortDescript = Str::limit( $shortDescript, 140, " ( ... )" );
 
-        $attr_name     = "";
-        $attr_val      = "";
+        $attr_name = "";
+        $attr_val = "";
 
         foreach ( $attributes as $att )
         {
             $name = Str::lower( $att[ "name" ] );
 
-            if ( $name == "voltagem" )
+            if ( $name === "voltagem" )
             {
                 $attr_name = Str::ucfirst( $name );
-                $val       = reset( $att[ "options" ] );
-                $attr_val  = ( $val == "110" || $val == "220" ) ? $val . "V" : $val;
+                $val = reset( $att[ "options" ] );
+                $attr_val = ( $val === "110" || $val === "220" ) ? $val."V" : $val;
             }
         }
 
-        if ( $attr_name && $attr_val && $attr_val != "NA" ) $shortDescript .= "\r\n\r\n$attr_name : $attr_val";
+        if ( $attr_name && $attr_val && $attr_val !== "NA" ) $shortDescript .= "\r\n\r\n{$attr_name} : {$attr_val}";
 
-        $wcData         = [
-            "name"              => $data[ "ProductName" ],
-            "slug"              => $slug,
+        $wcData = [
+            "name" => $data[ "ProductName" ],
+            "slug" => $slug,
 
-            "description"       => $description,
+            "description" => $description,
             "short_description" => $shortDescript,
-            "sku"               => "FS-$sku",
+            "sku" => "FS-{$sku}",
 
-            "manage_stock"      => true,
-            "backorders"        => "no",
+            "manage_stock" => true,
+            "backorders" => "no",
             "sold_individually" => false,
 
-            "weight"            => convert_weight( $data[ "WeightKg" ] ),
-            "dimensions"        => [
-                "length" => ( string ) $data[ "Length" ],
-                "width"  => ( string ) $data[ "Width"  ],
-                "height" => ( string ) $data[ "Height" ]
+            "weight" => convert_weight( $data[ "WeightKg" ] ),
+            "dimensions" => [
+                "length" => (string) $data[ "Length" ],
+                "width" => (string) $data[ "Width"  ],
+                "height" => (string) $data[ "Height" ]
             ],
 
-            "shipping_class"    => "fast-shop",
+            "shipping_class" => "fast-shop",
 
-            "upsell_ids"        => [],
-            "cross_sell_ids"    => [],
-            "parent_id"         => 0,
-            "purchase_note"     => "",
+            "upsell_ids" => [],
+            "cross_sell_ids" => [],
+            "parent_id" => 0,
+            "purchase_note" => "",
 
-            "tags"              => [ [ "id" => 289 ] ],
+            "tags" => [["id" => 289]],
 
-            "categories"        => $categories,
-            "images"            => $images,
-            "attributes"        => $attributes,
+            "categories" => $categories,
+            "images" => $images,
+            "attributes" => $attributes,
         ];
 
         $wcData = json_encode( $wcData, JSON_UNESCAPED_SLASHES );
-        $wcData = json_decode( $wcData, true                   );
 
-        return $wcData;
+        return json_decode( $wcData, true );
     }
 
     private function translateFsToWc( $array )
     {
         $items = $array[ "items" ];
         $infos = $array[ "logisticsInfo" ];
-        $data  = [];
+        $data = [];
 
         if ( empty( $infos ) )
         {
             foreach ( $items as $item )
             {
-                $data[]  = [
-                    "product_sku"   => $item[ "id" ],
+                $data[] = [
+                    "product_sku" => $item[ "id" ],
                     "regular_price" => insert_decimal( $item[ "listPrice" ] ),
-                    "sale_price"    => insert_decimal( $item[ "price"     ] ),
-                    "stock"         => 0,
+                    "sale_price" => insert_decimal( $item[ "price"     ] ),
+                    "stock" => 0,
                 ];
 
                 $message = "Products: {$item[ "id" ]} processed";
@@ -405,20 +405,20 @@ class GetProductInfosFastShop extends Command
 
         foreach ( $infos as $info )
         {
-            $index   = $info[ "itemIndex" ];
-            $key     = array_search( $index, array_column( $items, "requestIndex" ) );
-            $item    = $items[ $key ];
+            $index = $info[ "itemIndex" ];
+            $key = array_search( $index, array_column( $items, "requestIndex" ) );
+            $item = $items[ $key ];
 
-            $sku     = "FS-" . $item[ "id" ];
+            $sku = "FS-".$item[ "id" ];
             $regular = $item[ "listPrice"    ];
-            $sale    = $item[ "price"        ];
-            $stock   = $info[ "stockBalance" ];
+            $sale = $item[ "price"        ];
+            $stock = $info[ "stockBalance" ];
 
-            $data[]  = [
-                "product_sku"   => $sku,
+            $data[] = [
+                "product_sku" => $sku,
                 "regular_price" => insert_decimal( $regular ),
-                "sale_price"    => insert_decimal( $sale    ),
-                "stock"         => $stock,
+                "sale_price" => insert_decimal( $sale ),
+                "stock" => $stock,
             ];
 
             $message = "Products: {$sku} processed";
