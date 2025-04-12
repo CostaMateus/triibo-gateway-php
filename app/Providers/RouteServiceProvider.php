@@ -1,14 +1,15 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace App\Providers;
 
-use Illuminate\Cache\RateLimiting\Limit;
-use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Support\Facades\{RateLimiter, Route};
+use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
-class RouteServiceProvider extends ServiceProvider
+final class RouteServiceProvider extends ServiceProvider
 {
     /**
      * The path to the "home" route for your application.
@@ -24,7 +25,7 @@ class RouteServiceProvider extends ServiceProvider
      *
      * When present, controller route declarations will automatically be prefixed with this namespace.
      *
-     * @var string|null
+     * @var null|string
      */
     // protected $namespace = 'App\\Http\\Controllers';
 
@@ -33,20 +34,21 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot() : void
     {
         $this->configureRateLimiting();
 
-        $this->routes(function () {
-            Route::prefix('api')
-                ->middleware('api')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/api.php'));
+        $this->routes( function () : void
+        {
+            Route::prefix( 'api' )
+                ->middleware( 'api' )
+                ->namespace( $this->namespace )
+                ->group( base_path( 'routes/api.php' ) );
 
-            Route::middleware('web')
-                ->namespace($this->namespace)
-                ->group(base_path('routes/web.php'));
-        });
+            Route::middleware( 'web' )
+                ->namespace( $this->namespace )
+                ->group( base_path( 'routes/web.php' ) );
+        } );
     }
 
     /**
@@ -54,11 +56,12 @@ class RouteServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function configureRateLimiting()
+    protected function configureRateLimiting() : void
     {
         // 150 / min
-        RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(150)->by(optional($request->user())->id ?: $request->ip());
-        });
+        RateLimiter::for( 'api', static function ( Request $request )
+        {
+            return Limit::perMinute( 150 )->by( optional( $request->user() )->id ?: $request->ip() );
+        } );
     }
 }
