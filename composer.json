@@ -10,7 +10,7 @@
     "require": {
         "php": "^8.2",
         "codexshaper/laravel-woocommerce": "^3.0",
-        "costamateus/laravel-mautic-api": "^3.0.4",
+        "costamateus/laravel-mautic-api": "^3.0",
         "devio/pipedrive": "^2.10",
         "gregwar/image": "^2.1",
         "guzzlehttp/guzzle": "^7.3",
@@ -24,7 +24,6 @@
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.1",
         "fakerphp/faker": "^1.9.1",
-        "friendsofphp/php-cs-fixer": "^3.75",
         "laravel/pint": "^1.22",
         "laravel/sail": "^1.0.1",
         "lucascudo/laravel-pt-br-localization": "^1.1",
@@ -64,8 +63,7 @@
     "prefer-stable": true,
     "scripts": {
         "pint": [
-            "vendor/bin/pint",
-            "vendor/bin/php-cs-fixer fix"
+            "vendor/bin/pint"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

@@ -1,7 +1,11 @@
 {
     "preset": "laravel",
-    "notName": [
-        "ArraySpacingFixer.php"
+    "exclude": [
+        "bootstrap",
+        "cache",
+        "public",
+        "storage",
+        "vendor"
     ],
     "rules": {
         "align_multiline_comment": true,
@@ -69,15 +73,15 @@
         "declare_equal_normalize": {
             "space": "single"
         },
-        "declare_strict_types": true,
+        "declare_strict_types": false,
         "dir_constant": true,
         "echo_tag_syntax": true,
         "elseif": true,
         "encoding": true,
         "explicit_indirect_variable": true,
         "explicit_string_variable": true,
-        "final_class": true,
-        "final_internal_class": true,
+        "final_class": false,
+        "final_internal_class": false,
         "final_public_method_for_abstract_class": true,
         "full_opening_tag": true,
         "fully_qualified_strict_types": true,
@@ -130,8 +134,6 @@
         "no_superfluous_phpdoc_tags": false,
         "no_trailing_comma_in_list_call": true,
         "no_trailing_comma_in_singleline": true,
-        "no_trailing_comma_in_singleline_array": true,
-        "no_trailing_comma_in_singleline_function_call": true,
         "no_trailing_whitespace": true,
         "no_trailing_whitespace_in_comment": true,
         "no_trailing_whitespace_in_string": true,
@@ -195,7 +197,7 @@
         },
         "phpdoc_align": {
             "align": "vertical",
-            "spacing": 2
+            "spacing": 1
         },
         "phpdoc_annotation_without_dot": true,
         "phpdoc_indent": true,
@@ -253,11 +255,14 @@
         "switch_continue_to_break": true,
         "ternary_operator_spaces": true,
         "ternary_to_null_coalescing": true,
-        "trailing_comma_in_multiline": true,
+        "trailing_comma_in_multiline": false,
+        "trim_array_spaces": true,
         "type_declaration_spaces": true,
         "types_spaces": true,
         "visibility_required": true,
         "void_return": true,
-        "whitespace_after_comma_in_array": true
+        "whitespace_after_comma_in_array": {
+            "ensure_single_space" : true
+        }
     }
 }
