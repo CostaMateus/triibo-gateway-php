@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-final class ScheduleCofry extends Notification
+class ScheduleCofry extends Notification
 {
     use Queueable;
     private $details;
@@ -34,7 +32,7 @@ final class ScheduleCofry extends Notification
      */
     public function via( $notifiable )
     {
-        return [ "mail" ];
+        return ["mail"];
     }
 
     /**
@@ -48,12 +46,10 @@ final class ScheduleCofry extends Notification
     {
         return ( new MailMessage() )->subject( $this->details[ "subject" ] )
             ->markdown(
-                "mail.cofry.schedule", [
-                    "title" => $this->details[ "title" ],
+                "mail.cofry.schedule", ["title" => $this->details[ "title" ],
                     "method" => $this->details[ "method" ],
                     "catch" => $this->details[ "catch" ],
-                    "stacktrace" => $this->details[ "stacktrace" ]
-                ] );
+                    "stacktrace" => $this->details[ "stacktrace" ], ] );
     }
 
     /**

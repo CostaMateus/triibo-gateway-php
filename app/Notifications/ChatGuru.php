@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-final class ChatGuru extends Notification
+class ChatGuru extends Notification
 {
     use Queueable;
     private $details;
@@ -34,7 +32,7 @@ final class ChatGuru extends Notification
      */
     public function via( $notifiable )
     {
-        return [ "mail" ];
+        return ["mail"];
     }
 
     /**
@@ -51,10 +49,8 @@ final class ChatGuru extends Notification
         return ( new MailMessage() )->subject( $this->details[ "subject" ] )
             ->markdown(
                 "mail.triibo.{$blade}",
-                [
-                    "title" => $this->details[ "title" ],
-                    "params" => $this->details[ "params" ]
-                ] );
+                ["title" => $this->details[ "title" ],
+                    "params" => $this->details[ "params" ], ] );
     }
 
     /**

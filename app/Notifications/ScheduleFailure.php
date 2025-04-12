@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-final class ScheduleFailure extends Notification
+class ScheduleFailure extends Notification
 {
     use Queueable;
     private $blade;
@@ -37,7 +35,7 @@ final class ScheduleFailure extends Notification
      */
     public function via( $notifiable )
     {
-        return [ "mail" ];
+        return ["mail"];
     }
 
     /**
@@ -51,12 +49,10 @@ final class ScheduleFailure extends Notification
     {
         return ( new MailMessage() )->subject( $this->details[ "subject" ] )
             ->markdown(
-                "mail.{$this->blade}.schedule-failure", [
-                    "title" => $this->details[ "title" ],
+                "mail.{$this->blade}.schedule-failure", ["title" => $this->details[ "title" ],
                     "method" => $this->details[ "method" ],
                     "catch" => $this->details[ "catch" ],
-                    "stacktrace" => $this->details[ "stacktrace" ]
-                ] );
+                    "stacktrace" => $this->details[ "stacktrace" ], ] );
     }
 
     /**

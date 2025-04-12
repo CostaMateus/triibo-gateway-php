@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Notifications\FastShop;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-final class HubError extends Notification
+class HubError extends Notification
 {
     use Queueable;
     private $data;
@@ -34,7 +32,7 @@ final class HubError extends Notification
      */
     public function via( $notifiable )
     {
-        return [ "mail" ];
+        return ["mail"];
     }
 
     /**
@@ -49,10 +47,8 @@ final class HubError extends Notification
         return ( new MailMessage() )
             ->subject( $this->data[ "subject" ] )
             ->markdown(
-                "mail.marketplace.fastshop.hub_error", [
-                    "title" => $this->data[ "title" ],
-                    "data" => $this->data[ "data" ]
-                ] );
+                "mail.marketplace.fastshop.hub_error", ["title" => $this->data[ "title" ],
+                    "data" => $this->data[ "data" ], ] );
     }
 
     /**

@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Notifications\Messages\MailMessage;
 
-final class WebhookMarketplace extends Notification
+class WebhookMarketplace extends Notification
 {
     use Queueable;
     private $details;
@@ -34,7 +32,7 @@ final class WebhookMarketplace extends Notification
      */
     public function via( $notifiable )
     {
-        return [ "mail" ];
+        return ["mail"];
     }
 
     /**
@@ -48,12 +46,10 @@ final class WebhookMarketplace extends Notification
     {
         return ( new MailMessage() )->subject( $this->details[ "subject" ] )
             ->markdown(
-                "mail.marketplace.webhook", [
-                    "title" => $this->details[ "title" ],
+                "mail.marketplace.webhook", ["title" => $this->details[ "title" ],
                     "class" => $this->details[ "class" ],
                     "params" => $this->details[ "params" ],
-                    "stacktrace" => $this->details[ "stacktrace" ]
-                ] );
+                    "stacktrace" => $this->details[ "stacktrace" ], ] );
     }
 
     /**
