@@ -3,11 +3,15 @@
 namespace App\Console\Commands\Marketplace;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{DB};
 
 class DeleteDuplicateSku extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -23,16 +27,9 @@ class DeleteDuplicateSku extends Command
     protected $description = "Delete duplicate SKUs in the marketplace";
 
     /**
-     *
-     * @var     string
+     * @var string
      */
-    protected $prefix      = "MKT Duplicate Products:";
-
-    /**
-     *
-     * @var     string
-     */
-    protected const LOG_CHANNEL = "marketplace";
+    protected $prefix = "MKT Duplicate Products:";
 
     /**
      * Create a new command instance.
@@ -51,15 +48,16 @@ class DeleteDuplicateSku extends Command
      */
     public function handle()
     {
-        $start   = now();
+        $start = now();
         $message = "{$this->prefix} Starting process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $db      = ( config( key: "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
-        $conn    = DB::connection( name: $db );
+        $db = ( config( key: "app.env" ) === "local" ) ? "dev-mkt" : "prd-mkt";
+        $conn = DB::connection( name: $db );
 
-        do {
+        do
+        {
             $select_posts = "
                 SELECT
                     p.ID,
@@ -91,7 +89,7 @@ class DeleteDuplicateSku extends Command
 
                 foreach ( $posts as $key => $post )
                 {
-                    if ( $key == array_key_last( $posts ) )
+                    if ( $key === array_key_last( $posts ) )
                     {
                         $del_metas .= "post_id = {$post->ID};";
                         $del_posts .= "ID      = {$post->ID};";
@@ -103,7 +101,7 @@ class DeleteDuplicateSku extends Command
                     }
                 }
 
-                $data      = [
+                $data = [
                     "posts" => $conn->delete( $del_posts ),
                     "metas" => $conn->delete( $del_metas )
                 ];
@@ -111,13 +109,13 @@ class DeleteDuplicateSku extends Command
                 log_message( channel: "marketplace", message: "Marketplace: Deleting duplicate SKUs...", context: $data );
             }
         }
-        while( count( $posts ) > 0 );
+        while ( count( $posts ) > 0 );
 
         $message = "{$this->prefix} Finished process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
 
-        $diff    = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( now() );
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
@@ -128,7 +126,7 @@ class DeleteDuplicateSku extends Command
      * This query deletes any rows from 'wp_wc_product_meta_lookup' where the associated
      * post in the 'wp_posts' table is missing (i.e., the post.ID is NULL).
      *
-     * @return  string
+     * @return string
      */
     private function deletePostMetaLookupQuery() : string
     {

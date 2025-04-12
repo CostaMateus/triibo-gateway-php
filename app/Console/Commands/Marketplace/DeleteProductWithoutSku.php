@@ -2,14 +2,17 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Exception;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Codexshaper\WooCommerce\Facades\Product;
 use Throwable;
+use Illuminate\Console\Command;
+use Codexshaper\WooCommerce\Facades\Product;
 
 class DeleteProductWithoutSku extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -25,16 +28,9 @@ class DeleteProductWithoutSku extends Command
     protected $description = "Delete products of Fast Shop when SKU is empty";
 
     /**
-     *
-     * @var     string
+     * @var string
      */
-    protected $prefix      = "MKT DEL Products:";
-
-    /**
-     *
-     * @var     string
-     */
-    protected const LOG_CHANNEL = "marketplace";
+    protected $prefix = "MKT DEL Products:";
 
     /**
      * Create a new command instance.
@@ -53,30 +49,30 @@ class DeleteProductWithoutSku extends Command
      */
     public function handle()
     {
-        $start   = now();
+        $start = now();
         $message = "{$this->prefix} Starting process...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $env                = config( key: "vtex.env" );
-        $has_ended          = false;
-        $page               = 1;
-        $per_page           = 100;
-        $delete             = [];
+        $env = config( key: "vtex.env" );
+        $has_ended = false;
+        $page = 1;
+        $per_page = 100;
+        $delete = [];
 
         do
         {
             try
             {
                 $search = [
-                    "per_page"     => $per_page,
-                    "page"         => $page,
+                    "per_page" => $per_page,
+                    "page" => $page,
                     "manage_stock" => false,
                     "stock_status" => "outofstock",
-                    "status"       => "private",
+                    "status" => "private",
                 ];
 
-                $aux    = Product::all( $search );
+                $aux = Product::all( $search );
 
                 $this->info( string: "Page: {$page} | Loaded: {$aux->count()}" );
 
@@ -86,22 +82,22 @@ class DeleteProductWithoutSku extends Command
 
                 foreach ( $aux as $product )
                 {
-                    if ( $product->store->id != 4265 )
+                    if ( $product->store->id !== 4265 )
                         continue;
 
                     // not empty sku
-                    if ( !empty( $product->sku ) )
+                    if ( ! empty( $product->sku ) )
                         continue;
 
                     $this->info( string: "Product ID: {$product->id}" );
 
                     $delete[] = $product->id;
 
-                    if ( count( $delete ) == 100 )
+                    if ( count( $delete ) === 100 )
                     {
                         try
                         {
-                            Product::batch( [ "delete" => $delete ] );
+                            Product::batch( ["delete" => $delete] );
                         }
                         catch ( Throwable $e )
                         {
@@ -119,11 +115,11 @@ class DeleteProductWithoutSku extends Command
                 $has_ended = false;
             }
         }
-        while ( !$has_ended );
+        while ( ! $has_ended );
 
         try
         {
-            Product::batch( [ "delete" => $delete ] );
+            Product::batch( ["delete" => $delete] );
         }
         catch ( Throwable $e )
         {
@@ -134,7 +130,7 @@ class DeleteProductWithoutSku extends Command
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
-        $diff    = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( now() );
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );

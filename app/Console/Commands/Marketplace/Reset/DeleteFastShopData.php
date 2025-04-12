@@ -2,74 +2,76 @@
 
 namespace App\Console\Commands\Marketplace\Reset;
 
+use Exception;
+use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Database\Connection;
-use Illuminate\Support\Facades\{ DB, Http, Artisan };
+use Illuminate\Support\Facades\{Artisan, DB, Http};
 
 class DeleteFastShopData extends Command
 {
     /**
-     * The name and signature of the console command.
-     *
-     * @var     string
-     */
-    protected $signature        = "mkt:delete_fs_data {--option=images : Options: images, products } {--meta} {--fix} {--outofstock}";
-
-    /**
-     * The console command description.
-     *
-     * @var     string
-     */
-    protected $description      = "Delete Fast Shop data";
-
-    /**
-     * @var     string
-     */
-    protected $prefix           = "MKT FS Delete:";
-
-    /**
-     * @var     string
-     */
-    protected $url_sufix        = "/wp-json/triibo/v1/delete/fs-data";
-
-    /**
-     * @var     string
-     */
-    protected $url;
-
-    /**
-     * @var     string
-     */
-    protected $store_id;
-
-    /**
-     * @var     Connection
-     */
-    protected $conn;
-
-    /**
-     * @var     array
-     */
-    protected $headers          = [
-        "Accept"       => "application/json",
-        "Content-Type" => "application/json",
-        "x-api-key"    => "54723162306C6F6A7052646D4C6170693030"
-    ];
-
-    /**
-     * @var     array
-     */
-    protected $allowed_options  = [ null, "image", "images", "product", "products" ];
-
-    /**
-     * @var     string
+     * @var string
      */
     protected const LOG_CHANNEL = "fastshop";
 
     /**
+     * The name and signature of the console command.
+     *
+     * @var string
+     */
+    protected $signature = "mkt:delete_fs_data {--option=images : Options: images, products } {--meta} {--fix} {--outofstock}";
+
+    /**
+     * The console command description.
+     *
+     * @var string
+     */
+    protected $description = "Delete Fast Shop data";
+
+    /**
+     * @var string
+     */
+    protected $prefix = "MKT FS Delete:";
+
+    /**
+     * @var string
+     */
+    protected $url_sufix = "/wp-json/triibo/v1/delete/fs-data";
+
+    /**
+     * @var string
+     */
+    protected $url;
+
+    /**
+     * @var string
+     */
+    protected $store_id;
+
+    /**
+     * @var Connection
+     */
+    protected $conn;
+
+    /**
+     * @var array
+     */
+    protected $headers = [
+        "Accept" => "application/json",
+        "Content-Type" => "application/json",
+        "x-api-key" => "54723162306C6F6A7052646D4C6170693030"
+    ];
+
+    /**
+     * @var array
+     */
+    protected $allowed_options = [null, "image", "images", "product", "products"];
+
+    /**
      * Create a new command instance.
      *
-     * @return  void
+     * @return void
      */
     public function __construct()
     {
@@ -79,17 +81,17 @@ class DeleteFastShopData extends Command
     /**
      * Execute the console command.
      *
-     * @return  int
+     * @return int
      */
     public function handle()
     {
-        $start          = now();
-        $option         = $this->option( key: "option"     );
-        $meta           = $this->option( key: "meta"       );
-        $fix            = $this->option( key: "fix"        );
-        $outofstock     = $this->option( key: "outofstock" );
+        $start = now();
+        $option = $this->option( key: "option" );
+        $meta = $this->option( key: "meta" );
+        $fix = $this->option( key: "fix" );
+        $outofstock = $this->option( key: "outofstock" );
 
-        if ( !in_array( needle: $option, haystack: $this->allowed_options ) )
+        if ( ! in_array( needle: $option, haystack: $this->allowed_options ) )
         {
             $message = "{$this->prefix} Invalid option: {$option}";
             log_message( channel: self::LOG_CHANNEL, message: $message );
@@ -98,53 +100,53 @@ class DeleteFastShopData extends Command
             return Command::FAILURE;
         }
 
-        $option         = match ( $option )
+        $option = match ( $option )
         {
-            "product"  => "product",
+            "product" => "product",
             "products" => "product",
-            "image"    => "attachment",
-            "images"   => "attachment",
+            "image" => "attachment",
+            "images" => "attachment",
         };
 
         $this->log_message( message: "Starting process, {$option}" );
 
-        $db             = "dev-mkt";
-        $this->url      = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
+        $db = "dev-mkt";
+        $this->url = "https://dev-marketplace.triibo.com.br".$this->url_sufix;
 
         if ( config( key: "app.env" ) === "production" )
         {
-            $db        = "prd-mkt";
-            $this->url = "https://marketplace.triibo.com.br" . $this->url_sufix;
+            $db = "prd-mkt";
+            $this->url = "https://marketplace.triibo.com.br".$this->url_sufix;
         }
 
         $this->log_message( message: "Selecting DB: {$db}..." );
 
-        $this->conn     = DB::connection( name: $db );
+        $this->conn = DB::connection( name: $db );
         $this->store_id = config( key: "woocommerce.partners" )[ "fast_shop" ][ "store_id" ];
 
         try
         {
-            if ( !in_array( true, [ $meta, $fix, $outofstock ] ) )
+            if ( ! in_array( true, [$meta, $fix, $outofstock] ) )
             {
                 $unfinished = true;
-                $response   = null;
+                $response = null;
 
                 do
                 {
-                    $posts    = $this->conn->select( query: $this->getSelect( type: $option ) );
+                    $posts = $this->conn->select( query: $this->getSelect( type: $option ) );
 
-                    if ( !$posts ) break;
+                    if ( ! $posts ) break;
 
-                    $ids      = [];
+                    $ids = [];
 
                     foreach ( $posts as $post )
-                        $ids[] = ( string ) $post->id;
+                        $ids[] = (string) $post->id;
 
-                    $this->log_message( message: "Selected: " . implode( ", ", $ids ) );
+                    $this->log_message( message: "Selected: ".implode( ", ", $ids ) );
 
-                    $content  = json_encode( [
+                    $content = json_encode( [
                         "posts" => $ids,
-                        "type"  => $option,
+                        "type" => $option,
                     ] );
 
                     $response = retry(
@@ -153,16 +155,16 @@ class DeleteFastShopData extends Command
                         callback          : function () use ( $content )
                         {
                             $response_2 = Http::timeout( 90 )
-                                            ->withHeaders( headers: $this->headers )
-                                            ->withBody( content : $content, contentType : "application/json" )
-                                            ->post( url: $this->url );
+                                ->withHeaders( headers: $this->headers )
+                                ->withBody( content : $content, contentType : "application/json" )
+                                ->post( url: $this->url );
 
-                            if ( !$response_2->successful() )
-                                throw new \Exception( $response_2->json()[ "message" ], $response_2->status() );
+                            if ( ! $response_2->successful() )
+                                throw new Exception( $response_2->json()[ "message" ], $response_2->status() );
 
                             return $response_2;
                         },
-                        when              : function ( \Throwable $e )
+                        when              : function ( Throwable $e )
                         {
                             $this->log_message( message: "Retry. Error: {$e->getMessage()}", type: "error" );
 
@@ -170,8 +172,8 @@ class DeleteFastShopData extends Command
                         }
                     );
 
-                    if ( !$response->successful() )
-                        throw new \Exception( $response->json()[ "message" ], $response->status() );
+                    if ( ! $response->successful() )
+                        throw new Exception( $response->json()[ "message" ], $response->status() );
 
                     $this->log_message( message: "Successful processed", context: $response->json() );
 
@@ -184,7 +186,7 @@ class DeleteFastShopData extends Command
             if ( $meta === true )
             {
                 $this->conn->select( query: $this->deleteMetaLookup() );
-                $this->conn->select( query: $this->deletePostMeta()   );
+                $this->conn->select( query: $this->deletePostMeta() );
             }
 
             if ( $fix === true )
@@ -193,7 +195,7 @@ class DeleteFastShopData extends Command
             if ( $outofstock === true )
                 $this->deleteOutofstock();
         }
-        catch ( \Throwable $e )
+        catch ( Throwable $e )
         {
             $this->log_message( message: "Error: {$e->getMessage()}", type: "error" );
 
@@ -215,9 +217,11 @@ class DeleteFastShopData extends Command
     /**
      * Log message
      *
-     * @param   string  $message
-     * @param   string  $type
-     * @return  void
+     * @param string $message
+     * @param string $type
+     * @param array  $context
+     *
+     * @return void
      */
     private function log_message( string $message, string $type = "info", array $context = [] ) : void
     {
@@ -228,21 +232,22 @@ class DeleteFastShopData extends Command
             context: $context
         );
 
-        $this->$type( string: $message );
+        $this->{$type}( string: $message );
     }
 
     /**
+     * @param int    $start
+     * @param int    $end
+     * @param string $type
      *
-     * @param   int     $start
-     * @param   int     $end
-     * @return  string
+     * @return string
      */
     private function getSelect( string $type ) : string
     {
         $limit = 25;
         $where = "";
 
-        if ( $type == "attachment" )
+        if ( $type === "attachment" )
         {
             $limit = 1000;
             $where = "AND p.post_parent = 0";
@@ -260,7 +265,7 @@ class DeleteFastShopData extends Command
     }
 
     /**
-     * @return  string
+     * @return string
      */
     private function deleteMetaLookup() : string
     {
@@ -275,7 +280,7 @@ class DeleteFastShopData extends Command
     }
 
     /**
-     * @return  string
+     * @return string
      */
     private function deletePostMeta() : string
     {
@@ -290,13 +295,13 @@ class DeleteFastShopData extends Command
     }
 
     /**
-     * @return  void
+     * @return void
      */
     private function fixPostGallery() : void
     {
-        $update    = [];
+        $update = [];
 
-        $query_0   = "
+        $query_0 = "
             UPDATE wp_posts AS img
             JOIN wp_postmeta AS meta ON img.ID = meta.meta_value
             JOIN wp_posts AS prod ON meta.post_id = prod.ID
@@ -307,7 +312,7 @@ class DeleteFastShopData extends Command
             AND prod.post_author = {$this->store_id};
         ";
 
-        $query_1   = "
+        $query_1 = "
             SELECT ID as post_id
             FROM wp_posts
             WHERE post_author = {$this->store_id}
@@ -316,7 +321,7 @@ class DeleteFastShopData extends Command
             ORDER BY ID DESC;
         ";
 
-        $query_2   = "
+        $query_2 = "
             SELECT post_id, meta_value
             FROM wp_postmeta
             WHERE meta_key = '_product_image_gallery'
@@ -327,31 +332,32 @@ class DeleteFastShopData extends Command
         $this->conn->select( query: $query_0 );
 
         $post_imgs = $this->conn->select( query: $query_1 );
-        $post_imgs = array_map( function( $obj ) { return $obj->post_id; }, $post_imgs );
+        $post_imgs = array_map( static function ( $obj )
+        { return $obj->post_id; }, $post_imgs );
 
-        $result    = $this->conn->select( query: $query_2 );
+        $result = $this->conn->select( query: $query_2 );
 
-        $chunked   = array_chunk( $result, 500 );
+        $chunked = array_chunk( $result, 500 );
 
         foreach ( $chunked as $i => $result )
         {
             $i++;
 
-            $this->log_message( message: "Chunk {$i} de " . count( $chunked ) );
+            $this->log_message( message: "Chunk {$i} de ".count( $chunked ) );
 
             foreach ( $result as $meta )
             {
                 $product_id = $meta->post_id;
-                $image_ids  = explode( ",", $meta->meta_value );
+                $image_ids = explode( ",", $meta->meta_value );
 
-                $intersect  = array_intersect( $image_ids, $post_imgs );
+                $intersect = array_intersect( $image_ids, $post_imgs );
 
                 if ( empty( $intersect ) )
                     continue;
 
                 foreach ( $image_ids as $image_id )
                 {
-                    $image_id = ( int ) trim( $image_id );
+                    $image_id = (int) trim( $image_id );
 
                     $update[] = "UPDATE wp_posts SET post_parent = {$product_id} WHERE ID = {$image_id};";
                 }
@@ -368,18 +374,19 @@ class DeleteFastShopData extends Command
         }
 
         $post_imgs = $this->conn->select( query: $query_1 );
-        $post_imgs = array_map( function( $obj ) { return $obj->post_id; }, $post_imgs );
+        $post_imgs = array_map( static function ( $obj )
+        { return $obj->post_id; }, $post_imgs );
 
-        if ( !empty( $post_imgs ) )
+        if ( ! empty( $post_imgs ) )
             Artisan::call( "mkt:delete_fs_data --option=images" );
     }
 
     /**
-     * @return  void
+     * @return void
      */
     private function deleteOutofstock() : void
     {
-        $query_0   = "
+        $query_0 = "
             SELECT p.ID as post_id
             FROM wp_posts p
             LEFT JOIN wp_postmeta pm
@@ -389,20 +396,21 @@ class DeleteFastShopData extends Command
             AND pm.meta_value = 'outofstock';
         ";
 
-        $post_ids  = $this->conn->select( query: $query_0 );
-        $post_ids  = array_map( function( $obj ) { return $obj->post_id; }, $post_ids );
-        $chunked   = array_chunk( $post_ids, 100 );
+        $post_ids = $this->conn->select( query: $query_0 );
+        $post_ids = array_map( static function ( $obj )
+        { return $obj->post_id; }, $post_ids );
+        $chunked = array_chunk( $post_ids, 100 );
 
         foreach ( $chunked as $i => $post_ids )
         {
             $i++;
 
-            $this->log_message( message: "Chunk {$i} de " . count( $chunked ) );
+            $this->log_message( message: "Chunk {$i} de ".count( $chunked ) );
 
-            $ids      = implode( ", ", $post_ids );
-            $query_1  = "DELETE wp_postmeta   FROM wp_postmeta WHERE post_id     IN ({$ids});";
-            $query_2  = "DELETE wp_posts      FROM wp_posts    WHERE ID          IN ({$ids});";
-            $query_3  = "SELECT ID as post_id FROM wp_posts    WHERE post_parent IN ({$ids});";
+            $ids = implode( ", ", $post_ids );
+            $query_1 = "DELETE wp_postmeta   FROM wp_postmeta WHERE post_id     IN ({$ids});";
+            $query_2 = "DELETE wp_posts      FROM wp_posts    WHERE ID          IN ({$ids});";
+            $query_3 = "SELECT ID as post_id FROM wp_posts    WHERE post_parent IN ({$ids});";
 
             $this->log_message( message: $query_1 );
             $this->log_message( message: $query_2 );
@@ -412,17 +420,18 @@ class DeleteFastShopData extends Command
             $this->conn->select( query: $query_2 );
 
             $imgs_ids = $this->conn->select( query: $query_3 );
-            $imgs_ids = array_map( function( $obj ) { return ( string ) $obj->post_id; }, $imgs_ids );
+            $imgs_ids = array_map( static function ( $obj )
+            { return (string) $obj->post_id; }, $imgs_ids );
 
-            $content  = json_encode( [
-                "type"  => "attachment",
+            $content = json_encode( [
+                "type" => "attachment",
                 "posts" => $imgs_ids,
             ] );
 
             $response = Http::timeout( 90 )
-                            ->withHeaders( headers: $this->headers )
-                            ->withBody( content : $content, contentType : "application/json" )
-                            ->post( url: $this->url );
+                ->withHeaders( headers: $this->headers )
+                ->withBody( content : $content, contentType : "application/json" )
+                ->post( url: $this->url );
 
             $this->log_message( message: $response );
         }

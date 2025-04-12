@@ -2,12 +2,18 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Throwable;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\{Cache, DB};
 use Codexshaper\WooCommerce\Facades\Product;
-use Illuminate\Support\Facades\{ DB, Cache };
 
 class GetProducts extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -23,16 +29,9 @@ class GetProducts extends Command
     protected $description = "Get marketplace products";
 
     /**
-     *
-     * @var     string
+     * @var string
      */
-    protected $prefix      = "MKT Get Products:";
-
-    /**
-     *
-     * @var     string
-     */
-    protected const LOG_CHANNEL = "marketplace";
+    protected $prefix = "MKT Get Products:";
 
     /**
      * Create a new command instance.
@@ -55,7 +54,7 @@ class GetProducts extends Command
 
         try
         {
-            $start   = now();
+            $start = now();
             $message = "{$this->prefix} Starting process WC data...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( string: $message );
@@ -69,7 +68,7 @@ class GetProducts extends Command
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( string: $message );
 
-            $diff    = $start->diffInMinutes( date: now() );
+            $diff = $start->diffInMinutes( date: now() );
             $message = "{$this->prefix} Runtime {$diff} minutes...";
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( string: $message );
@@ -81,23 +80,22 @@ class GetProducts extends Command
     }
 
     /**
-     *
-     * @return  void
+     * @return void
      */
     private function processProducts() : void
     {
-        $page     = 1;
+        $page = 1;
         $products = [];
-        $count    = 100;
+        $count = 100;
 
         do
         {
             try
             {
-                $response = Product::all( [ "per_page" => 100, "page" => $page ] );
-                $count    = $response->count();
+                $response = Product::all( ["per_page" => 100, "page" => $page] );
+                $count = $response->count();
 
-                if ( $count != 0 )
+                if ( $count !== 0 )
                 {
                     $this->info( string: "{$this->prefix} {$count} loaded" );
                     $products = $response->toArray();
@@ -107,63 +105,65 @@ class GetProducts extends Command
 
                 $page++;
             }
-            catch ( \Throwable $e )
+            catch ( Throwable $e )
             {
                 $errors = [
                     "JSON ERROR: Syntax error",
                     "Undefined property: stdClass::\$message",
                 ];
 
-                if ( !in_array( $e->getMessage(), $errors ) )
+                if ( ! in_array( $e->getMessage(), $errors ) )
                 {
                     report( exception: $e );
 
                     log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
                     $this->error( string: $e->getMessage() );
+
                     continue;
                 }
             }
         }
-        while ( $count == 100 );
+        while ( $count === 100 );
 
         if ( count( $products ) > 0 )
             $this->insertProducts( products: $products );
     }
 
     /**
+     * @param array  $metas
+     * @param string $key
      *
-     * @param   array   $metas
-     * @param   string  $key
-     * @return  mixed
+     * @return mixed
      */
     private function searchMetadata( array $metas, string $key = "_fs_product_id" ) : mixed
     {
         foreach ( $metas as $meta )
-            if ( $meta->key == $key )
+            if ( $meta->key === $key )
                 return $meta->value;
 
         return null;
     }
 
     /**
+     * @param array $products
      *
-     * @param   array   $products
-     * @return  void
+     * @return void
      */
     private function insertProducts( array $products ) : void
     {
-        $data    = [];
+        $data = [];
 
         foreach ( $products as $product )
         {
-            $founded     = false;
+            $founded = false;
             $metadata_id = $this->searchMetadata( metas: $product->meta_data );
 
             foreach ( $data as $value )
             {
-                if ( $value[ "metadata_id" ] == $metadata_id )
+                if ( $value[ "metadata_id" ] === $metadata_id )
                 {
                     $founded = true;
+
                     break;
                 }
             }
@@ -172,28 +172,28 @@ class GetProducts extends Command
                 continue;
 
             $data[] = [
-                "metadata_id"   => $metadata_id,
-                "store_id"      => $product->store?->id     ?: null,
-                "product_id"    => $product->id             ?: null,
-                "product_sku"   => $product->sku            ?: null,
-                "regular_price" => $product->regular_price  ?: null,
-                "sale_price"    => $product->sale_price     ?: null,
-                "stock_status"  => $product->stock_status   ?: null,
-                "stock"         => $product->stock_quantity ?: null,
-                "status"        => $product->status         ?: null,
+                "metadata_id" => $metadata_id,
+                "store_id" => $product->store?->id ?: null,
+                "product_id" => $product->id ?: null,
+                "product_sku" => $product->sku ?: null,
+                "regular_price" => $product->regular_price ?: null,
+                "sale_price" => $product->sale_price ?: null,
+                "stock_status" => $product->stock_status ?: null,
+                "stock" => $product->stock_quantity ?: null,
+                "status" => $product->status ?: null,
             ];
         }
 
-        $count   = count( $data );
+        $count = count( $data );
         $message = "MKT Inserting {$count} products in table: marketplace_product_skus";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
         DB::table( "marketplace_product_skus" )->upsert(
-            [ $data ],
-            [ "product_id", "product_sku" ],
-            [ "metadata_id", "store_id", "product_id", "product_sku", "regular_price", "sale_price", "stock_status", "stock", "status" ]
+            [$data],
+            ["product_id", "product_sku"],
+            ["metadata_id", "store_id", "product_id", "product_sku", "regular_price", "sale_price", "stock_status", "stock", "status"]
         );
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Affiliates\Cofry;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Affiliates\CofryController;
 
 class ProcessStoresPromos extends Command
@@ -42,28 +41,29 @@ class ProcessStoresPromos extends Command
     {
         $channel = "cofry";
 
-        $option  = $this->option( "option" );
-        $opts    = [
+        $option = $this->option( "option" );
+        $opts = [
             "promotions",
             "establishments",
             "all",
         ];
 
-        if ( !in_array( $option, $opts ) )
+        if ( ! in_array( $option, $opts ) )
         {
             $message = "Invalid option, terminating process...";
 
             log_message( channel: $channel, message: $message );
+
             return;
         }
 
-        $title   = ( $option != "all" ) ? ucfirst( $option ) : "Stores|Promotions";
+        $title = ( $option !== "all" ) ? ucfirst( $option ) : "Stores|Promotions";
         $message = "{$title}: Start processing...";
 
         log_message( channel: $channel, message: $message );
         $this->info( $message );
 
-        ( new CofryController() )->$option();
+        ( new CofryController() )->{$option}();
 
         $message = "{$title}: End processing...";
         log_message( channel: $channel, message: $message );

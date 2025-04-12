@@ -2,10 +2,9 @@
 
 namespace App\Console\Commands\Marketplace\Old;
 
+use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\{DB, Http, Storage};
 
 class GetHubFastShop extends Command
 {
@@ -22,9 +21,7 @@ class GetHubFastShop extends Command
      * @var string
      */
     protected $description = 'Get HUB FS';
-
     protected $fsUrl;
-
     protected $fsHeaders;
 
     /**
@@ -36,9 +33,9 @@ class GetHubFastShop extends Command
     {
         parent::__construct();
 
-        $env             = config( "fastshop.env"             );
-        $this->fsUrl     = config( "fastshop.$env.fs.url"     );
-        $this->fsHeaders = config( "fastshop.$env.fs.headers" );
+        $env = config( "fastshop.env" );
+        $this->fsUrl = config( "fastshop.{$env}.fs.url" );
+        $this->fsHeaders = config( "fastshop.{$env}.fs.headers" );
     }
 
     /**
@@ -48,39 +45,39 @@ class GetHubFastShop extends Command
      */
     public function handle()
     {
-        $status    = "active";
-        $cep       = "04024-020";
+        $status = "active";
+        $cep = "04024-020";
 
-        $logs      = [
-            "error"                => 0,
-            "success"              => [],
-            "outofstock"           => 0,
+        $logs = [
+            "error" => 0,
+            "success" => [],
+            "outofstock" => 0,
             "delivery-unavailable" => 0,
         ];
 
-        $products  = DB::table( "marketplace_product_skus" )->where( "status", $status )->get();
+        $products = DB::table( "marketplace_product_skus" )->where( "status", $status )->get();
 
-        $body      = [
-            "postalCode"     => $cep,
-            "country"        => "BRA",
+        $body = [
+            "postalCode" => $cep,
+            "country" => "BRA",
             "geoCoordinates" => [],
-            "items"          => []
+            "items" => []
         ];
 
-        foreach( $products as $p )
+        foreach ( $products as $p )
         {
             $sku = explode( "FS-", $p->product_sku )[ 1 ];
 
             $body[ "items" ][ 0 ] = [
-                "id"       => $sku,
+                "id" => $sku,
                 "quantity" => "1",
-                "seller"   => "FSH",
+                "seller" => "FSH",
             ];
 
             $this->callFs( $body, $sku, $logs );
         }
 
-        Storage::put( "fs-hubs-{$status}-" . date( "Ymd-his" ) . ".json", json_encode( $logs ) );
+        Storage::put( "fs-hubs-{$status}-".date( "Ymd-his" ).".json", json_encode( $logs ) );
 
         dd( "ok" );
     }
@@ -90,21 +87,23 @@ class GetHubFastShop extends Command
         try
         {
 
-            $response  = Http::withHeaders( $this->fsHeaders )
-                            ->withBody( json_encode( $body ), "application/json" )
-                            ->post( $this->fsUrl . "/pvt/orderForms/simulation" );
+            $response = Http::withHeaders( $this->fsHeaders )
+                ->withBody( json_encode( $body ), "application/json" )
+                ->post( $this->fsUrl."/pvt/orderForms/simulation" );
 
-            if ( !$response->successful() )
+            if ( ! $response->successful() )
             {
-                if ( $response->status() == 429 )
+                if ( $response->status() === 429 )
                 {
                     sleep( 5 );
+
                     return $this->callFs( $body, $sku, $logs );
                 }
 
-                $logs[ "error" ]++; //[ $sku ] = $response->status();
+                $logs[ "error" ]++; // [ $sku ] = $response->status();
 
-                echo "{$sku} : " . $response->status() . "\n";
+                echo "{$sku} : ".$response->status()."\n";
+
                 return false;
             }
 
@@ -112,9 +111,10 @@ class GetHubFastShop extends Command
 
             if ( empty( $data[ "logisticsInfo" ] ) )
             {
-                $logs[ "outofstock" ]++; //[] = $sku;
+                $logs[ "outofstock" ]++; // [] = $sku;
 
                 echo "{$sku} : outofstock\n";
+
                 return true;
             }
 
@@ -130,10 +130,11 @@ class GetHubFastShop extends Command
                 // }
                 // else
                 // {
-                    $logs[ "delivery-unavailable" ]++; //[] = $sku;
+                $logs[ "delivery-unavailable" ]++; // [] = $sku;
 
-                    echo "{$sku} : delivery-unavailable\n";
-                    return true;
+                echo "{$sku} : delivery-unavailable\n";
+
+                return true;
                 // }
 
                 // return $this->callFs( $body, $sku, $logs );
@@ -143,17 +144,18 @@ class GetHubFastShop extends Command
 
             if ( isset( $logs[ "success" ][ $hub ] ) )
                 $logs[ "success" ][ $hub ]++;
-            else
-                $logs[ "success" ][ $hub ] = 1;
+            else $logs[ "success" ][ $hub ] = 1;
 
             echo "{$sku} : {$hub}\n";
+
             return true;
         }
-        catch ( \Exception $e )
+        catch ( Exception $e )
         {
-            $logs[ "error" ]++; //[ $sku ] = $e->getMessage();
+            $logs[ "error" ]++; // [ $sku ] = $e->getMessage();
 
-            echo "{$sku} : " . $e->getMessage() . "\n";
+            echo "{$sku} : ".$e->getMessage()."\n";
+
             return false;
         }
     }

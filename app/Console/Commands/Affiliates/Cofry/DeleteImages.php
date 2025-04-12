@@ -44,7 +44,7 @@ class DeleteImages extends Command
         $this->info( $message );
 
         File::deleteDirectory( public_path( "images/estabelecimentos/" ), true );
-        File::deleteDirectory( public_path( "images/promos/"           ), true );
+        File::deleteDirectory( public_path( "images/promos/" ), true );
 
         $message = "Images: Successfully deleted...";
 
