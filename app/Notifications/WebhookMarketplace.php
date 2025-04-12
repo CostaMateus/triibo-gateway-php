@@ -1,24 +1,26 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
-class WebhookMarketplace extends Notification
+final class WebhookMarketplace extends Notification
 {
     use Queueable;
-
     private $details;
 
     /**
      * Create a new notification instance.
      *
+     * @param mixed $details
+     *
      * @return void
      */
-    public function __construct($details)
+    public function __construct( $details )
     {
         $this->details = $details;
     }
@@ -26,41 +28,43 @@ class WebhookMarketplace extends Notification
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
+     *
      * @return array
      */
-    public function via($notifiable)
+    public function via( $notifiable )
     {
-        return ["mail"];
+        return [ "mail" ];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
+     * @param mixed $notifiable
+     *
+     * @return MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail( $notifiable )
     {
-        return (new MailMessage)->subject($this->details["subject"])
-                                ->markdown("mail.marketplace.webhook",[
-                                    "title"      => $this->details["title"],
-                                    "class"      => $this->details["class"],
-                                    "params"     => $this->details["params"],
-                                    "stacktrace" => $this->details["stacktrace"],
-                                ]);
+        return ( new MailMessage() )->subject( $this->details[ "subject" ] )
+            ->markdown(
+                "mail.marketplace.webhook", [
+                    "title" => $this->details[ "title" ],
+                    "class" => $this->details[ "class" ],
+                    "params" => $this->details[ "params" ],
+                    "stacktrace" => $this->details[ "stacktrace" ]
+                ] );
     }
 
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
+     *
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray( $notifiable )
     {
-        return [
-            //
-        ];
+        return [];
     }
 }
