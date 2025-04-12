@@ -7,6 +7,7 @@
         "storage",
         "vendor"
     ],
+    "notName": ["server.php"],
     "rules": {
         "align_multiline_comment": true,
         "array_indentation": true,
@@ -262,7 +263,7 @@
         "visibility_required": true,
         "void_return": true,
         "whitespace_after_comma_in_array": {
-            "ensure_single_space" : true
+            "ensure_single_space": true
         }
     }
 }

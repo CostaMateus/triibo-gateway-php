@@ -425,7 +425,7 @@ class SocialSoulController extends Controller
         $fileNames = [];
 
         foreach ( $files as $file )
-            $fileNames[] = pathinfo( $file )[ "basename" ] ;
+            $fileNames[] = pathinfo( $file )[ "basename" ];
 
         return $fileNames;
     }
