@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Providers;
 
 use App\Models\User;
 use Illuminate\Support\Facades\{Gate, Validator};
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
-final class AuthServiceProvider extends ServiceProvider
+class AuthServiceProvider extends ServiceProvider
 {
     /**
      * The policy mappings for the application.

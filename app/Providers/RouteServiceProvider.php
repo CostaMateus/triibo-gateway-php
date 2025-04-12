@@ -1,7 +1,5 @@
 <?php
 
-declare(strict_types = 1);
-
 namespace App\Providers;
 
 use Illuminate\Http\Request;
@@ -9,7 +7,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\{RateLimiter, Route};
 use Illuminate\Foundation\Support\Providers\RouteServiceProvider as ServiceProvider;
 
-final class RouteServiceProvider extends ServiceProvider
+class RouteServiceProvider extends ServiceProvider
 {
     /**
      * The path to the "home" route for your application.
