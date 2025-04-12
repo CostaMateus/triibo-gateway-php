@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace App\Models\Vtex;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Product extends Model
+final class Product extends Model
 {
-    protected $table    = "vtex_products";
+    protected $table = "vtex_products";
 
     /**
      * The attributes that are mass assignable.
@@ -19,6 +21,6 @@ class Product extends Model
         "action",
         "status",
         "meta",
-        "data"
+        "data",
     ];
 }

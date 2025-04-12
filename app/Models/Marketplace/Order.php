@@ -1,22 +1,24 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace App\Models\Marketplace;
 
 use Illuminate\Database\Eloquent\Model;
 
-class Order extends Model
+final class Order extends Model
 {
     /**
      * The table associated with the model.
      *
-     * @var     string
+     * @var string
      */
     protected $table = "marketplace_orders";
 
     /**
      * The attributes that are mass assignable.
      *
-     * @var     array
+     * @var array
      */
     protected $fillable = [
         "file_name",
@@ -35,13 +37,13 @@ class Order extends Model
     /**
      * The attributes that should be cast to native types.
      *
-     * @var     array
+     * @var array
      */
     protected $casts = [
-        "max_price"    => "float",
-        "product_id"   => "integer",
+        "max_price" => "float",
+        "product_id" => "integer",
         "product_qntt" => "integer",
-        "billing"      => "array",
-        "shipping"     => "array",
+        "billing" => "array",
+        "shipping" => "array",
     ];
 }
