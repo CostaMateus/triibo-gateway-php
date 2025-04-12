@@ -1,8 +1,8 @@
 <?php
 
-use Monolog\Handler\NullHandler;
-use Monolog\Handler\StreamHandler;
-use Monolog\Handler\SyslogUdpHandler;
+declare(strict_types = 1);
+
+use Monolog\Handler\{NullHandler, StreamHandler, SyslogUdpHandler};
 
 return [
 
@@ -17,7 +17,7 @@ return [
     |
     */
 
-    'default' => env('LOG_CHANNEL', 'stack'),
+    'default' => env( 'LOG_CHANNEL', 'stack' ),
 
     /*
     |--------------------------------------------------------------------------
@@ -37,49 +37,49 @@ return [
     'channels' => [
         'stack' => [
             'driver' => 'stack',
-            'channels' => ['single'],
+            'channels' => [ 'single' ],
             'ignore_exceptions' => false,
         ],
 
         'single' => [
             "permission" => 0777,
             'driver' => 'single',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'path' => storage_path( 'logs/laravel.log' ),
+            'level' => env( 'LOG_LEVEL', 'debug' ),
             'permission' => 0664,
         ],
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
-            'level' => env('LOG_LEVEL', 'debug'),
+            'path' => storage_path( 'logs/laravel.log' ),
+            'level' => env( 'LOG_LEVEL', 'debug' ),
             'days' => 14,
             'permission' => 0664,
         ],
 
         'slack' => [
             'driver' => 'slack',
-            'url' => env('LOG_SLACK_WEBHOOK_URL'),
+            'url' => env( 'LOG_SLACK_WEBHOOK_URL' ),
             'username' => 'Laravel Log',
             'emoji' => ':boom:',
-            'level' => env('LOG_LEVEL', 'critical'),
+            'level' => env( 'LOG_LEVEL', 'critical' ),
         ],
 
         'papertrail' => [
             'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env( 'LOG_LEVEL', 'debug' ),
             'handler' => SyslogUdpHandler::class,
             'handler_with' => [
-                'host' => env('PAPERTRAIL_URL'),
-                'port' => env('PAPERTRAIL_PORT'),
+                'host' => env( 'PAPERTRAIL_URL' ),
+                'port' => env( 'PAPERTRAIL_PORT' ),
             ],
         ],
 
         'stderr' => [
             'driver' => 'monolog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env( 'LOG_LEVEL', 'debug' ),
             'handler' => StreamHandler::class,
-            'formatter' => env('LOG_STDERR_FORMATTER'),
+            'formatter' => env( 'LOG_STDERR_FORMATTER' ),
             'with' => [
                 'stream' => 'php://stderr',
             ],
@@ -87,12 +87,12 @@ return [
 
         'syslog' => [
             'driver' => 'syslog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env( 'LOG_LEVEL', 'debug' ),
         ],
 
         'errorlog' => [
             'driver' => 'errorlog',
-            'level' => env('LOG_LEVEL', 'debug'),
+            'level' => env( 'LOG_LEVEL', 'debug' ),
         ],
 
         'null' => [
@@ -101,63 +101,63 @@ return [
         ],
 
         'emergency' => [
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path( 'logs/laravel.log' ),
             'permission' => 0664,
         ],
 
         // programa de afiliados
-        "affiliate"   => [
+        "affiliate" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/affiliate.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/affiliate.log" ),
+            "level" => "debug",
         ],
-        "awin"        => [
+        "awin" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/awin.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/awin.log" ),
+            "level" => "debug",
         ],
-        "cofry"       => [
+        "cofry" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/cofry.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/cofry.log" ),
+            "level" => "debug",
         ],
-        "socialsoul"  => [
+        "socialsoul" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/socialsoul.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/socialsoul.log" ),
+            "level" => "debug",
         ],
 
         // marketplace
         "marketplace" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/marketplace.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/marketplace.log" ),
+            "level" => "debug",
         ],
-        "fastshop"    => [
+        "fastshop" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/fastshop.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/fastshop.log" ),
+            "level" => "debug",
         ],
 
         // triibo
-        "triibo"      => [
+        "triibo" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/triibo.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/triibo.log" ),
+            "level" => "debug",
         ],
 
-        "codex"       => [
+        "codex" => [
             "permission" => 0777,
-            "driver"     => "single",
-            "path"       => storage_path( "logs/codex.log" ),
-            "level"      => "debug"
+            "driver" => "single",
+            "path" => storage_path( "logs/codex.log" ),
+            "level" => "debug",
         ],
     ],
 ];

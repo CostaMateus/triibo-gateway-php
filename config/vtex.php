@@ -1,77 +1,79 @@
 <?php
 
+declare(strict_types = 1);
+
 return [
 
-    "env"         => env( key: "MKT_ENV", default: "local" ),
+    "env" => env( key: "MKT_ENV", default: "local" ),
 
-    "partners"    => [
+    "partners" => [
         "fast_shop" => [
-            "env"            => env( key: "FS_VTEX_ENV", default: "local" ),
+            "env" => env( key: "FS_VTEX_ENV", default: "local" ),
 
             "connector_name" => "Marketplace Triibo",
 
-            "local"          => [
+            "local" => [
                 "sales_channel" => 8,
                 "affiliated_id" => "TRB",
-                "account_name"  => "fastshopbrqa2",
-                "raw_url"       => "https://{account_name}.vtexcommercestable.com.br/api/",
-                "headers"       => [
-                    "Accept"              => "application/json",
-                    "Content-Type"        => "application/json",
-                    "X-VTEX-API-AppKey"   => env( key: "FS_VTEX_HML_KEY"   ),
-                    "X-VTEX-API-AppToken" => env( key: "FS_VTEX_HML_TOKEN" )
+                "account_name" => "fastshopbrqa2",
+                "raw_url" => "https://{account_name}.vtexcommercestable.com.br/api/",
+                "headers" => [
+                    "Accept" => "application/json",
+                    "Content-Type" => "application/json",
+                    "X-VTEX-API-AppKey" => env( key: "FS_VTEX_HML_KEY" ),
+                    "X-VTEX-API-AppToken" => env( key: "FS_VTEX_HML_TOKEN" ),
                 ],
             ],
 
-            "production"     => [
+            "production" => [
                 "sales_channel" => 35,
                 "affiliated_id" => "TRB",
-                "account_name"  => "fastshopbr",
-                "raw_url"       => "https://{account_name}.vtexcommercestable.com.br/api/",
-                "headers"       => [
-                    "Accept"              => "application/json",
-                    "Content-Type"        => "application/json",
-                    "X-VTEX-API-AppKey"   => env( key: "FS_VTEX_PRD_KEY"   ),
-                    "X-VTEX-API-AppToken" => env( key: "FS_VTEX_PRD_TOKEN" )
+                "account_name" => "fastshopbr",
+                "raw_url" => "https://{account_name}.vtexcommercestable.com.br/api/",
+                "headers" => [
+                    "Accept" => "application/json",
+                    "Content-Type" => "application/json",
+                    "X-VTEX-API-AppKey" => env( key: "FS_VTEX_PRD_KEY" ),
+                    "X-VTEX-API-AppToken" => env( key: "FS_VTEX_PRD_TOKEN" ),
                 ],
             ],
         ],
     ],
 
-    "api"         => [
-        "manager-connector"        => "channel-manager/connector",
+    "api" => [
+        "manager-connector" => "channel-manager/connector",
 
-        "category-register"        => "mkp-category-mapper/connector/register",
-        "category-marketplace"     => "mkp-category-mapper/categories/marketplace/{id}",
-        "order-retrieve"           => "oms/pvt/orders/{orderId}",
-        "order-integration"        => "order-integration/orders",
+        "category-register" => "mkp-category-mapper/connector/register",
+        "category-marketplace" => "mkp-category-mapper/categories/marketplace/{id}",
+        "order-retrieve" => "oms/pvt/orders/{orderId}",
+        "order-integration" => "order-integration/orders",
         "order-integration-status" => "order-integration/orders/status",
         "order-integration-cancel" => "oms/pvt/orders/{orderId}/cancel",
 
         // preço/estoque/frete | é pra sempre ter preço e estoque | só tem frete se mandar o CEP no body
         // https://developers.vtex.com/docs/api-reference/marketplace-protocol-external-marketplace-orders#post-/api/checkout/pub/orderForms/simulation
-        "fulfillment-simulation"   => "checkout/pub/orderForms/simulation",
+        "fulfillment-simulation" => "checkout/pub/orderForms/simulation",
 
-        "fulfillment-order"        => "fulfillment/pvt/orders",
-        "fulfillment-dispatch"     => "fulfillment/pvt/orders/{orderId}/fulfill",
+        "fulfillment-order" => "fulfillment/pvt/orders",
+        "fulfillment-dispatch" => "fulfillment/pvt/orders/{orderId}/fulfill",
 
-        "all-skus-list"            => "catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel",
+        "all-skus-list" => "catalog_system/pvt/sku/stockkeepingunitidsbysaleschannel",
 
         // Contexto de um SKU
         // https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog_system/pvt/sku/stockkeepingunitbyid/-skuId-
-        "get-sku-context"          => "catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}",
+        "get-sku-context" => "catalog_system/pvt/sku/stockkeepingunitbyid/{skuId}",
 
         // Dados de um SKU
         // https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/stockkeepingunit/-skuId-
-        "get-sku-data"             => "catalog/pvt/stockkeepingunit/{skuId}",
+        "get-sku-data" => "catalog/pvt/stockkeepingunit/{skuId}",
 
         // Recupera um produto pelo ID
         // https://developers.vtex.com/docs/api-reference/catalog-api#get-/api/catalog/pvt/product/-productId-
-        "get-detail-product"       => "catalog/pvt/product/{productId}",
+        "get-detail-product" => "catalog/pvt/product/{productId}",
     ],
 
     "order_codes" => [
-        "response"      => [
+        "response" => [
             "SOI001" => "The order was integrated into VTEX successfully",
             "SOI002" => "The order was approved in VTEX successfully",
             "SOI003" => "The order was successfully enqueued in our service for processing",

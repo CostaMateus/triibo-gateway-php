@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /*
  * This file is part of Laravel mautic.
  * Prince Ali Khan <princealikhan08@gmail.com>
@@ -20,7 +22,7 @@ return [
     | connections at once using the manager class.
     |
     */
-    'default'     => 'main',
+    'default' => 'main',
 
     /*
     |--------------------------------------------------------------------------
@@ -29,7 +31,7 @@ return [
     | Version of the OAuth can be OAuth2 or OAuth1a. OAuth2 is the default value.
     |
     */
-    'version'     => env('MAUTIC_AUTH_VERSION', 'OAuth2'),
+    'version' => env( 'MAUTIC_AUTH_VERSION', 'OAuth2' ),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,12 +45,12 @@ return [
     */
     'connections' => [
         'main' => [
-            'version'      => 'OAuth2',
-            'baseUrl'      => env('MAUTIC_BASE_URL'),
-            'clientKey'    => env('MAUTIC_PUBLIC_KEY'),
-            'clientSecret' => env('MAUTIC_SECRET_KEY'),
-            'callback'     => env('MAUTIC_CALLBACK'),
-        ]
+            'version' => 'OAuth2',
+            'baseUrl' => env( 'MAUTIC_BASE_URL' ),
+            'clientKey' => env( 'MAUTIC_PUBLIC_KEY' ),
+            'clientSecret' => env( 'MAUTIC_SECRET_KEY' ),
+            'callback' => env( 'MAUTIC_CALLBACK' ),
+        ],
     ],
 
 ];

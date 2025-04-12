@@ -1,5 +1,9 @@
 <?php
 
+declare(strict_types = 1);
+
+use Opcodes\LogViewer\Http\Middleware\{ AuthorizeLogViewer, EnsureFrontendRequestsAreStateful };
+
 return [
 
     /*
@@ -9,8 +13,8 @@ return [
     | Log Viewer can be disabled, so it's no longer accessible via browser.
     |
     */
-    "enabled"                    => env( "LOG_VIEWER_ENABLED", true ),
-    "api_only"                   => env( "LOG_VIEWER_API_ONLY", false ),
+    "enabled" => env( "LOG_VIEWER_ENABLED", true ),
+    "api_only" => env( "LOG_VIEWER_API_ONLY", false ),
     "require_auth_in_production" => true,
 
     /*
@@ -42,7 +46,7 @@ return [
     | Optional label to display for the above URL.
     |
     */
-    "back_to_system_url"   => config( "app.url", null ) . "home",
+    "back_to_system_url" => config( "app.url", null )."home",
     "back_to_system_label" => null, // Displayed by default: "Back to {{ app.name }}"
 
     /*
@@ -64,7 +68,7 @@ return [
     */
     "middleware" => [
         "web",
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+        AuthorizeLogViewer::class,
     ],
 
     /*
@@ -76,8 +80,8 @@ return [
     |
     */
     "api_middleware" => [
-        \Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+        EnsureFrontendRequestsAreStateful::class,
+        AuthorizeLogViewer::class,
     ],
     "api_stateful_domains" => env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ? explode( ",", env( "LOG_VIEWER_API_STATEFUL_DOMAINS" ) ) : null,
 
@@ -93,7 +97,7 @@ return [
 
     'hosts' => [
         'local' => [
-            'name' => ucfirst(env('APP_ENV', 'local')),
+            'name' => ucfirst( env( 'APP_ENV', 'local' ) ),
         ],
 
         // 'staging' => [
@@ -210,5 +214,5 @@ return [
     |
     */
     "lazy_scan_chunk_size_in_mb" => 50,
-    "strip_extracted_context"    => true,
+    "strip_extracted_context" => true,
 ];
