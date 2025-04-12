@@ -24,6 +24,7 @@
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^3.1",
         "fakerphp/faker": "^1.9.1",
+        "friendsofphp/php-cs-fixer": "^3.75",
         "laravel/pint": "^1.22",
         "laravel/sail": "^1.0.1",
         "lucascudo/laravel-pt-br-localization": "^1.1",
@@ -62,7 +63,10 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "scripts": {
-        "pint": "vendor/bin/pint",
+        "pint": [
+            "vendor/bin/pint",
+            "vendor/bin/php-cs-fixer fix"
+        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
