@@ -1459,6 +1459,9 @@ if ( ! function_exists( "vtex_product_to_mkt" ) )
                 [
                     "key" => "_fs_product_id",
                     "value" => $context[ "Id" ],
+                ], [
+                    "key" => "_fastshop_hub",
+                    "value" => "normal",
                 ]
             ]
         ];
