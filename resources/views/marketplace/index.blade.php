@@ -304,7 +304,7 @@
                                                     </button>
                                                 @endif
 
-                                                @if( in_array( $order->ord_status, [ "processed", "approved" ] ) )
+                                                @if( in_array( $order->ord_status, [ "processed", "approved", "fs_create_error", "fs_approval_error" ] ) )
                                                     <button class="btn btn-danger text-white p-1 cancel-order" title="Cancelar" data-action="cancel" >
                                                         <i class="h3 bi bi-x-circle i-align-center" ></i>
                                                     </button>
