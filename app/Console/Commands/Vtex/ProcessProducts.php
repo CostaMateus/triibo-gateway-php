@@ -4,9 +4,8 @@ namespace App\Console\Commands\Vtex;
 
 use Throwable;
 use App\Models\Vtex\Product;
-use Illuminate\Support\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Collection;
+use Illuminate\Support\{Carbon, Collection};
 use Illuminate\Support\Facades\{Artisan, DB};
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
 use App\Services\Vtex\{ConnectorService, FulfillmentService, ProductService};
@@ -626,7 +625,7 @@ class ProcessProducts extends Command
      *
      * @return null|array|false
      */
-    private function getProductData( string $sku, bool $create = false, bool $full = false ) : mixed
+    private function getProductData( string $sku, bool $create = false, bool $full = false ) : null|array|false
     {
         $data = $this->getSkuData( sku: $sku );
         $context = $this->getSkuContext( sku: $sku );
@@ -696,7 +695,7 @@ class ProcessProducts extends Command
      *
      * @return null|array|false
      */
-    private function getSkuData( int $sku ) : array|false|null
+    private function getSkuData( int $sku ) : null|array|false
     {
         return $this->safeApiCall(
             method_name: "getSkuData",
@@ -705,7 +704,7 @@ class ProcessProducts extends Command
                 $response = $this->product_service->getSkuData( sku: $sku );
 
                 if ( $response[0] !== 200 )
-                    return null;
+                    return;
 
                 $product = $response[1]["data"];
 
@@ -746,7 +745,7 @@ class ProcessProducts extends Command
                 $response = $this->simulation_service->simulate( data: $data );
 
                 if ( $response[0] !== 200 )
-                    return null;
+                    return;
 
                 return array_filter(
                     $response[1]["data"],
@@ -767,12 +766,12 @@ class ProcessProducts extends Command
     /**
      * Safely call API with exception handling
      *
+     * @param string   $method_name
      * @param callable $callback
-     * @param string   $methodName
      *
      * @return mixed
      */
-    private function safeApiCall( callable $callback, string $method_name ) : mixed
+    private function safeApiCall( string $method_name, callable $callback ) : mixed
     {
         try
         {
