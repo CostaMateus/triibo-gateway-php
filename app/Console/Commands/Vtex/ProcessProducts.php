@@ -350,7 +350,9 @@ class ProcessProducts extends Command
             if ( empty( $wc_product ) )
                 return;
 
-            $this->toDelete( wc_product: $wc_product );
+            // $this->toDelete( wc_product: $wc_product );
+
+            $this->toUpdate( id: $wc_product->id, wc_id: $wc_product->product_id );
 
             return;
         }
@@ -373,7 +375,9 @@ class ProcessProducts extends Command
 
             if ( $data === false )
             {
-                $this->toDelete( wc_product: $wc_product );
+                // $this->toDelete( wc_product: $wc_product );
+
+                $this->toUpdate( id: $wc_product->id, wc_id: $wc_product->product_id );
 
                 return;
             }
@@ -387,8 +391,8 @@ class ProcessProducts extends Command
 
             $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: [
                 "regular_price" => $data[ "regular_price" ],
-                "sale_price" => $data[ "sale_price"    ],
-                "stock_status" => $data[ "stock_status"  ],
+                "sale_price" => $data[ "sale_price" ],
+                "stock_status" => $data[ "stock_status" ],
             ] );
 
             return;
@@ -441,6 +445,24 @@ class ProcessProducts extends Command
         DB::table( "marketplace_product_skus" )
             ->where( "id", $wc_product->id )
             ->delete();
+    }
+
+    /**
+     * @param string $id
+     * @param string $wc_id
+     *
+     * @return void
+     */
+    private function toUpdate( string $id, string $wc_id ) : void
+    {
+        $this->batch_wc[ "update" ][] = [
+            "id" => $wc_id,
+            "stock_status" => "outofstock",
+        ];
+
+        $this->createOrUpdateLocalWcProduct( id: $id, data: [
+            "stock_status" => "outofstock",
+        ] );
     }
 
     /**
@@ -503,7 +525,7 @@ class ProcessProducts extends Command
         }
 
         return [
-            "regular_price" => convert_price( price: $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ),
+            "regular_price" => convert_price( price: $simulate[ "items" ][ 0 ][ "price" ] ?? 0 ),
             "sale_price" => convert_price( price: $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ),
             "stock_status" => "instock",
         ];
@@ -537,10 +559,10 @@ class ProcessProducts extends Command
         {
             log_exception(
                 channel: self::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : "getSimulate",
-                type    : "Throwable",
-                e       : $e
+                message: $e->getMessage(),
+                method : "getSimulate",
+                type   : "Throwable",
+                e      : $e
             );
 
             $this->log_message( message: $e->getMessage(), type: "error" );
@@ -574,10 +596,10 @@ class ProcessProducts extends Command
         {
             log_exception(
                 channel: self::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : "getSimulate",
-                type    : "Throwable",
-                e       : $e
+                message: $e->getMessage(),
+                method : "getSimulate",
+                type   : "Throwable",
+                e      : $e
             );
 
             $this->log_message( message: $e->getMessage(), type: "error" );
@@ -630,10 +652,10 @@ class ProcessProducts extends Command
         {
             log_exception(
                 channel: self::LOG_CHANNEL,
-                message : $e->getMessage(),
-                method  : "getSimulate",
-                type    : "Throwable",
-                e       : $e
+                message: $e->getMessage(),
+                method : "getSimulate",
+                type   : "Throwable",
+                e      : $e
             );
 
             $this->log_message( message: $e->getMessage(), type: "error" );
@@ -652,7 +674,11 @@ class ProcessProducts extends Command
      */
     private function log_message( string $message, string $type = "info" ) : void
     {
-        log_message( channel: self::LOG_CHANNEL, message: $message, level: $type );
+        log_message(
+            channel: self::LOG_CHANNEL,
+            message: $message,
+            level  : $type
+        );
 
         $this->{$type}( string: $message );
     }
