@@ -465,7 +465,7 @@ class MarketplaceController extends Controller
 
         $order = Order::where( "file_name", $request->file_name )
             ->where( "ord_id", $request->ord_id )
-            ->whereIn( "ord_status", ["processed", "approved"] )
+            ->whereIn( "ord_status", ["processed", "approved", "fs_create_error", "fs_approval_error"] )
             ->first();
 
         if ( ! $order )
