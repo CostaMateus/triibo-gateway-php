@@ -374,21 +374,6 @@ if ( ! function_exists( "array_search_by_key" ) )
     }
 }
 
-if ( ! function_exists( "hyphenize" ) )
-{
-    /**
-     * Replace spaces and multiple hyphens with a single hyphen.
-     *
-     * @param string $text the text to be processed
-     *
-     * @return string the text with spaces and multiple hyphens replaced by a single hyphen
-     */
-    function hyphenize( string $text ) : string
-    {
-        return Str::slug( $text, "-" );
-    }
-}
-
 if ( ! function_exists( "insert_decimal" ) )
 {
     /**
@@ -553,22 +538,6 @@ if ( ! function_exists( "triibo_usort" ) )
         {
             return $a[ $key ] <=> $b[ $key ];
         } );
-    }
-}
-
-if ( ! function_exists( "slugify" ) )
-{
-    /**
-     * Undocumented function
-     *
-     * @param string $text
-     * @param string $divider
-     *
-     * @return string
-     */
-    function slugify( string $text, string $divider = "-" ) : string
-    {
-        return Str::slug( $text, $divider );
     }
 }
 
@@ -741,22 +710,39 @@ if ( ! function_exists( "process_csv_file" ) )
      */
     function process_csv_file( mixed $file )
     {
+        $i = 0;
         $message = "";
+        $fields = app( Order::class )->getFillable();
+        $last_ord_id = Order::select( "ord_id" )->latest()->first();
+
+        if ( $last_ord_id )
+            $i = (int) explode( "ORD_", $last_ord_id )[ 1 ];
 
         try
         {
             $file_name = date( "ymdHis" )."_".$file->getClientOriginalName();
 
-            // Save csv file and get file path
-            $csv_path = $file->storeAs( "mkt-orders", $file_name, "local" );
+            $path = "mkt-orders/{$file_name}";
+
+            $temp_path = $file->getRealPath();
+
+            $original_content = file_get_contents( $temp_path );
+
+            $encoding = mb_detect_encoding( $original_content, [ "UTF-8", "ISO-8859-1", "Windows-1252", "ASCII" ], true );
+
+            $utf8_content = ( $encoding !== "UTF-8" )
+                ? mb_convert_encoding( $original_content, "UTF-8", $encoding )
+                : $original_content;
+
+            Storage::disk( "local" )->put( $path, $utf8_content );
 
             // Get csv content
-            $csv_content = Storage::disk( "local" )->get( $csv_path );
+            $csv_content = Storage::disk( "local" )->get( $path );
 
             // Convert csv to array
             $csv_array = array_map( static function ( $line )
             {
-                return str_getcsv( $line, ";", '"' );
+                return str_getcsv( $line, ";" );
             }, explode( "\n", $csv_content ) );
 
             // Clean empty lines
@@ -772,7 +758,7 @@ if ( ! function_exists( "process_csv_file" ) )
 
             try
             {
-                foreach ( $csv_array as $i => $row )
+                foreach ( $csv_array as $row )
                 {
                     if ( count( $row ) === count( $headers ) )
                     {
@@ -791,18 +777,22 @@ if ( ! function_exists( "process_csv_file" ) )
                                 $shipping[ Str::after( $header, "shipping_" ) ] = $value;
 
                             elseif ( $header === "ord_id" )
-                                $order[ $header ] = "ORD_".$i + 1;
+                                $order[ $header ] = "ORD_" . ++$i;
 
                             elseif ( $header === "ord_status" )
                                 $order[ $header ] = "not_processed";
 
-                            else $order[ $header ] = $value;
+                            elseif ( $header === "CHAVE_FORTE_RESGATE" )
+                                $order[ "strong_key" ] = $value;
+
+                            elseif ( in_array( $header, $fields ) )
+                                $order[ $header ] = $value;
                         }
 
                         $order[ "billing"      ] = $billing;
                         $order[ "shipping"     ] = $shipping;
 
-                        $order[ "max_price"    ] = (float) $order[ "max_price"    ];
+                        $order[ "max_price"    ] = (float) str_replace( ",", ".", $order[ "max_price" ] );
                         $order[ "product_id"   ] = (int) $order[ "product_id"   ];
                         $order[ "product_qntt" ] = (int) $order[ "product_qntt" ];
 
@@ -814,7 +804,7 @@ if ( ! function_exists( "process_csv_file" ) )
                         Order::updateOrCreate(
                             [
                                 "file_name" => $order[ "file_name" ],
-                                "ord_id" => $order[ "ord_id"    ]
+                                "ord_id" => $order[ "ord_id" ]
                             ],
                             $order
                         );
@@ -1023,13 +1013,16 @@ if ( ! function_exists( "get_all_order_status" ) )
     {
         return [
             "all" => "Todos",
+
             "not_processed" => "Não Processado",
             "processed" => "Processado",
             "approved" => "Aprovado",
             "canceled" => "Cancelado",
 
             "product_not_found" => "Produto não encontrado",
+
             "over_max" => "Preço acima do limite",
+
             "fs_create_error" => "Falha ao criar na Fast Shop",
             "fs_approval_error" => "Falha ao aprovar na Fast Shop",
             "fs_cancel_error" => "Falha ao cancelar na Fast Shop",
@@ -1098,6 +1091,22 @@ if ( ! function_exists( "format_postcode" ) )
         $addr[ "postcode" ] = $postcode;
 
         return $addr;
+    }
+}
+
+if ( ! function_exists( "format_price" ) )
+{
+    /**
+     * @param null|float $price
+     *
+     * @return string
+     */
+    function format_price( ?float $price ) : string
+    {
+        if ( !$price )
+            return "0,00";
+
+        return number_format( $price, 2, ",", "." );
     }
 }
 

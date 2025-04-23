@@ -112,7 +112,11 @@ Route::prefix( "mkt" )->group( static function () : void
     {
         try
         {
-            $orders = Order::where( "status", $status )->get();
+            $orders = Order::all( [
+                "per_page" => 100,
+                "page" => 1,
+                "status" => $status
+            ] );
 
             dd( $orders );
         }

@@ -22,9 +22,12 @@ final class Order extends Model
      */
     protected $fillable = [
         "file_name",
+        "strong_key",
         "mkt_id",
         "ord_id",
         "ord_status",
+        "ord_price",
+        "ord_shipping",
         "max_price",
         "product_id",
         "product_qntt",
@@ -40,6 +43,8 @@ final class Order extends Model
      * @var array
      */
     protected $casts = [
+        "ord_price" => "float",
+        "ord_shipping" => "float",
         "max_price" => "float",
         "product_id" => "integer",
         "product_qntt" => "integer",
