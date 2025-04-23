@@ -7,6 +7,7 @@ use Exception;
 use DateInterval;
 use App\Helpers\Helper;
 use Gregwar\Image\Image;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\{DB, File, Http};
 
 class SocialSoulIntegration
@@ -450,7 +451,7 @@ class SocialSoulIntegration
                 ];
             }
 
-            $auxName = hyphenize( mb_strtolower( $store[ "name" ] ) );
+            $auxName = Str::slug( mb_strtolower( $store[ "name" ] ) );
             $imageName = "socialsoul_{$store[ "id" ]}_{$auxName}.png";
             $imageName = self::saveImage( "establishments", $imageName, $store[ "thumbnail" ] ) ? $imageName : "standard.png";
 

@@ -374,21 +374,6 @@ if ( ! function_exists( "array_search_by_key" ) )
     }
 }
 
-if ( ! function_exists( "hyphenize" ) )
-{
-    /**
-     * Replace spaces and multiple hyphens with a single hyphen.
-     *
-     * @param string $text the text to be processed
-     *
-     * @return string the text with spaces and multiple hyphens replaced by a single hyphen
-     */
-    function hyphenize( string $text ) : string
-    {
-        return Str::slug( $text, "-" );
-    }
-}
-
 if ( ! function_exists( "insert_decimal" ) )
 {
     /**
@@ -553,22 +538,6 @@ if ( ! function_exists( "triibo_usort" ) )
         {
             return $a[ $key ] <=> $b[ $key ];
         } );
-    }
-}
-
-if ( ! function_exists( "slugify" ) )
-{
-    /**
-     * Undocumented function
-     *
-     * @param string $text
-     * @param string $divider
-     *
-     * @return string
-     */
-    function slugify( string $text, string $divider = "-" ) : string
-    {
-        return Str::slug( $text, $divider );
     }
 }
 
