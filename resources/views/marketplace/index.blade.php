@@ -308,7 +308,7 @@
                                                     </button>
                                                 @endif
 
-                                                @if( in_array( $order->ord_status, [ "processed", "approved", "fs_create_error", "fs_approval_error" ] ) )
+                                                @if( $order->ord_status != "canceled" )
                                                     <button class="btn btn-danger text-white p-1 cancel-order" title="Cancelar" data-action="cancel" >
                                                         <i class="h3 bi bi-x-circle i-align-center" ></i>
                                                     </button>
@@ -458,7 +458,7 @@
             else if ( action == "cancel"  )
             {
                 route   = "{{ route( 'mkt.order.cancel'  ) }}";
-                message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será cancelado na Fast Shop e no marketplace!`;
+                message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será cancelado na Fast Shop e no marketplace, caso exista!`;
             }
             else if ( action == "update"  )
             {

@@ -465,7 +465,6 @@ class MarketplaceController extends Controller
 
         $order = Order::where( "file_name", $request->file_name )
             ->where( "ord_id", $request->ord_id )
-            ->whereIn( "ord_status", ["processed", "approved", "fs_create_error", "fs_approval_error"] )
             ->first();
 
         if ( ! $order )
@@ -474,34 +473,27 @@ class MarketplaceController extends Controller
                 channel: self::LOG_CHANNEL,
                 route  : self::ROUTE,
                 type   : self::ERROR,
-                message: "{$request->ord_id}: Pedido com status diferente de 'Processado' ou 'Aprovado'."
+                message: "{$request->ord_id}: Pedido não encontrado."
             );
         }
 
-        if ( ! $order->mkt_id )
+        if ( $order->mkt_id )
         {
-            return log_and_redirect(
-                channel: self::LOG_CHANNEL,
-                route  : self::ROUTE,
-                type   : self::ERROR,
-                message: "{$request->ord_id}: Pedido sem ID do marketplace, 'Mkt ID'."
+            $response = update_marketplace_order(
+                channel : self::LOG_CHANNEL,
+                order_id: $order->mkt_id,
+                status  : "cancelled",
             );
-        }
 
-        $response = update_marketplace_order(
-            channel : self::LOG_CHANNEL,
-            order_id: $order->mkt_id,
-            status  : "cancelled",
-        );
-
-        if ( ! $response[ "success" ] )
-        {
-            return log_and_redirect(
-                channel: self::LOG_CHANNEL,
-                route  : self::ROUTE,
-                type   : self::ERROR,
-                message: $response[ "message" ]
-            );
+            if ( ! $response[ "success" ] )
+            {
+                return log_and_redirect(
+                    channel: self::LOG_CHANNEL,
+                    route  : self::ROUTE,
+                    type   : self::ERROR,
+                    message: $response[ "message" ]
+                );
+            }
         }
 
         $order->ord_status = "canceled";

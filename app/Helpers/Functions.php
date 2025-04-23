@@ -1013,13 +1013,16 @@ if ( ! function_exists( "get_all_order_status" ) )
     {
         return [
             "all" => "Todos",
+
             "not_processed" => "Não Processado",
             "processed" => "Processado",
             "approved" => "Aprovado",
             "canceled" => "Cancelado",
 
             "product_not_found" => "Produto não encontrado",
+
             "over_max" => "Preço acima do limite",
+
             "fs_create_error" => "Falha ao criar na Fast Shop",
             "fs_approval_error" => "Falha ao aprovar na Fast Shop",
             "fs_cancel_error" => "Falha ao cancelar na Fast Shop",
