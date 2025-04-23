@@ -192,6 +192,8 @@
                                         <th class="text-center text-nowrap" >Status</th>
                                         <th class="text-center text-nowrap" >Qntdd</th>
                                         <th class="text-center text-nowrap" >Preço máximo</th>
+                                        <th class="text-center text-nowrap" >Preço do pedido</th>
+                                        <th class="text-center text-nowrap" >Preço do frete</th>
                                         <th class="text-center text-nowrap" >
                                             ID usuário
                                             <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="ID do usuário ao qual o pedido ficará atrelado no marketplace" >
@@ -250,7 +252,9 @@
                                                 </span>
                                             </td>
                                             <td class="text-center"          >{{ $order->product_qntt }}</td>
-                                            <td class="text-nowrap text-end" >{{ number_format( $order->max_price, 2, ',', '.' ) }}</td>
+                                            <td class="text-nowrap text-end" >{{ format_price( $order->max_price ) }}</td>
+                                            <td class="text-nowrap text-end" >{{ format_price( $order->ord_price ) }}</td>
+                                            <td class="text-nowrap text-end" >{{ format_price( $order->ord_shipping ) }}</td>
                                             <td class="text-center"          >{{ $order->customer_id  }}</td>
                                             <td class="text-center"          >
                                                 {{ $order->product_id   }}
