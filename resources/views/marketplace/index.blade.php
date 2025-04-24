@@ -187,9 +187,9 @@
                             <div class="col-12" >
                                 <form id="export-form" action="{{ route( "mkt.orders.export" ) }}" method="POST" >
                                     @csrf
-                                    <div >
-                                        <button class="btn btn-sm btn-success text-white" type="submit" >Exportar arquivo</button>
-                                    </div>
+                                    <button class="btn btn-sm btn-success text-white" type="submit" @if ( $orders->isEmpty() ) disabled @endif >
+                                        Exportar arquivo
+                                    </button>
                                 </form>
                             </div>
                         </div>
