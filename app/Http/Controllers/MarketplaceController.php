@@ -248,7 +248,7 @@ class MarketplaceController extends Controller
 
         $product_prices = get_product_prices( product_id: $fs_product_id, freight: $freight[ "data" ] );
         $delivery_price = $product_prices[ "delivery_price" ];
-        $price = $product_prices[ "price"          ];
+        $price = $product_prices[ "price" ];
 
         if ( $delivery_price === false )
         {
@@ -314,8 +314,16 @@ class MarketplaceController extends Controller
         $wc_order = $response[ "data" ];
         $wc_order = json_decode( json_encode( $wc_order ), true );
 
+        $created_at = str_replace( "T", " ", $wc_order[ "date_created" ] );
+        $total = (float) $wc_order[ "total" ];
+        $shipping = (float) $wc_order[ "shipping_total" ];
+        $price = $total - $shipping;
+
         $order->mkt_id = $wc_order[ "id" ];
         $order->ord_status = "processed";
+        $order->ord_price = $price;
+        $order->ord_shipping = $shipping;
+        $order->ord_created_at = $created_at;
         $order->save();
 
         return log_and_redirect(
