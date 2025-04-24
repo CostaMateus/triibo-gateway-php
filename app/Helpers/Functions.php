@@ -11,6 +11,7 @@ use Illuminate\Http\RedirectResponse;
 use App\Notifications\ScheduleFailure;
 use Kreait\Firebase\Database\Reference;
 use Illuminate\Support\Facades\{ DB, Log };
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use App\Services\Vtex\{ ConnectorService, FulfillmentService };
 use Codexshaper\WooCommerce\Facades\{Order as WC_Order, Product as WC_Product};
 
@@ -835,6 +836,33 @@ if ( ! function_exists( "process_csv_file" ) )
         log_message( channel: "triibo", message: "Falha ao processar arquivo CSV", level: "error", context: $context );
 
         return false;
+    }
+}
+
+if ( ! function_exists( "export_csv_file" ) )
+{
+    /**
+     * @param array $data
+     * @param string $file_name
+     *
+     * @return BinaryFileResponse
+     */
+    function export_csv_file( array $data, string $file_name ) : BinaryFileResponse
+    {
+        $csv = fopen( $file_name, "w" );
+
+        fprintf( $csv, chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) );
+
+        $headers = array_keys( $data[ 0 ] );
+
+        fputcsv( $csv, $headers, ";" );
+
+        foreach ( $data as $row )
+            fputcsv( $csv, $row, ";" );
+
+        fclose( $csv );
+
+        return Response::download( public_path( $file_name ) )->deleteFileAfterSend( true );
     }
 }
 
