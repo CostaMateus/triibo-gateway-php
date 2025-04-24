@@ -6,6 +6,7 @@ use Exception;
 use App\Models\Marketplace\Order;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\{RedirectResponse, Request};
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use App\Http\Controllers\Vtex\OrderController as VtexOrderController;
 
 class MarketplaceController extends Controller
@@ -18,8 +19,6 @@ class MarketplaceController extends Controller
     public const WARNING = "warning";
 
     /**
-     * Show the marketplace orders.
-     *
      * @param Request $request
      *
      * @return Renderable
@@ -46,20 +45,6 @@ class MarketplaceController extends Controller
 
         $orders = $query->paginate( $per_page );
 
-        // if ( $request->getPathInfo() === "/marketplace/pedidos/2" )
-        // {
-        //     $ids    = [ 1148803, 1136223, 1136166, 1136127, 1136096, 1136086,
-        //                 1136066, 1136007, 1135939, 1135896, 1135850, 1135849,
-        //                 1135848, 1135745, 1135744, 1135743, 1135742, 1135741,
-        //                 1135740, 1135739, 1130618, 1130389, 1130454, 1130367,
-        //                 1130363, 1130361, ];
-        //
-        //     $orders = Order::where( "file_name", $file )
-        //                     ->whereIn( "mkt_id", $ids   )
-        //                     ->orderBy( "mkt_id", "DESC" )
-        //                     ->paginate( $per_page );
-        // }
-
         if ( $orders->currentPage() > 1 && $orders->isEmpty() )
             $orders = $query->paginate( $per_page, ["*"], "page", $orders->lastPage() );
 
@@ -71,17 +56,6 @@ class MarketplaceController extends Controller
 
             return $order;
         } );
-
-        // $orders      = $orders->filter( function ( $order )
-        // {
-        //     $billing = reorganize_fields( data: $order->billing,  order: get_billing_fields_order()  );
-        //     if ( $billing[ "first_name" ] == "LIFE LS JARDIM BRASIL EMPREENDIMENTOS IMOBILIARIOS" )
-        //     {
-        //         dd( $order );
-        //         return $order;
-        //     }
-        // } );
-        // dd( $orders );
 
         session( [
             "mkt_file" => $file,
@@ -119,8 +93,6 @@ class MarketplaceController extends Controller
     }
 
     /**
-     * Show the marketplace orders.
-     *
      * @param Request $request
      *
      * @return RedirectResponse
@@ -153,6 +125,42 @@ class MarketplaceController extends Controller
             type   : $type,
             message: $message
         );
+    }
+
+    /**
+     * @param Request $request
+     *
+     * @return BinaryFileResponse
+     */
+    public function exportOrders( Request $request ) : BinaryFileResponse
+    {
+        $files = Order::select( "file_name" )->distinct()->orderBy( "file_name", "DESC" )->pluck( "file_name" );
+
+        $file = $request->query( "file", session( "mkt_file", $files->first() ) );
+        $status = $request->query( "status", session( "mkt_status", "all" ) );
+        $product_id = $request->query( "product_id", session( "mkt_product_id", "all" ) );
+
+        $query = Order::select( [
+            "strong_key",
+            "mkt_id",
+            "ord_id",
+            "ord_status",
+            "max_price",
+            "ord_price",
+            "ord_shipping",
+            "ord_created_at",
+            "product_id",
+            "product_qntt",
+            "product_name",
+        ] )->where( "file_name", $file );
+
+        if ( $status !== "all" )
+            $query->where( "ord_status", $status );
+
+        if ( $product_id !== "all" )
+            $query->where( "product_id", $product_id );
+
+        return export_csv_file( data: $query->get()->toArray(), file_name: $file );
     }
 
     /**
@@ -248,7 +256,7 @@ class MarketplaceController extends Controller
 
         $product_prices = get_product_prices( product_id: $fs_product_id, freight: $freight[ "data" ] );
         $delivery_price = $product_prices[ "delivery_price" ];
-        $price = $product_prices[ "price"          ];
+        $price = $product_prices[ "price" ];
 
         if ( $delivery_price === false )
         {
@@ -314,8 +322,16 @@ class MarketplaceController extends Controller
         $wc_order = $response[ "data" ];
         $wc_order = json_decode( json_encode( $wc_order ), true );
 
+        $created_at = str_replace( "T", " ", $wc_order[ "date_created" ] );
+        $total = (float) $wc_order[ "total" ];
+        $shipping = (float) $wc_order[ "shipping_total" ];
+        $price = $total - $shipping;
+
         $order->mkt_id = $wc_order[ "id" ];
         $order->ord_status = "processed";
+        $order->ord_price = $price;
+        $order->ord_shipping = $shipping;
+        $order->ord_created_at = $created_at;
         $order->save();
 
         return log_and_redirect(
