@@ -40,6 +40,7 @@ Route::group( ["middleware" => "auth"], static function () : void
         Route::post( "/consulta-produtos", [MarketplaceController::class, "searchFsProducts"] )->name( "search.products" );
 
         Route::post( "/importar", [MarketplaceController::class, "importOrders"] )->name( "orders.import" );
+        Route::post( "/exportar", [MarketplaceController::class, "exportOrders"] )->name( "orders.export" );
 
         Route::post( "/pedido/criar", [MarketplaceController::class, "orderCreate"] )->name( "order.create" );
         Route::post( "/pedido/aprovar", [MarketplaceController::class, "orderApproval"] )->name( "order.approval" );
