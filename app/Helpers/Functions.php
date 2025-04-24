@@ -849,7 +849,12 @@ if ( ! function_exists( "export_csv_file" ) )
      */
     function export_csv_file( array $data, string $file_name ) : BinaryFileResponse
     {
-        $csv = fopen( $file_name, "w" );
+        $path = storage_path( "mkt-orders/tmp/{$file_name}" );
+
+        if ( ! file_exists( dirname( $path ) ) )
+            mkdir( dirname( $path ), 0775, true );
+
+        $csv = fopen( $path, "w" );
 
         fprintf( $csv, chr( 0xEF ) . chr( 0xBB ) . chr( 0xBF ) );
 
@@ -862,7 +867,7 @@ if ( ! function_exists( "export_csv_file" ) )
 
         fclose( $csv );
 
-        return Response::download( public_path( $file_name ) )->deleteFileAfterSend( true );
+        return Response::download( $path )->deleteFileAfterSend( true );
     }
 }
 
