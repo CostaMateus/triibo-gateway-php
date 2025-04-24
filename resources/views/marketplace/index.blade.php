@@ -70,6 +70,7 @@
                             </div>
                         @endif
 
+                        {{-- Import --}}
                         <div class="row mb-3" >
                             <div class="col-12 col-md-6 mx-auto" >
                                 <form id="import-form" action="{{ route( "mkt.orders.import" ) }}" method="POST" enctype="multipart/form-data" >
@@ -82,6 +83,7 @@
                             </div>
                         </div>
 
+                        {{-- Filters --}}
                         <div class="row mb-3" >
                             <div class="col-12 col-md-6 col-lg-3 mb-2 pe-md-1" >
                                 <label for="orders-file" class="text-muted" >Arquivo</label>
@@ -124,6 +126,7 @@
                             </div>
                         </div>
 
+                        {{-- Subtitle --}}
                         <div class="row mb-3" >
                             <div class="col-12 mb-2" >
                                 <small>Legenda</small>
@@ -176,7 +179,20 @@
                             </div>
                         </div>
 
+                        {{-- Pagination --}}
                         {!! $orders->onEachSide( 1 )->links( "pagination::bootstrap-5" ) !!}
+
+                        {{-- Export --}}
+                        <div class="row my-3" >
+                            <div class="col-12" >
+                                <form id="export-form" action="{{ route( "mkt.orders.export" ) }}" method="POST" >
+                                    @csrf
+                                    <div >
+                                        <button class="btn btn-sm btn-success text-white" type="submit" >Exportar arquivo</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
 
                         <div class="table-responsive my-3" >
                             <table class="table table-borderless table-striped table-sm mb-0" >
