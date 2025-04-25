@@ -268,9 +268,9 @@
                                                 </span>
                                             </td>
                                             <td class="text-center"          >{{ $order->product_qntt }}</td>
-                                            <td class="text-nowrap text-end" >{{ format_price( $order->max_price ) }}</td>
-                                            <td class="text-nowrap text-end" >{{ format_price( $order->ord_price ) }}</td>
-                                            <td class="text-nowrap text-end" >{{ format_price( $order->ord_shipping ) }}</td>
+                                            <td class="text-nowrap text-end" >{{ $order->max_price }}</td>
+                                            <td class="text-nowrap text-end" >{{ $order->ord_price }}</td>
+                                            <td class="text-nowrap text-end" >{{ $order->ord_shipping }}</td>
                                             <td class="text-center"          >{{ $order->customer_id  }}</td>
                                             <td class="text-center"          >
                                                 {{ $order->product_id   }}

@@ -255,10 +255,8 @@ class MarketplaceController extends Controller
         }
 
         $product_prices = get_product_prices( product_id: $fs_product_id, freight: $freight[ "data" ] );
-        $delivery_price = $product_prices[ "delivery_price" ];
-        $price = $product_prices[ "price" ];
 
-        if ( $delivery_price === false )
+        if ( $product_prices[ "delivery_price" ] === false )
         {
             return log_and_redirect(
                 channel: self::LOG_CHANNEL,
@@ -284,7 +282,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        if ( (float) $price > (float) $order->max_price )
+        if ( (float) $product_prices[ "price" ] > $order->max_price )
         {
             $order->ord_status = "over_max";
             $order->save();

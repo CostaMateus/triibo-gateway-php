@@ -792,11 +792,8 @@ if ( ! function_exists( "process_csv_file" ) )
 
                         $order[ "billing"      ] = $billing;
                         $order[ "shipping"     ] = $shipping;
-
-                        $order[ "max_price"    ] = (float) str_replace( ",", ".", $order[ "max_price" ] );
                         $order[ "product_id"   ] = (int) $order[ "product_id"   ];
                         $order[ "product_qntt" ] = (int) $order[ "product_qntt" ];
-
                         $order[ "file_name"    ] = $file_name;
 
                         if ( ! isset( $order[ "customer_id" ] ) )
@@ -1124,22 +1121,6 @@ if ( ! function_exists( "format_postcode" ) )
         $addr[ "postcode" ] = $postcode;
 
         return $addr;
-    }
-}
-
-if ( ! function_exists( "format_price" ) )
-{
-    /**
-     * @param null|float $price
-     *
-     * @return string
-     */
-    function format_price( ?float $price ) : string
-    {
-        if ( !$price )
-            return "0,00";
-
-        return number_format( $price, 2, ",", "." );
     }
 }
 
