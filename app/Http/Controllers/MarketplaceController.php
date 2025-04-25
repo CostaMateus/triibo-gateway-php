@@ -282,7 +282,10 @@ class MarketplaceController extends Controller
             );
         }
 
-        if ( (float) $product_prices[ "price" ] > $order->max_price )
+        $max_price = str_replace( ".", "", $order->max_price );
+        $max_price = str_replace( ",", ".", $max_price );
+
+        if ( (float) $product_prices[ "price" ] > $max_price )
         {
             $order->ord_status = "over_max";
             $order->save();
@@ -298,7 +301,7 @@ class MarketplaceController extends Controller
         $wc_data = marketplace_new_order_prepare(
             order     : $order,
             product_id: $order->product_id,
-            freight   : $delivery_price
+            freight   : $product_prices[ "delivery_price" ]
         );
 
         $response = create_marketplace_order(
