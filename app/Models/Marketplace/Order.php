@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace App\Models\Marketplace;
 
+use App\Casts\FormattedPrice;
 use Illuminate\Database\Eloquent\Model;
 
 final class Order extends Model
@@ -44,9 +45,9 @@ final class Order extends Model
      * @var array
      */
     protected $casts = [
-        "ord_price" => "float",
-        "ord_shipping" => "float",
-        "max_price" => "float",
+        "ord_price" => FormattedPrice::class,
+        "ord_shipping" => FormattedPrice::class,
+        "max_price" => FormattedPrice::class,
         "product_id" => "integer",
         "product_qntt" => "integer",
         "billing" => "array",
