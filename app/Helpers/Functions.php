@@ -1124,22 +1124,6 @@ if ( ! function_exists( "format_postcode" ) )
     }
 }
 
-if ( ! function_exists( "format_price" ) )
-{
-    /**
-     * @param null|float $price
-     *
-     * @return string
-     */
-    function format_price( ?float $price ) : string
-    {
-        if ( !$price )
-            return "0,00";
-
-        return number_format( $price, 2, ",", "." );
-    }
-}
-
 if ( ! function_exists( "get_freight_vtex" ) )
 {
     /**
