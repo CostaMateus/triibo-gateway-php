@@ -208,7 +208,7 @@
                                         <th class="text-center text-nowrap" >Status</th>
                                         <th class="text-center text-nowrap" >Qntdd</th>
                                         <th class="text-center text-nowrap" >Preço máximo</th>
-                                        <th class="text-center text-nowrap" >Preço do pedido</th>
+                                        <th class="text-center text-nowrap" >Preço do produto</th>
                                         <th class="text-center text-nowrap" >Preço do frete</th>
                                         <th class="text-center text-nowrap" >
                                             ID usuário
