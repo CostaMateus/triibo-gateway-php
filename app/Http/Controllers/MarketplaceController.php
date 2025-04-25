@@ -183,7 +183,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $store_id = config( key: "woocommerce.partners.".self::SELLER.".store_id" );
+        $store_id = (int) config( key: "woocommerce.partners.".self::SELLER.".store_id" );
 
         $order = Order::where( "file_name", $request->file_name )
             ->where( "ord_id", $request->ord_id )
