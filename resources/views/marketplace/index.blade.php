@@ -251,13 +251,15 @@
                                             {{-- {{ $order->status[ "color" ] }} --}}
                                             <td class="text-center" >{{ $order->ord_id }}</td>
                                             <td class="text-nowrap" >
-                                                <p class="mb-0 external_id-preview" >{{ Str::limit( $order->external_id, 10 ) }}</p>
-                                                <div class="external_id-full d-none" >
-                                                    {{ $order->external_id }}
-                                                </div>
-                                                <div class="text-center" >
-                                                    <button class="btn btn-sm btn-link show-more-external_id" >Ver mais</button>
-                                                </div>
+                                                @if ( $order->external_id )
+                                                    <p class="mb-0 external_id-preview" >{{ Str::limit( $order->external_id, 10 ) }}</p>
+                                                    <div class="external_id-full d-none" >
+                                                        {{ $order->external_id }}
+                                                    </div>
+                                                    <div class="text-center" >
+                                                        <button class="btn btn-sm btn-link show-more-external_id" >Ver mais</button>
+                                                    </div>
+                                                @endif
                                             </td>
                                             <td class="text-nowrap text-center" >
                                                 {{ $order->mkt_id }}
