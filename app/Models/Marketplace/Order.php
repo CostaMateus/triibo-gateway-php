@@ -23,7 +23,7 @@ final class Order extends Model
      */
     protected $fillable = [
         "file_name",
-        "strong_key",
+        "external_id",
         "mkt_id",
         "max_price",
         "ord_id",

@@ -141,7 +141,7 @@ class MarketplaceController extends Controller
         $product_id = $request->query( "product_id", session( "mkt_product_id", "all" ) );
 
         $query = Order::select( [
-            "strong_key",
+            "external_id",
             "mkt_id",
             "ord_id",
             "ord_status",

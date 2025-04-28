@@ -808,7 +808,7 @@ if ( ! function_exists( "process_csv_file" ) )
                                 $order[ $header ] = "not_processed";
 
                             elseif ( $header === "CHAVE_FORTE_RESGATE" )
-                                $order[ "strong_key" ] = $value;
+                                $order[ "external_id" ] = $value;
 
                             elseif ( in_array( $header, $fields ) )
                                 $order[ $header ] = $value;

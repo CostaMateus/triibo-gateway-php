@@ -251,12 +251,12 @@
                                             {{-- {{ $order->status[ "color" ] }} --}}
                                             <td class="text-center" >{{ $order->ord_id }}</td>
                                             <td class="text-nowrap" >
-                                                <p class="mb-0 strong_key-preview" >{{ Str::limit( $order->strong_key, 10 ) }}</p>
-                                                <div class="strong_key-full d-none" >
-                                                    {{ $order->strong_key }}
+                                                <p class="mb-0 external_id-preview" >{{ Str::limit( $order->external_id, 10 ) }}</p>
+                                                <div class="external_id-full d-none" >
+                                                    {{ $order->external_id }}
                                                 </div>
                                                 <div class="text-center" >
-                                                    <button class="btn btn-sm btn-link show-more-strong_key" >Ver mais</button>
+                                                    <button class="btn btn-sm btn-link show-more-external_id" >Ver mais</button>
                                                 </div>
                                             </td>
                                             <td class="text-nowrap text-center" >
@@ -423,22 +423,22 @@
         } );
 
         // Show more/less for name
-        $( document ).on( "click", ".show-more-strong_key", function()
+        $( document ).on( "click", ".show-more-external_id", function()
         {
             var row = $( this ).closest( "tr" );
 
-            row.find( ".strong_key-preview" ).toggleClass( "d-none" );
-            row.find( ".strong_key-full"    ).toggleClass( "d-none" );
+            row.find( ".external_id-preview" ).toggleClass( "d-none" );
+            row.find( ".external_id-full"    ).toggleClass( "d-none" );
 
             $( this ).text( function( i, text )
             {
                 return text === "Ver mais" ? "Ver menos" : "Ver mais";
             } );
 
-            // Hide other expanded strong_key
-            $( "tr" ).not( row ).find( ".strong_key-preview"   ).removeClass( "d-none" );
-            $( "tr" ).not( row ).find( ".strong_key-full"      ).addClass( "d-none" );
-            $( "tr" ).not( row ).find( ".show-more-strong_key" ).text( "Ver mais" );
+            // Hide other expanded external_id
+            $( "tr" ).not( row ).find( ".external_id-preview"   ).removeClass( "d-none" );
+            $( "tr" ).not( row ).find( ".external_id-full"      ).addClass( "d-none" );
+            $( "tr" ).not( row ).find( ".show-more-external_id" ).text( "Ver mais" );
         } );
 
         // Show more/less for name
