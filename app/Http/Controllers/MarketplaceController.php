@@ -108,14 +108,14 @@ class MarketplaceController extends Controller
         {
             $processed = process_csv_file( file: $request->file( "csv_file" ) );
 
-            if ( $processed )
+            if ( $processed === true )
             {
                 $type = self::SUCCESS;
                 $message = "Arquivo importado com sucesso.";
             }
             else
             {
-                $message = "Falha ao processar arquivo.";
+                $message = $processed;
             }
         }
 
@@ -141,7 +141,7 @@ class MarketplaceController extends Controller
         $product_id = $request->query( "product_id", session( "mkt_product_id", "all" ) );
 
         $query = Order::select( [
-            "strong_key",
+            "external_id",
             "mkt_id",
             "ord_id",
             "ord_status",

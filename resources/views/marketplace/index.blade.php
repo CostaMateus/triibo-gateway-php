@@ -200,6 +200,12 @@
                                     <tr>
                                         <th class="text-center text-nowrap" >ID</th>
                                         <th class="text-center text-nowrap" >
+                                            ID Externo
+                                            <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="'Chave Forte' do arquivo importado" >
+                                                <i class="bi bi-info-circle text-primary" > </i>
+                                            </a>
+                                        </th>
+                                        <th class="text-center text-nowrap" >
                                             Mkt ID
                                             <a tabindex="0" role="button" data-bs-toggle="popover" data-bs-trigger="focus" data-bs-content="ID do pedido gerado pelo marketplace" >
                                                 <i class="bi bi-info-circle text-primary" > </i>
@@ -244,6 +250,15 @@
                                         <tr>
                                             {{-- {{ $order->status[ "color" ] }} --}}
                                             <td class="text-center" >{{ $order->ord_id }}</td>
+                                            <td class="text-nowrap" >
+                                                <p class="mb-0 external_id-preview" >{{ Str::limit( $order->external_id, 10 ) }}</p>
+                                                <div class="external_id-full d-none" >
+                                                    {{ $order->external_id }}
+                                                </div>
+                                                <div class="text-center" >
+                                                    <button class="btn btn-sm btn-link show-more-external_id" >Ver mais</button>
+                                                </div>
+                                            </td>
                                             <td class="text-nowrap text-center" >
                                                 {{ $order->mkt_id }}
                                                 @if ( $order->mkt_id )
@@ -408,6 +423,25 @@
         } );
 
         // Show more/less for name
+        $( document ).on( "click", ".show-more-external_id", function()
+        {
+            var row = $( this ).closest( "tr" );
+
+            row.find( ".external_id-preview" ).toggleClass( "d-none" );
+            row.find( ".external_id-full"    ).toggleClass( "d-none" );
+
+            $( this ).text( function( i, text )
+            {
+                return text === "Ver mais" ? "Ver menos" : "Ver mais";
+            } );
+
+            // Hide other expanded external_id
+            $( "tr" ).not( row ).find( ".external_id-preview"   ).removeClass( "d-none" );
+            $( "tr" ).not( row ).find( ".external_id-full"      ).addClass( "d-none" );
+            $( "tr" ).not( row ).find( ".show-more-external_id" ).text( "Ver mais" );
+        } );
+
+        // Show more/less for name
         $( document ).on( "click", ".show-more-name", function()
         {
             var row = $( this ).closest( "tr" );
@@ -421,9 +455,9 @@
             } );
 
             // Hide other expanded name
-            $( "tr" ).not( row ).find( ".name-preview" ).removeClass( "d-none" );
-            $( "tr" ).not( row ).find( ".name-full"    ).addClass( "d-none" );
-            $( "tr" ).not( row ).find( ".show-more-name"  ).text( "Ver mais" );
+            $( "tr" ).not( row ).find( ".name-preview"   ).removeClass( "d-none" );
+            $( "tr" ).not( row ).find( ".name-full"      ).addClass( "d-none" );
+            $( "tr" ).not( row ).find( ".show-more-name" ).text( "Ver mais" );
         } );
 
         // Show more/less for addresses
@@ -452,7 +486,7 @@
             {
                 $( ".address-preview" ).removeClass( "d-none" );
                 $( ".address-full"    ).addClass( "d-none" );
-                $( ".show-more"       ).text( "Exibir mais" );
+                $( ".show-more"       ).text( "Ver mais" );
             }
         } );
 

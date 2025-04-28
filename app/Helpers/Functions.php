@@ -702,6 +702,34 @@ if ( ! function_exists( "get_cashback" ) )
     }
 }
 
+if ( ! function_exists( "get_csv_content" ) )
+{
+    /**
+     * @param string $path
+     *
+     * @return array
+     */
+    function get_csv_content( string $path ) : array
+    {
+        // Get csv content
+        $content = Storage::disk( "local" )->get( $path );
+
+        // Convert csv to array
+        $data = array_map( static function ( $line )
+        {
+            return str_getcsv( $line, ";" );
+        }, explode( "\n", $content ) );
+
+        // Clean empty lines
+        $data = array_filter( $data, static function ( $row )
+        {
+            return ! empty( array_filter( $row ) );
+        } );
+
+        return $data;
+    }
+}
+
 if ( ! function_exists( "process_csv_file" ) )
 {
     /**
@@ -714,14 +742,20 @@ if ( ! function_exists( "process_csv_file" ) )
         $i = 0;
         $message = "";
         $fields = app( Order::class )->getFillable();
-        $last_ord_id = Order::select( "ord_id" )->latest()->first();
-
-        if ( $last_ord_id )
-            $i = (int) explode( "ORD_", $last_ord_id )[ 1 ];
 
         try
         {
-            $file_name = date( "ymdHis" )."_".$file->getClientOriginalName();
+            $file_name = $file->getClientOriginalName();
+            $orders = Order::where( "file_name", $file_name )->get();
+
+            if ( $orders->count() > 0 )
+                return "Um arquivo com esse nome já foi processado, '{$file_name}'";
+
+            $file_name = date( "ymdHis" ) . "_" . $file->getClientOriginalName();
+            $order = Order::select( "ord_id" )->get()->last();
+
+            if ( $order )
+                $i = (int) explode( "ORD_", $order->ord_id )[ 1 ];
 
             $path = "mkt-orders/{$file_name}";
 
@@ -735,22 +769,12 @@ if ( ! function_exists( "process_csv_file" ) )
                 ? mb_convert_encoding( $original_content, "UTF-8", $encoding )
                 : $original_content;
 
+            $utf8_content = preg_replace( "/^\xEF\xBB\xBF/", "", $utf8_content );
+
             Storage::disk( "local" )->put( $path, $utf8_content );
 
             // Get csv content
-            $csv_content = Storage::disk( "local" )->get( $path );
-
-            // Convert csv to array
-            $csv_array = array_map( static function ( $line )
-            {
-                return str_getcsv( $line, ";" );
-            }, explode( "\n", $csv_content ) );
-
-            // Clean empty lines
-            $csv_array = array_filter( $csv_array, static function ( $row )
-            {
-                return ! empty( array_filter( $row ) );
-            } );
+            $csv_array = get_csv_content( path: $path );
 
             // Get headers
             $headers = array_shift( $csv_array );
@@ -784,7 +808,7 @@ if ( ! function_exists( "process_csv_file" ) )
                                 $order[ $header ] = "not_processed";
 
                             elseif ( $header === "CHAVE_FORTE_RESGATE" )
-                                $order[ "strong_key" ] = $value;
+                                $order[ "external_id" ] = $value;
 
                             elseif ( in_array( $header, $fields ) )
                                 $order[ $header ] = $value;
@@ -799,13 +823,7 @@ if ( ! function_exists( "process_csv_file" ) )
                         if ( ! isset( $order[ "customer_id" ] ) )
                             $order[ "customer_id" ] = 6636;
 
-                        Order::updateOrCreate(
-                            [
-                                "file_name" => $order[ "file_name" ],
-                                "ord_id" => $order[ "ord_id" ]
-                            ],
-                            $order
-                        );
+                        Order::create( $order );
                     }
                 }
 
@@ -832,7 +850,7 @@ if ( ! function_exists( "process_csv_file" ) )
 
         log_message( channel: "triibo", message: "Falha ao processar arquivo CSV", level: "error", context: $context );
 
-        return false;
+        return $message;
     }
 }
 
