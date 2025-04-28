@@ -108,14 +108,14 @@ class MarketplaceController extends Controller
         {
             $processed = process_csv_file( file: $request->file( "csv_file" ) );
 
-            if ( $processed )
+            if ( $processed === true )
             {
                 $type = self::SUCCESS;
                 $message = "Arquivo importado com sucesso.";
             }
             else
             {
-                $message = "Falha ao processar arquivo.";
+                $message = $processed;
             }
         }
 
