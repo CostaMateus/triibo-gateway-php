@@ -112,9 +112,9 @@ class DeleteFastShopData extends Command
         $this->log_message( message: "Starting process" );
         $this->log_message( message: implode( " ", [
             "--option:" . ( $option ?: "null" ),
-            "--meta:" . ( $meta ?: "false" ),
-            "--fix:" . ( $fix ?: "false" ),
-            "--outofstock:" . ( $outofstock ?: "false" ),
+            "--meta:" . ( $meta ? "true" : "false" ),
+            "--fix:" . ( $fix ? "true" : "false" ),
+            "--outofstock:" . ( $outofstock ? "true" : "false" ),
         ] ) );
 
         $db = "dev-mkt";
