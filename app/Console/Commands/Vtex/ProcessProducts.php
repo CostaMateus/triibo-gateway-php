@@ -293,7 +293,11 @@ class ProcessProducts extends Command
             {
                 if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
                 {
-                    $this->logMessage( message: $e->getMessage(), type: "error" );
+                    $this->logMessage(
+                        message: $e->getMessage(),
+                        context: $chunk,
+                        type: "error"
+                    );
 
                     return false;
                 }
@@ -412,7 +416,12 @@ class ProcessProducts extends Command
             {
                 if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
                 {
-                    $this->logMessage( message: $e->getMessage(), type: "error" );
+                    $this->logMessage(
+                        message: $e->getMessage(),
+                        context: $product,
+                        type: "error"
+                    );
+
                     $this->logMessage( message: print_r( $e, true ), type: "error" );
 
                     return false;
