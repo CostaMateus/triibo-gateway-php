@@ -20,6 +20,7 @@ final class Product extends Model
         "origin",
         "action",
         "status",
+        "description",
         "meta",
         "data",
     ];
