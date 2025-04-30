@@ -44,7 +44,7 @@ return [
     | Optional label to display for the above URL.
     |
     */
-    'back_to_system_url' => config( 'app.url', null ).'home',
+    'back_to_system_url' => config( 'app.url', null ) . 'home',
     'back_to_system_label' => null, // Displayed by default: "Back to {{ app.name }}"
 
     /*

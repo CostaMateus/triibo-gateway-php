@@ -107,7 +107,7 @@ class GetProductList extends Command
         // $skus = Storage::get( "vtex/skus.json" );
         // $skus = json_decode( $skus, true );
 
-        $this->log_message( message: "Load: ".count( $skus ) );
+        $this->log_message( message: "Load: " . count( $skus ) );
 
         $this->getAllProducts( skus: $skus );
 
@@ -248,7 +248,7 @@ class GetProductList extends Command
                     "simulate" => $simulate,
                 ];
 
-                $this->log_message( message: "SKU loaded: ".mb_str_pad( $sku, 5, " ", STR_PAD_LEFT ) );
+                $this->log_message( message: "SKU loaded: " . mb_str_pad( $sku, 5, " ", STR_PAD_LEFT ) );
 
                 $products[ $sku ] = $product;
 
@@ -448,14 +448,14 @@ class GetProductList extends Command
     {
         try
         {
-            $this->log_message( message: "Translate to marketplace: ".count( $products ) );
+            $this->log_message( message: "Translate to marketplace: " . count( $products ) );
 
             $wc_data = [];
 
             foreach ( $products as $sku => $product )
             {
                 $s = mb_str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                $this->log_message( message: "SKU: {$s} | ".$product[ "data" ][ "Name" ] );
+                $this->log_message( message: "SKU: {$s} | " . $product[ "data" ][ "Name" ] );
 
                 $wc_data[] = vtex_product_to_mkt(
                     data     : $product[ "data"     ],

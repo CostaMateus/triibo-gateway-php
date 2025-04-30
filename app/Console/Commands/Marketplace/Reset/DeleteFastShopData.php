@@ -111,12 +111,12 @@ class DeleteFastShopData extends Command
         $this->log_message( message: "Starting process, {$option}" );
 
         $db = "dev-mkt";
-        $this->url = "https://dev-marketplace.triibo.com.br".$this->url_sufix;
+        $this->url = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
 
         if ( config( key: "app.env" ) === "production" )
         {
             $db = "prd-mkt";
-            $this->url = "https://marketplace.triibo.com.br".$this->url_sufix;
+            $this->url = "https://marketplace.triibo.com.br" . $this->url_sufix;
         }
 
         $this->log_message( message: "Selecting DB: {$db}..." );
@@ -142,7 +142,7 @@ class DeleteFastShopData extends Command
                     foreach ( $posts as $post )
                         $ids[] = (string) $post->id;
 
-                    $this->log_message( message: "Selected: ".implode( ", ", $ids ) );
+                    $this->log_message( message: "Selected: " . implode( ", ", $ids ) );
 
                     $content = json_encode( [
                         "posts" => $ids,
@@ -343,7 +343,7 @@ class DeleteFastShopData extends Command
         {
             $i++;
 
-            $this->log_message( message: "Chunk {$i} de ".count( $chunked ) );
+            $this->log_message( message: "Chunk {$i} de " . count( $chunked ) );
 
             foreach ( $result as $meta )
             {
@@ -405,7 +405,7 @@ class DeleteFastShopData extends Command
         {
             $i++;
 
-            $this->log_message( message: "Chunk {$i} de ".count( $chunked ) );
+            $this->log_message( message: "Chunk {$i} de " . count( $chunked ) );
 
             $ids = implode( ", ", $post_ids );
             $query_1 = "DELETE wp_postmeta   FROM wp_postmeta WHERE post_id     IN ({$ids});";

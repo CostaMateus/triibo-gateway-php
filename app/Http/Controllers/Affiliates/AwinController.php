@@ -163,7 +163,7 @@ class AwinController extends Controller
         foreach ( self::TYPES as $type )
         {
             // Construct the local path where the images for the current type are located.
-            $local_path = public_path( path: self::LC_BASE_PATH."/{$type}" );
+            $local_path = public_path( path: self::LC_BASE_PATH . "/{$type}" );
 
             // Determine the Firebase path where the images will be uploaded based on the type.
             $firebase_path = ( $type === "establishments" ) ? self::FB_ESTAB_PATH : self::FB_PROMO_PATH;
@@ -255,7 +255,7 @@ class AwinController extends Controller
     private function insertEstablishmentsFirebase() : void
     {
         // Delete the existing establishments directory.
-        clear_directory( path: self::LC_BASE_PATH."/establishments" );
+        clear_directory( path: self::LC_BASE_PATH . "/establishments" );
 
         // Initialize Firebase database references
         $db = Firebase::database();
@@ -356,7 +356,7 @@ class AwinController extends Controller
             // Awin establishment exist in local.
             else
             {
-                $affiliate_id = $establishment_aw[ "origin" ].$partner_id;
+                $affiliate_id = $establishment_aw[ "origin" ] . $partner_id;
 
                 // Establishment does not exist in firebase, create curation creation request.
                 if ( $firebase_est === null )
@@ -406,7 +406,7 @@ class AwinController extends Controller
     private function insertPromotionsFirebase() : void
     {
         // Delete the existing promotions directory.
-        clear_directory( path: self::LC_BASE_PATH."/promotions" );
+        clear_directory( path: self::LC_BASE_PATH . "/promotions" );
 
         $local_data = [];
 
@@ -468,7 +468,7 @@ class AwinController extends Controller
                 $local_data[] = [
                     "origin_id" => $id,
                     "origin" => $awin_promotion[ "origin" ],
-                    "affiliate_id" => $awin_promotion[ "origin" ].$id,
+                    "affiliate_id" => $awin_promotion[ "origin" ] . $id,
                     "push_id" => null,
                     "data" => json_encode( $awin_promotion ),
                     "created_at" => now(),
@@ -503,10 +503,10 @@ class AwinController extends Controller
             // Skip if there are no changes
             if ( empty( $diff ) ) continue;
 
-            $this->logger->log_message( message: "Promotions: Has changes ID ".$local_promotion[ "push_id" ] );
+            $this->logger->log_message( message: "Promotions: Has changes ID " . $local_promotion[ "push_id" ] );
 
             // Add edit approval request in Firebase.
-            $db->getReference( path: "/Store-Aprovacoes/".$local_promotion[ "push_id" ] )
+            $db->getReference( path: "/Store-Aprovacoes/" . $local_promotion[ "push_id" ] )
                 ->update( values: [
                     "requesterId" => self::REQUESTER_ID,
                     "id" => $local_promotion[ "push_id" ],
@@ -525,7 +525,7 @@ class AwinController extends Controller
             $past_diffs = invalidate_past_promotion_changes( reference: $reference_changes, push_id: $local_promotion[ "push_id" ] );
 
             if ( ! empty( $past_diffs ) )
-                $this->logger->log_message( message: "Promotions: Invalidating past changes ID ".$local_promotion[ "push_id" ] );
+                $this->logger->log_message( message: "Promotions: Invalidating past changes ID " . $local_promotion[ "push_id" ] );
 
             $current_changes = array_merge( $past_diffs, $diff );
 
@@ -552,10 +552,10 @@ class AwinController extends Controller
                 ->update( ["data" => json_encode( $awin_promotion )] );
 
             $this->logger->log_message(
-                message : "Promotions: Edited ID ".$local_promotion[ "push_id" ],
+                message : "Promotions: Edited ID " . $local_promotion[ "push_id" ],
                 context : [
-                    "Need approval ID ".$local_promotion[ "push_id" ],
-                    "Change Request ID ".$new_push_changes,
+                    "Need approval ID " . $local_promotion[ "push_id" ],
+                    "Change Request ID " . $new_push_changes,
                     $current_changes
                 ]
             );
@@ -601,8 +601,8 @@ class AwinController extends Controller
                     ] );
 
                 $this->logger->log_message(
-                    message : "Promotions: Created ID = ".$new_push_promotion,
-                    context : ["Need approval ID = ".$new_push_promotion]
+                    message : "Promotions: Created ID = " . $new_push_promotion,
+                    context : ["Need approval ID = " . $new_push_promotion]
                 );
 
                 $promotion[ "push_id" ] = $new_push_promotion;
@@ -611,7 +611,7 @@ class AwinController extends Controller
                 DB::table( "affiliates_promotions" )->insert( $promotion );
             }
 
-            $this->logger->log_message( message: "Promotions: Added ".count( $local_data )." new promotions in the local table" );
+            $this->logger->log_message( message: "Promotions: Added " . count( $local_data ) . " new promotions in the local table" );
         }
     }
 
@@ -1170,10 +1170,10 @@ class AwinController extends Controller
         ] );
 
         $this->logger->log_message(
-            message : "Establishments: Edited ID ".$push,
+            message : "Establishments: Edited ID " . $push,
             context : [
-                "Need approval ID ".$push,
-                "Change Request ID ".$new_push,
+                "Need approval ID " . $push,
+                "Change Request ID " . $new_push,
                 $changes
             ]
         );
@@ -1181,7 +1181,7 @@ class AwinController extends Controller
 
     private function createOrUpdateLocalEstablishment( int $id, string $push, array $establishment, string $action ) : void
     {
-        $affiliate_id = $establishment[ "origin" ].$id;
+        $affiliate_id = $establishment[ "origin" ] . $id;
 
         $query = DB::table( "affiliates_establishments" );
 

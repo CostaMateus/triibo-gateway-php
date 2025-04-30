@@ -110,7 +110,7 @@ class GetProductInfosFastShop extends Command
 
         foreach ( $products as $data )
         {
-            $message = "Products: Processing local product_id: ".$data[ "id" ];
+            $message = "Products: Processing local product_id: " . $data[ "id" ];
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             $this->info( $message );
@@ -328,7 +328,7 @@ class GetProductInfosFastShop extends Command
             {
                 $attr_name = Str::ucfirst( $name );
                 $val = reset( $att[ "options" ] );
-                $attr_val = ( $val === "110" || $val === "220" ) ? $val."V" : $val;
+                $attr_val = ( $val === "110" || $val === "220" ) ? $val . "V" : $val;
             }
         }
 
@@ -409,7 +409,7 @@ class GetProductInfosFastShop extends Command
             $key = array_search( $index, array_column( $items, "requestIndex" ) );
             $item = $items[ $key ];
 
-            $sku = "FS-".$item[ "id" ];
+            $sku = "FS-" . $item[ "id" ];
             $regular = $item[ "listPrice"    ];
             $sale = $item[ "price"        ];
             $stock = $info[ "stockBalance" ];

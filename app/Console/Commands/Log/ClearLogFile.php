@@ -41,7 +41,7 @@ class ClearLogFile extends Command
         $date = date( "Y-m-d" );
         $log_folder = storage_path( "logs/" );
         $all_files = File::files( $log_folder );
-        $bkp_folder = $log_folder."/bkp-{$date}";
+        $bkp_folder = $log_folder . "/bkp-{$date}";
 
         if ( ! File::exists( $bkp_folder ) )
             File::makeDirectory( $bkp_folder, 0755, true, true );

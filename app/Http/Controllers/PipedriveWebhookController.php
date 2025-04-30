@@ -91,11 +91,11 @@ class PipedriveWebhookController extends Controller
 
         if ( $params[ "meta" ][ "change_source" ] === "api" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | ".self::MSG_CHANGE_BY_API );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 0 | " . self::MSG_CHANGE_BY_API );
 
             return response()->json( [
                 "status" => "Ok",
-                "message" => "Deal - ".self::MSG_CHANGE_BY_API,
+                "message" => "Deal - " . self::MSG_CHANGE_BY_API,
                 "code" => -1,
             ], 200 );
         }
@@ -182,11 +182,11 @@ class PipedriveWebhookController extends Controller
                     break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | ".self::MSG_UNSUPPORTED_EVENT );
+                    log_message( channel: self::LOG_CHANNEL, message: "Deals: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
                         "status" => "Error",
-                        "message" => "Deals - ".self::MSG_UNSUPPORTED_EVENT,
+                        "message" => "Deals - " . self::MSG_UNSUPPORTED_EVENT,
                         "code" => 0,
                     ], 400 );
 
@@ -195,7 +195,7 @@ class PipedriveWebhookController extends Controller
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | ".$e->getMessage() );
+            log_message( channel: self::LOG_CHANNEL, message: "Deals: code 500 | " . $e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
@@ -226,11 +226,11 @@ class PipedriveWebhookController extends Controller
         if ( $params[ "meta" ][ "change_source" ] === "api" )
         {
             $message = "";
-            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | ".self::MSG_CHANGE_BY_API );
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 0 | " . self::MSG_CHANGE_BY_API );
 
             return response()->json( [
                 "status" => "Ok",
-                "message" => "Organizations - ".self::MSG_CHANGE_BY_API,
+                "message" => "Organizations - " . self::MSG_CHANGE_BY_API,
                 "code" => -1,
             ], 200 );
         }
@@ -269,11 +269,11 @@ class PipedriveWebhookController extends Controller
                     break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | ".self::MSG_UNSUPPORTED_EVENT );
+                    log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
                         "status" => "Error",
-                        "message" => "Organizations - ".self::MSG_UNSUPPORTED_EVENT,
+                        "message" => "Organizations - " . self::MSG_UNSUPPORTED_EVENT,
                         "code" => 0,
                     ], 400 );
 
@@ -282,13 +282,13 @@ class PipedriveWebhookController extends Controller
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | ".$e->getMessage() );
+            log_message( channel: self::LOG_CHANNEL, message: "Organizations: code 500 | " . $e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
             return response()->json( [
                 "status" => "Error",
-                "message" => "Organizations - ".$e->getMessage(),
+                "message" => "Organizations - " . $e->getMessage(),
                 "code" => self::ORG_CODE,
             ], 500 );
         }
@@ -313,11 +313,11 @@ class PipedriveWebhookController extends Controller
 
         if ( $params[ "meta" ][ "change_source" ] === "api" )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | ".self::MSG_CHANGE_BY_API );
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 0 | " . self::MSG_CHANGE_BY_API );
 
             return response()->json( [
                 "status" => "Ok",
-                "message" => "Stages - ".self::MSG_CHANGE_BY_API,
+                "message" => "Stages - " . self::MSG_CHANGE_BY_API,
                 "code" => -1,
             ], 200 );
         }
@@ -334,11 +334,11 @@ class PipedriveWebhookController extends Controller
                     break;
 
                 default:
-                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | ".self::MSG_UNSUPPORTED_EVENT );
+                    log_message( channel: self::LOG_CHANNEL, message: "Stages: code 400 | " . self::MSG_UNSUPPORTED_EVENT );
 
                     return response()->json( [
                         "status" => "Error",
-                        "message" => "Stages - ".self::MSG_UNSUPPORTED_EVENT,
+                        "message" => "Stages - " . self::MSG_UNSUPPORTED_EVENT,
                         "code" => 0,
                     ], 400 );
 
@@ -347,13 +347,13 @@ class PipedriveWebhookController extends Controller
         }
         catch ( Exception $e )
         {
-            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | ".$e->getMessage() );
+            log_message( channel: self::LOG_CHANNEL, message: "Stages: code 500 | " . $e->getMessage() );
 
             self::sendMailNotification( $params, $e );
 
             return response()->json( [
                 "status" => "Error",
-                "message" => "Stages - ".$e->getMessage(),
+                "message" => "Stages - " . $e->getMessage(),
                 "code" => self::STAGE_CODE,
             ], 500 );
         }
@@ -475,7 +475,7 @@ class PipedriveWebhookController extends Controller
         {
             $mail = [
                 "subject" => "Dev - Integração Triibo Pipedrive-Mautic",
-                "title" => "Erro no webhook: ".$params[ "meta" ][ "object" ],
+                "title" => "Erro no webhook: " . $params[ "meta" ][ "object" ],
                 "class" => $params[ "meta" ][ "object" ],
                 "params" => $params,
                 "stacktrace" => $e,

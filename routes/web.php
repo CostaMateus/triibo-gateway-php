@@ -195,7 +195,7 @@ Route::prefix( "mkt" )->group( static function () : void
         $url = "https://marketplace.triibo.com.br/wp-json/triibo-payments/v1/orders/update-payment";
         $params = "?status=RECEIVED&orderId={$id}&approved=true";
 
-        $response = Http::withHeaders( headers: $headers )->get( url: $url.$params );
+        $response = Http::withHeaders( headers: $headers )->get( url: $url . $params );
 
         dd( $response->json() );
 
@@ -376,7 +376,7 @@ Route::prefix( "mkt" )->group( static function () : void
             dd( $e->getMessage() );
         }
 
-        dd( "Count: ".count( $wc_products ) );
+        dd( "Count: " . count( $wc_products ) );
     } );
 
     Route::get( "/get-gateways", static function () : void
@@ -499,7 +499,7 @@ Route::prefix( "fb" )->group( static function () : void
             }
 
             $p = $estab[ "isPublished" ] ? "✅" : "❌";
-            $text .= "{$push_id} | {$p} | ".$estab[ "nome" ]."\n";
+            $text .= "{$push_id} | {$p} | " . $estab[ "nome" ] . "\n";
         }
 
         foreach ( $disab as $push_id )

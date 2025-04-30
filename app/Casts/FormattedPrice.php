@@ -2,24 +2,24 @@
 
 namespace App\Casts;
 
-use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 
 class FormattedPrice implements CastsAttributes
 {
     /**
      * Cast the given value, float to string.
      *
-     * @param Model $model
+     * @param Model  $model
      * @param string $key
-     * @param mixed $value
-     * @param array $attributes
+     * @param mixed  $value
+     * @param array  $attributes
      *
      * @return string
      */
     public function get( Model $model, string $key, mixed $value, array $attributes ) : string
     {
-        if ( !$value )
+        if ( ! $value )
             return "0,00";
 
         return number_format( $value, 2, ",", "." );
@@ -28,10 +28,10 @@ class FormattedPrice implements CastsAttributes
     /**
      * Prepare the given value for storage, string to float.
      *
-     * @param Model $model
+     * @param Model  $model
      * @param string $key
-     * @param mixed $value
-     * @param array $attributes
+     * @param mixed  $value
+     * @param array  $attributes
      *
      * @return float
      */

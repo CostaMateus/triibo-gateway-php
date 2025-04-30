@@ -24,7 +24,7 @@ class PipedriveIntegration
      */
     public static function updateMauticId( string $class, array $ids ) : void
     {
-        $message = ucfirst( $class ).": selecionando API...";
+        $message = ucfirst( $class ) . ": selecionando API...";
 
         log_message( channel: "marketplace", message: $message );
 
@@ -39,7 +39,7 @@ class PipedriveIntegration
         // Update the entity in Pipedrive with the new Mautic ID.
         $pipedrive->{$class}->update( $ids[ "pd_id" ], [$field_key => $ids[ "mautic_id" ]] );
 
-        $message = ucfirst( $class ).": chamada API finalizada...";
+        $message = ucfirst( $class ) . ": chamada API finalizada...";
 
         log_message( channel: "marketplace", message: $message );
 

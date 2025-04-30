@@ -77,7 +77,7 @@ class GetHubFastShop extends Command
             $this->callFs( $body, $sku, $logs );
         }
 
-        Storage::put( "fs-hubs-{$status}-".date( "Ymd-his" ).".json", json_encode( $logs ) );
+        Storage::put( "fs-hubs-{$status}-" . date( "Ymd-his" ) . ".json", json_encode( $logs ) );
 
         dd( "ok" );
     }
@@ -89,7 +89,7 @@ class GetHubFastShop extends Command
 
             $response = Http::withHeaders( $this->fsHeaders )
                 ->withBody( json_encode( $body ), "application/json" )
-                ->post( $this->fsUrl."/pvt/orderForms/simulation" );
+                ->post( $this->fsUrl . "/pvt/orderForms/simulation" );
 
             if ( ! $response->successful() )
             {
@@ -102,7 +102,7 @@ class GetHubFastShop extends Command
 
                 $logs[ "error" ]++; // [ $sku ] = $response->status();
 
-                echo "{$sku} : ".$response->status()."\n";
+                echo "{$sku} : " . $response->status() . "\n";
 
                 return false;
             }
@@ -154,7 +154,7 @@ class GetHubFastShop extends Command
         {
             $logs[ "error" ]++; // [ $sku ] = $e->getMessage();
 
-            echo "{$sku} : ".$e->getMessage()."\n";
+            echo "{$sku} : " . $e->getMessage() . "\n";
 
             return false;
         }

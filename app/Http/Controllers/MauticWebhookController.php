@@ -20,7 +20,7 @@ class MauticWebhookController extends Controller
         $date = date( "Ymd-his" );
         $encoded = json_encode( $request->all(), JSON_UNESCAPED_SLASHES );
 
-        Storage::put( "mautic-".$date.".json", $encoded );
+        Storage::put( "mautic-" . $date . ".json", $encoded );
 
         return response()->json( [
             "message" => "Apenas teste",
@@ -33,7 +33,7 @@ class MauticWebhookController extends Controller
         $date = date( "Ymd-his" );
         $encoded = json_encode( $request->all(), JSON_UNESCAPED_SLASHES );
 
-        Storage::put( "mautic-app-register-".$date.".json", $encoded );
+        Storage::put( "mautic-app-register-" . $date . ".json", $encoded );
 
         return response()->json( [
             "message" => "Callback Mautic teste",

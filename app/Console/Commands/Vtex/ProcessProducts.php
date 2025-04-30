@@ -272,7 +272,7 @@ class ProcessProducts extends Command
 
         foreach ( $chunks as $key => $chunk )
         {
-            $group = ( $key + 1 )." of {$total_count}";
+            $group = ( $key + 1 ) . " of {$total_count}";
 
             $this->logMessage( message: "VTEX Products: Updating marketplace products, {$group}" );
 
@@ -428,7 +428,7 @@ class ProcessProducts extends Command
      */
     private function processProduct( Product $product ) : void
     {
-        $this->logMessage( message: "VTEX Products: Processing product SKU {$product->sku}, with action {$product->action}..." );
+        $this->logMessage( message: "VTEX Products: Processing product SKU {$product->sku}, with action {$product->action}...", context: $product->toArray() );
 
         $wc_product = $this->searchProduct( id: $product->sku );
 
@@ -798,15 +798,17 @@ class ProcessProducts extends Command
      *
      * @param string $message
      * @param string $type
+     * @param array  $context
      *
      * @return void
      */
-    private function logMessage( string $message, string $type = "info" ) : void
+    private function logMessage( string $message, string $type = "info", array $context = [] ) : void
     {
         log_message(
             channel: self::LOG_CHANNEL,
             message: $message,
-            level  : $type
+            level  : $type,
+            context: $context
         );
 
         $this->{$type}( string: $message );

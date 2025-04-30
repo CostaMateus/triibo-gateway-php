@@ -194,7 +194,7 @@ if ( ! function_exists( "get_wc_order" ) )
 
             if ( ! $response[ "success" ] )
             {
-                $message = "Falha ao obter pedido {$order_id}: ".$response[ "message" ];
+                $message = "Falha ao obter pedido {$order_id}: " . $response[ "message" ];
 
                 log_message( channel: $channel, message: $message );
 
@@ -211,7 +211,7 @@ if ( ! function_exists( "get_wc_order" ) )
 
                     if ( ! $parent_response[ "success" ] )
                     {
-                        $message = "Falha ao obter pedido pai {$order[ "parent_id" ]}: ".$parent_response[ "message" ];
+                        $message = "Falha ao obter pedido pai {$order[ "parent_id" ]}: " . $parent_response[ "message" ];
 
                         log_message( channel: $channel, message: $message );
 
@@ -368,7 +368,7 @@ if ( ! function_exists( "update_order_meta" ) )
 
         log_exception(
             channel : $channel,
-            message : "Error trying to update order: #{$order_id} ".json_encode( $data ),
+            message : "Error trying to update order: #{$order_id} " . json_encode( $data ),
             method  : "create_order_note",
             type    : "Throwable",
             e       : $e ?? null
@@ -1431,7 +1431,7 @@ if ( ! function_exists( "vtex_product_to_mkt" ) )
             "slug" => Str::slug( $context[ "ProductName" ] ),
             "description" => $context[ "ProductDescription" ],
             "short_description" => $short_desc,
-            "sku" => "FS-".$data[ "RefId" ],
+            "sku" => "FS-" . $data[ "RefId" ],
             "regular_price" => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "price"        ] ?? 0 ) : 0,
             "sale_price" => isset( $simulate[ "items" ] ) ? convert_price( $simulate[ "items" ][ 0 ][ "sellingPrice" ] ?? 0 ) : 0,
 

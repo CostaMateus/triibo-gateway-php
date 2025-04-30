@@ -83,13 +83,13 @@ class ChatGuruController extends Controller
                 {
                     $count++;
                     $num = mb_substr( $phone, 5, mb_strlen( $phone ) );
-                    $phone = $code.$num;
+                    $phone = $code . $num;
                 }
                 elseif ( mb_strlen( $phone ) === 12 )
                 {
                     $count++;
                     $num = mb_substr( $phone, 4, mb_strlen( $phone ) );
-                    $phone = $code."9".$num;
+                    $phone = $code . "9" . $num;
                 }
             }
         }
@@ -335,21 +335,21 @@ class ChatGuruController extends Controller
     {
         $res_add_chat = Http::post(
             self::URL
-            ."?key=".self::KEY
-            ."&account_id=".self::ACCOUNT_ID
-            ."&phone_id=".self::PHONE_ID
-            ."&action=chat_add"
-            ."&name={$name}"
-            ."&text=".self::getFirstMessage( $name )
-            ."&chat_number={$phone}"
-            ."&dialog_id={$dialog_id}"
+            . "?key=" . self::KEY
+            . "&account_id=" . self::ACCOUNT_ID
+            . "&phone_id=" . self::PHONE_ID
+            . "&action=chat_add"
+            . "&name={$name}"
+            . "&text=" . self::getFirstMessage( $name )
+            . "&chat_number={$phone}"
+            . "&dialog_id={$dialog_id}"
         );
 
         if ( $res_add_chat->failed()
              || $res_add_chat[ "code"   ] === 400
              || $res_add_chat[ "result" ] === "error" )
         {
-            log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Add chat | ".$res_add_chat->json() );
+            log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Add chat | " . $res_add_chat->json() );
 
             self::sendMailNotification( $data_email );
         }
@@ -371,11 +371,11 @@ class ChatGuruController extends Controller
 
         $res_check_chat = Http::post(
             self::URL
-            ."?key=".self::KEY
-            ."&account_id=".self::ACCOUNT_ID
-            ."&phone_id=".self::PHONE_ID
-            ."&action=chat_add_status"
-            ."&chat_add_id={$chat_id}"
+            . "?key=" . self::KEY
+            . "&account_id=" . self::ACCOUNT_ID
+            . "&phone_id=" . self::PHONE_ID
+            . "&action=chat_add_status"
+            . "&chat_add_id={$chat_id}"
         );
 
         if ( $res_check_chat->failed()
@@ -383,7 +383,7 @@ class ChatGuruController extends Controller
              || $res_check_chat[ "result"          ] === "error"
              || $res_check_chat[ "chat_add_status" ] === "error" )
         {
-            log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Check add chat | ".$res_check_chat->json() );
+            log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Check add chat | " . $res_check_chat->json() );
 
             return false;
         }
@@ -392,7 +392,7 @@ class ChatGuruController extends Controller
             return self::checkChat( $chat_id, $data_email );
         }
 
-        log_message( channel: self::LOG_CHANNEL, message: "ChatGuru: Check add chat | ".$res_check_chat->json() );
+        log_message( channel: self::LOG_CHANNEL, message: "ChatGuru: Check add chat | " . $res_check_chat->json() );
 
         return true;
 
@@ -431,12 +431,12 @@ class ChatGuruController extends Controller
 
         $res_add_note = Http::post(
             self::URL
-            ."?key=".self::KEY
-            ."&account_id=".self::ACCOUNT_ID
-            ."&phone_id=".self::PHONE_ID
-            ."&action=note_add"
-            ."&chat_number={$phone}"
-            ."&note_text={$note_text}"
+            . "?key=" . self::KEY
+            . "&account_id=" . self::ACCOUNT_ID
+            . "&phone_id=" . self::PHONE_ID
+            . "&action=note_add"
+            . "&chat_number={$phone}"
+            . "&note_text={$note_text}"
         );
 
         if ( $res_add_note->failed()
@@ -445,7 +445,7 @@ class ChatGuruController extends Controller
         {
             if ( $count === 1 )
             {
-                log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Add note | ".$res_add_note->json() );
+                log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Add note | " . $res_add_note->json() );
 
                 self::sendMailNotification( $data_email, "Chat criado com sucesso. \nFalha na criação da anotação." );
 
@@ -458,19 +458,19 @@ class ChatGuruController extends Controller
             {
                 $count++;
                 $num = mb_substr( $phone, 5, mb_strlen( $phone ) );
-                $phone = $code.$num;
+                $phone = $code . $num;
             }
             elseif ( mb_strlen( $phone ) === 12 )
             {
                 $count++;
                 $num = mb_substr( $phone, 4, mb_strlen( $phone ) );
-                $phone = $code."9".$num;
+                $phone = $code . "9" . $num;
             }
 
             return self::createNote( $phone, $email, $segment, $size, $objective, $physical, $data_email, $data, $hora, $url, $count );
         }
 
-        log_message( channel: self::LOG_CHANNEL, message: "ChatGuru: Add note | ".$res_add_note->json() );
+        log_message( channel: self::LOG_CHANNEL, message: "ChatGuru: Add note | " . $res_add_note->json() );
 
         return true;
     }
@@ -533,7 +533,7 @@ class ChatGuruController extends Controller
 
         if ( in_array( true, $error ) )
         {
-            log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Request missing data | ".json_encode( $error ) );
+            log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Request missing data | " . json_encode( $error ) );
 
             $mail = [
                 "subject" => "Formulário de contato",
@@ -573,7 +573,7 @@ class ChatGuruController extends Controller
      */
     private static function error( array $data ) : JsonResponse
     {
-        log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Form | ".json_encode( $data ) );
+        log_message( channel: self::LOG_CHANNEL, level: "error", message: "ChatGuru: Form | " . json_encode( $data ) );
 
         return response()->json( [
             "message" => "Fail",

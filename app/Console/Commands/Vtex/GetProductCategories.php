@@ -65,7 +65,7 @@ class GetProductCategories extends Command
             return;
         }
 
-        $this->info( "Load: ".count( $skus ) );
+        $this->info( "Load: " . count( $skus ) );
 
         $this->getAllProducts( $skus );
     }

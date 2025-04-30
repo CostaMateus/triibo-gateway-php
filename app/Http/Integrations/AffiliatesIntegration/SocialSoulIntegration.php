@@ -56,7 +56,7 @@ class SocialSoulIntegration
             $path = public_path( "images/affiliates/socialsoul/establishments" );
             $default = public_path( "images/standard.png" );
 
-            File::copy( $default, $path."/standard.png" );
+            File::copy( $default, $path . "/standard.png" );
 
             $stores = $this->searchStores();
 
@@ -134,7 +134,7 @@ class SocialSoulIntegration
         $publisher_id = config( "socialsoul.{$this->env}.publisher_id" );
 
         $partial_url = "/createToken?user={$user}&password={$pass}";
-        $response = Http::get( $this->url_report.$partial_url );
+        $response = Http::get( $this->url_report . $partial_url );
 
         if ( ! $response->successful() )
         {
@@ -159,7 +159,7 @@ class SocialSoulIntegration
             $partial_url .= "&startDate={$date}";     // ddMMaaaa
             $partial_url .= "&endDate={$date}";       // ddMMaaaa
 
-            $response = Http::get( $this->url_report.$partial_url );
+            $response = Http::get( $this->url_report . $partial_url );
 
             if ( ! $response->successful() )
             {
@@ -223,7 +223,7 @@ class SocialSoulIntegration
      */
     private static function saveImage( string $path, string $imageName, string $url )
     {
-        $fullPath = public_path( "images/affiliates/socialsoul/{$path}" )."/{$imageName}";
+        $fullPath = public_path( "images/affiliates/socialsoul/{$path}" ) . "/{$imageName}";
 
         try
         {
@@ -263,7 +263,7 @@ class SocialSoulIntegration
 
         do
         {
-            $response = Http::get( $this->url_store."{$partial_url}&page={$page}&size={$size}" );
+            $response = Http::get( $this->url_store . "{$partial_url}&page={$page}&size={$size}" );
 
             if ( ! $response->successful() )
             {
@@ -313,7 +313,7 @@ class SocialSoulIntegration
 
         do
         {
-            $response = Http::get( $this->url_coupon."{$partial_url}&page={$page}&size={$size}" );
+            $response = Http::get( $this->url_coupon . "{$partial_url}&page={$page}&size={$size}" );
 
             if ( ! $response->successful() )
             {
@@ -365,7 +365,7 @@ class SocialSoulIntegration
 
         do
         {
-            $response = Http::get( $this->url_offer."{$partial_url}&page={$page}&size={$size}" );
+            $response = Http::get( $this->url_offer . "{$partial_url}&page={$page}&size={$size}" );
 
             if ( ! $response->successful() )
             {
@@ -427,7 +427,7 @@ class SocialSoulIntegration
             if ( $i > 10 ) continue;
             $i++;
 
-            $id = self::ID.$store[ "id" ];
+            $id = self::ID . $store[ "id" ];
             $cashback = (float) $store[ "maxCommission" ] / 2;
             $cashback = number_format( $cashback, 1, ",", "" );
 
@@ -474,7 +474,7 @@ class SocialSoulIntegration
                 "long" => -48.015408891158984,
 
                 "nome" => $store[ "name" ],
-                "descricao" => $store[ "name" ]." em parceria com a Triibo oferece ofertas, cupons e cashback em pontos. Aproveite!",
+                "descricao" => $store[ "name" ] . " em parceria com a Triibo oferece ofertas, cupons e cashback em pontos. Aproveite!",
                 "email" => "contato@triibo.com.br",
                 "contatotriibo" => ["+5511944965799"],
                 "contatos" => ["+5511944965799"],
@@ -516,7 +516,7 @@ class SocialSoulIntegration
 
         foreach ( $data as $key => $coupon )
         {
-            $idStore = self::ID.$coupon[ "store" ][ "id" ];
+            $idStore = self::ID . $coupon[ "store" ][ "id" ];
 
             if ( ! isset( $stores[ $idStore ] ) ) continue;
 
@@ -528,17 +528,17 @@ class SocialSoulIntegration
             $cashback = str_replace( ",", ".", $cashback );
             $points = $this->base * $this->rate * ( $cashback / 100 );
 
-            $id = $idStore.$coupon[ "id" ];
+            $id = $idStore . $coupon[ "id" ];
 
             $establishmentName = $coupon[ "store" ][ "name" ];
 
             $description = $coupon[ "description" ];
             $description .= "\n\nGanhe {$points} pontos Triibo a cada R\${$this->base}.";
-            $description .= "\n\nCategoria: ".$coupon[ "category" ][ "name" ];
+            $description .= "\n\nCategoria: " . $coupon[ "category" ][ "name" ];
 
             $detailsDescrip = $coupon[ "description" ];
-            $detailsDescrip .= "\n\nUtilize o código de desconto ".$coupon[ "code" ]." no fechamento da compra.";
-            $detailsDescrip .= "\n\nVálido até ".explode( " ", $coupon[ "vigency" ] )[ 0 ];
+            $detailsDescrip .= "\n\nUtilize o código de desconto " . $coupon[ "code" ] . " no fechamento da compra.";
+            $detailsDescrip .= "\n\nVálido até " . explode( " ", $coupon[ "vigency" ] )[ 0 ];
 
             $url = $coupon[ "link" ];
             $url = str_contains( $url, "?" ) ? "{$url}&mdasc={userId}" : "{$url}?mdasc={userId}";
@@ -614,8 +614,8 @@ class SocialSoulIntegration
             if ( $i > 10 ) continue;
             $i++;
 
-            $idStore = self::ID.$offer[ "store" ][ "id" ];
-            $id = $idStore.$offer[ "id" ];
+            $idStore = self::ID . $offer[ "store" ][ "id" ];
+            $id = $idStore . $offer[ "id" ];
 
             $establishmentName = $offer[ "store" ][ "name" ];
 
@@ -640,7 +640,7 @@ class SocialSoulIntegration
             $points = $this->base * $this->rate * ( $cashback / 100 );
 
             $description .= "Ganhe {$points} pontos Triibo a cada R\${$this->base}.";
-            $description .= "\n\nCategoria: ".$offer[ "category" ][ "name" ];
+            $description .= "\n\nCategoria: " . $offer[ "category" ][ "name" ];
 
             $imageUrl = $offer[ "thumbnail" ];
             $imageName = "socialsoul_{$offer[ "store" ][ "id" ]}{$offer[ "id" ]}.png";

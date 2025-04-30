@@ -65,7 +65,9 @@
         "combine_consecutive_unsets": true,
         "combine_nested_dirname": true,
         "compact_nullable_type_declaration": true,
-        "concat_space": true,
+        "concat_space": {
+            "spacing": "one"
+        },
         "constant_case": true,
         "control_structure_braces": false,
         "control_structure_continuation_position": {

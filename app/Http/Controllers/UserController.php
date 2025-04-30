@@ -96,7 +96,7 @@ class UserController extends Controller
     {
         $valData = $request->validate( [
             "name" => "required|string|max:255",
-            "email" => "required|string|max:255|email|allowed_domain|".Rule::unique( "users" )->ignore( $user->id ),
+            "email" => "required|string|max:255|email|allowed_domain|" . Rule::unique( "users" )->ignore( $user->id ),
             "password" => "nullable|string|min:8|same:password_confirmation",
         ] );
 

@@ -66,7 +66,7 @@ class MauticIntegration
         // If no ID or email is provided, log the absence of searchable data and return early.
         else
         {
-            $message = "Persons: No data to search | mautic_id: 0 | pipedrive_id: ".( $data[ "pd_org_id" ] ?? 0 );
+            $message = "Persons: No data to search | mautic_id: 0 | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             echo $message;
@@ -106,7 +106,7 @@ class MauticIntegration
         self::saveCreateOrUpdateMautic( $mautic_api, "persons", $data, "pd_org_id" );
 
         // Log the final outcome of the operation.
-        $message = "Persons: mautic_id: ".( $data[ "id" ] ?? 0 )." | pipedrive_id: ".( $data[ "pd_org_id" ] ?? 0 );
+        $message = "Persons: mautic_id: " . ( $data[ "id" ] ?? 0 ) . " | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         echo $message;
@@ -168,7 +168,7 @@ class MauticIntegration
         // If no ID or email is provided, log the absence of searchable data and return early.
         else
         {
-            $message = "Deals: No data to search | mautic_id: 0 | pipedrive_id: ".( $data[ "pd_org_id" ] ?? 0 );
+            $message = "Deals: No data to search | mautic_id: 0 | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             echo $message;
@@ -179,7 +179,7 @@ class MauticIntegration
         // If no matching contact is found in Mautic, log the event and return.
         if ( empty( $response[ "total" ] ) )
         {
-            $message = "Deals: Contact not found | mautic_id: ".( $data[ "id" ] ?? 0 )." | pipedrive_id: ".( $data[ "pd_org_id" ] ?? 0 );
+            $message = "Deals: Contact not found | mautic_id: " . ( $data[ "id" ] ?? 0 ) . " | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
             log_message( channel: self::LOG_CHANNEL, message: $message );
             echo $message;
@@ -200,7 +200,7 @@ class MauticIntegration
         $mautic_api->edit( $data[ "id" ], $data );
 
         // Log the final outcome of the operation.
-        $message = "Deals: Contact deal updated | mautic_id: ".( $data[ "id" ] ?? 0 )." | pipedrive_id: ".( $data[ "pd_org_id" ] ?? 0 );
+        $message = "Deals: Contact deal updated | mautic_id: " . ( $data[ "id" ] ?? 0 ) . " | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         echo $message;
@@ -559,7 +559,7 @@ class MauticIntegration
         // If there are errors in the response, log them and exit the function.
         if ( isset( $response[ "errors" ] ) )
         {
-            $message = "Persons: Create or Update failed | mautic_id: {$entity_id} | pipedrive_id: ".( $data[ "pd_org_id" ] ?? 0 );
+            $message = "Persons: Create or Update failed | mautic_id: {$entity_id} | pipedrive_id: " . ( $data[ "pd_org_id" ] ?? 0 );
 
             log_message( channel: self::LOG_CHANNEL, message: $message, context: $response );
             echo $message;
@@ -590,7 +590,7 @@ class MauticIntegration
     private static function updateMauticId( string $entity_type, int $mautic_id, int $pipedrive_id, bool $has_id ) : void
     {
         // Log the creation or update action in the 'marketplace' channel.
-        $message = ucfirst( $entity_type ).": created/updated | mautic_id: {$mautic_id} | pipedrive_id: {$pipedrive_id}";
+        $message = ucfirst( $entity_type ) . ": created/updated | mautic_id: {$mautic_id} | pipedrive_id: {$pipedrive_id}";
 
         log_message( channel: self::LOG_CHANNEL, message: $message );
         echo $message;
@@ -674,8 +674,8 @@ class MauticIntegration
             {
                 // Return an associative array with combined 'value' and 'label' keys.
                 return [
-                    "value" => $stage[ "value" ].":".$label[ 0 ],
-                    "label" => $stage[ "label" ]." : ".$label,
+                    "value" => $stage[ "value" ] . ":" . $label[ 0 ],
+                    "label" => $stage[ "label" ] . " : " . $label,
                 ];
             }, $labels ) );
         } );

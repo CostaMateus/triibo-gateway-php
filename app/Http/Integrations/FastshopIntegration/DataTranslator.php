@@ -82,7 +82,7 @@ class DataTranslator
                 $slas = reset( $logisticsInfo[ "slas" ] );
                 $hubValue = $slas[ "id" ];
                 $hubParts = explode( "_", $hubValue );
-                $shippingClass = "fast-shop-".end( $hubParts );
+                $shippingClass = "fast-shop-" . end( $hubParts );
 
                 // Update the quantity and stock status based on the available balance.
                 $quantity = $logisticsInfo[ "stockBalance" ];
@@ -313,7 +313,7 @@ class DataTranslator
                     {
                         $error = [
                             "cep" => $data[ "postalCode" ],
-                            "sku" => "FS-".$data[ "items" ][ $lg[ "itemIndex" ] ][ "id" ],
+                            "sku" => "FS-" . $data[ "items" ][ $lg[ "itemIndex" ] ][ "id" ],
                             "hub" => $hub,
                         ];
 
@@ -338,7 +338,7 @@ class DataTranslator
 
                     // Add the logistics information for the current item.
                     $logistics = [
-                        "sku" => "FS-".$item[ "id" ],
+                        "sku" => "FS-" . $item[ "id" ],
                         "quantity" => $lg[ "quantity" ],
                         "stock" => $stock,
                         "deliveryPrice" => convert_price( $price ),
@@ -393,7 +393,7 @@ class DataTranslator
             foreach ( $data[ "items" ] as $product )
             {
                 $logistics = [
-                    "sku" => "FS-".$product[ "id" ],
+                    "sku" => "FS-" . $product[ "id" ],
                     "quantity" => $product[ "quantity" ],
                     "stock" => 0,
                     "deliveryPrice" => "0.00",
@@ -534,7 +534,7 @@ class DataTranslator
                 "logisticsInfo" => $logisticsInfo,
                 "address" => [
                     "addressType" => "Desconhecido",
-                    "receiverName" => $shipping[ "first_name"   ]." ".$shipping[ "last_name" ],
+                    "receiverName" => $shipping[ "first_name"   ] . " " . $shipping[ "last_name" ],
                     "postalCode" => $shipping[ "postcode"     ],
                     "street" => $shipping[ "address_1"    ],
                     "number" => $shipping[ "number"       ],
@@ -569,7 +569,7 @@ class DataTranslator
 
         // Adds the corresponding error message for the code, if it exists.
         if ( isset( $errorMessages[ $code ] ) )
-            $message .= "\n".$errorMessages[ $code ];
+            $message .= "\n" . $errorMessages[ $code ];
 
         // Appends SKU-specific error messages.
         foreach ( $data[ "sku" ] as $error )
@@ -647,7 +647,7 @@ class DataTranslator
             "orderId" => $orderId,
             "subOrderId" => $subOrderId,
             "customer_id" => $customerId,
-            "name" => $billing[ "first_name" ]." ".$billing[ "last_name" ],
+            "name" => $billing[ "first_name" ] . " " . $billing[ "last_name" ],
             "email" => $billing[ "email"      ],
             "phone" => $billing[ "phone"      ],
         ];

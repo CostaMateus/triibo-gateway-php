@@ -276,7 +276,7 @@ class SocialSoulController extends Controller
                     $aux = "";
                     array_shift( $descrip );
 
-                    foreach ( $descrip as $value ) $aux .= "\n\n#".$value;
+                    foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
 
                     $store[ "descricao" ] .= $aux;
                 }
@@ -390,7 +390,7 @@ class SocialSoulController extends Controller
                         $aux = "";
                         array_shift( $descrip );
 
-                        foreach ( $descrip as $value ) $aux .= "\n\n#".$value;
+                        foreach ( $descrip as $value ) $aux .= "\n\n#" . $value;
 
                         $promo[ "description" ] .= $aux;
                     }
@@ -455,7 +455,7 @@ class SocialSoulController extends Controller
             {
                 $uploader = $bucket->getResumableUploader(
                     fopen( "{$lc_path}/{$img}", "r" ),
-                    ["name" => $fb_path.$img]
+                    ["name" => $fb_path . $img]
                 );
 
                 try
