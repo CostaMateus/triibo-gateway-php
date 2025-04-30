@@ -20,7 +20,7 @@ class DeleteFastShopData extends Command
      *
      * @var string
      */
-    protected $signature = "mkt:delete_fs_data {--option=images : Options: images, products } {--meta} {--fix} {--outofstock}";
+    protected $signature = "mkt:delete_fs_data {--option= : Options: images, products } {--meta} {--fix} {--outofstock}";
 
     /**
      * The console command description.
@@ -106,9 +106,16 @@ class DeleteFastShopData extends Command
             "products" => "product",
             "image" => "attachment",
             "images" => "attachment",
+            default => null,
         };
 
-        $this->log_message( message: "Starting process, {$option}" );
+        $this->log_message( message: "Starting process" );
+        $this->log_message( message: implode( " ", [
+            "--option:" . ( $option ?: "null" ) ,
+            "--meta:" . ( $meta ?: "false" ) ,
+            "--fix:" . ( $fix ?: "false" ) ,
+            "--outofstock:" . ( $outofstock ?: "false" ),
+        ] ) );
 
         $db = "dev-mkt";
         $this->url = "https://dev-marketplace.triibo.com.br" . $this->url_sufix;
@@ -126,7 +133,7 @@ class DeleteFastShopData extends Command
 
         try
         {
-            if ( ! in_array( true, [$meta, $fix, $outofstock] ) )
+            if ( ! is_null( $option ) && ! in_array( true, [$meta, $fix, $outofstock] ) )
             {
                 $unfinished = true;
                 $response = null;
