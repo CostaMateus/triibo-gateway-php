@@ -215,7 +215,11 @@ class ProcessProducts extends Command
                 else
                 {
                     DB::rollBack();
-                    $this->logMessage( message: "VTEX Products: Fail processing {$i} of {$count} notifications" );
+                    $this->logMessage(
+                        message: "VTEX Products: Fail processing {$i} of {$count} notifications",
+                        context: $chunk->toArray(),
+                        type: "error"
+                    );
                 }
             }
             catch ( Throwable $e )
