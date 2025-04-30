@@ -69,8 +69,8 @@ class CofryIntegration
         array_multisort( $keys, SORT_ASC, $promotions );
 
         // Define the path for the common promotion image.
-        $cupom_path = public_path( "images" )."/cupom.png";
-        $promotion_path = public_path( "images/promos" )."/common_promotion.png";
+        $cupom_path = public_path( "images" ) . "/cupom.png";
+        $promotion_path = public_path( "images/promos" ) . "/common_promotion.png";
 
         // Copy the common promotion image to the promotions directory if it doesn't exist.
         if ( ! file_exists( $promotion_path ) )
@@ -202,7 +202,7 @@ class CofryIntegration
 
         // If the logo filename is not empty, use it; otherwise, use 'standard.png'.
         // Prepend the provided prefix to the filename.
-        return $prefix.( basename( $logo ) ?: "standard.png" );
+        return $prefix . ( basename( $logo ) ?: "standard.png" );
     }
 
     /**
@@ -222,15 +222,15 @@ class CofryIntegration
         $about = str_replace( "  ", " ", trim( $about ) );
 
         // Start with the 'about' section, ensuring it has no leading/trailing whitespace.
-        $description = ( $about ? $about."\n\n" : "" ).$general_rules;
+        $description = ( $about ? $about . "\n\n" : "" ) . $general_rules;
 
         // If 'additional_rules' is provided, append it separated by two newlines.
         if ( $additional_rules )
-            $description .= "\n\n".$additional_rules;
+            $description .= "\n\n" . $additional_rules;
 
         // If 'specific_rules' is provided, append it separated by two newlines.
         if ( $specific_rules )
-            $description .= "\n\n".$specific_rules;
+            $description .= "\n\n" . $specific_rules;
 
         // Return the combined description.
         return $description;
@@ -255,7 +255,7 @@ class CofryIntegration
 
         // Check for JSON decoding errors and throw an exception if necessary.
         if ( json_last_error() !== JSON_ERROR_NONE )
-            throw new Exception( "Func prepareRules(). Error decoding JSON rules: ".json_last_error_msg() );
+            throw new Exception( "Func prepareRules(). Error decoding JSON rules: " . json_last_error_msg() );
 
         // Replace HTML list tags with plain text formatting.
         $search = ["<ol><li>", "</li></ol>", "</li><li>"];
@@ -489,7 +489,7 @@ class CofryIntegration
         foreach ( $data as $establishment )
         {
             // Concatenate the prefix with the establishment UUID to create a unique ID.
-            $id = $prefix_cofry.$establishment[ "uuid" ];
+            $id = $prefix_cofry . $establishment[ "uuid" ];
 
             // Trim the name of the advertiser.
             $name = trim( $establishment[ "Advertiser" ] );
@@ -571,12 +571,12 @@ class CofryIntegration
         foreach ( $data as $establishment )
         {
             // Construct the establishment ID by appending the establishment UUID to the Cofry prefix.
-            $establishment_id = $prefix_cofry.$establishment[ "uuid" ];
+            $establishment_id = $prefix_cofry . $establishment[ "uuid" ];
 
             // Remove non-word characters and transliterate to ASCII, then remove spaces to form the promotion ID.
             $aux_advertiser = preg_replace( "/[^\w\s]/", "", iconv( "UTF-8", "ASCII//TRANSLIT//IGNORE", $establishment[ "Advertiser" ] ) );
             $promotion_id = mb_strtolower( str_replace( " ", "", str_replace( "\t", "", $aux_advertiser ) ) );
-            $id = $establishment_id.$promotion_id;
+            $id = $establishment_id . $promotion_id;
 
             // Trim the advertiser's name to remove any extra whitespace.
             $name = trim( $establishment[ "Advertiser" ] );
@@ -604,8 +604,8 @@ class CofryIntegration
                 "partnerPromotionId" => $promotion_id,
                 "establishmentId" => $establishment_id,
                 "establishmentName" => $name,
-                "title" => "Ganhe ".$cashback."% de volta!",
-                "detailsTitle" => "Ganhe ".$cashback."% de volta!",
+                "title" => "Ganhe " . $cashback . "% de volta!",
+                "detailsTitle" => "Ganhe " . $cashback . "% de volta!",
                 "description" => $about,
                 "detailsDescription" => $description,
                 "enableDate" => self::$date_enable,
@@ -661,11 +661,11 @@ class CofryIntegration
         foreach ( $data as $promotion )
         {
             // Construct the establishment ID by appending the promotion UUID to the Cofry prefix.
-            $establishment_id = $prefix_cofry.$promotion[ "uuid" ];
+            $establishment_id = $prefix_cofry . $promotion[ "uuid" ];
             // Remove any periods from the promotion ID.
             $promotion_id = str_replace( ".", "", $promotion[ "ProductAPIID" ] );
             // Concatenate the establishment ID and promotion ID to form a unique identifier.
-            $id = $establishment_id.$promotion_id;
+            $id = $establishment_id . $promotion_id;
 
             // Format the cashback percentage as a string without decimals.
             $cashback = number_format( (float) $promotion[ "CashbackClient" ], $promotion[ "CashbackFormat" ], ",", "" );
@@ -707,8 +707,8 @@ class CofryIntegration
                 "partnerPromotionId" => $promotion_id,
                 "establishmentId" => $establishment_id,
                 "establishmentName" => $name,
-                "title" => "Ganhe ".$cashback."% de volta!",
-                "detailsTitle" => "Ganhe ".$cashback."% de volta!",
+                "title" => "Ganhe " . $cashback . "% de volta!",
+                "detailsTitle" => "Ganhe " . $cashback . "% de volta!",
                 "description" => $item_title,
                 "detailsDescription" => "{$item_title}\n\nUtilize o código de desconto {$code} no fechamento da compra.",
                 "checkoutCode" => $code,

@@ -99,13 +99,13 @@ class InsertFastShopSkus extends Command
 
         $wc_products = $this->translateProducts( products: $fs_products );
 
-        $message = "{$this->prefix} Inserting in local, ".count( $wc_products )." products...";
+        $message = "{$this->prefix} Inserting in local, " . count( $wc_products ) . " products...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
         $this->createLocalProduct( products: $wc_products );
 
-        $message = "{$this->prefix} Sending to marketplace, ".count( $wc_products )." products...";
+        $message = "{$this->prefix} Sending to marketplace, " . count( $wc_products ) . " products...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
 
@@ -126,7 +126,7 @@ class InsertFastShopSkus extends Command
             foreach ( $products as $sku => $product )
             {
                 $s = mb_str_pad( $sku, 5, " ", STR_PAD_LEFT );
-                $message = "{$this->prefix}: sku {$s} | ".$product[ "data" ][ "Name" ];
+                $message = "{$this->prefix}: sku {$s} | " . $product[ "data" ][ "Name" ];
 
                 log_message( channel: self::LOG_CHANNEL, message: $message );
                 $this->info( string: $message );

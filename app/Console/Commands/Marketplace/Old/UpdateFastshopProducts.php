@@ -94,7 +94,7 @@ class UpdateFastshopProducts extends Command
             if ( next( $hubs ) === true ) $msg .= ", ";
         }
 
-        echo "Performing update to HUBs [{$msg}] with stock_status ".mb_strtoupper( $stock )."\n";
+        echo "Performing update to HUBs [{$msg}] with stock_status " . mb_strtoupper( $stock ) . "\n";
 
         // PERFORMING
         foreach ( $hubs as $i => $hub )
@@ -184,7 +184,7 @@ class UpdateFastshopProducts extends Command
                         {
                             $value = $data[ "data" ][ "hub" ];
                             $p_hub = explode( "_", $data[ "data" ][ "hub" ] );
-                            $class = "fast-shop-".end( $p_hub );
+                            $class = "fast-shop-" . end( $p_hub );
                         }
 
                         if ( $class === "fast-shop" )
@@ -256,7 +256,7 @@ class UpdateFastshopProducts extends Command
             }
             catch ( Exception $e )
             {
-                echo $e->getMessage()."\n";
+                echo $e->getMessage() . "\n";
             }
 
             echo "HUB {$i} finished\n\n";

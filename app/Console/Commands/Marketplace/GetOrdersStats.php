@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Exception;
 use Illuminate\Console\Command;
 use App\Models\Marketplace\Order;
 use Codexshaper\WooCommerce\Facades\Order as Wc_Order;
-use Exception;
 
 class GetOrdersStats extends Command
 {
@@ -36,13 +36,13 @@ class GetOrdersStats extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle() : void
     {
         $start = now();
 
         $this->logMessage( message: "{$this->prefix} Starting process WC Orders stats..." );
 
-        $ids = Order::select( [ "id", "mkt_id", "ord_price" ] )
+        $ids = Order::select( ["id", "mkt_id", "ord_price"] )
             ->where( "ord_status", "approved" )
             ->whereNull( "ord_price" )
             ->get()
@@ -55,19 +55,19 @@ class GetOrdersStats extends Command
 
             try
             {
-                $wc_order   = Wc_Order::find( $mkt_id );
+                $wc_order = Wc_Order::find( $mkt_id );
 
                 $created_at = str_replace( "T", " ", $wc_order[ "date_created" ] );
-                $total      = (float) $wc_order[ "total" ];
-                $shipping   = (float) $wc_order[ "shipping_total" ];
-                $price      = $total - $shipping;
+                $total = (float) $wc_order[ "total" ];
+                $shipping = (float) $wc_order[ "shipping_total" ];
+                $price = $total - $shipping;
 
-                $order      = Order::whereId( $id )
-                ->update( [
-                    "ord_price" => $price,
-                    "ord_shipping" => $shipping,
-                    "ord_created_at" => $created_at,
-                ] );
+                $order = Order::whereId( $id )
+                    ->update( [
+                        "ord_price" => $price,
+                        "ord_shipping" => $shipping,
+                        "ord_created_at" => $created_at,
+                    ] );
 
                 $this->logMessage( message: "{$this->prefix} Order {$id}:{$mkt_id} updated..." );
             }

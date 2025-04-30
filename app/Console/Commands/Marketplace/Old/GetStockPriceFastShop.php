@@ -244,7 +244,7 @@ class GetStockPriceFastShop extends Command
                 $key = array_search( $index, array_column( $items, "requestIndex" ) );
                 $item = $items[ $key ];
 
-                $sku = "FS-".$item[ "id" ];
+                $sku = "FS-" . $item[ "id" ];
                 $regular = $item[ "listPrice"    ];
                 $sale = $item[ "price"        ];
                 $stock = $info[ "stockBalance" ];

@@ -86,7 +86,7 @@ class FixProducts extends Command
                 // ];
                 $delete[] = $product->id;
 
-                $this->info( "delete: ".mb_str_pad( $product->id, 6, " ", STR_PAD_LEFT ) );
+                $this->info( "delete: " . mb_str_pad( $product->id, 6, " ", STR_PAD_LEFT ) );
 
                 if ( count( $delete ) === 100 )
                 {

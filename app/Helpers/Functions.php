@@ -721,12 +721,10 @@ if ( ! function_exists( "get_csv_content" ) )
         }, explode( "\n", $content ) );
 
         // Clean empty lines
-        $data = array_filter( $data, static function ( $row )
+        return array_filter( $data, static function ( $row )
         {
             return ! empty( array_filter( $row ) );
         } );
-
-        return $data;
     }
 }
 
@@ -763,7 +761,7 @@ if ( ! function_exists( "process_csv_file" ) )
 
             $original_content = file_get_contents( $temp_path );
 
-            $encoding = mb_detect_encoding( $original_content, [ "UTF-8", "ISO-8859-1", "Windows-1252", "ASCII" ], true );
+            $encoding = mb_detect_encoding( $original_content, ["UTF-8", "ISO-8859-1", "Windows-1252", "ASCII"], true );
 
             $utf8_content = ( $encoding !== "UTF-8" )
                 ? mb_convert_encoding( $original_content, "UTF-8", $encoding )
@@ -857,7 +855,7 @@ if ( ! function_exists( "process_csv_file" ) )
 if ( ! function_exists( "export_csv_file" ) )
 {
     /**
-     * @param array $data
+     * @param array  $data
      * @param string $file_name
      *
      * @return BinaryFileResponse

@@ -63,7 +63,7 @@ class Helper
             {
                 if ( $lbl["id"] === (int) $label )
                 {
-                    $resp = "{$id}:".$lbl["label"];
+                    $resp = "{$id}:" . $lbl["label"];
 
                     break;
                 }
@@ -178,7 +178,7 @@ class Helper
         {
             if ( $tag === "Cofry" ) continue;
 
-            $tag = "\n#cofry_".Str::slug( $tag, "_" );
+            $tag = "\n#cofry_" . Str::slug( $tag, "_" );
             $desc .= $tag;
         }
 
@@ -225,10 +225,10 @@ class Helper
         if ( $volt_attr )
         {
             $val = reset( $volt_attr[ "options" ] );
-            $val = in_array( $val, ["110", "220"] ) ? $val."V" : $val;
+            $val = in_array( $val, ["110", "220"] ) ? $val . "V" : $val;
 
             if ( $val !== "NA" )
-                $short .= "\r\n\r\n".Str::ucfirst( "voltagem" )." : {$val}";
+                $short .= "\r\n\r\n" . Str::ucfirst( "voltagem" ) . " : {$val}";
         }
 
         return $short;

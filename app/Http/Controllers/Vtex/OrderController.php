@@ -108,7 +108,7 @@ class OrderController extends VtexController
 
                     if ( $status[ "description" ] === "Entrega realizada" )
                     {
-                        $message = "ENTREGA REALIZADA\n".convert_delivery_date( $courier[ "deliveredDate" ] );
+                        $message = "ENTREGA REALIZADA\n" . convert_delivery_date( $courier[ "deliveredDate" ] );
 
                         update_order_meta( parent::LOG_CHANNEL, $order_id, [
                             "status" => "completed",
@@ -190,7 +190,7 @@ class OrderController extends VtexController
 
             $message = "PEDIDO CANCELADO PELA FAST SHOP\n";
             $message .= "{$request->reason}\n";
-            $message .= date( "d/m/Y à\s H:i:s" )."\n";
+            $message .= date( "d/m/Y à\s H:i:s" ) . "\n";
 
             // Create cancellation note
             create_order_note( parent::LOG_CHANNEL, $order_id, $message );
@@ -344,7 +344,7 @@ class OrderController extends VtexController
             ] );
 
             // Create creation note
-            create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO CRIADO NA FAST SHOP:\n#".$response[ "data" ][ "operationId" ] );
+            create_order_note( parent::LOG_CHANNEL, $order_id, "PEDIDO CRIADO NA FAST SHOP:\n#" . $response[ "data" ][ "operationId" ] );
 
             return response()->json( [
                 "error_code" => null,
@@ -528,7 +528,7 @@ class OrderController extends VtexController
                 $code = $response[ "error_code" ];
                 $message = "Pedido não cancelado.\n";
                 $message .= "Falha na recuperação do pedido na Fast Shop.\n";
-                $message .= $response[ "message" ]."\n";
+                $message .= $response[ "message" ] . "\n";
                 $message .= "Code: {$code}";
 
                 // Create error note
@@ -591,7 +591,7 @@ class OrderController extends VtexController
                 $code = $response[ "error_code" ];
                 $message = "Pedido não cancelado.\n";
                 $message .= "Falha ao informar a Fast Shop sobre o cancelamento do pedido.\n";
-                $message .= $response[ "message" ]."\n";
+                $message .= $response[ "message" ] . "\n";
                 $message .= "Code: {$code}";
 
                 // Create error note

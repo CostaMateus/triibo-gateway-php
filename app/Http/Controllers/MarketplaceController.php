@@ -183,7 +183,7 @@ class MarketplaceController extends Controller
             );
         }
 
-        $store_id = (int) config( key: "woocommerce.partners.".self::SELLER.".store_id" );
+        $store_id = (int) config( key: "woocommerce.partners." . self::SELLER . ".store_id" );
 
         $order = Order::where( "file_name", $request->file_name )
             ->where( "ord_id", $request->ord_id )
@@ -278,7 +278,7 @@ class MarketplaceController extends Controller
                 channel: self::LOG_CHANNEL,
                 route  : self::ROUTE,
                 type   : self::ERROR,
-                message: "{$order->ord_id}: ".$response[ "message" ]
+                message: "{$order->ord_id}: " . $response[ "message" ]
             );
         }
 
@@ -449,7 +449,7 @@ class MarketplaceController extends Controller
         create_order_note(
             channel : self::LOG_CHANNEL,
             order_id: $order->mkt_id,
-            message : "Pedido aprovado manualmente na FS por: ".auth()->user()->name." (integração)"
+            message : "Pedido aprovado manualmente na FS por: " . auth()->user()->name . " (integração)"
         );
 
         return log_and_redirect(
@@ -567,7 +567,7 @@ class MarketplaceController extends Controller
                 channel: self::LOG_CHANNEL,
                 route  : self::ROUTE,
                 type   : self::ERROR,
-                message: $order->ord_id." ".$response[ "message" ]
+                message: $order->ord_id . " " . $response[ "message" ]
             );
         }
 

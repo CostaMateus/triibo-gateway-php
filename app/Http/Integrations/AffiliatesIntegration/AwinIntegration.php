@@ -186,7 +186,7 @@ class AwinIntegration
                     // ->slice( 0, 10 )
                 ->map( function ( $establishment, $index ) use ( $count )
                 {
-                    $this->logger->log_message( message: "Establishments: Loading establishment ".++$index." of {$count} | ID ".$establishment[ "id" ] );
+                    $this->logger->log_message( message: "Establishments: Loading establishment " . ++$index . " of {$count} | ID " . $establishment[ "id" ] );
 
                     $establishment[ "commissionRange" ] = $this->searchEstablishmentsDetails( id: $establishment[ "id" ] );
 
@@ -343,7 +343,7 @@ class AwinIntegration
      */
     private static function saveImage( string $path, string $image_name, string $url ) : bool
     {
-        $full_path = public_path( path: "images/affiliates/awin/{$path}" )."/{$image_name}";
+        $full_path = public_path( path: "images/affiliates/awin/{$path}" ) . "/{$image_name}";
 
         try
         {
@@ -618,7 +618,7 @@ class AwinIntegration
 
         $query = "?startDate={$start}";
         $query .= "&endDate={$end}";
-        $query .= "&timezone=".self::TZ;
+        $query .= "&timezone=" . self::TZ;
         $query .= ( $is_update ) ? "&dateType=validation" : "&dateType=transaction&status=pending";
 
         $this->logger->log_message( message: "Reports: Start search reports..." );
@@ -864,7 +864,7 @@ class AwinIntegration
         {
             $name = explode( " BR", $establishment[ "name" ] )[ 0 ];
 
-            $id = $establishment[ "id" ].mb_strtolower( str_replace( " ", "", Str::slug( title: $name, separator: "" ) ) );
+            $id = $establishment[ "id" ] . mb_strtolower( str_replace( " ", "", Str::slug( title: $name, separator: "" ) ) );
 
             $cashback = "";
 
@@ -939,7 +939,7 @@ class AwinIntegration
 
         foreach ( $data as $promotion )
         {
-            $id = $promotion[ "advertiser" ][ "id" ].$promotion[ "promotionId" ];
+            $id = $promotion[ "advertiser" ][ "id" ] . $promotion[ "promotionId" ];
 
             $name = explode( " BR", $promotion[ "advertiser" ][ "name" ] )[ 0 ];
 
@@ -962,9 +962,9 @@ class AwinIntegration
             ];
 
             if ( $promotion[ "type" ] === "voucher" )
-                $details_descrip[] = "Utilize o código de desconto ".$promotion[ "voucher" ][ "code" ]." no fechamento da compra.";
+                $details_descrip[] = "Utilize o código de desconto " . $promotion[ "voucher" ][ "code" ] . " no fechamento da compra.";
 
-            $details_descrip[] = "Válido até ".convert_date( date: $promotion[ "endDate" ] );
+            $details_descrip[] = "Válido até " . convert_date( date: $promotion[ "endDate" ] );
 
             $url = $this->urlTracking( id: $promotion[ "advertiser" ][ "id" ], url: $promotion[ "url" ] );
 
