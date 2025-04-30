@@ -52,27 +52,63 @@ class ProductController extends VtexController
 
         try
         {
-            $product = Product::where( "sku", $vtex_data[ "IdSku" ] )->where( "origin", $origin )->first();
+            // $vtex_data_example = [
+            //     "IdSku" => "15811",
+            //     "An" => "fastshopbr",
+            //     "IdAffiliate" => "TRB",
+            //     "ProductId" => 15242,
+            //     "DateModified" => "2025-04-30T14:47:33.8537266Z",
+            //     "IsActive" => true,
+            //     "StockModified" => true,
+            //     "PriceModified" => false,
+            //     "HasStockKeepingUnitModified" => false,
+            //     "HasStockKeepingUnitRemovedFromAffiliate" => false,
+            //     "Attempt" => 1
+            // ];
+
+            $action = "";
+            $description = "";
+
+            $product = DB::table( "marketplace_product_skus" )->where( "metadata_id", $vtex_data[ "IdSku" ] )->first();
 
             if ( ! $product )
             {
-                $create = [
-                    "sku" => $vtex_data[ "IdSku" ],
-                    "origin" => $origin,
-                    "action" => "create",
-                    "status" => "unprocessed",
-                    "meta" => json_encode( $vtex_data ),
-                ];
-
-                Product::create( $create );
+                $action = "create";
+                $description = "New SKU to create.";
             }
             else
             {
-                $product->action = ( $vtex_data[ "IsActive" ] === true ) ? "update" : "disable";
-                $product->status = "unprocessed";
-                $product->meta = json_encode( $vtex_data );
-                $product->save();
+                if ( $vtex_data[ "HasStockKeepingUnitRemovedFromAffiliate" ] )
+                {
+                    $action = "disable";
+                    $description = "SKU removed from affiliate.";
+                }
+                else
+                {
+                    $action = "update";
+
+                    if ( $vtex_data[ "HasStockKeepingUnitModified" ] )
+                        $description .= "Data has changed. ";
+
+                    if ( $vtex_data[ "StockModified" ] )
+                        $description .= "Stock has changed. ";
+
+                    if ( $vtex_data[ "PriceModified" ] )
+                        $description .= "Price has changed. ";
+
+                    if ( ! $vtex_data[ "IsActive" ] )
+                        $description .= "SKU is inactive. ";
+                }
             }
+
+            Product::create( [
+                "sku" => $vtex_data[ "IdSku" ],
+                "origin" => $origin,
+                "action" => $action,
+                "status" => "unprocessed",
+                "description" => trim( $description ),
+                "meta" => json_encode( $vtex_data ),
+            ] );
         }
         catch ( Throwable $e )
         {
