@@ -111,9 +111,9 @@ class DeleteFastShopData extends Command
 
         $this->log_message( message: "Starting process" );
         $this->log_message( message: implode( " ", [
-            "--option:" . ( $option ?: "null" ) ,
-            "--meta:" . ( $meta ?: "false" ) ,
-            "--fix:" . ( $fix ?: "false" ) ,
+            "--option:" . ( $option ?: "null" ),
+            "--meta:" . ( $meta ?: "false" ),
+            "--fix:" . ( $fix ?: "false" ),
             "--outofstock:" . ( $outofstock ?: "false" ),
         ] ) );
 
@@ -133,7 +133,7 @@ class DeleteFastShopData extends Command
 
         try
         {
-            if ( ! is_null( $option ) && ! in_array( true, [$meta, $fix, $outofstock] ) )
+            if ( $option !== null && ! in_array( true, [$meta, $fix, $outofstock] ) )
             {
                 $unfinished = true;
                 $response = null;
