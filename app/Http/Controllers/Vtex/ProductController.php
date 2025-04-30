@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Vtex;
 
 use Throwable;
 use App\Models\Vtex\Product;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\{JsonResponse, Request};
 
 class ProductController extends VtexController
