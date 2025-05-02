@@ -99,7 +99,7 @@ class ProcessProducts extends Command
     {
         $start = now();
         $this->logMessage( message: "============================================" );
-        $this->logMessage( message: "{$this->prefix} Starting process Vtex data..." );
+        $this->logMessage( message: "Starting process Vtex data..." );
 
         $seller = $this->option( key: "seller" );
 
@@ -115,7 +115,7 @@ class ProcessProducts extends Command
 
         if ( $notifications->isEmpty() )
         {
-            $this->logMessage( message: "{$this->prefix} No notification to process..." );
+            $this->logMessage( message: "No notification to process..." );
             $this->logRuntimeAndFinish( start: $start );
 
             return Command::SUCCESS;
@@ -124,17 +124,40 @@ class ProcessProducts extends Command
         $this->initializeServices( seller: $seller );
         $this->loadWcProducts();
 
-        $this->logMessage( message: "{$this->prefix} Processing Vtex notifications..." );
+        $this->logMessage( message: "Processing Vtex notifications..." );
 
         $this->processNotificationsChunks( notifications: $notifications );
 
-        $this->logMessage( message: "{$this->prefix} Finished data process..." );
+        $this->logMessage( message: "Finished data process..." );
 
         $this->logRuntimeAndFinish( start: $start );
 
         Artisan::call( command: "mkt:delete_fs_data --meta" );
 
         return Command::SUCCESS;
+    }
+
+    /**
+     * Log message with consistent format
+     *
+     * @param string $message
+     * @param string $type
+     * @param array  $context
+     *
+     * @return void
+     */
+    private function logMessage( string $message, string $type = "info", array $context = [] ) : void
+    {
+        $message = "{$this->prefix} {$message}";
+
+        log_message(
+            channel: self::LOG_CHANNEL,
+            message: $message,
+            level  : $type,
+            context: $context
+        );
+
+        $this->{$type}( string: $message );
     }
 
     /**
@@ -215,13 +238,13 @@ class ProcessProducts extends Command
                 if ( $success )
                 {
                     DB::commit();
-                    $this->logMessage( message: "{$this->prefix} Processed {$i} of {$count} notifications" );
+                    $this->logMessage( message: "Processed {$i} of {$count} notifications" );
                 }
                 else
                 {
                     DB::rollBack();
                     $this->logMessage(
-                        message: "{$this->prefix} Fail processing {$i} of {$count} notifications",
+                        message: "Fail processing {$i} of {$count} notifications",
                         context: $chunk->toArray(),
                         type: "error"
                     );
@@ -247,7 +270,7 @@ class ProcessProducts extends Command
     {
         $diff = $start->diffInMinutes( date: now() );
 
-        $this->logMessage( message: "{$this->prefix} Runtime {$diff} minutes..." );
+        $this->logMessage( message: "Runtime {$diff} minutes..." );
     }
 
     /**
@@ -257,13 +280,13 @@ class ProcessProducts extends Command
      */
     private function loadWcProducts() : void
     {
-        $this->logMessage( message: "{$this->prefix} Loading marketplace products..." );
+        $this->logMessage( message: "Loading marketplace products..." );
 
         $this->wc_products = DB::table( "marketplace_product_skus" )->where( "store_id", $this->store_id )->get();
 
         $count = $this->wc_products->count();
 
-        $this->logMessage( message: "{$this->prefix} {$count} products loaded..." );
+        $this->logMessage( message: "{$count} products loaded..." );
     }
 
     /**
@@ -273,7 +296,7 @@ class ProcessProducts extends Command
      */
     private function batchMarketplaceProduct() : bool
     {
-        $this->logMessage( message: "{$this->prefix} Updating marketplace products..." );
+        $this->logMessage( message: "Updating marketplace products..." );
 
         $chunks = $this->prepareBatchChunks();
 
@@ -283,7 +306,7 @@ class ProcessProducts extends Command
         {
             $group = ( $key + 1 ) . " of {$total_count}";
 
-            $this->logMessage( message: "{$this->prefix} Updating marketplace products, {$group}" );
+            $this->logMessage( message: "Updating marketplace products, {$group}" );
 
             if ( empty( $chunk["create"] ) && empty( $chunk["update"] ) && empty( $chunk["delete"] ) )
                 continue;
@@ -381,7 +404,7 @@ class ProcessProducts extends Command
      */
     private function deleteProcessed() : void
     {
-        $this->logMessage( message: "{$this->prefix} Deleting completed processes..." );
+        $this->logMessage( message: "Deleting completed processes..." );
 
         ProductNotification::whereIn( "id", $this->update_local )->delete();
     }
@@ -393,7 +416,7 @@ class ProcessProducts extends Command
      */
     private function createLocalWcProducts() : bool
     {
-        $this->logMessage( message: "{$this->prefix} Creating local WC products..." );
+        $this->logMessage( message: "Creating local WC products..." );
 
         foreach ( $this->batch_wc["create"] as $product )
         {
@@ -446,7 +469,7 @@ class ProcessProducts extends Command
      */
     private function processNotification( ProductNotification $notification ) : void
     {
-        $this->logMessage( message: "{$this->prefix} Processing notification SKU {$notification->sku}, with action {$notification->action}...", context: $notification->toArray() );
+        $this->logMessage( message: "Processing notification SKU {$notification->sku}, with action {$notification->action}...", context: $notification->toArray() );
 
         $wc_product = $this->searchProduct( id: $notification->sku );
 
@@ -809,26 +832,5 @@ class ProcessProducts extends Command
 
             return null;
         }
-    }
-
-    /**
-     * Log message with consistent format
-     *
-     * @param string $message
-     * @param string $type
-     * @param array  $context
-     *
-     * @return void
-     */
-    private function logMessage( string $message, string $type = "info", array $context = [] ) : void
-    {
-        log_message(
-            channel: self::LOG_CHANNEL,
-            message: $message,
-            level  : $type,
-            context: $context
-        );
-
-        $this->{$type}( string: $message );
     }
 }
