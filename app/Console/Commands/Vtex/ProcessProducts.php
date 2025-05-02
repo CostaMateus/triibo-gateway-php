@@ -18,6 +18,11 @@ class ProcessProducts extends Command
     protected const LOG_CHANNEL = "marketplace";
 
     /**
+     * @var string
+     */
+    protected $prefix = "VTEX Notifications:";
+
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -94,7 +99,7 @@ class ProcessProducts extends Command
     {
         $start = now();
         $this->logMessage( message: "============================================" );
-        $this->logMessage( message: "VTEX Products: Starting process Vtex data..." );
+        $this->logMessage( message: "{$this->prefix} Starting process Vtex data..." );
 
         $seller = $this->option( key: "seller" );
 
@@ -106,11 +111,11 @@ class ProcessProducts extends Command
         }
 
         $origin = $this->allowed_sellers[$seller];
-        $products = ProductNotification::where( "status", "unprocessed" )->where( "origin", $origin )->get();
+        $notifications = ProductNotification::where( "status", "unprocessed" )->where( "origin", $origin )->get();
 
-        if ( $products->isEmpty() )
+        if ( $notifications->isEmpty() )
         {
-            $this->logMessage( message: "VTEX Products: No products to process..." );
+            $this->logMessage( message: "{$this->prefix} No notification to process..." );
             $this->logRuntimeAndFinish( start: $start );
 
             return Command::SUCCESS;
@@ -119,11 +124,11 @@ class ProcessProducts extends Command
         $this->initializeServices( seller: $seller );
         $this->loadWcProducts();
 
-        $this->logMessage( message: "VTEX Products: Processing Vtex notifications..." );
+        $this->logMessage( message: "{$this->prefix} Processing Vtex notifications..." );
 
-        $this->processProductChunks( products: $products );
+        $this->processNotificationsChunks( notifications: $notifications );
 
-        $this->logMessage( message: "VTEX Products: Finished data process..." );
+        $this->logMessage( message: "{$this->prefix} Finished data process..." );
 
         $this->logRuntimeAndFinish( start: $start );
 
@@ -143,7 +148,7 @@ class ProcessProducts extends Command
     {
         if ( ! isset( $this->allowed_sellers[$seller] ) )
         {
-            $this->logMessage( "VTEX Products: Seller not allowed..." );
+            $this->logMessage( "{$this->prefix} Seller not allowed..." );
 
             return false;
         }
@@ -175,16 +180,16 @@ class ProcessProducts extends Command
     /**
      * Process products in chunks
      *
-     * @param Collection $products
+     * @param Collection $notifications
      *
      * @return void
      */
-    private function processProductChunks( Collection $products ) : void
+    private function processNotificationsChunks( Collection $notifications ) : void
     {
-        $products_chunk = $products->chunk( 100 );
-        $count = count( $products_chunk );
+        $notifications_chunk = $notifications->chunk( 100 );
+        $count = count( $notifications_chunk );
 
-        foreach ( $products_chunk as $key => $chunk )
+        foreach ( $notifications_chunk as $key => $chunk )
         {
             $i = $key + 1;
 
@@ -192,11 +197,11 @@ class ProcessProducts extends Command
             {
                 DB::beginTransaction();
 
-                foreach ( $chunk as $product )
+                foreach ( $chunk as $notification )
                 {
-                    $this->processProduct( product: $product );
+                    $this->processNotification( notification: $notification );
 
-                    $this->update_local[] = $product->id;
+                    $this->update_local[] = $notification->id;
                 }
 
                 $success = $this->batchMarketplaceProduct();
@@ -210,13 +215,13 @@ class ProcessProducts extends Command
                 if ( $success )
                 {
                     DB::commit();
-                    $this->logMessage( message: "VTEX Products: Processed {$i} of {$count} notifications" );
+                    $this->logMessage( message: "{$this->prefix} Processed {$i} of {$count} notifications" );
                 }
                 else
                 {
                     DB::rollBack();
                     $this->logMessage(
-                        message: "VTEX Products: Fail processing {$i} of {$count} notifications",
+                        message: "{$this->prefix} Fail processing {$i} of {$count} notifications",
                         context: $chunk->toArray(),
                         type: "error"
                     );
@@ -242,7 +247,7 @@ class ProcessProducts extends Command
     {
         $diff = $start->diffInMinutes( date: now() );
 
-        $this->logMessage( message: "VTEX Products: Runtime {$diff} minutes..." );
+        $this->logMessage( message: "{$this->prefix} Runtime {$diff} minutes..." );
     }
 
     /**
@@ -252,13 +257,13 @@ class ProcessProducts extends Command
      */
     private function loadWcProducts() : void
     {
-        $this->logMessage( message: "VTEX Products: Loading marketplace products..." );
+        $this->logMessage( message: "{$this->prefix} Loading marketplace products..." );
 
         $this->wc_products = DB::table( "marketplace_product_skus" )->where( "store_id", $this->store_id )->get();
 
         $count = $this->wc_products->count();
 
-        $this->logMessage( message: "VTEX Products: {$count} products loaded..." );
+        $this->logMessage( message: "{$this->prefix} {$count} products loaded..." );
     }
 
     /**
@@ -268,7 +273,7 @@ class ProcessProducts extends Command
      */
     private function batchMarketplaceProduct() : bool
     {
-        $this->logMessage( message: "VTEX Products: Updating marketplace products..." );
+        $this->logMessage( message: "{$this->prefix} Updating marketplace products..." );
 
         $chunks = $this->prepareBatchChunks();
 
@@ -278,7 +283,7 @@ class ProcessProducts extends Command
         {
             $group = ( $key + 1 ) . " of {$total_count}";
 
-            $this->logMessage( message: "VTEX Products: Updating marketplace products, {$group}" );
+            $this->logMessage( message: "{$this->prefix} Updating marketplace products, {$group}" );
 
             if ( empty( $chunk["create"] ) && empty( $chunk["update"] ) && empty( $chunk["delete"] ) )
                 continue;
@@ -376,7 +381,7 @@ class ProcessProducts extends Command
      */
     private function deleteProcessed() : void
     {
-        $this->logMessage( message: "VTEX Products: Deleting completed processes..." );
+        $this->logMessage( message: "{$this->prefix} Deleting completed processes..." );
 
         ProductNotification::whereIn( "id", $this->update_local )->delete();
     }
@@ -388,7 +393,7 @@ class ProcessProducts extends Command
      */
     private function createLocalWcProducts() : bool
     {
-        $this->logMessage( message: "VTEX Products: Creating local WC products..." );
+        $this->logMessage( message: "{$this->prefix} Creating local WC products..." );
 
         foreach ( $this->batch_wc["create"] as $product )
         {
@@ -435,21 +440,21 @@ class ProcessProducts extends Command
     /**
      * Process a single product
      *
-     * @param Product $product
+     * @param ProductNotification $notification
      *
      * @return void
      */
-    private function processProduct( Product $product ) : void
+    private function processNotification( ProductNotification $notification ) : void
     {
-        $this->logMessage( message: "VTEX Products: Processing product SKU {$product->sku}, with action {$product->action}...", context: $product->toArray() );
+        $this->logMessage( message: "{$this->prefix} Processing notification SKU {$notification->sku}, with action {$notification->action}...", context: $notification->toArray() );
 
-        $wc_product = $this->searchProduct( id: $product->sku );
+        $wc_product = $this->searchProduct( id: $notification->sku );
 
-        match ( $product->action )
+        match ( $notification->action )
         {
             "disable" => $this->processDisableAction( $wc_product ),
-            "update" => $this->processUpdateAction( $product, $wc_product ),
-            "create" => $this->processCreateAction( $product, $wc_product ),
+            "update" => $this->processUpdateAction( $notification, $wc_product ),
+            "create" => $this->processCreateAction( $notification, $wc_product ),
         };
     }
 
@@ -471,17 +476,17 @@ class ProcessProducts extends Command
     /**
      * Process 'update' action
      *
-     * @param Product     $product
+     * @param ProductNotification     $notification
      * @param null|object $wc_product
      *
      * @return void
      */
-    private function processUpdateAction( Product $product, ?object $wc_product ) : void
+    private function processUpdateAction( ProductNotification $notification, ?object $wc_product ) : void
     {
         if ( empty( $wc_product ) )
             return;
 
-        $data = json_decode( $product->meta, true );
+        $data = json_decode( $notification->meta, true );
 
         if ( $data["HasStockKeepingUnitRemovedFromAffiliate"] )
         {
@@ -490,62 +495,62 @@ class ProcessProducts extends Command
             return;
         }
 
-        $product_data = $this->getProductData( sku: $product->sku, full: $data["HasStockKeepingUnitModified"] );
+        $product = $this->getProductData( sku: $notification->sku, full: $data["HasStockKeepingUnitModified"] );
 
-        if ( $product_data === false )
+        if ( $product === false )
         {
             $this->toUpdate( id: $wc_product->id, wc_id: $wc_product->product_id );
 
             return;
         }
 
-        if ( isset( $product_data["data"] ) )
+        if ( isset( $product["data"] ) )
         {
-            $product_data = vtex_product_to_mkt(
-                data    : $product_data["data"],
-                context : $product_data["context"],
-                simulate: $product_data["simulate"]
+            $product = vtex_product_to_mkt(
+                data    : $product["data"],
+                context : $product["context"],
+                simulate: $product["simulate"]
             );
         }
 
-        $product_data["id"] = $wc_product->product_id;
+        $product["id"] = $wc_product->product_id;
 
-        $this->batch_wc["update"][] = $product_data;
+        $this->batch_wc["update"][] = $product;
 
         $this->createOrUpdateLocalWcProduct( id: $wc_product->id, data: [
-            "regular_price" => $product_data["regular_price"],
-            "sale_price" => $product_data["sale_price"],
-            "stock_status" => $product_data["stock_status"],
+            "regular_price" => $product["regular_price"],
+            "sale_price" => $product["sale_price"],
+            "stock_status" => $product["stock_status"],
         ] );
     }
 
     /**
      * Process 'create' action
      *
-     * @param Product     $product
+     * @param ProductNotification     $notification
      * @param null|object $wc_product
      *
      * @return void
      */
-    private function processCreateAction( Product $product, $wc_product ) : void
+    private function processCreateAction( ProductNotification $notification, $wc_product ) : void
     {
         if ( ! empty( $wc_product ) )
             return;
 
-        $data = $this->getProductData( sku: $product->sku, create: true );
+        $data = $this->getProductData( sku: $notification->sku, create: true );
 
         if ( $data === null )
             return;
 
-        $data = vtex_product_to_mkt(
+        $product = vtex_product_to_mkt(
             data    : $data["data"],
             context : $data["context"],
             simulate: $data["simulate"]
         );
 
-        $this->batch_wc["create"][] = $data;
+        $this->batch_wc["create"][] = $product;
 
-        $this->createOrUpdateLocalWcProduct( data: $data );
+        $this->createOrUpdateLocalWcProduct( data: $product );
     }
 
     /**
@@ -557,12 +562,12 @@ class ProcessProducts extends Command
      */
     private function searchProduct( string $id ) : ?object
     {
-        $product = $this->wc_products->filter( callback: static function ( $product ) use ( $id )
+        $wc_product = $this->wc_products->filter( callback: static function ( $wc_product ) use ( $id )
         {
-            return $product->metadata_id === $id;
+            return $wc_product->metadata_id === $id;
         } );
 
-        return $product->isEmpty() ? null : $product->first();
+        return $wc_product->isEmpty() ? null : $wc_product->first();
     }
 
     /**
@@ -688,15 +693,15 @@ class ProcessProducts extends Command
                 if ( $response[0] !== 200 )
                     return;
 
-                $product = $response[1]["data"];
+                $data = $response[1]["data"];
 
-                if ( $product["IsActive"] === false && $product["IsProductActive"] === false )
+                if ( $data["IsActive"] === false && $data["IsProductActive"] === false )
                     return false;
 
-                if ( ! in_array( $this->sale_channel, $product["SalesChannels"] ) )
+                if ( ! in_array( $this->sale_channel, $data["SalesChannels"] ) )
                     return false;
 
-                return $product;
+                return $data;
             }
         );
     }
@@ -719,12 +724,12 @@ class ProcessProducts extends Command
                 if ( $response[0] !== 200 )
                     return;
 
-                $product = $response[1]["data"];
+                $data = $response[1]["data"];
 
-                if ( $product["IsActive"] === false )
+                if ( $data["IsActive"] === false )
                     return false;
 
-                return $product;
+                return $data;
             }
         );
     }
