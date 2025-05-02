@@ -3,8 +3,8 @@
 namespace App\Console\Commands\Vtex;
 
 use Throwable;
-use App\Models\Vtex\Product;
 use Illuminate\Console\Command;
+use App\Models\Vtex\ProductNotification;
 use Illuminate\Support\{Carbon, Collection};
 use Illuminate\Support\Facades\{Artisan, DB};
 use Codexshaper\WooCommerce\Facades\Product as WC_Product;
@@ -106,7 +106,7 @@ class ProcessProducts extends Command
         }
 
         $origin = $this->allowed_sellers[$seller];
-        $products = Product::where( "status", "unprocessed" )->where( "origin", $origin )->get();
+        $products = ProductNotification::where( "status", "unprocessed" )->where( "origin", $origin )->get();
 
         if ( $products->isEmpty() )
         {
@@ -378,7 +378,7 @@ class ProcessProducts extends Command
     {
         $this->logMessage( message: "VTEX Products: Deleting completed processes..." );
 
-        Product::whereIn( "id", $this->update_local )->delete();
+        ProductNotification::whereIn( "id", $this->update_local )->delete();
     }
 
     /**

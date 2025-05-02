@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Vtex;
 
 use Throwable;
-use App\Models\Vtex\Product;
 use Illuminate\Support\Facades\DB;
+use App\Models\Vtex\ProductNotification;
 use Illuminate\Http\{JsonResponse, Request};
 
 class ProductController extends VtexController
@@ -102,7 +102,7 @@ class ProductController extends VtexController
                 }
             }
 
-            Product::create( [
+            ProductNotification::create( [
                 "sku" => $vtex_data[ "IdSku" ],
                 "origin" => $origin,
                 "action" => $action,
