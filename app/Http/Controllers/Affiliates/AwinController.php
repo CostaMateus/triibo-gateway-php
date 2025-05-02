@@ -928,7 +928,7 @@ class AwinController extends Controller
 
         $this->logger->log_message(
             message : "Establishments: {$count} filtered from firebase...",
-            context : $establishments,
+            // context : $establishments,
         );
 
         return $establishments;
@@ -981,7 +981,7 @@ class AwinController extends Controller
 
         $this->logger->log_message(
             message : "Promotions: {$count} filtered from firebase...",
-            context : $promotions,
+            // context : $promotions,
         );
 
         return $promotions;
