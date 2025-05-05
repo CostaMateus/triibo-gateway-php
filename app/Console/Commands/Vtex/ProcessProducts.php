@@ -121,8 +121,6 @@ class ProcessProducts extends Command
             return Command::SUCCESS;
         }
 
-        Artisan::call( command: "mkt:delete_fs_data --meta" );
-
         $this->initializeServices( seller: $seller );
         $this->loadWcProducts();
 
