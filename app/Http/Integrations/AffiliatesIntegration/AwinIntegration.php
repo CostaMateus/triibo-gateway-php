@@ -704,8 +704,8 @@ class AwinIntegration
             foreach ( $data[ "data" ] as &$report )
             {
                 $id = $report[ "advertiserId" ];
-                $name = explode( " BR", $info[ "programmeInfo" ][ "name" ] )[ 0 ];
                 $info = $this->searchEstablishmentsDetails( id: $id, all_info: true );
+                $name = explode( " BR", $info[ "programmeInfo" ][ "name" ] )[ 0 ];
                 $cashback = get_cashback( data: $info[ "commissionRange" ][ 0 ] );
 
                 $has_click_ref = isset( $report[ "clickRefs" ], $report["clickRefs"]["clickRef"] );
