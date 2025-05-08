@@ -3,62 +3,52 @@
 namespace App\Notifications\FastShop;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class OrderError extends Notification
 {
     use Queueable;
-
     private $data;
 
     /**
      * Create a new notification instance.
      *
+     * @param mixed $data
+     *
      * @return void
      */
-    public function __construct($data)
+    public function __construct( $data )
     {
         $this->data = $data;
     }
 
-
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
+     *
      * @return array
      */
-    public function via($notifiable)
+    public function via( $notifiable )
     {
-        return ['mail'];
+        return ["mail"];
     }
 
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
-     */
-    public function toMail($notifiable)
-    {
-        return (new MailMessage)->subject($this->data["subject"])
-                                ->markdown("mail.marketplace.fastshop.order_error", [
-                                    "title" => $this->data["title"],
-                                    "data"  => $this->data["data"],
-                                ]);
-    }
-
-    /**
-     * Get the array representation of the notification.
+     * @param mixed $notifiable
      *
-     * @param  mixed  $notifiable
-     * @return array
+     * @return MailMessage
      */
-    public function toArray($notifiable)
+    public function toMail( $notifiable )
     {
-        return [
-            //
-        ];
+        $mail = new MailMessage();
+
+        return $mail->subject( $this->data[ "subject" ] )
+            ->markdown(
+                "mail.marketplace.fastshop.order_error", ["title" => $this->data[ "title" ],
+                    "data" => $this->data[ "data" ], ] );
     }
 }

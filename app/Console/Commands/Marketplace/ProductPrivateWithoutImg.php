@@ -2,13 +2,17 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Exception;
+use Throwable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
 class ProductPrivateWithoutImg extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -22,6 +26,11 @@ class ProductPrivateWithoutImg extends Command
      * @var string
      */
     protected $description = "Change the status of products to private when without images";
+
+    /**
+     * @var string
+     */
+    protected $prefix = "MKT Without Img Products:";
 
     /**
      * Create a new command instance.
@@ -40,9 +49,14 @@ class ProductPrivateWithoutImg extends Command
      */
     public function handle()
     {
-        $ended  = false;
-        $page   = 1;
-        $per    = 100;
+        $start = now();
+        $message = "{$this->prefix} Starting process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
+        $ended = false;
+        $page = 1;
+        $per = 100;
         $update = [];
 
         do
@@ -51,8 +65,8 @@ class ProductPrivateWithoutImg extends Command
             {
                 $products = Product::all( [
                     "per_page" => $per,
-                    "page"     => $page,
-                    "status"   => "publish",
+                    "page" => $page,
+                    "status" => "publish",
                 ] );
 
                 if ( $products->count() < 100 ) $ended = true;
@@ -61,42 +75,47 @@ class ProductPrivateWithoutImg extends Command
 
                 foreach ( $products as $product )
                 {
-                    if ( empty( $product->images ) && count( $product->images ) == 0 )
+                    if ( empty( $product->images ) && count( $product->images ) === 0 )
                     {
                         $update[] = [
-                            "id"     => $product->id,
+                            "id" => $product->id,
                             "status" => "private",
                         ];
                     }
 
-                    if ( count( $update ) == 100 )
+                    if ( count( $update ) === 100 )
                     {
-                        Product::batch( [
-                            "update" => $update
-                        ] );
+                        Product::batch( ["update" => $update] );
 
                         $update = [];
                     }
                 }
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
+                $this->error( $e->getMessage() );
+
                 $ended = false;
             }
         }
-        while ( !$ended );
+        while ( ! $ended );
 
         try
         {
-            Product::batch( [
-                "update" => $update
-            ] );
+            Product::batch( ["update" => $update] );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::error( $e );
+            $this->error( $e->getMessage() );
         }
 
-        echo "ENDED";
+        $message = "{$this->prefix} Finished process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $diff = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
     }
 }

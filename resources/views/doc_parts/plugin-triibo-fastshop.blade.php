@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapsePluginFastShop"
                 aria-expanded="true" aria-controls="collapsePluginFastShop" >
                 Plugin MKT - Triibo FastShop
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapsePluginFastShop" class="accordion-collapse collapse" aria-labelledby="headingPluginFastShop" data-bs-parent="#accordionTriibo" >

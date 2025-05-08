@@ -3,22 +3,22 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Notifications\Messages\MailMessage;
 
 class ChatGuru extends Notification
 {
     use Queueable;
-
     private $details;
 
     /**
      * Create a new notification instance.
      *
+     * @param mixed $details
+     *
      * @return void
      */
-    public function __construct($details)
+    public function __construct( $details )
     {
         $this->details = $details;
     }
@@ -26,10 +26,11 @@ class ChatGuru extends Notification
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
+     *
      * @return array
      */
-    public function via($notifiable)
+    public function via( $notifiable )
     {
         return ["mail"];
     }
@@ -37,30 +38,30 @@ class ChatGuru extends Notification
     /**
      * Get the mail representation of the notification.
      *
-     * @param  mixed  $notifiable
-     * @return \Illuminate\Notifications\Messages\MailMessage
+     * @param mixed $notifiable
+     *
+     * @return MailMessage
      */
-    public function toMail($notifiable)
+    public function toMail( $notifiable )
     {
-        $blade = $this->details["error"] ? "chatguru_error" : "chatguru";
+        $blade = $this->details[ "error" ] ? "chatguru_error" : "chatguru";
 
-        return (new MailMessage)->subject($this->details["subject"])
-                                ->markdown("mail.triibo.$blade", [
-                                    "title"      => $this->details["title"],
-                                    "params"     => $this->details["params"],
-                                ]);
+        return ( new MailMessage() )->subject( $this->details[ "subject" ] )
+            ->markdown(
+                "mail.triibo.{$blade}",
+                ["title" => $this->details[ "title" ],
+                    "params" => $this->details[ "params" ], ] );
     }
 
     /**
      * Get the array representation of the notification.
      *
-     * @param  mixed  $notifiable
+     * @param mixed $notifiable
+     *
      * @return array
      */
-    public function toArray($notifiable)
+    public function toArray( $notifiable )
     {
-        return [
-            //
-        ];
+        return [];
     }
 }

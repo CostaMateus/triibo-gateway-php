@@ -1,6 +1,6 @@
 <?php
 
-use Opcodes\LogViewer\Level;
+use Opcodes\LogViewer\Http\Middleware\{AuthorizeLogViewer, EnsureFrontendRequestsAreStateful};
 
 return [
 
@@ -11,7 +11,9 @@ return [
     | Log Viewer can be disabled, so it's no longer accessible via browser.
     |
     */
-    "enabled" => env( "LOG_VIEWER_ENABLED", true ),
+    'enabled' => env( 'LOG_VIEWER_ENABLED', true ),
+    'api_only' => env( 'LOG_VIEWER_API_ONLY', false ),
+    'require_auth_in_production' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -21,7 +23,7 @@ return [
     | If the domain is empty, all domains will be valid.
     |
     */
-    "route_domain" => null,
+    'route_domain' => null,
 
     /*
     |--------------------------------------------------------------------------
@@ -30,7 +32,7 @@ return [
     | Log Viewer will be available under this URL.
     |
     */
-    "route_path" => "log-viewer",
+    'route_path' => 'log-viewer',
 
     /*
     |--------------------------------------------------------------------------
@@ -42,8 +44,8 @@ return [
     | Optional label to display for the above URL.
     |
     */
-    "back_to_system_url"   => config( "app.url", null ) . "home",
-    "back_to_system_label" => null, // Displayed by default: "Back to {{ app.name }}"
+    'back_to_system_url' => config( 'app.url', null ) . 'home',
+    'back_to_system_label' => null, // Displayed by default: "Back to {{ app.name }}"
 
     /*
     |--------------------------------------------------------------------------
@@ -53,7 +55,7 @@ return [
     | the application's timezone defined in config/app.php.
     |
     */
-    "timezone" => "America/Sao_Paulo",
+    'timezone' => 'America/Sao_Paulo',
 
     /*
     |--------------------------------------------------------------------------
@@ -62,10 +64,9 @@ return [
     | Optional middleware to use when loading the initial Log Viewer page.
     |
     */
-    "middleware" => [
-        "web",
-        "auth",
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+    'middleware' => [
+        'web',
+        AuthorizeLogViewer::class,
     ],
 
     /*
@@ -76,10 +77,11 @@ return [
     | used from within the Log Viewer user interface.
     |
     */
-    "api_middleware" => [
-        \Opcodes\LogViewer\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
-        \Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer::class,
+    'api_middleware' => [
+        EnsureFrontendRequestsAreStateful::class,
+        AuthorizeLogViewer::class,
     ],
+    'api_stateful_domains' => env( 'LOG_VIEWER_API_STATEFUL_DOMAINS' ) ? explode( ',', env( 'LOG_VIEWER_API_STATEFUL_DOMAINS' ) ) : null,
 
     /*
     |--------------------------------------------------------------------------
@@ -90,9 +92,10 @@ return [
     | would like to show in this Log Viewer instance.
     |
     */
-    "hosts" => [
-        "local" => [
-            "name" => ucfirst( env( "APP_ENV", "local" ) ),
+
+    'hosts' => [
+        'local' => [
+            'name' => ucfirst( env( 'APP_ENV', 'local' ) ),
         ],
 
         // 'staging' => [
@@ -122,9 +125,24 @@ return [
     |--------------------------------------------------------------------------
     |
     */
-    "include_files" => [
-        "*.log",
-        "**/*.log",
+
+    'include_files' => [
+        '*.log',
+        '**/*.log',
+
+        // You can include paths to other log types as well, such as apache, nginx, and more.
+        '/var/log/mysql/*.log',
+        '/var/log/apache2/*.log',
+        '/var/log/laravel-deploy.log',
+
+        // // MacOS Apple Silicon logs
+        // '/opt/homebrew/var/log/nginx/*',
+        // '/opt/homebrew/var/log/httpd/*',
+        // '/opt/homebrew/var/log/php-fpm.log',
+        // '/opt/homebrew/var/log/postgres*log',
+        // '/opt/homebrew/var/log/redis*log',
+        // '/opt/homebrew/var/log/supervisor*log',
+
         // '/absolute/paths/supported',
     ],
 
@@ -135,9 +153,20 @@ return [
     | This will take precedence over included files.
     |
     */
-    "exclude_files" => [
+    'exclude_files' => [
         // 'my_secret.log'
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Hide unknown files.
+    |--------------------------------------------------------------------------
+    | The include/exclude options above might catch files which are not
+    | logs supported by Log Viewer. In that case, you can hide them
+    | from the UI and API calls by setting this to true.
+    |
+    */
+    'hide_unknown_files' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -147,36 +176,10 @@ return [
     | This setting is only active when the function is enabled via the user interface.
     |
     */
-    "shorter_stack_trace_excludes" => [
-        "/vendor/symfony/",
-        "/vendor/laravel/framework/",
-        "/vendor/barryvdh/laravel-debugbar/",
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Log matching patterns
-    |--------------------------------------------------------------------------
-    | Regexes for matching log files
-    |
-    */
-    "patterns" => [
-        "laravel" => [
-            "log_matching_regex" => "/^\[(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\.?(\d{6}([\+-]\d\d:\d\d)?)?)\].*/",
-
-            /**
-             * This pattern, used for processing Laravel logs, returns these results:
-             * $matches[0] - the full log line being tested.
-             * $matches[1] - full timestamp between the square brackets (includes microseconds and timezone offset)
-             * $matches[2] - timestamp microseconds, if available
-             * $matches[3] - timestamp timezone offset, if available
-             * $matches[4] - contents between timestamp and the severity level
-             * $matches[5] - environment (local, production, etc)
-             * $matches[6] - log severity (info, debug, error, etc)
-             * $matches[7] - the log text, the rest of the text.
-             */
-            "log_parsing_regex" => "/^\[(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}\.?(\d{6}([\+-]\d\d:\d\d)?)?)\](.*?(\w+)\.|.*?)(" . implode( "|", array_filter( Level::caseValues() ) ) . ")?: (.*?)( in [\/].*?:[0-9]+)?$/is",
-        ],
+    'shorter_stack_trace_excludes' => [
+        '/vendor/symfony/',
+        '/vendor/laravel/framework/',
+        '/vendor/barryvdh/laravel-debugbar/',
     ],
 
     /*
@@ -187,7 +190,19 @@ return [
     | log navigation. Defaults to your application's default cache driver.
     |
     */
-    "cache_driver" => env( "LOG_VIEWER_CACHE_DRIVER", null ),
+    'cache_driver' => env( 'LOG_VIEWER_CACHE_DRIVER', null ),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Cache key prefix
+    |--------------------------------------------------------------------------
+    | Log Viewer prefixes all the cache keys created with this value. If for
+    | some reason you would like to change this prefix, you can do so here.
+    | The format of Log Viewer cache keys is:
+    | {prefix}:{version}:{rest-of-the-key}
+    |
+    */
+    'cache_key_prefix' => 'lv',
 
     /*
     |--------------------------------------------------------------------------
@@ -196,5 +211,6 @@ return [
     | The size in MB of files to scan before updating the progress bar when searching across all files.
     |
     */
-    "lazy_scan_chunk_size_in_mb" => 50,
+    'lazy_scan_chunk_size_in_mb' => 50,
+    'strip_extracted_context' => true,
 ];

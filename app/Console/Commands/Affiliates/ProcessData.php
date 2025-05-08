@@ -2,12 +2,9 @@
 
 namespace App\Console\Commands\Affiliates;
 
-use App\Helpers\Helper;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Http\Integrations\AffiliatesIntegration\AwinIntegration;
-use App\Http\Integrations\AffiliatesIntegration\SocialSoulIntegration;
+use Illuminate\Support\Facades\{DB, Log};
+use App\Http\Integrations\AffiliatesIntegration\{AwinIntegration, SocialSoulIntegration};
 
 class ProcessData extends Command
 {
@@ -43,22 +40,23 @@ class ProcessData extends Command
      */
     public function handle()
     {
-        $opts   = [
+        $opts = [
             "stores",
         ];
 
         $option = $this->option( "option" );
 
-        if ( !in_array( $option, $opts ) )
+        if ( ! in_array( $option, $opts ) )
         {
             echo "Invalid option, terminating process!\n";
+
             return;
         }
 
         $this->{$option}();
     }
 
-    private function stores()
+    private function stores() : void
     {
         /**
          * Awin
@@ -68,15 +66,13 @@ class ProcessData extends Command
         /**
          * SocialSoul
          */
-        $ssStores   = $this->socialsoul();
+        $ssStores = $this->socialsoul();
 
         /**
          * Outros programas de afiliados a serem adicionados
          */
-        //
-
-        $merge      = $this->mergeStores( $awinStores, $ssStores );
-        $data       = $this->prepareForInsert( $merge );
+        $merge = $this->mergeStores( $awinStores, $ssStores );
+        $data = $this->prepareForInsert( $merge );
 
         DB::table( "affiliates_stores" )->truncate();
         DB::table( "affiliates_stores" )->insert( $data );
@@ -85,35 +81,35 @@ class ProcessData extends Command
     private function awin()
     {
         echo "Command : Start processing of Awin Stores\n";
-        Log::channel( "affiliate" )->info( "Stores", [ "Start processing of Awin Stores" ]);
+        Log::channel( "affiliate" )->info( "Stores", ["Start processing of Awin Stores"] );
 
-        $awin       = new AwinIntegration();
-        $stores     = $awin->schGetStores();
+        $awin = new AwinIntegration();
+        $stores = $awin->schGetStores();
         $awinStores = [];
 
         foreach ( $stores as $store )
         {
-            $cashback     = null;
-            $commission   = $awin->searchStoresDetails( ( int ) $store[ "id" ] );
-            $commission   = reset( $commission );
+            $cashback = null;
+            $commission = $awin->searchStoresDetails( (int) $store[ "id" ] );
+            $commission = reset( $commission );
 
             if ( $commission )
             {
-                $cashback = ( float ) $commission[ "max" ] / 2;
-                $cashback = ( float ) number_format( $cashback, 1, ".", "" );
+                $cashback = (float) $commission[ "max" ] / 2;
+                $cashback = (float) number_format( $cashback, 1, ".", "" );
             }
 
-            $url          = Helper::parseUrl( $store[ "displayUrl" ] );
+            $url = triibo_parse_url( $store[ "displayUrl" ] );
             $awinStores[] = [
-                "id"         => $store[ "id" ],
-                "name"       => "awin",
-                "domain"     => $url,
+                "id" => $store[ "id" ],
+                "name" => "awin",
+                "domain" => $url,
                 "commission" => $cashback,
             ];
         }
 
         echo "Command : End Awin Stores processing\n";
-        Log::channel( "affiliate" )->info( "Stores", [ "End Awin Stores processing" ] );
+        Log::channel( "affiliate" )->info( "Stores", ["End Awin Stores processing"] );
 
         return $awinStores;
     }
@@ -121,30 +117,30 @@ class ProcessData extends Command
     private function socialsoul()
     {
         echo "Command : Start processing of SocialSoul Stores\n";
-        Log::channel( "affiliate" )->info( "Stores", [ "Start processing of SocialSoul Stores" ]);
+        Log::channel( "affiliate" )->info( "Stores", ["Start processing of SocialSoul Stores"] );
 
         $socialSoul = new SocialSoulIntegration();
-        $stores     = $socialSoul->schGetStores();
-        $ssStores   = [];
+        $stores = $socialSoul->schGetStores();
+        $ssStores = [];
         ksort( $stores, SORT_NUMERIC );
 
         foreach ( $stores as $store )
         {
-            $cashback   = null;
-            $cashback   = ( float ) $store[ "commission" ] / 2;
-            $cashback   = ( float ) number_format( $cashback, 1, ".", "" );
+            $cashback = null;
+            $cashback = (float) $store[ "commission" ] / 2;
+            $cashback = (float) number_format( $cashback, 1, ".", "" );
 
-            $url        = Helper::parseUrl( $store[ "link" ] );
+            $url = triibo_parse_url( $store[ "link" ] );
             $ssStores[] = [
-                "id"         => $store[ "id" ],
-                "name"       => "socialsoul",
-                "domain"     => $url,
+                "id" => $store[ "id" ],
+                "name" => "socialsoul",
+                "domain" => $url,
                 "commission" => $cashback,
             ];
         }
 
         echo "Command : End SocialSoul Stores processing\n";
-        Log::channel( "affiliate" )->info( "Stores", [ "End SocialSoul Stores processing" ] );
+        Log::channel( "affiliate" )->info( "Stores", ["End SocialSoul Stores processing"] );
 
         return $ssStores;
     }
@@ -174,12 +170,12 @@ class ProcessData extends Command
         foreach ( $stores as $store )
         {
             $data[] = [
-                "affiliate_id"   => $store[ "id"         ],
+                "affiliate_id" => $store[ "id"         ],
                 "affiliate_name" => $store[ "name"       ],
-                "domain"         => $store[ "domain"     ],
-                "commission"     => $store[ "commission" ],
-                "created_at"     => now(),
-                "updated_at"     => now()
+                "domain" => $store[ "domain"     ],
+                "commission" => $store[ "commission" ],
+                "created_at" => now(),
+                "updated_at" => now()
             ];
         }
 

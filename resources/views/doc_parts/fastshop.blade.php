@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapseFastshop"
                 aria-expanded="true" aria-controls="collapseFastshop" >
                 Integração Fast Shop
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapseFastshop" class="accordion-collapse collapse" aria-labelledby="headingFastshop" data-bs-parent="#accordionTriibo" >
@@ -158,14 +159,14 @@
                             </p>
                         </div>
 
-                        <div id="orderapproved" class="mb-4" >
+                        <div id="orderapproval" class="mb-4" >
                             <p class="mb-2 h4 text-decoration-underline">Pedido Aprovado e Pago</p>
                             <p class="mb-0" style="font-size: .75rem">
                                 <a href="https://fastshop.gitbook.io/fastshop-api-seller/integracao/recursos/pedido-aprovado-e-pago" class="text-decoration-none link-info" target="_blank">Documentação Fast Shop</a>
                             </p>
                             <p class="mb-0" ><strong>POST</strong></p>
                             <p class="mb-0 font-monospace text-break" >
-                                <mark>/wc/orderapproved/<var>{orderId}</var></mark>
+                                <mark>/wc/orderapproval/<var>{orderId}</var></mark>
                             </p>
                             <p class="mb-0" >
                                 O <var>{orderId}</var> é o número do pedido no Marketplace.

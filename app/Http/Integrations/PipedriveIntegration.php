@@ -7,7 +7,7 @@ use Devio\Pipedrive\Pipedrive;
 class PipedriveIntegration
 {
     // Define custom field keys as class constants
-    private const PERSON_FIELD_KEY       = "bd7287f0a9a02de60a8aff83b5905c489b7cf007";
+    private const PERSON_FIELD_KEY = "bd7287f0a9a02de60a8aff83b5905c489b7cf007";
     private const ORGANIZATION_FIELD_KEY = "918dace587a4707755926d7c02c3bb46ed53d539";
 
     /**
@@ -17,13 +17,18 @@ class PipedriveIntegration
      * containing the Pipedrive ID ('pd_id') and the Mautic ID ('mautic_id'). It then updates the
      * corresponding entity in Pipedrive with the provided Mautic ID.
      *
-     * @param   string  $class  The class of the entity to update ('persons' or 'organizations').
-     * @param   array   $ids    Associative array with 'pd_id' for the Pipedrive ID and 'mautic_id' for the Mautic ID.
-     * @return  void
+     * @param string $class the class of the entity to update ('persons' or 'organizations')
+     * @param array  $ids   associative array with 'pd_id' for the Pipedrive ID and 'mautic_id' for the Mautic ID
+     *
+     * @return void
      */
-    public static function updateMauticId( string $class, array $ids )
+    public static function updateMauticId( string $class, array $ids ) : void
     {
-        // Log::channel("marketplace")->info(ucfirst($class), [ "data" => "selecionando API class: $class" ]);
+        $message = ucfirst( $class ) . ": selecionando API...";
+
+        log_message( channel: "marketplace", message: $message );
+
+        echo $message;
 
         // Initialize Pipedrive API with the provided token from configuration.
         $pipedrive = new Pipedrive( config( "pipedrive.token" ) );
@@ -32,8 +37,12 @@ class PipedriveIntegration
         $field_key = ( $class === "persons" ) ? self::PERSON_FIELD_KEY : self::ORGANIZATION_FIELD_KEY;
 
         // Update the entity in Pipedrive with the new Mautic ID.
-        $pipedrive->{$class}->update( $ids[ "pd_id" ], [ $field_key => $ids[ "mautic_id" ] ] );
+        $pipedrive->{$class}->update( $ids[ "pd_id" ], [$field_key => $ids[ "mautic_id" ]] );
 
-        // Log::channel("marketplace")->info(ucfirst($class), [ "data" => "chamada API finalizada" ]);
+        $message = ucfirst( $class ) . ": chamada API finalizada...";
+
+        log_message( channel: "marketplace", message: $message );
+
+        echo $message;
     }
 }

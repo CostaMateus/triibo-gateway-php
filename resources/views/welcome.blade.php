@@ -1,24 +1,24 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" >
+<html lang="{{ str_replace( '_', '-', app()->getLocale() ) }}" >
     <head>
         <meta charset="utf-8" >
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" >
         <meta name="viewport" content="width=device-width, initial-scale=1" >
-        <title>{{ config('app.name', 'Triibo') }}</title>
+        <meta name="csrf-token" content="{{ csrf_token() }}" >
 
-        <!-- Scripts -->
-        <script src="{{ asset('js/app.js') }}" defer></script>
+        {{-- Title --}}
+        <title>{{ config( "app.name", "Triibo" ) }}</title>
 
-        <!-- Styles -->
-        <link href="{{ asset('css/app.css')    }}" rel="stylesheet" >
-        <link href="{{ asset('css/triibo.css') }}" rel="stylesheet" >
-
-        <style>
-            body{font-family:Nunito,sans-serif;margin:0}*,:after,:before{box-sizing:border-box}.flex{display:flex}.items-center{align-items:center}.justify-center{justify-content:center}.h-100{min-height:100vh}.triibo-logo{width:300px}
-        </style>
+        {{-- CSS/JS --}}
+        @vite( [
+            "resources/sass/app.scss",
+            "resources/css/app.css",
+            "resources/js/app.js"
+        ] )
     </head>
     <body>
-        <div class="d-flex flex-column justify-content-center align-items-center bg-triibo h-100" >
-            <img class="triibo-logo" src="{{ asset('images/logo/logo-triibo.png')}}" alt="Triibo" >
+        <div class="d-flex flex-column justify-content-center align-items-center bg-triibo vh-100" >
+            <img class="triibo-logo" src="{{ asset('images/logo/logo-triibo.png')}}" alt="Triibo" width="300" >
             <a class="btn btn-default text-triibo" href="{{ route( "login" ) }}" >HOME</a>
         </div>
 
@@ -38,9 +38,7 @@
 
             <script>
                 // jQuery('#liveToast').toast('show');
-                window.setTimeout(function () {
-                    location.href = "/";
-                }, 10000);
+                window.setTimeout( function () { location.href = "/"; }, 10000 );
             </script>
         @endif
     </body>

@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'token' => env('PIPEDRIVE_TOKEN'),
+    'token' => env( 'PIPEDRIVE_TOKEN' ),
 ];

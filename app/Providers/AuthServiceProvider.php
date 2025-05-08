@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use Illuminate\Support\Facades\{Gate, Validator};
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
@@ -16,9 +16,8 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
     ];
-
     protected $allowedDomains = [
-        'triibo.com.br'
+        "triibo.com.br",
     ];
 
     /**
@@ -26,14 +25,18 @@ class AuthServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot() : void
     {
         $this->registerPolicies();
 
-        Validator::extend('allowed_domain', function($attribute, $value, $parameters, $validator) {
-            return in_array(explode('@', $value)[1], $this->allowedDomains);
-        }, __('validation.custom.allowed_domain') );
+        Validator::extend( "allowed_domain", function ( $attribute, $value, $parameters, $validator )
+        {
+            return in_array( explode( "@", $value )[ 1 ], $this->allowedDomains );
+        }, __( "validation.custom.allowed_domain" ) );
 
-        //
+        Gate::define( "viewLogViewer", static function ( ?User $user )
+        {
+            return true;
+        } );
     }
 }

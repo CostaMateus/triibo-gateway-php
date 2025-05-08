@@ -2,12 +2,18 @@
 
 namespace App\Console\Commands\Marketplace;
 
+use Throwable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Codexshaper\WooCommerce\Facades\Category;
 
 class GetCategories extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -21,6 +27,11 @@ class GetCategories extends Command
      * @var string
      */
     protected $description = "Get marketplace product categories";
+
+    /**
+     * @var string
+     */
+    protected $prefix = "MKT Categories:";
 
     /**
      * Create a new command instance.
@@ -39,38 +50,78 @@ class GetCategories extends Command
      */
     public function handle()
     {
-        DB::table( "marketplace_product_categories" )->truncate();
+        $page = 1;
+        $categories = [];
+        $data = [];
+        $count = 100;
 
-        $ended = false;
-        $page  = 1;
-        $cats  = [];
-        $data  = [];
+        $start = now();
+        $this->log_message( message: "{$this->prefix} Starting process WC data..." );
 
         do
         {
-            $search = [
-                "per_page" => 100,
-                "page"     => $page,
-            ];
+            $this->info( "Searching for categories in the marketplace, page {$page}" );
 
-            $aux    = Category::all( $search );
+            try
+            {
+                $response = Category::all( ["per_page" => 100, "page" => $page] );
+                $count = $response->count();
+                $categories = array_merge( $response->toArray(), $categories );
 
-            if ( $aux->count() < 100 ) $ended = true;
+                $page++;
+            }
+            catch ( Throwable $e )
+            {
+                if ( $e->getMessage() !== "JSON ERROR: Syntax error" )
+                {
+                    log_message( channel: self::LOG_CHANNEL, message: print_r( $e, true ), level: "error" );
+                    $this->log_message( message: $e->getMessage(), level: "error" );
 
-            $cats   = array_merge( $aux->toArray(), $cats );
-
-            $page++;
+                    break;
+                }
+            }
         }
-        while ( !$ended );
+        while ( $count === 100 );
 
-        foreach ( $cats as $cat )
+        $count = count( $categories );
+        $this->log_message( message: "{$this->prefix} {$count} loaded..." );
+
+        foreach ( $categories as $category )
         {
             $data[] = [
-                "cat_id"   => $cat->id,
-                "cat_slug" => $cat->slug,
+                "cat_id" => $category->id,
+                "cat_slug" => $category->slug,
+                "cat_name" => $category->name,
+                "cat_parent" => $category->parent,
             ];
         }
 
+        $this->log_message( message: "Truncate table: marketplace_product_categories" );
+
+        DB::table( "marketplace_product_categories" )->truncate();
+
+        $this->log_message( message: "MKT Inserting {$count} categories in table: marketplace_product_categories" );
+
         DB::table( "marketplace_product_categories" )->insert( $data );
+
+        $this->log_message( message: "{$this->prefix} Finished WC data process..." );
+
+        $diff = $start->diffInMinutes( now() );
+        $this->log_message( message: "{$this->prefix} Runtime {$diff} minutes..." );
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @param string $channel
+     * @param string $message
+     * @param string $level
+     *
+     * @return void
+     */
+    private function log_message( string $message, string $level = "info" ) : void
+    {
+        log_message( channel: self::LOG_CHANNEL, message: $message, level: $level );
+        $this->{$level}( $message );
     }
 }

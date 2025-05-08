@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Triibo;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\TriiboController;
 
 class UnsetVouchers extends Command
@@ -39,11 +38,16 @@ class UnsetVouchers extends Command
      */
     public function handle()
     {
-        Log::channel("triibo")->info("unset-vouchers", [ "Start processing of unset-vouchers" ]);
+        $message = "Unset vouchers: Start processing...";
 
-        $triibo = new TriiboController();
-        $triibo->unsetVouchers();
+        log_message( channel: "triibo", message: $message );
+        $this->info( $message );
 
-        Log::channel("triibo")->info("unset-vouchers", [ "End unset-vouchers processing" ]);
+        ( new TriiboController() )->unsetVouchers();
+
+        $message = "Unset vouchers: End processing...";
+
+        log_message( channel: "triibo", message: $message );
+        $this->info( $message );
     }
 }

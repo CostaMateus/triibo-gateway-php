@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapsePluginApiServices"
                 aria-expanded="true" aria-controls="collapsePluginApiServices" >
                 Plugin MKT - Triibo API Services
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapsePluginApiServices" class="accordion-collapse collapse" aria-labelledby="headingPluginApiServices" data-bs-parent="#accordionTriibo" >

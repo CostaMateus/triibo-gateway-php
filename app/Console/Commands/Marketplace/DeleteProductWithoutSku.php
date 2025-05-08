@@ -2,13 +2,17 @@
 
 namespace App\Console\Commands\Marketplace;
 
-use Exception;
+use Throwable;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use Codexshaper\WooCommerce\Facades\Product;
 
 class DeleteProductWithoutSku extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -22,6 +26,11 @@ class DeleteProductWithoutSku extends Command
      * @var string
      */
     protected $description = "Delete products of Fast Shop when SKU is empty";
+
+    /**
+     * @var string
+     */
+    protected $prefix = "MKT DEL Products:";
 
     /**
      * Create a new command instance.
@@ -40,79 +49,90 @@ class DeleteProductWithoutSku extends Command
      */
     public function handle()
     {
-        $env    = config( "fastshop.env" );
-        $ended  = false;
-        $page   = 1;
-        $per    = 100;
+        $start = now();
+        $message = "{$this->prefix} Starting process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
+        $env = config( key: "vtex.env" );
+        $has_ended = false;
+        $page = 1;
+        $per_page = 100;
         $delete = [];
-        $fsIds  = [
-            ( $env == "local" ) ? 4453 : 3970, // padrao
-            ( $env == "local" ) ? 4454 : 4309, // 05 A
-            ( $env == "local" ) ? 4451 : 4310, // 14 B
-            ( $env == "local" ) ? 4345 : 4311, // 33 C
-        ];
-        $fsId   = ( $env == "local" ) ? 3158 : 4265;
 
         do
         {
             try
             {
                 $search = [
-                    "per_page"     => $per,
-                    "page"         => $page,
-                    "manage_stock" => true,
+                    "per_page" => $per_page,
+                    "page" => $page,
+                    "manage_stock" => false,
+                    "stock_status" => "outofstock",
+                    "status" => "private",
                 ];
 
-                $aux    = Product::all( $search );
+                $aux = Product::all( $search );
 
-                if ( $aux->count() < 100 ) $ended = true;
+                $this->info( string: "Page: {$page} | Loaded: {$aux->count()}" );
+
+                if ( $aux->count() < 100 ) $has_ended = true;
 
                 $page++;
 
-                foreach ( $aux as $p )
+                foreach ( $aux as $product )
                 {
-                    if ( $p->store->id != $fsId ) continue;
+                    if ( $product->store->id !== 4265 )
+                        continue;
 
                     // not empty sku
-                    if ( !empty( $p->sku ) ) continue;
+                    if ( ! empty( $product->sku ) )
+                        continue;
 
-                    // not shipping-class of FS
-                    if ( !in_array( $p->shipping_class_id, $fsIds ) ) continue;
+                    $this->info( string: "Product ID: {$product->id}" );
 
-                    echo "{$p->id}\n";
+                    $delete[] = $product->id;
 
-                    $delete[] = [
-                        "id"    => $p->id,
-                        "force" => true
-                    ];
-
-                    if ( count( $delete ) == 100 )
+                    if ( count( $delete ) === 100 )
                     {
-                        Product::batch( [ "delete" => $delete ] );
+                        try
+                        {
+                            Product::batch( ["delete" => $delete] );
+                        }
+                        catch ( Throwable $e )
+                        {
+                            $this->error( string: $e->getMessage() );
+                        }
 
                         $delete = [];
                     }
                 }
             }
-            catch ( Exception $e )
+            catch ( Throwable $e )
             {
-                echo $e->getMessage() . "\n";
-                $ended = false;
+                $this->error( string: $e->getMessage() );
+
+                $has_ended = false;
             }
         }
-        while ( !$ended );
+        while ( ! $has_ended );
 
         try
         {
-            Product::batch( [
-                "delete" => $delete
-            ] );
+            Product::batch( ["delete" => $delete] );
         }
-        catch ( Exception $e )
+        catch ( Throwable $e )
         {
-            Log::error( $e );
+            $this->error( string: $e->getMessage() );
         }
 
-        echo "ENDED";
+        $message = "{$this->prefix} Finished process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
+
+        $diff = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
     }
 }

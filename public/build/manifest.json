@@ -1,0 +1,42 @@
+{
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff": {
+    "file": "assets/bootstrap-icons-BOrJxbIo.woff",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff"
+  },
+  "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2": {
+    "file": "assets/bootstrap-icons-BtvjY1KL.woff2",
+    "src": "node_modules/bootstrap-icons/font/fonts/bootstrap-icons.woff2"
+  },
+  "node_modules/tablesort/src/sorts/tablesort.date.js": {
+    "file": "assets/tablesort.date-C4G2cGFh.js",
+    "name": "tablesort.date",
+    "src": "node_modules/tablesort/src/sorts/tablesort.date.js",
+    "isDynamicEntry": true
+  },
+  "node_modules/tablesort/src/sorts/tablesort.number.js": {
+    "file": "assets/tablesort.number-CqONQmOq.js",
+    "name": "tablesort.number",
+    "src": "node_modules/tablesort/src/sorts/tablesort.number.js",
+    "isDynamicEntry": true
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-CsaWtr8b.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-B2wSEdPX.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "dynamicImports": [
+      "node_modules/tablesort/src/sorts/tablesort.number.js",
+      "node_modules/tablesort/src/sorts/tablesort.date.js"
+    ]
+  },
+  "resources/sass/app.scss": {
+    "file": "assets/app-Au_6HcKS.css",
+    "src": "resources/sass/app.scss",
+    "isEntry": true
+  }
+}

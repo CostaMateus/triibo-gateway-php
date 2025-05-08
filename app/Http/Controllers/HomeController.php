@@ -3,439 +3,85 @@
 namespace App\Http\Controllers;
 
 use Exception;
-use App\Models\User;
-use Mautic\MauticApi;
-use Mautic\Auth\ApiAuth;
-use Illuminate\Http\Request;
-use Devio\Pipedrive\Pipedrive;
-use Ramsey\Collection\Collection;
-use Triibo\Mautic\Facades\Mautic;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Storage;
-use Triibo\Mautic\Models\MauticConsumer;
-use App\Notifications\WebhookMarketplace;
-use Codexshaper\WooCommerce\Facades\Order;
-use App\Http\Integrations\MauticIntegration;
-
-// use Illuminate\Support\Facades\Storage;
+use Symfony\Component\Process\Process;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Contracts\Support\Renderable;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 class HomeController extends Controller
 {
-    const APIKEY = "7f3a767e18d06afd45d8a09402ee687951953686729d7006a88c59c5195d7753";
-    const URL    = "https://sandbox.asaas.com/api/v3/";
-
-    const merchantId     = "2b19aec0-3884-4243-8ac6-8bdf99597fce";
-    const merchantKey    = "GIYOSRIKPSFDBHPRSQNXLYVFWXMQMZLETMYLGSWC";
-    const api            = "https://apisandbox.cieloecommerce.cielo.com.br/1/sales";
-    const apiquery       = "https://apiquerysandbox.cieloecommerce.cielo.com.br/1";
-    const onlyVisa       = "-Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA";
-    const apiTokenConst  = "54723162306C6F6A7052646D4C6170693030";
-
-    const header = [
-        "Content-Type" => "application/json",
-        "MerchantId"   => self::merchantId,
-        "MerchantKey"  => self::merchantKey,
-    ];
+    /**
+     * Show the application welcome.
+     *
+     * @return Renderable
+     */
+    public function welcome() : Renderable
+    {
+        return view( "welcome", ["showToast" => false, "message" => ""] );
+    }
 
     /**
-     * Create a new controller instance.
+     * Clear the application caches.
      *
-     * @return void
+     * @return Renderable
      */
-    public function __construct()
+    public function clearCache() : Renderable
     {
-        // $this->middleware("auth");
+        Artisan::call( "optimize:clear" );
+
+        return view( "welcome", ["showToast" => true, "message" => "Cache limpos com sucesso!"] );
     }
 
     /**
      * Show the application dashboard.
      *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * @return Renderable
      */
-    public function index()
+    public function index() : Renderable
     {
-        return view("home");
-    }
-
-    public function atualizaEmailComEspacoEmBranco(Request $request)
-    {
-        $token     = config("pipedrive.token");
-        $pipedrive = new Pipedrive($token);
-        $arr       = [];
-        for ($i = 1; $i <= 600; $i++)
-        {
-            try
-            {
-                $person = $pipedrive->persons->find($i);
-                $found = true;
-            }
-            catch (Exception $e)
-            {
-                $found = false;
-            }
-            if ($found)
-            {
-                $data  = $person->getData();
-                $email = $data->email[0]->value;
-                if (preg_match("/\s/",$email))
-                {
-                    $arr[] = $email;
-                    $new   = $pipedrive->persons->update($i, ["email" => trim($email)]);
-                    $arr[] = $new->getData()->email[0]->value;
-                }
-            }
-            else
-            {
-                continue;
-            }
-        }
-        dd($arr);
-    }
-
-    public function teste(Request $request)
-    {
-        $header   = [
-            "Content-Type" => "application/json",
-            "access_token" => self::APIKEY,
-        ];
-
-        $customer = [
-            "name"                 => "Mateus Costa",
-            "email"                => "Mateus.costa@triibo.com.br",
-            "phone"                => "11949289507",
-            "mobilePhone"          => "11949289507",
-            "cpfCnpj"              => "02681487242",
-            "postalCode"           => "01218-011",
-            "address"              => "Al. Eduardo Prado",
-            "addressNumber"        => "170",
-            "complement"           => "125A",
-            "province"             => "Campos Eliseos",
-            "notificationDisabled" => false,
-            "creditCard"           => [
-                "holderName"  => "Mateus Costa",
-                "number"      => "5162306219378829",
-                "expiryMonth" => "10",
-                "expiryYear"  => "2022",
-                "ccv"         => "318"
-            ]
-        ];
-
-        $response = Http::withHeaders($header)->get(self::URL . "/customers?cpfCnpj=" . $customer["cpfCnpj"]);
-
-        $data     = $response->json();
-
-        // cpf não cadastrado
-        if ($data["data"] == [] && empty($data["data"]))
-        {
-            $response       = Http::withHeaders($header)->post(self::URL . "/customers", $customer);
-            $data           = $response->json();
-            $customer["id"] = $data["id"];
-        }
-        else
-        {
-            $customer["id"] = $data["data"][0]["id"];
-        }
-
-        // $cobranca = self::gerarCobranca($customer, "CREDIT_CARD", 111, 2);
-        $assinatura = self::gerarAssinatura($customer, "CREDIT_CARD", "MONTHLY", 19.90, 2);
-
-        dd($data, $assinatura);
+        return view( "home" );
     }
 
     /**
-     * Gerar cobrança no boleto e no cartão de credito
+     * Show the documentation.
      *
-     * @param array $customer
-     * @param string $tipo
-     * @param double $total
-     * @param int $parcelas
-     * @return void
+     * @return Renderable
      */
-    private static function gerarCobranca($customer, $tipo, $total, $parcelas = NULL)
+    public function documentation() : Renderable
     {
-        $header   = [
-            "Content-Type" => "application/json",
-            "access_token" => self::APIKEY,
-        ];
-
-        $payment = [
-            "customer"          => $customer["id"],
-            "billingType"       => $tipo,   // BOLETO, CREDIT_CARD, UNDEFINED
-            "value"             => $total,
-            "dueDate"           => "2021-07-28",
-            "description"       => "Pedido 056984", // ID marketplace
-            "externalReference" => "056984",        // ID marketplace
-            "postalService"     => false,
-            // "installmentCount"  => 5,
-            // "installmentValue"  => 100,
-        ];
-
-        if ($tipo == "CREDIT_CARD")
-        {
-            $parcelas = $parcelas ?? 3;
-            $payment["installmentCount"]     = $parcelas;
-            $payment["installmentValue"]     = ($total / $parcelas);
-            $payment["creditCard"]           = $customer["creditCard"];
-            $payment["creditCardHolderInfo"] = [
-                "name"              => $customer["name"],          //"Marcelo Henrique Almeida",
-                "email"             => $customer["email"],         //"marcelo.almeida@gmail.com",
-                "cpfCnpj"           => $customer["cpfCnpj"],       //"24971563792",
-                "postalCode"        => $customer["postalCode"],    //"89223-005",
-                "addressNumber"     => $customer["addressNumber"], //"277",
-                "addressComplement" => $customer["complement"],    //NULL,
-                "phone"             => $customer["phone"],         //"4738010919",
-                "mobilePhone"       => $customer["mobilePhone"],   //"47998781877"
-            ];
-        }
-
-        $response = Http::withHeaders($header)->post(self::URL . "/payments", $payment);
-
-        return $response->json();
+        return view( "doc_parts.index" );
     }
 
     /**
-     * Gera uma assinatura
+     * Git push.
      *
-     * @param array $customer
-     * @param string $tipo
-     * @param string $ciclo
-     * @param double $total
-     * @param int $parcelas
-     * @return void
+     * @return Renderable
      */
-    private static function gerarAssinatura($customer, $tipo, $ciclo, $total, $parcelas)
+    public function gitPush() : Renderable
     {
-        $header   = [
-            "Content-Type" => "application/json",
-            "access_token" => self::APIKEY,
-        ];
+        if ( ! auth()->check() || auth()->user()->email !== "mateus.costa@triibo.com.br" )
+            return view( "home" );
 
-        $payment = [
-            "customer"          => $customer["id"],
-            "billingType"       => $tipo,           // BOLETO, CREDIT_CARD, UNDEFINED
-            "value"             => $total,
-            "nextDueDate"       => "2021-07-27",
-            "endDate"           => "2022-01-26",
-            "interest"          => [
-                "value" => 2,
-            ],
-            "fine"              => [
-                "value" => 1,
-            ],
-            "cycle"             => $ciclo,          // WEEKLY semana, BIWEEKLY quizenal, MONTHLY mensal, QUARTERLY trimestral, SEMIANNUALLY semestral, YEARLY anual,
-            "description"       => "Pedido 056984", // ID marketplace
-            "externalReference" => "056984",        // ID marketplace
-            "maxPayments"       => $parcelas,
-        ];
-
-        if ($tipo == "CREDIT_CARD")
+        try
         {
-            $payment["installmentCount"]     = $parcelas;
-            $payment["installmentValue"]     = ($total / $parcelas);
-            $payment["creditCard"]           = $customer["creditCard"];
-            $payment["creditCardHolderInfo"] = [
-                "name"              => $customer["name"],          //"Marcelo Henrique Almeida",
-                "email"             => $customer["email"],         //"marcelo.almeida@gmail.com",
-                "cpfCnpj"           => $customer["cpfCnpj"],       //"24971563792",
-                "postalCode"        => $customer["postalCode"],    //"89223-005",
-                "addressNumber"     => $customer["addressNumber"], //"277",
-                "addressComplement" => $customer["complement"],    //NULL,
-                "phone"             => $customer["phone"],         //"4738010919",
-                "mobilePhone"       => $customer["mobilePhone"],   //"47998781877"
-            ];
-            // $payment["creditCardToken"]      = "c9d92c1e-7667-491f-be38-6e0ccc2fc1bd";
+            $process = new Process( ["/var/www/html/laravel/laravel-deploy.sh"] );
+            $process->setTimeout( 3600 );
+            $process->run();
+
+            if ( ! $process->isSuccessful() )
+                throw new ProcessFailedException( $process );
+
+            return view( "home", [
+                "showToast" => true,
+                "message" => "Git push executado com sucesso!",
+            ] );
         }
-
-        $response = Http::withHeaders($header)->post(self::URL . "/subscriptions", $payment);
-
-        return $response->json();
-    }
-
-
-    // Cielo
-    public static function gateway(Request $request)
-    {
-        $date    = date("Ymd-his");
-        $encoded = json_encode($request->all(), JSON_UNESCAPED_SLASHES);
-        Storage::put("gateway-".$date.".json", $encoded);
-
-        // STATUS - DESCRIÇÃO
-        // 200      OK (Capture/Void/Get)
-        // 201      OK (Authorization)
-        // 400      Bad Request
-        // 404      Resource Not Found
-        // 500      Internal Server Error
-
-        // $req = [
-        //     "totalAmount"    => ($request->totalAmount * 100),                  // 69.31, // recebe em reais e transforma para centavos
-        //     "orderId"        => $request->orderId,                              // 38963,
-        //     "senderEmail"    => $request->senderEmail,                          // mateus.costa@triibo.com.br,
-        //     "orderIp"        => $request->orderIp,                              // 189.111.43.160,
-        //     "callBack"       => $request->callBack,                             // https://dev-marketplace.triibo.com.br/checkout_01/order-received/38963/?key=wc_order_Ex5KUA4AbaUiv,
-        //     "cellPhone"      => $request->cellPhone,                            // (11) 3331-2370,
-        //     "name"           => $request->name,                                 // MATEUS LOPES COSTA,
-        //     "document"       => $request->document,                             // 00987654321,
-        //     "cardNumber"     => str_replace(" ", "", $request->cardNumber),     // 5162 9260 1111 3940, // recebe com espaços e já remove os msm
-        //     "expirationDate" => str_replace(" ", "", $request->expirationDate), // 10 / 2044,           // recebe com espaços e já remove os msm
-        //     "cvc"            => $request->cvc,                                  // 111,
-
-        //     "gatewayId"      => $request->gatewayId, // -Kx8jpgL7X-e_aJf0R7B-MarketplaceTriiboVISA,
-        //     "apiToken"       => $request->apiToken,  // 54723162306C6F6A7052646D4C6170693030
-        // ];
-
-        // if (empty($req["apiToken"]) || is_null($req["apiToken"]) || $req["apiToken"] != self::apiTokenConst)
-        // {
-        //     return self::error([
-        //         "code"    => 500,
-        //         "message" => "'apiToken' inválida"
-        //     ]);
-        // }
-
-
-        // // ========================================================
-        // $res1 = self::validateCardBrand($req);
-        // if ($res1["code"] != 200)
-        // {
-        //     self::updateOrder($req["orderId"], "failed");
-        //     Log::channel("marketplace")->info("Gateway", $res1["data"]);
-        //     return self::error($res1);
-        // }
-
-
-        // // ========================================================
-        // $res2 = self::makePayment($req);
-        // if ($res2["code"] != 200)
-        // {
-        //     self::updateOrder($req["orderId"], "failed");
-        //     return self::error($res2);
-        // }
-
-        // self::updateOrder($req["orderId"], "processing");
-
-        // Log::channel("marketplace")->info("Gateway", $res2["data"]);
-
-        return response()->json([
-            "code"    => 200,
-            "message" => "Autorizado",
-        ], 200);
-    }
-
-    private static function error(array $res)
-    {
-        Log::channel("marketplace")->info("Gateway", $res);
-        return response()->json($res, 500);
-    }
-
-    private static function updateOrder(int $orderId, string $status)
-    {
-        Order::update($orderId, [ "status" => $status ]);
-    }
-
-    private static function validateCardBrand($req)
-    {
-        $res = Http::withHeaders(self::header)->get(self::apiquery . "/cardBin/" . $req["cardNumber"]);
-
-        // Erro na verificação do cartão
-        if ($res->failed() && !$res->successful())
+        catch ( Exception $e )
         {
-            $code    = $res[0]["Code"];
-            $message = $res[0]["Message"];
+            return view( "home", [
+                "showToast" => true,
+                "message" => $e->getMessage(),
+            ] );
         }
-
-        // erro no dados retornados pelo Cielo
-        elseif (!isset($res["Provider"]))
-        {
-            $code    = 500;
-            $message = "Error";
-        }
-
-        // bandeira diferente de VISA
-        elseif ($res["Provider"] != "VISA" && $req["gatewayId"] == self::onlyVisa)
-        {
-            $code    = 500;
-            $message = "Bandeira não permitida";
-        }
-
-        else
-        {
-            $code    = 200;
-            $message = "Valid Brand";
-        }
-
-        return [
-            "code"    => $code,
-            "message" => $message,
-            "data"    => $res->json()
-        ];
-    }
-
-    private static function makePayment($req)
-    {
-        // monta objeto para efetuar a cobrança
-        $sale = [
-            "MerchantOrderId" => $req["orderId"],
-            "Customer"        => [
-                "Name"         => $req["name"],
-                "Identity"     => $req["document"],
-                "IdentityType" => "CPF",
-                "Email"        => $req["senderEmail"],
-            ],
-            "Payment" => [
-                "Type"           => "CreditCard",
-                "Amount"         => $req["totalAmount"],
-                "Currency"       => "BRL",
-                "Country"        => "BRA",
-                "Installments"   => 1,
-                "SoftDescriptor" => "Marketplace Triibo",
-                "CreditCard"     => [
-                    "CardNumber"     => $req["cardNumber"],
-                    "Holder"         => $req["name"],
-                    "ExpirationDate" => $req["expirationDate"],
-                    "SecurityCode"   => $req["cvc"],
-                    "Brand"          => "VISA",
-                    "CardOnFile"     => [
-                        "Usage"  => "Used",
-                        "Reason" => "Unscheduled"
-                    ]
-                ],
-                "IsCryptoCurrencyNegotiation" => false
-            ]
-        ];
-
-        $res = Http::withHeaders(self::header)->post(self::api, $sale);
-
-        // Erro na verificação do cartão
-        if ($res->failed() && !$res->successful())
-        {
-            $code    = $res[0]["Code"];
-            $message = $res[0]["Message"];
-        }
-
-        // erro no dados retornados pelo Cielo
-        elseif (!isset($res["Payment"]))
-        {
-            $code    = 500;
-            $message = "Error";
-        }
-
-        // bandeira diferente de VISA
-        elseif (!in_array($res["Payment"]["ReturnCode"], ["4","6"]))
-        {
-            $code    = 500;
-            $message = "Não Autorizado";
-        }
-
-        else
-        {
-            $code    = 200;
-            $message = "Autorizado";
-        }
-
-        return [
-            "code"    => $code,
-            "message" => $message,
-            "data"    => $res->json(),
-        ];
     }
 }

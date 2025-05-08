@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Affiliates\Cofry;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Affiliates\CofryController;
 
 class ProcessStoresPromos extends Command
@@ -40,40 +39,34 @@ class ProcessStoresPromos extends Command
      */
     public function handle()
     {
-        $opts   = [
+        $channel = "cofry";
+
+        $option = $this->option( "option" );
+        $opts = [
             "promotions",
             "establishments",
             "all",
         ];
 
-        $option = $this->option( "option" );
-
-        if ( !in_array( $option, $opts ) )
+        if ( ! in_array( $option, $opts ) )
         {
-            echo "Invalid option, terminating process!\n";
+            $message = "Invalid option, terminating process...";
+
+            log_message( channel: $channel, message: $message );
+
             return;
         }
 
-        if ( $option != "all" )
-        {
-            $logTitle = ucfirst( $option );
-            $logStart = "{$logTitle} : Start processing of {$option}\n";
-            $logEnd   = "{$logTitle} : End {$option} processing\n";
-        }
-        else
-        {
-            $logTitle = "Stores|Promotions";
-            $logStart = "S|P : Start processing of stores|promotions\n";
-            $logEnd   = "S|P : End stores|promotions processing\n";
-        }
+        $title = ( $option !== "all" ) ? ucfirst( $option ) : "Stores|Promotions";
+        $message = "{$title}: Start processing...";
 
-        echo $logStart;
-        Log::channel( "cofry" )->info( $logTitle, [ $logStart ] );
+        log_message( channel: $channel, message: $message );
+        $this->info( $message );
 
-        $cofry = new CofryController();
-        $cofry->$option();
+        ( new CofryController() )->{$option}();
 
-        echo $logEnd;
-        Log::channel( "cofry" )->info( $logTitle, [ $logEnd ] );
+        $message = "{$title}: End processing...";
+        log_message( channel: $channel, message: $message );
+        $this->info( $message );
     }
 }

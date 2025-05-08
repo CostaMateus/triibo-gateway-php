@@ -3,11 +3,15 @@
 namespace App\Console\Commands\Marketplace;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\{DB};
 
 class DeleteDuplicateSku extends Command
 {
+    /**
+     * @var string
+     */
+    protected const LOG_CHANNEL = "marketplace";
+
     /**
      * The name and signature of the console command.
      *
@@ -21,6 +25,11 @@ class DeleteDuplicateSku extends Command
      * @var string
      */
     protected $description = "Delete duplicate SKUs in the marketplace";
+
+    /**
+     * @var string
+     */
+    protected $prefix = "MKT Duplicate Products:";
 
     /**
      * Create a new command instance.
@@ -39,10 +48,16 @@ class DeleteDuplicateSku extends Command
      */
     public function handle()
     {
-        $DB   = ( config( "app.env" ) == "local" ) ? "dev-mkt" : "prd-mkt";
-        $conn = DB::connection( $DB );
+        $start = now();
+        $message = "{$this->prefix} Starting process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( string: $message );
 
-        do {
+        $db = ( config( key: "app.env" ) === "local" ) ? "dev-mkt" : "prd-mkt";
+        $conn = DB::connection( name: $db );
+
+        do
+        {
             $select_posts = "
                 SELECT
                     p.ID,
@@ -65,7 +80,7 @@ class DeleteDuplicateSku extends Command
                 WHERE post_type = 'product';
             ";
 
-            $posts = $conn->select( $select_posts );
+            $posts = $conn->select( query: $select_posts );
 
             if ( count( $posts ) > 0 )
             {
@@ -74,7 +89,7 @@ class DeleteDuplicateSku extends Command
 
                 foreach ( $posts as $key => $post )
                 {
-                    if ( $key == array_key_last( $posts ) )
+                    if ( $key === array_key_last( $posts ) )
                     {
                         $del_metas .= "post_id = {$post->ID};";
                         $del_posts .= "ID      = {$post->ID};";
@@ -86,15 +101,69 @@ class DeleteDuplicateSku extends Command
                     }
                 }
 
-                $result_metas = $conn->delete( $del_metas );
-                $result_posts = $conn->delete( $del_posts );
+                $data = [
+                    "posts" => $conn->delete( $del_posts ),
+                    "metas" => $conn->delete( $del_metas )
+                ];
 
-                Log::channel( "fastshop" )->info( "Deleting duplicate SKUs", [
-                    "posts" => $result_posts,
-                    "metas" => $result_metas
-                ] );
+                log_message( channel: "marketplace", message: "Marketplace: Deleting duplicate SKUs...", context: $data );
             }
         }
-        while( count( $posts ) > 0 );
+        while ( count( $posts ) > 0 );
+
+        $message = "{$this->prefix} Finished process...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+
+        $diff = $start->diffInMinutes( now() );
+        $message = "{$this->prefix} Runtime {$diff} minutes...";
+        log_message( channel: self::LOG_CHANNEL, message: $message );
+        $this->info( $message );
+    }
+
+    /**
+     * Remove orphaned entries in the 'wc_product_meta_lookup' table.
+     * This query deletes any rows from 'wp_wc_product_meta_lookup' where the associated
+     * post in the 'wp_posts' table is missing (i.e., the post.ID is NULL).
+     *
+     * @return string
+     */
+    private function deletePostMetaLookupQuery() : string
+    {
+        return "
+            DELETE
+                wp_wc_product_meta_lookup
+            FROM
+                wp_wc_product_meta_lookup
+            LEFT JOIN
+                wp_posts
+            ON
+                wp_wc_product_meta_lookup.product_id = wp_posts.ID
+            WHERE
+                wp_posts.ID IS NULL;
+        ";
+    }
+
+    /**
+     * Remove orphaned entries in the 'postmeta' table.
+     * This query deletes any rows from 'wp_postmeta' where the associated
+     * post in the 'wp_posts' table is missing (i.e., the post.ID is NULL).
+     *
+     * @return string
+     */
+    private function deletePostMetaQuery() : string
+    {
+        return "
+            DELETE
+                wp_postmeta
+            FROM
+                wp_postmeta
+            LEFT JOIN
+                wp_posts
+            ON
+                wp_postmeta.post_id = wp_posts.ID
+            WHERE
+                wp_posts.ID IS NULL;
+        ";
     }
 }

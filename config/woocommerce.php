@@ -1,75 +1,46 @@
 <?php
 
 return [
-    /**
-     *================================================================================
-     * Store URL eg: http://example.com
-     *================================================================================
-     */
-    "store_url"          => (env("MKT_ENV") == "local") ? env("WOOCOMMERCE_STORE_URL_HML")       : env("WOOCOMMERCE_STORE_URL"),
 
-    /**
-     *================================================================================
-     * Consumer Key
-     *================================================================================
-     */
-    "consumer_key"       => (env("MKT_ENV") == "local") ? env("WOOCOMMERCE_CONSUMER_KEY_HML")    : env("WOOCOMMERCE_CONSUMER_KEY"),
+    // Plugin key and token.
+    'plugins' => [
+        'key' => ( env( key: 'MKT_ENV' ) === 'local' ) ? env( key: 'WOO_PLG_HML_KEY' ) : env( key: 'WOO_PLG_PRD_KEY' ),
+        'token' => ( env( key: 'MKT_ENV' ) === 'local' ) ? env( key: 'WOO_PLG_HML_TOKEN' ) : env( key: 'WOO_PLG_PRD_TOKEN' ),
+    ],
 
-    /**
-     *================================================================================
-     * Consumer Secret.
-     *================================================================================
-     */
-    "consumer_secret"    => (env("MKT_ENV") == "local") ? env("WOOCOMMERCE_CONSUMER_SECRET_HML") : env("WOOCOMMERCE_CONSUMER_SECRET"),
+    // Store URL eg: http://example.com
+    'store_url' => ( env( key: 'MKT_ENV' ) === 'local' ) ? env( key: 'MKT_STORE_HML_URL' ) : env( key: 'MKT_STORE_PRD_URL' ),
 
-    /**
-     *================================================================================
-     * SSL support
-     *================================================================================
-     */
-    "verify_ssl"         => env("WOOCOMMERCE_VERIFY_SSL", false),
+    // Consumer Key.
+    'consumer_key' => ( env( key: 'MKT_ENV' ) === 'local' ) ? env( key: 'WOO_HML_KEY' ) : env( key: 'WOO_PRD_KEY' ),
 
-    /**
-     *================================================================================
-     * Woocommerce API version
-     *================================================================================
-     */
-    "api_version"        => env("WOOCOMMERCE_API_VERSION", "v3"),
+    // Consumer Secret.
+    'consumer_secret' => ( env( key: 'MKT_ENV' ) === 'local' ) ? env( key: 'WOO_HML_SECRET' ) : env( key: 'WOO_PRD_SECRET' ),
 
-    /**
-     *================================================================================
-     * Enable WP API Integration
-     *================================================================================
-     */
-    "wp_api"             => env("WP_API_INTEGRATION", true),
+    // SSL support
+    'verify_ssl' => env( key: 'WOO_VERIFY_SSL', default: false ),
 
-    /**
-     *================================================================================
-     * Force Basic Authentication as query string
-     *================================================================================
-     */
-    "query_string_auth"  => env("WOOCOMMERCE_WP_QUERY_STRING_AUTH", false),
+    // Woocommerce API version
+    'api_version' => env( key: 'WOO_API_VERSION', default: 'v3' ),
 
-    /**
-     *================================================================================
-     * Default WP timeout
-     *================================================================================
-     */
-    "timeout"            => env("WOOCOMMERCE_WP_TIMEOUT", 120),
+    // Enable WP API Integration
+    'wp_api_integration' => env( key: 'WP_API_INTEGRATION', default: true ),
 
-    /**
-     *================================================================================
-     * Total results header
-     * Default value X-WP-Total
-     *================================================================================
-     */
-    "header_total"       => env("WOOCOMMERCE_WP_HEADER_TOTAL", "X-WP-Total"),
+    // Force Basic Authentication as query string
+    'query_string_auth' => env( key: 'WOO_WP_QUERY_AUTH', default: true ),
 
-    /**
-     *================================================================================
-     * Total pages header
-     * Default value X-WP-TotalPages
-     *================================================================================
-     */
-    "header_total_pages" => env("WOOCOMMERCE_WP_HEADER_TOTAL_PAGES", "X-WP-TotalPages"),
+    // Default WP timeout
+    'timeout' => env( key: 'WOO_WP_TIMEOUT', default: 300 ),
+
+    // Total results header. Default value "X-WP-Total"
+    'header_total' => env( key: 'WOO_WP_HEADER_TOTAL', default: 'X-WP-Total' ),
+
+    // Total pages header. Default value "X-WP-TotalPages"
+    'header_total_pages' => env( key: 'WOO_WP_HEADER_TOTAL_PAGES', default: 'X-WP-TotalPages' ),
+
+    'partners' => [
+        'fast_shop' => [
+            'store_id' => ( env( key: 'MKT_ENV' ) === 'local' ) ? env( key: 'FS_WOO_HML_STORE_ID' ) : env( key: 'FS_WOO_PRD_STORE_ID' ),
+        ],
+    ],
 ];

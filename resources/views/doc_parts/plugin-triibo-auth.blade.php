@@ -5,6 +5,7 @@
                 data-bs-toggle="collapse" data-bs-target="#collapsePluginAuth"
                 aria-expanded="true" aria-controls="collapsePluginAuth" >
                 Plugin MKT - Triibo Auth
+                <span class="text-danger fw-bold ps-1" >(desatualizado)</span>
             </button>
         </p>
         <div id="collapsePluginAuth" class="accordion-collapse collapse" aria-labelledby="headingPluginAuth" data-bs-parent="#accordionTriibo" >

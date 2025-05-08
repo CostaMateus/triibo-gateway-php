@@ -3,7 +3,6 @@
 namespace App\Console\Commands\Affiliates\Cofry;
 
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Affiliates\CofryController;
 
 class ProcessImages extends Command
@@ -39,13 +38,16 @@ class ProcessImages extends Command
      */
     public function handle()
     {
-        echo "IMG : Start processing of images\n";
-        Log::channel( "cofry" )->info( "Images", [ "Start processing of images" ] );
+        $message = "Images: Start processing...";
 
-        $cofry = new CofryController();
-        $cofry->images();
+        log_message( channel: "cofry", message: $message );
+        $this->info( $message );
 
-        echo "IMG : End images processing\n";
-        Log::channel( "cofry" )->info( "Images", [ "End images processing" ] );
+        ( new CofryController() )->images();
+
+        $message = "Images: End processing...";
+
+        log_message( channel: "cofry", message: $message );
+        $this->info( $message );
     }
 }
