@@ -14,7 +14,7 @@
                     <h3 class="text-center" >Integração Fast Shop</h3>
                     <p>
                         URL base:<br>
-                        @if (config("app.env") == "local")
+                        @if ( config( key: "app.env" ) == "local" )
                             <span class="font-monospace" ><var>php-hml.triibo.com.br/api/marketplace</var></span>
                         @else
                             <span class="font-monospace" ><var>php.triibo.com.br/api/marketplace</var></span>

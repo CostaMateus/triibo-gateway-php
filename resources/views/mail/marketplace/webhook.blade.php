@@ -8,7 +8,7 @@
 Parametros enviados:
 @php
     echo "<pre class='code' >";
-        print_r($params);
+        print_r( value: $params );
     echo "</pre>";
 @endphp
 

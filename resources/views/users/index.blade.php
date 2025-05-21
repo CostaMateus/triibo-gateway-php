@@ -1,8 +1,8 @@
-@extends( "layouts.app" )
+@extends( view: "layouts.app" )
 
-@section( "title", "Lista de usuários" )
+@section( section: "title", content: "Lista de usuários" )
 
-@section( "content" )
+@section( section: "content" )
     <div class="container" >
         <div class="row justify-content-center" >
             <div class="col-12 col-sm-10 col-md-8 col-lg-6" >
@@ -12,7 +12,7 @@
                     <div class="card-body" >
                         <button class="btn btn-success text-white btn-sm mb-3 add-user float-end" >Adicionar novo</button>
 
-                        @if ( $message = Session::get( "success" ) )
+                        @if ( $message = Session::get( key: "success" ) )
                             <div class="alert alert-success" >
                                 <p>{{ $message }}</p>
                             </div>
@@ -226,7 +226,7 @@
                 e.preventDefault();
 
                 const id   = $( this ).data( "id" );
-                const url  = "{{ url("/users") }}";
+                const url  = "{{ url( path: "/users" ) }}";
                 const data = $( "#add-user-form" ).serialize();
 
                 $( "#add-user-form button" ).html( divSpinner ).prop( "disabled", "disabled" );
@@ -240,7 +240,7 @@
                     },
                     error: function ( error ) {
                         // console.log(error);
-                        $( "#add-user-form button" ).html( "{{ __("common.confirm") }}" ).prop( "disabled", false );
+                        $( "#add-user-form button" ).html( "{{ __( key: "common.confirm" ) }}" ).prop( "disabled", false );
 
                         if ( error.status == 422 )
                             showErrors( error, "add" );
@@ -269,7 +269,7 @@
                 e.preventDefault();
 
                 const id   = $( this ).data( "id" );
-                const url  = `{{ url("/users") }}/${id}`;
+                const url  = `{{ url( path: "/users" ) }}/${id}`;
                 const data = $( "#edit-user-form" ).serialize();
 
                 $( "#edit-user-form button" ).html( divSpinner ).prop( "disabled", "disabled" );
@@ -283,7 +283,7 @@
                     },
                     error: function ( error ) {
                         // console.log(error);
-                        $( "#edit-user-form button" ).html( "{{ __('common.save' ) }}" ).prop( "disabled", false );
+                        $( "#edit-user-form button" ).html( "{{ __( key: 'common.save' ) }}" ).prop( "disabled", false );
 
                         if ( error.status == 422 )
                             showErrors( error, "edit" );
@@ -308,7 +308,7 @@
                 e.preventDefault();
 
                 const id   = $( this ).data( "id" );
-                const url  = `{{ url("/users") }}/${id}`;
+                const url  = `{{ url( path: "/users" ) }}/${id}`;
                 const data = $( "#del-user-form" ).serialize();
 
                 $( "#del-user-form button" ).html( divSpinner ).prop( "disabled", "disabled" );
@@ -322,7 +322,7 @@
                     },
                     error: function ( error ) {
                         // console.log(error.statusText);
-                        $( "#del-user-form button" ).html( "{{ __("common.confirm") }}" ).prop( "disabled", false );
+                        $( "#del-user-form button" ).html( "{{ __( key: "common.confirm" ) }}" ).prop( "disabled", false );
                     }
                 } );
             } );
