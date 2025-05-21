@@ -51,9 +51,11 @@ class ConnectorRegistration extends Command
         {
             $this->error( "Error registering connector" );
 
-            return;
+            return Command::FAILURE;
         }
 
         $this->info( "Connector registered successfully" );
+
+        return Command::SUCCESS;
     }
 }

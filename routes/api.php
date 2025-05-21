@@ -100,8 +100,6 @@ Route::group( ["middleware" => "log.route"], static function () : void
                 Route::post( "/pub/orders/{order_id}/invoice", [VtexOrderController::class, "invoiceNotification"] )->name( "notification.invoice" );
                 Route::post( "/pvt/orders/{order_id}/cancel", [VtexOrderController::class, "cancellationNotification"] )->name( "notification.cancel" );
             } );
-
         } );
     } );
-
 } );

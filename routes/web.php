@@ -26,7 +26,7 @@ Auth::routes( ["register" => false] );
 Route::get( "/", [HomeController::class, "welcome"] )->name( "welcome" );
 Route::get( "/clear-cache", [HomeController::class, "clearCache"] )->name( "clear.cache" );
 
-Route::group( ["middleware" => "auth"], static function () : void
+Route::group( ["middleware" => "auth"], function () : void
 {
     Route::get( "/home", [HomeController::class, "index"] )->name( "home" );
     Route::get( "/documentacao", [HomeController::class, "documentation"] )->name( "docs.index" );
@@ -49,11 +49,10 @@ Route::group( ["middleware" => "auth"], static function () : void
 
         Route::get( "/fs/{order_id}", [MarketplaceController::class, "getFsOrder"] )->name( "order.fs" );
         Route::get( "/mkt/{order_id}", [MarketplaceController::class, "getMktOrder"] )->name( "order.mkt" );
-        Route::get( "/mkt/{id}/ext", [MarketplaceController::class, "redirectToMkt"] )->name( "external" );
+        Route::get( "/mkt/{id}/ext", [MarketplaceController::class, "redirectToMkt"] )->name(    "external" );
     } );
 
     Route::get( "/fast-shop/product/{sku}", [ProductController::class, "getProductData"] );
-
 } );
 
 // =========================================

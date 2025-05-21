@@ -25,9 +25,9 @@ class FixProducts extends Command
     /**
      * Execute the console command.
      *
-     * @return void
+     * @return int
      */
-    public function handle() : void
+    public function handle() : int
     {
         $page = 1;
         $per_page = 100;
@@ -128,6 +128,8 @@ class FixProducts extends Command
         }
 
         $this->info( "Finished" );
+
+        return Command::SUCCESS;
     }
 
     private function print( $not_fs, $fs_new, $fs_old ) : void

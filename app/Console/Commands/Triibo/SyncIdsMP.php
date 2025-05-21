@@ -39,5 +39,7 @@ class SyncIdsMP extends Command
     public function handle()
     {
         MauticIntegration::syncIdsMauticPipe();
+
+        return Command::SUCCESS;
     }
 }

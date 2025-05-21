@@ -54,7 +54,7 @@ class ProcessStoresPromos extends Command
 
             log_message( channel: $channel, message: $message );
 
-            return;
+            return Command::FAILURE;
         }
 
         $title = ( $option !== "all" ) ? ucfirst( $option ) : "Stores|Promotions";
@@ -68,5 +68,7 @@ class ProcessStoresPromos extends Command
         $message = "{$title}: End processing...";
         log_message( channel: $channel, message: $message );
         $this->info( $message );
+
+        return Command::SUCCESS;
     }
 }

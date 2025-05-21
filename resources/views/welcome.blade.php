@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace( '_', '-', app()->getLocale() ) }}" >
+<html lang="{{ str_replace( search: '_', replace: '-', subject: app()->getLocale() ) }}" >
     <head>
         <meta charset="utf-8" >
         <meta http-equiv="X-UA-Compatible" content="IE=edge" >
@@ -7,10 +7,10 @@
         <meta name="csrf-token" content="{{ csrf_token() }}" >
 
         {{-- Title --}}
-        <title>{{ config( "app.name", "Triibo" ) }}</title>
+        <title>{{ config( key: "app.name", default: "Triibo" ) }}</title>
 
         {{-- CSS/JS --}}
-        @vite( [
+        @vite( entrypoints: [
             "resources/sass/app.scss",
             "resources/css/app.css",
             "resources/js/app.js"
@@ -18,8 +18,8 @@
     </head>
     <body>
         <div class="d-flex flex-column justify-content-center align-items-center bg-triibo vh-100" >
-            <img class="triibo-logo" src="{{ asset('images/logo/logo-triibo.png')}}" alt="Triibo" width="300" >
-            <a class="btn btn-default text-triibo" href="{{ route( "login" ) }}" >HOME</a>
+            <img class="triibo-logo" src="{{ asset( path: 'images/logo/logo-triibo.png' )}}" alt="Triibo" width="300" >
+            <a class="btn btn-default text-triibo" href="{{ route( name: "login" ) }}" >HOME</a>
         </div>
 
         @if ( $showToast )

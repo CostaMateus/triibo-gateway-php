@@ -41,13 +41,15 @@ class UnsetVouchers extends Command
         $message = "Unset vouchers: Start processing...";
 
         log_message( channel: "triibo", message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
 
         ( new TriiboController() )->unsetVouchers();
 
         $message = "Unset vouchers: End processing...";
 
         log_message( channel: "triibo", message: $message );
-        $this->info( $message );
+        $this->info( string: $message );
+
+        return Command::SUCCESS;
     }
 }

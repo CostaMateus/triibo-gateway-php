@@ -33,7 +33,7 @@
                         @if ( isset( $data ) && $data )
                             <div id="searched" class="w-100 mt-3" >
 
-                                @if ( !empty( $data[ "mkt" ] ) )
+                                @if ( !empty( $data[ "mkt" ] ) && is_array( $data[ "mkt" ] ) )
                                     <p class="mb-0" >
                                         <strong>Nome</strong>:
                                         {{ $data[ "mkt" ][ "name"         ] }}
@@ -46,6 +46,8 @@
                                         <strong>Estoque</strong>:
                                         {{ $data[ "mkt" ][ "stock_status" ] }}
                                     </p>
+                                @else
+                                    <p class="mb-0" >Produto não encontrado na Fast Shop</p>
                                 @endif
 
                                 @dump( $data )

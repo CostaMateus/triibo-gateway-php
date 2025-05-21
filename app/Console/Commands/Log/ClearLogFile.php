@@ -38,27 +38,29 @@ class ClearLogFile extends Command
      */
     public function handle()
     {
-        $date = date( "Y-m-d" );
-        $log_folder = storage_path( "logs/" );
-        $all_files = File::files( $log_folder );
+        $date = date( format: "Y-m-d" );
+        $log_folder = storage_path( path: "logs/" );
+        $all_files = File::files( directory: $log_folder );
         $bkp_folder = $log_folder . "/bkp-{$date}";
 
-        if ( ! File::exists( $bkp_folder ) )
-            File::makeDirectory( $bkp_folder, 0755, true, true );
+        if ( ! File::exists( path: $bkp_folder ) )
+            File::makeDirectory( path: $bkp_folder, mode: 0755, recursive: true, force: true );
 
         foreach ( $all_files as $file )
         {
-            if ( pathinfo( $file, PATHINFO_EXTENSION ) === "log" )
+            if ( pathinfo( path: $file, flags: PATHINFO_EXTENSION ) === "log" )
             {
-                $file = pathinfo( $file );
+                $file = pathinfo( path: $file );
 
                 File::move(
-                    "{$log_folder}{$file[ "basename" ]}",
-                    "{$bkp_folder}/{$file[ "basename" ]}"
+                    path: "{$log_folder}{$file[ "basename" ]}",
+                    target: "{$bkp_folder}/{$file[ "basename" ]}"
                 );
             }
         }
 
         $this->info( "Logs have been cleared" );
+
+        return Command::SUCCESS;
     }
 }

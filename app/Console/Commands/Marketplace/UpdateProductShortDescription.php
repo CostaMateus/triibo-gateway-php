@@ -59,6 +59,8 @@ class UpdateProductShortDescription extends Command
         $message = "MKT Products: Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
+
+        return Command::SUCCESS;
     }
 
     private function processProducts() : void
