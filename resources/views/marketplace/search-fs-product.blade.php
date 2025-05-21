@@ -1,8 +1,8 @@
-@extends( "layouts.app" )
+@extends( view: "layouts.app" )
 
-@section( "title", "Consulta produtos FS" )
+@section( section: "title", content: "Consulta produtos FS" )
 
-@section( "css" )
+@section( section: "css" )
     <style>
         #searched pre {
             margin-bottom: 0;
@@ -10,7 +10,7 @@
     </style>
 @endsection
 
-@section( "content" )
+@section( section: "content" )
     <div class="container" >
         <div class="row justify-content-center" >
             <div class="col-12" >
@@ -19,7 +19,7 @@
                 <div class="card" >
                     <div class="card-body" >
 
-                        @include( "partials.alerts" )
+                        @include( view: "partials.alerts" )
 
                         <form id="search_product" class="row mb-0" action="" method="POST" >
                             @csrf
@@ -33,7 +33,7 @@
                         @if ( isset( $data ) && $data )
                             <div id="searched" class="w-100 mt-3" >
 
-                                @if ( !empty( $data[ "mkt" ] ) )
+                                @if ( !empty( $data[ "mkt" ] ) && is_array( value: $data[ "mkt" ] ) )
                                     <p class="mb-0" >
                                         <strong>Nome</strong>:
                                         {{ $data[ "mkt" ][ "name"         ] }}
@@ -46,6 +46,8 @@
                                         <strong>Estoque</strong>:
                                         {{ $data[ "mkt" ][ "stock_status" ] }}
                                     </p>
+                                @else
+                                    <p class="mb-0" >Produto não encontrado na Fast Shop</p>
                                 @endif
 
                                 @dump( $data )
@@ -60,7 +62,7 @@
 
 @endsection
 
-@section( "js" )
+@section( section: "js" )
     <script type="module" >
         $( document ).ready( function()
         {
