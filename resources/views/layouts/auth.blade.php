@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace( search: '_', replace: '-', subject: app()->getLocale() ) }}" >
+<html lang="{{ str_replace( '_', '-', app()->getLocale() ) }}" >
     <head>
         <meta charset="utf-8" >
         <meta http-equiv="X-UA-Compatible" content="IE=edge" >
@@ -11,24 +11,24 @@
         @endif
 
         {{-- Title --}}
-        <title>{{ config( key: "app.name", default: "Triibo" ) }}</title>
+        <title>{{ config( "app.name", "Triibo" ) }}</title>
 
         {{-- CSS/JS --}}
-        @vite( entrypoints: [
+        @vite( [
             "resources/sass/app.scss",
             "resources/css/app.css",
             "resources/js/app.js"
         ] )
 
-        @yield( section: "css" )
+        @yield( "css" )
     </head>
     <body class="bg-dots" >
         <div id="app" >
             <main>
-                @yield( section: "content" )
+                @yield( "content" )
             </main>
         </div>
 
-        @yield( section: "js" )
+        @yield( "js" )
     </body>
 </html>

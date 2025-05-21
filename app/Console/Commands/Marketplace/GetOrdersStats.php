@@ -35,8 +35,10 @@ class GetOrdersStats extends Command
 
     /**
      * Execute the console command.
+     *
+     * @return int
      */
-    public function handle() : void
+    public function handle() : int
     {
         $start = now();
 
@@ -82,6 +84,8 @@ class GetOrdersStats extends Command
         $diff = $start->diffInMinutes( date: now() );
 
         $this->logMessage( message: "{$this->prefix} Runtime {$diff} minutes..." );
+
+        return Command::SUCCESS;
     }
 
     /**

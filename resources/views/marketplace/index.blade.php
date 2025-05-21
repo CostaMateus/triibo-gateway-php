@@ -1,8 +1,8 @@
-@extends( view: "layouts.app" )
+@extends( "layouts.app" )
 
-@section( section: "title", content: "Pedidos marketplace" )
+@section( "title", "Pedidos marketplace" )
 
-@section( section: "css" )
+@section( "css" )
     <style>
         .bg-fs-favicon, .bg-mkt-favicon, .bg-external-link {
             width: 20px;
@@ -29,7 +29,7 @@
     </style>
 @endsection
 
-@section( section: "content" )
+@section( "content" )
     <div class="container-fluid" >
         <div class="row justify-content-center" >
             <div class="col-12" >
@@ -41,22 +41,22 @@
                             $type    = false;
                             $message = "";
 
-                            if ( Session::has( key: "error" ) )
+                            if ( Session::has( "error" ) )
                             {
                                 $type    = "danger";
-                                $message = Session::get( key: "error" );
+                                $message = Session::get( "error" );
                             }
 
-                            if ( Session::has( key: "success" ) )
+                            if ( Session::has( "success" ) )
                             {
                                 $type    = "success";
-                                $message = Session::get( key: "success" );
+                                $message = Session::get( "success" );
                             }
 
-                            if ( Session::has( key: "warning" ) )
+                            if ( Session::has( "warning" ) )
                             {
                                 $type    = "warning";
-                                $message = Session::get( key: "warning" );
+                                $message = Session::get( "warning" );
                             }
                         @endphp
 
@@ -73,7 +73,7 @@
                         {{-- Import --}}
                         <div class="row mb-3" >
                             <div class="col-12 col-md-6 mx-auto" >
-                                <form id="import-form" action="{{ route( name: "mkt.orders.import" ) }}" method="POST" enctype="multipart/form-data" >
+                                <form id="import-form" action="{{ route( "mkt.orders.import" ) }}" method="POST" enctype="multipart/form-data" >
                                     @csrf
                                     <div class="input-group" >
                                         <input type="file" class="form-control border-secondary text-secondary" name="csv_file" accept=".csv" required >
@@ -185,7 +185,7 @@
                         {{-- Export --}}
                         <div class="row my-3" >
                             <div class="col-12" >
-                                <form id="export-form" action="{{ route( name: "mkt.orders.export" ) }}" method="POST" >
+                                <form id="export-form" action="{{ route( "mkt.orders.export" ) }}" method="POST" >
                                     @csrf
                                     <button class="btn btn-sm btn-success text-white" type="submit" @if ( $orders->isEmpty() ) disabled @endif >
                                         Exportar arquivo
@@ -252,7 +252,7 @@
                                             <td class="text-center" >{{ $order->ord_id }}</td>
                                             <td class="text-nowrap" >
                                                 @if ( $order->external_id )
-                                                    <p class="mb-0 external_id-preview" >{{ Str::limit( value: $order->external_id, limit: 10 ) }}</p>
+                                                    <p class="mb-0 external_id-preview" >{{ Str::limit( $order->external_id, 10 ) }}</p>
                                                     <div class="external_id-full d-none" >
                                                         {{ $order->external_id }}
                                                     </div>
@@ -265,15 +265,15 @@
                                                 {{ $order->mkt_id }}
                                                 @if ( $order->mkt_id )
                                                     <br>
-                                                    <a class="btn btn-light p-1" href="{{ route( name: "mkt.order.fs", parameters: [ "order_id" => $order->mkt_id ] ) }}"
+                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.fs", [ "order_id" => $order->mkt_id ] ) }}"
                                                         title="Ver dados da FS" target="_blank" rel="noopener noreferrer" >
                                                         <i class="bi bg-fs-favicon i-align-center" ></i>
                                                     </a>
-                                                    <a class="btn btn-light p-1" href="{{ route( name: "mkt.order.mkt", parameters: [ "order_id" => $order->mkt_id ] ) }}"
+                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.order.mkt", [ "order_id" => $order->mkt_id ] ) }}"
                                                         title="Ver dados do MKT" target="_blank" rel="noopener noreferrer" >
                                                         <i class="bi bg-mkt-favicon i-align-center" ></i>
                                                     </a>
-                                                    <a class="btn btn-light p-1" href="{{ route( name: "mkt.external", parameters: [ "id" => $order->mkt_id ] ) }}"
+                                                    <a class="btn btn-light p-1" href="{{ route( "mkt.external", [ "id" => $order->mkt_id ] ) }}"
                                                         title="Ver pedido no MKT" target="_blank" rel="noopener noreferrer" >
                                                         <i class="bi bg-external-link i-align-center" ></i>
                                                     </a>
@@ -292,13 +292,13 @@
                                             <td class="text-center"          >
                                                 {{ $order->product_id   }}
                                                 <br>
-                                                <a class="btn btn-light p-1" href="{{ route( name: "mkt.external", parameters: [ "id" => $order->product_id ] ) }}"
+                                                <a class="btn btn-light p-1" href="{{ route( "mkt.external", [ "id" => $order->product_id ] ) }}"
                                                     title="Ver produto no MKT" target="_blank" rel="noopener noreferrer" >
                                                     <i class="bi bg-external-link i-align-center" ></i>
                                                 </a>
                                             </td>
                                             <td style="min-width:400px" >
-                                                <p class="mb-0 name-preview" >{{ Str::limit( value: $order->product_name, limit: 50 ) }}</p>
+                                                <p class="mb-0 name-preview" >{{ Str::limit( $order->product_name, 50 ) }}</p>
                                                 <div class="name-full d-none" >
                                                     {{ $order->product_name }}
                                                 </div>
@@ -307,7 +307,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-nowrap" >
-                                                <p class="mb-0 address-preview" >{{ Str::limit( value: implode( separator: " ", array: $order->billing ), limit: 20 ) }}</p>
+                                                <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->billing ), 20 ) }}</p>
                                                 <div class="address-full d-none" >
                                                     @foreach ( $order->billing as $key => $value )
                                                         <p class="mb-0" >{{ $value }}</p>
@@ -318,7 +318,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-nowrap" >
-                                                <p class="mb-0 address-preview" >{{ Str::limit( value: implode( separator: " ", array: $order->shipping ), limit: 20 ) }}</p>
+                                                <p class="mb-0 address-preview" >{{ Str::limit( implode( " ", $order->shipping ), 20 ) }}</p>
                                                 <div class="address-full d-none" >
                                                     @foreach ( $order->shipping as $key => $value )
                                                         <p class="mb-0" >{{ $value }}</p>
@@ -329,7 +329,7 @@
                                                 </div>
                                             </td>
                                             <td class="text-center text-nowrap" data-ord_id="{{ $order->ord_id }}" data-file_name="{{ $order->file_name }}" >
-                                                @if ( in_array( needle: $order->ord_status, haystack: [ "not_processed", "product_not_found", "over_max" ] ) )
+                                                @if ( in_array( $order->ord_status, [ "not_processed", "product_not_found", "over_max" ] ) )
                                                     <button class="btn btn-primary text-white p-1 create-order" title="Criar" data-action="create" >
                                                         <i class="h3 bi bi-plus-circle i-align-center" ></i>
                                                     </button>
@@ -347,7 +347,7 @@
                                                     </button>
                                                 @endif
 
-                                                @if( !in_array( needle: $order->ord_status, haystack: [ "not_processed", "approved", "canceled", "over_max" ] ) )
+                                                @if( !in_array( $order->ord_status, [ "not_processed", "approved", "canceled", "over_max" ] ) )
                                                     <button class="btn btn-triibo text-white p-1 update-order" title="Atualizar" data-action="update" >
                                                         <i class="h3 bi bi-arrow-repeat i-align-center" ></i>
                                                     </button>
@@ -499,22 +499,22 @@
 
             if ( action == "create"  )
             {
-                route   = "{{ route( name: 'mkt.order.create'  ) }}";
+                route   = "{{ route( 'mkt.order.create'  ) }}";
                 message = `Deseja criar o pedido ID: ${ord_id}?\nO pedido será criado no marketplace e enviado a Fast Shop!`;
             }
             else if ( action == "approval" )
             {
-                route   = "{{ route( name: 'mkt.order.approval' ) }}";
+                route   = "{{ route( 'mkt.order.approval' ) }}";
                 message = `Deseja aprovar o pedido ID: ${ord_id}?\nO pedido será aprovado para a Fast Shop!`;
             }
             else if ( action == "cancel"  )
             {
-                route   = "{{ route( name: 'mkt.order.cancel'  ) }}";
+                route   = "{{ route( 'mkt.order.cancel'  ) }}";
                 message = `Deseja cancelar o pedido ID: ${ord_id}?\nO pedido será cancelado na Fast Shop e no marketplace, caso exista!`;
             }
             else if ( action == "update"  )
             {
-                route   = "{{ route( name: 'mkt.order.update'  ) }}";
+                route   = "{{ route( 'mkt.order.update'  ) }}";
                 message = `O pedido ID: ${ord_id}, será atualizado!`;
             }
 

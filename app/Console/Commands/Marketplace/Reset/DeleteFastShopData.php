@@ -110,7 +110,7 @@ class DeleteFastShopData extends Command
         };
 
         $this->log_message( message: "Starting process" );
-        $this->log_message( message: implode( " ", [
+        $this->log_message( message: implode( separator: " ", array: [
             "--option:" . ( $option ?: "null" ),
             "--meta:" . ( $meta ? "true" : "false" ),
             "--fix:" . ( $fix ? "true" : "false" ),
@@ -133,7 +133,7 @@ class DeleteFastShopData extends Command
 
         try
         {
-            if ( $option !== null && ! in_array( true, [$meta, $fix, $outofstock] ) )
+            if ( $option !== null && ! in_array( needle: true, haystack: [$meta, $fix, $outofstock] ) )
             {
                 $unfinished = true;
                 $response = null;
@@ -149,9 +149,9 @@ class DeleteFastShopData extends Command
                     foreach ( $posts as $post )
                         $ids[] = (string) $post->id;
 
-                    $this->log_message( message: "Selected: " . implode( ", ", $ids ) );
+                    $this->log_message( message: "Selected: " . implode( separator: ", ", array: $ids ) );
 
-                    $content = json_encode( [
+                    $content = json_encode( value: [
                         "posts" => $ids,
                         "type" => $option,
                     ] );
@@ -161,13 +161,13 @@ class DeleteFastShopData extends Command
                         sleepMilliseconds : 2000,
                         callback          : function () use ( $content )
                         {
-                            $response_2 = Http::timeout( 90 )
+                            $response_2 = Http::timeout( seconds: 90 )
                                 ->withHeaders( headers: $this->headers )
                                 ->withBody( content : $content, contentType : "application/json" )
                                 ->post( url: $this->url );
 
                             if ( ! $response_2->successful() )
-                                throw new Exception( $response_2->json()[ "message" ], $response_2->status() );
+                                throw new Exception( message: $response_2->json()[ "message" ], code: $response_2->status() );
 
                             return $response_2;
                         },
@@ -180,7 +180,7 @@ class DeleteFastShopData extends Command
                     );
 
                     if ( ! $response->successful() )
-                        throw new Exception( $response->json()[ "message" ], $response->status() );
+                        throw new Exception( message: $response->json()[ "message" ], code: $response->status() );
 
                     $this->log_message( message: "Successful processed", context: $response->json() );
 
@@ -204,7 +204,9 @@ class DeleteFastShopData extends Command
         }
         catch ( Throwable $e )
         {
-            $this->log_message( message: "Error: {$e->getMessage()}", type: "error" );
+            $message = "Error: {$e->getMessage()}";
+
+            $this->log_message( message: $message, type: "error" );
 
             log_exception(
                 channel : self::LOG_CHANNEL,
@@ -215,7 +217,7 @@ class DeleteFastShopData extends Command
 
         $this->log_message( message: "Finished process..." );
 
-        $diff = $start->diffInMinutes( now() );
+        $diff = $start->diffInMinutes( date: now() );
         $this->log_message( message: "Runtime {$diff} minutes..." );
 
         return Command::SUCCESS;
@@ -339,32 +341,32 @@ class DeleteFastShopData extends Command
         $this->conn->select( query: $query_0 );
 
         $post_imgs = $this->conn->select( query: $query_1 );
-        $post_imgs = array_map( static function ( $obj )
-        { return $obj->post_id; }, $post_imgs );
+        $post_imgs = array_map( callback: static function ( $obj )
+        { return $obj->post_id; }, array: $post_imgs );
 
         $result = $this->conn->select( query: $query_2 );
 
-        $chunked = array_chunk( $result, 500 );
+        $chunked = array_chunk( array: $result, length: 500 );
 
         foreach ( $chunked as $i => $result )
         {
             $i++;
 
-            $this->log_message( message: "Chunk {$i} de " . count( $chunked ) );
+            $this->log_message( message: "Chunk {$i} de " . count( value: $chunked ) );
 
             foreach ( $result as $meta )
             {
                 $product_id = $meta->post_id;
-                $image_ids = explode( ",", $meta->meta_value );
+                $image_ids = explode( separator: ",", string: $meta->meta_value );
 
-                $intersect = array_intersect( $image_ids, $post_imgs );
+                $intersect = array_intersect( array: $image_ids, arrays: $post_imgs );
 
                 if ( empty( $intersect ) )
                     continue;
 
                 foreach ( $image_ids as $image_id )
                 {
-                    $image_id = (int) trim( $image_id );
+                    $image_id = (int) trim( string: $image_id );
 
                     $update[] = "UPDATE wp_posts SET post_parent = {$product_id} WHERE ID = {$image_id};";
                 }
@@ -381,11 +383,11 @@ class DeleteFastShopData extends Command
         }
 
         $post_imgs = $this->conn->select( query: $query_1 );
-        $post_imgs = array_map( static function ( $obj )
-        { return $obj->post_id; }, $post_imgs );
+        $post_imgs = array_map( callback: static function ( $obj )
+        { return $obj->post_id; }, array: $post_imgs );
 
         if ( ! empty( $post_imgs ) )
-            Artisan::call( "mkt:delete_fs_data --option=images" );
+            Artisan::call( command: "mkt:delete_fs_data --option=images" );
     }
 
     /**
@@ -404,17 +406,17 @@ class DeleteFastShopData extends Command
         ";
 
         $post_ids = $this->conn->select( query: $query_0 );
-        $post_ids = array_map( static function ( $obj )
-        { return $obj->post_id; }, $post_ids );
-        $chunked = array_chunk( $post_ids, 100 );
+        $post_ids = array_map( callback: static function ( $obj )
+        { return $obj->post_id; }, array: $post_ids );
+        $chunked = array_chunk( array: $post_ids, length: 100 );
 
         foreach ( $chunked as $i => $post_ids )
         {
             $i++;
 
-            $this->log_message( message: "Chunk {$i} de " . count( $chunked ) );
+            $this->log_message( message: "Chunk {$i} de " . count( value: $chunked ) );
 
-            $ids = implode( ", ", $post_ids );
+            $ids = implode( separator: ", ", array: $post_ids );
             $query_1 = "DELETE wp_postmeta   FROM wp_postmeta WHERE post_id     IN ({$ids});";
             $query_2 = "DELETE wp_posts      FROM wp_posts    WHERE ID          IN ({$ids});";
             $query_3 = "SELECT ID as post_id FROM wp_posts    WHERE post_parent IN ({$ids});";
@@ -427,15 +429,15 @@ class DeleteFastShopData extends Command
             $this->conn->select( query: $query_2 );
 
             $imgs_ids = $this->conn->select( query: $query_3 );
-            $imgs_ids = array_map( static function ( $obj )
-            { return (string) $obj->post_id; }, $imgs_ids );
+            $imgs_ids = array_map( callback: static function ( $obj )
+            { return (string) $obj->post_id; }, array: $imgs_ids );
 
-            $content = json_encode( [
+            $content = json_encode( value: [
                 "type" => "attachment",
                 "posts" => $imgs_ids,
             ] );
 
-            $response = Http::timeout( 90 )
+            $response = Http::timeout( seconds: 90 )
                 ->withHeaders( headers: $this->headers )
                 ->withBody( content : $content, contentType : "application/json" )
                 ->post( url: $this->url );

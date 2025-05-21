@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="{{ str_replace( search: '_', replace: '-', subject: app()->getLocale() ) }}" >
+<html lang="{{ str_replace( '_', '-', app()->getLocale() ) }}" >
     <head>
         <meta charset="utf-8" >
         <meta http-equiv="X-UA-Compatible" content="IE=edge" >
@@ -11,7 +11,7 @@
         @endif
 
         {{-- <!-- Title --> --}}
-        <title>@yield( section: "title" ) | Triibo</title>
+        <title>@yield( "title" ) | Triibo</title>
 
         {{-- <!-- Fonts --> --}}
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback" >
@@ -23,18 +23,18 @@
             "resources/js/app.js"
         ] )
 
-        @yield( section: "css" )
+        @yield( "css" )
     </head>
     <body class="bg-dots" >
 
         <div class="app-wrapper" >
             {{-- Loading --}}
-            @include( view: "layouts.partials.load"    )
+            @include( "layouts.partials.load"    )
 
-            @include( view: "layouts.partials.navbar"  )
+            @include( "layouts.partials.navbar"  )
 
             <main class="app-main py-4" >
-                @yield( section: "content" )
+                @yield( "content" )
             </main>
         </div>
 
@@ -59,6 +59,6 @@
             </script>
         @endif
 
-        @yield( section: "js" )
+        @yield( "js" )
     </body>
 </html>

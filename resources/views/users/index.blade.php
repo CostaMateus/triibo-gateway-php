@@ -1,8 +1,8 @@
-@extends( view: "layouts.app" )
+@extends( "layouts.app" )
 
-@section( section: "title", content: "Lista de usuários" )
+@section( "title",  "Lista de usuários" )
 
-@section( section: "content" )
+@section( "content" )
     <div class="container" >
         <div class="row justify-content-center" >
             <div class="col-12 col-sm-10 col-md-8 col-lg-6" >

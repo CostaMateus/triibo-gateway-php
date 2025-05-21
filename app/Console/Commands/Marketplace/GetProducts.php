@@ -77,6 +77,8 @@ class GetProducts extends Command
         {
             Cache::forget( key: "mkt:get_products_running" );
         }
+
+        return Command::SUCCESS;
     }
 
     /**

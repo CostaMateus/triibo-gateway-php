@@ -1,8 +1,8 @@
-@extends( view: "layouts.app" )
+@extends( "layouts.app" )
 
-@section( section: "title", content: "Consulta produtos FS" )
+@section( "title", "Consulta produtos FS" )
 
-@section( section: "css" )
+@section( "css" )
     <style>
         #searched pre {
             margin-bottom: 0;
@@ -10,7 +10,7 @@
     </style>
 @endsection
 
-@section( section: "content" )
+@section( "content" )
     <div class="container" >
         <div class="row justify-content-center" >
             <div class="col-12" >
@@ -19,7 +19,7 @@
                 <div class="card" >
                     <div class="card-body" >
 
-                        @include( view: "partials.alerts" )
+                        @include( "partials.alerts" )
 
                         <form id="search_product" class="row mb-0" action="" method="POST" >
                             @csrf
@@ -33,7 +33,7 @@
                         @if ( isset( $data ) && $data )
                             <div id="searched" class="w-100 mt-3" >
 
-                                @if ( !empty( $data[ "mkt" ] ) && is_array( value: $data[ "mkt" ] ) )
+                                @if ( !empty( $data[ "mkt" ] ) && is_array( $data[ "mkt" ] ) )
                                     <p class="mb-0" >
                                         <strong>Nome</strong>:
                                         {{ $data[ "mkt" ][ "name"         ] }}
@@ -62,7 +62,7 @@
 
 @endsection
 
-@section( section: "js" )
+@section( "js" )
     <script type="module" >
         $( document ).ready( function()
         {

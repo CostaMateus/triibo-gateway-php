@@ -50,5 +50,7 @@ class DeleteImages extends Command
 
         log_message( channel: "cofry", message: $message );
         $this->info( $message );
+
+        return Command::SUCCESS;
     }
 }

@@ -54,7 +54,7 @@ class ProcessDataSS extends Command
         {
             echo "Invalid option, terminating process!\n";
 
-            return;
+            return Command::FAILURE;
         }
 
         if ( in_array( $option, ["promotions", "stores"] ) )
@@ -65,6 +65,8 @@ class ProcessDataSS extends Command
         {
             $this->{$option}();
         }
+
+        return Command::SUCCESS;
     }
 
     private function storesAndPromotions( string $option ) : void

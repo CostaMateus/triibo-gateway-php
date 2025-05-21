@@ -47,6 +47,8 @@ class GetProductCategories extends Command
         $connector->enableLogNotify( false );
 
         $this->product_service = new ProductService( $connector );
+
+        return Command::SUCCESS;
     }
 
     /**

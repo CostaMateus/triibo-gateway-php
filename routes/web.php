@@ -21,39 +21,38 @@ use App\Http\Controllers\{ HomeController, MarketplaceController, UserController
 |
 */
 
-Auth::routes( options: ["register" => false] );
+Auth::routes( ["register" => false] );
 
-Route::get( uri: "/", action: [HomeController::class, "welcome"] )->name( name: "welcome" );
-Route::get( uri: "/clear-cache", action: [HomeController::class, "clearCache"] )->name( name: "clear.cache" );
+Route::get( "/", [HomeController::class, "welcome"] )->name( "welcome" );
+Route::get( "/clear-cache", [HomeController::class, "clearCache"] )->name( "clear.cache" );
 
-Route::group( attributes: ["middleware" => "auth"], routes: static function () : void
+Route::group( ["middleware" => "auth"], function () : void
 {
-    Route::get( uri: "/home", action: [HomeController::class, "index"] )->name( name: "home" );
-    Route::get( uri: "/documentacao", action: [HomeController::class, "documentation"] )->name( name: "docs.index" );
+    Route::get( "/home", [HomeController::class, "index"] )->name( "home" );
+    Route::get( "/documentacao", [HomeController::class, "documentation"] )->name( "docs.index" );
 
-    Route::resource( name: "users", controller: UserController::class );
+    Route::resource( "users", UserController::class );
 
-    Route::prefix( prefix: "marketplace" )->name( value: "mkt." )->group( callback: static function () : void
+    Route::prefix( "marketplace" )->name( "mkt." )->group( static function () : void
     {
-        Route::get( uri: "/pedidos", action: [MarketplaceController::class, "orders"] )->name( name: "index" );
-        Route::get( uri: "/consulta-produtos", action: [MarketplaceController::class, "searchFsProducts"] )->name( name: "search.products" );
-        Route::post( uri: "/consulta-produtos", action: [MarketplaceController::class, "searchFsProducts"] )->name( name: "search.products" );
+        Route::get( "/pedidos", [MarketplaceController::class, "orders"] )->name( "index" );
+        Route::get( "/consulta-produtos", [MarketplaceController::class, "searchFsProducts"] )->name( "search.products" );
+        Route::post( "/consulta-produtos", [MarketplaceController::class, "searchFsProducts"] )->name( "search.products" );
 
-        Route::post( uri: "/importar", action: [MarketplaceController::class, "importOrders"] )->name( name: "orders.import" );
-        Route::post( uri: "/exportar", action: [MarketplaceController::class, "exportOrders"] )->name( name: "orders.export" );
+        Route::post( "/importar", [MarketplaceController::class, "importOrders"] )->name( "orders.import" );
+        Route::post( "/exportar", [MarketplaceController::class, "exportOrders"] )->name( "orders.export" );
 
-        Route::post( uri: "/pedido/criar", action: [MarketplaceController::class, "orderCreate"] )->name( name: "order.create" );
-        Route::post( uri: "/pedido/aprovar", action: [MarketplaceController::class, "orderApproval"] )->name( name: "order.approval" );
-        Route::post( uri: "/pedido/cancelar", action: [MarketplaceController::class, "orderCancel"] )->name( name: "order.cancel" );
-        Route::post( uri: "/pedido/atualizar", action: [MarketplaceController::class, "orderUpdate"] )->name( name: "order.update" );
+        Route::post( "/pedido/criar", [MarketplaceController::class, "orderCreate"] )->name( "order.create" );
+        Route::post( "/pedido/aprovar", [MarketplaceController::class, "orderApproval"] )->name( "order.approval" );
+        Route::post( "/pedido/cancelar", [MarketplaceController::class, "orderCancel"] )->name( "order.cancel" );
+        Route::post( "/pedido/atualizar", [MarketplaceController::class, "orderUpdate"] )->name( "order.update" );
 
-        Route::get( uri: "/fs/{order_id}", action: [MarketplaceController::class, "getFsOrder"] )->name( name: "order.fs" );
-        Route::get( uri: "/mkt/{order_id}", action: [MarketplaceController::class, "getMktOrder"] )->name( name: "order.mkt" );
-        Route::get( uri: "/mkt/{id}/ext", action: [MarketplaceController::class, "redirectToMkt"] )->name( name: "external" );
+        Route::get( "/fs/{order_id}", [MarketplaceController::class, "getFsOrder"] )->name( "order.fs" );
+        Route::get( "/mkt/{order_id}", [MarketplaceController::class, "getMktOrder"] )->name( "order.mkt" );
+        Route::get( "/mkt/{id}/ext", [MarketplaceController::class, "redirectToMkt"] )->name(    "external" );
     } );
 
-    Route::get( uri: "/fast-shop/product/{sku}", action: [ProductController::class, "getProductData"] );
-
+    Route::get( "/fast-shop/product/{sku}", [ProductController::class, "getProductData"] );
 } );
 
 // =========================================

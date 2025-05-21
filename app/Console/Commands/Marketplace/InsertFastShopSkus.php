@@ -47,7 +47,7 @@ class InsertFastShopSkus extends Command
      */
     public function handle()
     {
-        return 0;
+        return Command::SUCCESS;
 
         $start = now();
         $message = "{$this->prefix} Starting process WC data...";
@@ -69,6 +69,8 @@ class InsertFastShopSkus extends Command
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
+
+        return Command::SUCCESS;
     }
 
     /**
