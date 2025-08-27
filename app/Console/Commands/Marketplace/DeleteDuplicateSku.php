@@ -119,8 +119,6 @@ class DeleteDuplicateSku extends Command
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( $message );
-
-        return Command::SUCCESS;
     }
 
     /**

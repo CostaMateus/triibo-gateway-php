@@ -15,13 +15,13 @@
             height: 15px;
         }
         .bg-fs-favicon {
-            background-image: url( "{{ asset( path: 'images/fs-favicon.png'     ) }}" );
+            background-image: url( "{{ asset( 'images/fs-favicon.png'     ) }}" );
         }
         .bg-mkt-favicon {
-            background-image: url( "{{ asset( path: 'images/triibo-favicon.png' ) }}" );
+            background-image: url( "{{ asset( 'images/triibo-favicon.png' ) }}" );
         }
         .bg-external-link {
-            background-image: url( "{{ asset( path: 'images/external-link.png'  ) }}" );
+            background-image: url( "{{ asset( 'images/external-link.png'  ) }}" );
         }
         .btn-triibo {
             box-shadow: none !important;

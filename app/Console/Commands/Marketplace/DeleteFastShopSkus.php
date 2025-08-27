@@ -64,8 +64,6 @@ class DeleteFastShopSkus extends Command
         $message = "{$this->prefix} Runtime {$diff} minutes...";
         log_message( channel: self::LOG_CHANNEL, message: $message );
         $this->info( string: $message );
-
-        return Command::SUCCESS;
     }
 
     /**

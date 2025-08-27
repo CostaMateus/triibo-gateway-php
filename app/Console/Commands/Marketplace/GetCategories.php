@@ -108,8 +108,6 @@ class GetCategories extends Command
 
         $diff = $start->diffInMinutes( now() );
         $this->log_message( message: "{$this->prefix} Runtime {$diff} minutes..." );
-
-        return Command::SUCCESS;
     }
 
     /**

@@ -67,7 +67,7 @@ class ProcessDataAwin extends Command
         {
             $this->log_message( message: "Invalid option: Terminating process!" );
 
-            return Command::FAILURE;
+            return 1;
         }
 
         $start = now();
@@ -84,7 +84,7 @@ class ProcessDataAwin extends Command
 
         $this->log_message( message: "Products: Runtime {$diff} minutes..." );
 
-        return Command::SUCCESS;
+        return 0;
     }
 
     /**
